@@ -47,7 +47,6 @@ function traitPropertyIds(catalog: Catalog): string[] {
 function buildSchema(catalog: Catalog) {
   const categoryIds = catalog.categories.map((item) => item.id)
   const subcategoryIds = catalog.subcategories.map((item) => item.id)
-  const grades = optionIds(catalog, 'grade')
   const sizes = optionIds(catalog, 'size')
   const stages = optionIds(catalog, 'stage')
   const traitIds = traitPropertyIds(catalog)
@@ -70,8 +69,7 @@ function buildSchema(catalog: Catalog) {
       probability: { type: 'NUMBER', description: 'Confidence 0–1' },
       categoryId: nullableEnum(categoryIds, 'Best matching catalog category id'),
       subcategoryId: nullableEnum(subcategoryIds, 'Best matching catalog subcategory id'),
-      quality: nullableEnum(grades),
-      size: nullableEnum(sizes),
+      size: nullableEnum(sizes, 'Size band of the plant in the photo'),
       stage: nullableEnum(stages),
       traits: {
         type: 'OBJECT',
@@ -112,7 +110,6 @@ export type GeminiJson = {
   probability?: number
   categoryId?: string | null
   subcategoryId?: string | null
-  quality?: string | null
   size?: string | null
   stage?: string | null
   traits?: Record<string, string | null> | null
@@ -140,7 +137,6 @@ function suggestionFromJson(parsed: GeminiJson): RawSuggestion {
     isPlant,
     categoryId: parsed.categoryId?.trim() || undefined,
     subcategoryId: parsed.subcategoryId?.trim() || undefined,
-    quality: parsed.quality?.trim() || undefined,
     size: parsed.size?.trim() || undefined,
     stage: parsed.stage?.trim() || undefined,
     traits: Object.keys(traits).length ? traits : undefined,
@@ -170,6 +166,58 @@ export function parseGeminiBody(body: GeminiBody, _catalog: Catalog): RawSuggest
   return suggestionFromJson(parsed)
 }
 
+/** Size only, after another provider already named the plant. Failures stay inside identify. */
+export async function guessPlantSize(image: string, catalog: Catalog): Promise<string | undefined> {
+  const key = apiKey()
+  const sizes = optionIds(catalog, 'size')
+  if (!key || sizes.length === 0) return undefined
+  const { mime, base64 } = stripDataUrl(image)
+  const prompt = [
+    'Estimate the size band of the plant in this photo for a greenhouse catalog.',
+    `Allowed size ids: ${sizes.join(', ')}.`,
+    'Pick the closest band. If the photo does not show a plant, omit size.',
+  ].join('\n')
+  const requestBody = JSON.stringify({
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: base64 } }],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'OBJECT',
+        properties: { size: nullableEnum(sizes) },
+        required: ['size'],
+      },
+    },
+  })
+  for (const model of modelsToTry()) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
+    try {
+      const res = await fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody,
+      })
+      if (!res.ok) {
+        if (RETRYABLE_STATUS.has(res.status)) continue
+        return undefined
+      }
+      const body = (await res.json()) as GeminiBody
+      const text = body.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || ''
+      const parsed = JSON.parse(text) as { size?: string | null }
+      const size = parsed.size?.trim()
+      activeModel = model
+      return size && sizes.includes(size) ? size : undefined
+    } catch {
+      return undefined
+    }
+  }
+  return undefined
+}
+
 export const geminiProvider: IdentifyProvider = {
   id: 'gemini',
   order: 3,
@@ -180,7 +228,7 @@ export const geminiProvider: IdentifyProvider = {
       id: 'gemini',
       order: 3,
       name: 'Gemini',
-      returns: 'Catalog match plus grade, size, stage, traits',
+      returns: 'Catalog match plus size, stage, traits',
       docsUrl: DOCS_URL,
       keySet: Boolean(key),
       status: key ? 'ready' : 'missingKey',
@@ -199,7 +247,7 @@ export const geminiProvider: IdentifyProvider = {
     const prompt = [
       'Identify the plant in the image for a greenhouse marketplace catalog.',
       'Pick the best matching catalog category and subcategory ids when possible.',
-      'Estimate quality (grade), size, stage, and trait option ids only from the allowed enums.',
+      'Estimate size, stage, and trait option ids only from the allowed enums. Do not assign a grade.',
       'If unsure about a field, use an empty string or omit it.',
       'Set isPlant false when the image is not a plant.',
       '',

@@ -6,6 +6,7 @@ import {
   liveUnavailableRecord,
   mockErrorRecord,
   mockMatchRecord,
+  liveNotInCatalogRecord,
   mockNotInCatalogRecord,
   mockNotPlantRecord,
 } from '../../identifyFixtures'
@@ -32,6 +33,8 @@ export const MockMatch = () => <IdentifyResult record={mockMatchRecord} />
 export const LiveFallback = () => <IdentifyResult record={liveFallbackRecord} />
 
 export const NotInCatalog = () => <IdentifyResult record={mockNotInCatalogRecord} />
+
+export const LiveNotInCatalog = () => <IdentifyResult record={liveNotInCatalogRecord} />
 
 export const NotAPlant = () => <IdentifyResult record={mockNotPlantRecord} />
 

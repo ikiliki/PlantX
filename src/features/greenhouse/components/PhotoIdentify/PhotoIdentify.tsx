@@ -255,7 +255,11 @@ export function PhotoIdentify({
         mode={selected.diagnosis?.mode}
         tried={selected.tried ?? []}
         notice={notice}
+        onRemove={max <= 1 ? () => remove(selected.id) : undefined}
+        removeLabel={t.addPlant.removePhoto.replace('{n}', '1')}
       />
+      {max > 1 && (
+      <>
       <Strip aria-label={t.addPlant.photoStrip.replace('{n}', String(scans.length)).replace('{max}', String(max))}>
         {scans.map((scan, index) => {
           const label = t.addPlant.stickerPhoto.replace('{n}', String(index + 1))
@@ -290,10 +294,10 @@ export function PhotoIdentify({
       <StripHint>
         {room > 0
           ? t.addPlant.morePhotosHint
-          : max > 1
-            ? t.addPlant.maxPhotosHint.replace('{max}', String(max))
-            : t.addPlant.maxPhotosHintOne}
+          : t.addPlant.maxPhotosHint.replace('{max}', String(max))}
       </StripHint>
+      </>
+      )}
     </Root>
   )
 }

@@ -9,7 +9,7 @@ import { createCatalog } from '../../../../mock/catalog'
 import { AREAS, areaById, greenhousePlace } from '../../../../mock/locations'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { useStore } from '../../../../mock/store'
-import type { Diagnosis, PlantClassDraft, QualityGrade, SizeBand, StageBand } from '../../../../mock/types'
+import type { Diagnosis, PlantClassDraft, SizeBand, StageBand } from '../../../../mock/types'
 import { catalogName, optionLabel, propertiesForPlant } from '../../../catalog/catalog'
 import {
   ADD_PLANT_UPLOAD_LIMIT,
@@ -21,7 +21,6 @@ import {
 import {
   catalogChoicePhoto,
   emptyClassDraft,
-  gradeChoices,
   narrowDraft,
   sizeChoices,
   stageChoices,
@@ -111,7 +110,6 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const followsAi = draftMatchesDiagnosis(draft, ai)
 
   const varieties = subcategoryChoices(catalog, draft)
-  const grades = gradeChoices(catalog, draft)
   const sizes = sizeChoices(catalog, draft)
   const stages = stageChoices(catalog, draft)
   const requiredExtra = propertiesForPlant(catalog, draft.categoryId, draft.subcategoryId, true).filter(
@@ -170,7 +168,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
 
   const identityReady = Boolean(draft.categoryId) && (varieties.length === 0 || Boolean(draft.subcategoryId))
   const specsReady =
-    Boolean(draft.quality && draft.size && draft.stage) && requiredExtra.every((item) => draft.traits[item.id])
+    Boolean(draft.size && draft.stage) && requiredExtra.every((item) => draft.traits[item.id])
   const detailsReady = Boolean(description.trim() && areaId && matched)
 
   const save = () => {
@@ -179,7 +177,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     const category = catalog.categories.find((item) => item.id === draft.categoryId)
     const species = db.species.find((item) => item.id === category?.speciesId)
     const sub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
-    if (!category || !species || !draft.quality || !draft.size || !draft.stage) return
+    if (!category || !species || !draft.size || !draft.stage) return
     const id = addGreenhousePlant({
       title: matched.name,
       titleHe: matched.nameHe,
@@ -376,38 +374,15 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             </StepHead>
             <Section>
               <ChoiceChips
-                label={t.admin.grade}
+                label={t.admin.size}
                 required
-                value={draft.quality}
-                suggestedId={aiDraft?.quality || undefined}
+                value={draft.size}
+                suggestedId={aiDraft?.size || undefined}
                 suggestedLabel={AI_MARK}
-                options={grades.map((grade) => ({
-                  id: grade,
-                  label: grade,
-                  hint: t.addPlant[`grade${grade}`],
-                }))}
-                onChange={(value) =>
-                  setClass({
-                    quality: value as QualityGrade | '',
-                    size: '',
-                    stage: '',
-                  })
-                }
+                options={sizes.map((size) => ({ id: size, label: size }))}
+                onChange={(value) => setClass({ size: value as SizeBand | '', stage: '' })}
               />
             </Section>
-            {draft.quality ? (
-              <Section key={`size-${draft.quality}`}>
-                <ChoiceChips
-                  label={t.admin.size}
-                  required
-                  value={draft.size}
-                  suggestedId={aiDraft?.size || undefined}
-                  suggestedLabel={AI_MARK}
-                  options={sizes.map((size) => ({ id: size, label: size }))}
-                  onChange={(value) => setClass({ size: value as SizeBand | '', stage: '' })}
-                />
-              </Section>
-            ) : null}
             {draft.size ? (
               <Section key={`stage-${draft.size}`}>
                 <ChoiceChips
@@ -524,7 +499,6 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 },
               ]
             : []),
-          { label: t.admin.grade, value: draft.quality, step: 'specs' },
           { label: t.admin.size, value: draft.size, step: 'specs' },
           {
             label: t.admin.stage,

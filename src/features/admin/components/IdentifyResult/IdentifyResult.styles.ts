@@ -16,6 +16,11 @@ export const Badges = styled.div`
   gap: 6px;
 `
 
+export const Note = styled.span`
+  color: ${theme.colors.muted};
+  font-size: 13px;
+`
+
 export const Answer = styled.div`
   display: grid;
   gap: 2px;

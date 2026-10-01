@@ -11,6 +11,7 @@ import type { FeatureId, PageId, PlacementId, SystemConfig } from '../../../../s
 import type { Activity } from '../../features/activity/activity.types.ts'
 import type { PendingTransaction, PendingUser } from '../../features/users/users.types.ts'
 import type { PlantxStore } from '../store.ts'
+import { supabaseCatalogSuggestions } from './supabaseCatalogSuggestions.ts'
 import { supabaseIdentifyRequests } from './supabaseIdentifyRequests.ts'
 import { supabaseIdentifySettings } from './supabaseIdentifySettings.ts'
 
@@ -61,6 +62,14 @@ export function createSupabaseStore(): PlantxStore {
     allowExitOnIdle: !local,
     ssl: local || url.includes('sslmode=') ? undefined : { rejectUnauthorized: false },
   })
+
+  void pool
+    .query(`
+      alter table plants drop constraint if exists plants_quality_check;
+      alter table plants alter column quality drop not null;
+      alter table plants add constraint plants_quality_check check (quality is null or quality in ('A', 'B', 'C'));
+    `)
+    .catch(() => undefined)
 
   async function rows(client: PoolClient, sql: string, params: unknown[] = []) {
     const result = await client.query(sql, params)
@@ -136,6 +145,7 @@ export function createSupabaseStore(): PlantxStore {
     },
     identifyRequests: supabaseIdentifyRequests(pool),
     identifySettings: supabaseIdentifySettings(pool),
+    catalogSuggestions: supabaseCatalogSuggestions(pool),
   }
 
   async function listUsers(client: PoolClient): Promise<User[]> {
@@ -880,7 +890,7 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.quantity,
     plant.sizeGrade,
     plant.sizeBand ?? null,
-    plant.quality,
+    plant.quality || null,
     plant.rooting,
     plant.stage ?? null,
     plant.potFormat ?? null,

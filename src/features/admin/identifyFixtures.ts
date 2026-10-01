@@ -87,6 +87,21 @@ export const mockNotInCatalogRecord: IdentifyRequestRecord = {
   },
 }
 
+export const liveNotInCatalogRecord: IdentifyRequestRecord = {
+  ...mockNotInCatalogRecord,
+  id: 'idr-live-notincatalog',
+  source: 'playground',
+  mode: 'live',
+  target: 'chain',
+  scenario: undefined,
+  durationMs: 1840,
+  diagnosis: {
+    ...mockNotInCatalogRecord.diagnosis!,
+    mode: 'live',
+    provider: 'plantnet',
+  },
+}
+
 export const mockNotPlantRecord: IdentifyRequestRecord = {
   id: 'idr-mock-notplant',
   createdAt: '2026-09-30T16:40:00.000Z',

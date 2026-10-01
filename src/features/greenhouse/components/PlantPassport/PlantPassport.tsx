@@ -292,10 +292,12 @@ export function PlantPassport({
         <StatSpacer />
 
         <AsideStats>
-          <AsideStat title={gradeLabel} data-grade-source={communityGrade ? 'community' : 'catalog'}>
-            <dt>{gradeLabel}</dt>
-            <dd>{gradeLetter}</dd>
-          </AsideStat>
+          {gradeLetter ? (
+            <AsideStat title={gradeLabel} data-grade-source={communityGrade ? 'community' : 'catalog'}>
+              <dt>{gradeLabel}</dt>
+              <dd>{gradeLetter}</dd>
+            </AsideStat>
+          ) : null}
           {!marketOn ? null : average == null ? (
             <AsideStat>
               <dt>{t.passport.averagePrice}</dt>

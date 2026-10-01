@@ -89,7 +89,7 @@ export function SellPage({
   const [title, setTitle] = useState(preset?.title ?? 'Rooted cuttings batch')
   const [titleHe, setTitleHe] = useState(preset?.titleHe ?? 'מנת ייחורים מושרשים')
   const [qty, setQty] = useState(preset?.quantity ?? 25)
-  const [quality, setQuality] = useState<QualityGrade>(preset?.quality ?? 'B')
+  const [quality, setQuality] = useState<QualityGrade>(preset?.quality || 'B')
   const [rooting, setRooting] = useState<'rooted' | 'unrooted' | 'established'>(
     preset?.rooting ?? 'rooted',
   )

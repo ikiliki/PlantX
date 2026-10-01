@@ -71,7 +71,7 @@ export function ListingCard({ listing, compact = false }: { listing: Listing; co
           </strong>
           <Meta>
             <span>{plant.code}</span>
-            <GradeChip grade={plant.quality} />
+            {plant.quality ? <GradeChip grade={plant.quality} /> : null}
             <span>
               {plant.rooting === 'rooted'
                 ? t.market.rooted

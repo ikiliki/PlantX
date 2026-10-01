@@ -9,7 +9,7 @@ export type DictClass = {
   variety: string
   varietyHe: string
   varietyCode: string
-  quality: QualityGrade
+  quality: QualityGrade | ''
   size: SizeBand
   stage: StageBand
   author: string

@@ -131,7 +131,8 @@ export interface Plant {
   quantity: number
   sizeGrade: string
   sizeBand?: SizeBand
-  quality: QualityGrade
+  /** Empty until the grade feature assigns a letter. */
+  quality: QualityGrade | ''
   rooting: RootingStatus
   stage?: StageBand
   potFormat?: string
@@ -414,6 +415,18 @@ export type IdentifyTried = {
   provider: IdentifyProviderId
   reason: IdentifySkipReason
   detail?: string
+}
+
+/** A plant identify could not match. Only the admin catalog sees these. */
+export type CatalogSuggestion = {
+  id: string
+  createdAt: string
+  name: string
+  scientificName: string
+  genus: string
+  commonNames: string[]
+  provider: string
+  hits: number
 }
 
 export type Diagnosis = {

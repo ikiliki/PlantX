@@ -252,6 +252,18 @@ export function fetchCatalogOutcome() {
   return requestOutcome<{ catalog: import('./types').Catalog }>('/api/catalog')
 }
 
+export function fetchCatalogSuggestions() {
+  return request<{ suggestions: import('./types').CatalogSuggestion[] }>('/api/catalog/suggestions').then(
+    (body) => body?.suggestions ?? null,
+  )
+}
+
+export function dismissCatalogSuggestion(id: string) {
+  return request<{ ok: boolean }>(`/api/catalog/suggestions/${encodeURIComponent(id)}/dismiss`, {
+    method: 'POST',
+  })
+}
+
 export function putCatalog(catalog: import('./types').Catalog) {
   return request<{ catalog: import('./types').Catalog }>('/api/catalog', {
     method: 'PUT',

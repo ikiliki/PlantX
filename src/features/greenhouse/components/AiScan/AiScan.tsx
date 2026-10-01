@@ -16,12 +16,14 @@ import {
   FactLabel,
   FactValue,
   Facts,
+  Close,
   Frame,
   Head,
   Layout,
   Node,
   Notice,
   Panel,
+  PhotoWell,
   Ring,
   RingValue,
   Root,
@@ -101,6 +103,8 @@ export function AiScan({
   mode,
   tried = [],
   notice,
+  onRemove,
+  removeLabel,
 }: {
   photo: string
   state: AiScanState
@@ -110,6 +114,9 @@ export function AiScan({
   mode?: IdentifyMode
   tried?: IdentifyTried[]
   notice?: { title: string; body: string }
+  /** Clears this photo. Used when there is no thumbnail strip under the scan. */
+  onRemove?: () => void
+  removeLabel?: string
 }) {
   const { t } = useI18n()
   const stages = [t.addPlant.scanStage1, t.addPlant.scanStage2, t.addPlant.scanStage3]
@@ -125,6 +132,7 @@ export function AiScan({
   return (
     <Root data-state={state}>
       <Layout>
+        <PhotoWell>
         <Frame $state={state}>
           <PlantImage src={photo} fallbackSrc={photo} alt="" />
           {state === 'scanning' ? (
@@ -150,6 +158,12 @@ export function AiScan({
           {state === 'answered' && attributed ? <Stamp $tone="ok">✦ {t.addPlant.stampVerified}</Stamp> : null}
           {state === 'unverified' ? <Stamp $tone="warn">{t.addPlant.stampUnverified}</Stamp> : null}
         </Frame>
+          {onRemove ? (
+            <Close type="button" aria-label={removeLabel} onClick={onRemove}>
+              ×
+            </Close>
+          ) : null}
+        </PhotoWell>
 
         <Panel aria-live="polite">
           {state === 'scanning' ? (

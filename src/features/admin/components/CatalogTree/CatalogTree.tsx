@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { dismissCatalogSuggestion } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
 import type { CatalogCategory, CatalogProperty, CatalogSubcategory } from '../../../../mock/types'
 import {
@@ -15,6 +16,7 @@ import {
   SYSTEM_PROPERTY_IDS,
 } from '../../catalogMutations'
 import { AdminTable } from '../AdminTable/AdminTable'
+import { CatalogSuggestions, tickerFromPlant } from '../CatalogSuggestions/CatalogSuggestions'
 import { CategoryEditorDialog } from '../CatalogEditor/CategoryEditorDialog'
 import { PropertyEditorDialog } from '../CatalogEditor/PropertyEditorDialog'
 import { SubcategoryEditorDialog } from '../CatalogEditor/SubcategoryEditorDialog'
@@ -26,7 +28,12 @@ type PropertyScope =
 
 type DialogState =
   | { kind: 'none' }
-  | { kind: 'category'; item?: CatalogCategory }
+  | {
+      kind: 'category'
+      item?: CatalogCategory
+      suggestionId?: string
+      seed?: { name: string; nameHe: string; ticker: string }
+    }
   | { kind: 'subcategory'; categoryId: string; item?: CatalogSubcategory }
   | { kind: 'properties'; scope: PropertyScope }
   | { kind: 'property'; scope: PropertyScope; item?: CatalogProperty }
@@ -49,6 +56,7 @@ export function CatalogTree({
     onlyCategoryId && startExpanded ? [onlyCategoryId] : [],
   )
   const [dialog, setDialog] = useState<DialogState>({ kind: 'none' })
+  const [suggestionTick, setSuggestionTick] = useState(0)
 
   const scopeLabel = (scope: PropertyScope) => {
     if (scope.level === 'category') {
@@ -68,6 +76,22 @@ export function CatalogTree({
 
   return (
     <>
+      {onlyCategoryId ? null : (
+        <CatalogSuggestions
+          refreshKey={suggestionTick}
+          onAdd={(suggestion) =>
+            setDialog({
+              kind: 'category',
+              suggestionId: suggestion.id,
+              seed: {
+                name: suggestion.name,
+                nameHe: '',
+                ticker: tickerFromPlant(suggestion.genus, suggestion.scientificName),
+              },
+            })
+          }
+        />
+      )}
       <AdminTable
         rows={categories}
         rowId={(row) => row.id}
@@ -143,10 +167,14 @@ export function CatalogTree({
 
       {dialog.kind === 'category' && (
         <CategoryEditorDialog
-          initial={dialog.item}
+          initial={dialog.item ?? dialog.seed}
           onClose={close}
           onConfirm={(draft) => {
             commitCatalog(({ catalog: cat, species }) => upsertCategory(cat, species, draft))
+            if (dialog.suggestionId) {
+              const id = dialog.suggestionId
+              void dismissCatalogSuggestion(id).then(() => setSuggestionTick((n) => n + 1))
+            }
             close()
           }}
           onDelete={

@@ -31,7 +31,7 @@ export function CategoryEditorDialog({
   onDelete,
   onClose,
 }: {
-  initial?: CatalogCategory
+  initial?: Partial<Pick<CatalogCategory, 'id' | 'name' | 'nameHe' | 'ticker' | 'photo'>>
   onConfirm: (draft: CategoryDraft) => void
   onDelete?: () => void
   onClose: () => void
@@ -54,7 +54,7 @@ export function CategoryEditorDialog({
         <Close type="button" onClick={onClose} aria-label={t.common.cancel}>
           ×
         </Close>
-        <Title>{initial ? t.admin.editCategory : t.admin.addCategory}</Title>
+        <Title>{initial?.id ? t.admin.editCategory : t.admin.addCategory}</Title>
         <form onSubmit={submit}>
           <FormGrid>
             <input

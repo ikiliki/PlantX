@@ -141,7 +141,7 @@ export function synthesizeClass(
   catalog: Catalog,
   draft: PlantClassDraft,
 ): DictClass | undefined {
-  if (!draft.categoryId || !draft.quality || !draft.size || !draft.stage) return undefined
+  if (!draft.categoryId || !draft.size || !draft.stage) return undefined
   const category = categoryById(catalog, draft.categoryId)
   if (!category) return undefined
   const subs = subcategoriesFor(catalog, draft.categoryId)
@@ -199,10 +199,6 @@ export function narrowDraft(catalog: Catalog, draft: PlantClassDraft): PlantClas
   const subs = subcategoryChoices(catalog, next)
   if (!subs.some((item) => item.id === next.subcategoryId)) {
     next.subcategoryId = subs.length === 1 ? subs[0].id : ''
-  }
-  const grades = gradeChoices(catalog, next)
-  if (!next.quality || !grades.includes(next.quality)) {
-    next.quality = grades.length === 1 ? grades[0] : ''
   }
   const sizes = sizeChoices(catalog, next)
   if (!next.size || !sizes.includes(next.size)) {

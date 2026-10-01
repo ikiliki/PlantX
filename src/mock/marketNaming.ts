@@ -50,24 +50,26 @@ export function inferSizeBand(sizeGrade: string, potSizeCm?: number, stemLengthC
 export function buildMarketCode(parts: {
   ticker: string
   varietyCode: string
-  quality: QualityGrade
+  quality: QualityGrade | ''
   size: SizeBand
   stage: StageBand
 }) {
   const stageShort = STAGE_LABEL[parts.stage].short
-  return `${parts.ticker}-${parts.varietyCode}-${parts.quality}-${parts.size}-${stageShort}`
+  const grade = parts.quality ? `${parts.quality}-` : ''
+  return `${parts.ticker}-${parts.varietyCode}-${grade}${parts.size}-${stageShort}`
 }
 
 export function buildMarketDisplay(parts: {
   species: string
   variety: string
-  quality: QualityGrade
+  quality: QualityGrade | ''
   size: SizeBand
   stage: StageBand
   locale: 'he' | 'en'
 }) {
   const stage = STAGE_LABEL[parts.stage][parts.locale]
-  return `${parts.species} ${parts.variety} · ${parts.quality} · ${parts.size} · ${stage}`
+  const grade = parts.quality ? `${parts.quality} · ` : ''
+  return `${parts.species} ${parts.variety} · ${grade}${parts.size} · ${stage}`
 }
 
 export function varietyCode(variety: string) {

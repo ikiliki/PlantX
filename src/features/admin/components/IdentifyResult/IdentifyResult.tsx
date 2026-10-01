@@ -15,7 +15,7 @@ import {
   targetLabelKey,
 } from '../../identifyLabels'
 import { AdminDetailGrid } from '../AdminTable/AdminTable'
-import { Answer, Badges, Block, Problem, Raw, Root, Subhead, TriedList } from './IdentifyResult.styles'
+import { Answer, Badges, Block, Note, Problem, Raw, Root, Subhead, TriedList } from './IdentifyResult.styles'
 
 type DetailItem = { label: string; value: ReactNode }
 
@@ -121,6 +121,7 @@ export function IdentifyResult({
           ) : (
             <Badges>
               <Badge $tone="warn">{t.admin.apisNotMapped}</Badge>
+              {record.mode === 'live' ? <Note>{t.admin.apisSuggestedCategory}</Note> : null}
             </Badges>
           )}
         </Block>

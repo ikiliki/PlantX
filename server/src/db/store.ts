@@ -1,5 +1,6 @@
 import type {
   Catalog,
+  CatalogSuggestion,
   IdentifyFieldChecks,
   IdentifyMode,
   IdentifyProviderId,
@@ -45,6 +46,18 @@ export interface PlantxStore {
   catalog: {
     get(): Promise<Catalog>
     save(catalog: Catalog): Promise<void>
+  }
+  /** Identify hits that matched no category. Hidden from the grower. */
+  catalogSuggestions: {
+    listOpen(): Promise<CatalogSuggestion[]>
+    suggest(input: {
+      name: string
+      scientificName: string
+      genus: string
+      commonNames: string[]
+      provider: string
+    }): Promise<void>
+    dismiss(id: string): Promise<void>
   }
   system: {
     get(): Promise<Partial<SystemConfig> | null>

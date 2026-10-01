@@ -202,7 +202,7 @@ interface StoreApi {
     speciesId: string
     variety: string
     varietyHe: string
-    quality: QualityGrade
+    quality: QualityGrade | ''
     sizeBand: SizeBand
     stage: StageBand
     code: string

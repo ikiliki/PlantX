@@ -9,6 +9,7 @@ import type {
   IdentifySource,
   IdentifyTarget,
   IdentifyTried,
+  SizeBand,
 } from '../../../../src/mock/types.ts'
 import { getStore } from '../../db/index.ts'
 import { AppError, Errors } from '../../lib/errors.ts'
@@ -17,7 +18,7 @@ import { catalogService } from '../catalog/catalog.service.ts'
 import { IdentifyTimeoutError } from './http.ts'
 import { mapDiagnosis } from './mapDiagnosis.ts'
 import { mockIdentify } from './mock/index.ts'
-import { geminiProvider } from './providers/gemini.ts'
+import { geminiProvider, guessPlantSize } from './providers/gemini.ts'
 import { plantidProvider } from './providers/plantid.ts'
 import { plantnetProvider } from './providers/plantnet.ts'
 import type { IdentifyProvider, RawSuggestion } from './types.ts'
@@ -123,6 +124,21 @@ async function statusOf(
   return { ...(await provider.status()), enabled: flags[provider.id] ?? true }
 }
 
+/** Add Plant and the admin playground share this on a live answer. Mock runs do not file a row. */
+function noteMissingCategory(raw: RawSuggestion) {
+  const name = raw.commonNames.find(Boolean) || raw.scientificName || raw.genus || ''
+  if (!name.trim()) return
+  void getStore()
+    .catalogSuggestions.suggest({
+      name: name.trim(),
+      scientificName: raw.scientificName.trim(),
+      genus: raw.genus?.trim() || '',
+      commonNames: raw.commonNames.filter(Boolean).slice(0, 6),
+      provider: raw.provider,
+    })
+    .catch((err) => logger.warn('catalog suggestion skipped', undefined, err))
+}
+
 export const identifyService = {
   async providersStatus(): Promise<IdentifyProviderStatus[]> {
     const flags = await enabledFlags()
@@ -156,7 +172,18 @@ export const identifyService = {
 
       try {
         const raw = await call(provider, image, catalog, run)
-        return toDiagnosis(raw, catalog, run.mode, tried)
+        const diagnosis = toDiagnosis(raw, catalog, run.mode, tried)
+        if (raw.isPlant && !diagnosis.draft.size) {
+          const guessed =
+            run.mode === 'mock'
+              ? catalog.properties.find((item) => item.id === 'size')?.options[0]?.id
+              : await guessPlantSize(image, catalog).catch(() => undefined)
+          if (guessed && catalog.properties.some((item) => item.id === 'size' && item.options.some((opt) => opt.id === guessed))) {
+            diagnosis.draft.size = guessed as SizeBand
+          }
+        }
+        if (run.mode === 'live' && raw.isPlant && !diagnosis.draft.categoryId) void noteMissingCategory(raw)
+        return diagnosis
       } catch (err) {
         if (err instanceof IdentifyTimeoutError) {
           tried.push(toTried(provider, 'timeout', err.message))

@@ -108,7 +108,7 @@ export function listingMatches(
     const subId = plant.subcategoryId ?? (catalog ? subcategoryOfPlant(catalog, plant)?.id : undefined)
     if (!subId || !filters.subcategoryIds.includes(subId)) return false
   }
-  if (filters.grades.length > 0 && !filters.grades.includes(plant.quality)) return false
+  if (filters.grades.length > 0 && (!plant.quality || !filters.grades.includes(plant.quality))) return false
   if (filters.sizes.length > 0 && (!plant.sizeBand || !filters.sizes.includes(plant.sizeBand))) return false
   if (filters.stages.length > 0 && (!plant.stage || !filters.stages.includes(plant.stage))) return false
   if (!priceMatches(listing.price, filters.priceBand)) return false

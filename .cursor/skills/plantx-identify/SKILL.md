@@ -46,7 +46,7 @@ UI: `IdentifyBadge` (plant), `PhotoCheckSticker` (one photo), `PhotoChecks` (pho
 
 ## Mapper
 
-Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategory: name / nameHe / code. Grade, size, stage, traits: only existing option ids (Gemini only).
+Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategory: name / nameHe / code. Size, stage, and traits: only existing option ids. Grade is left empty; growers grade later. When the winner left size empty, mock uses the first size option and live calls `guessPlantSize` (Gemini, size only, errors swallowed). A live answer (Add Plant or the admin playground) that is a plant with no category writes `catalog_suggestions` (same scientific name increments hits). Mock runs do not. The diagnosis JSON does not mention it. Admin catalog lists open rows via `GET /api/catalog/suggestions`; dismiss is admin-only. A missing table is created at runtime, and a failed write is a warning.
 
 ## Keys
 

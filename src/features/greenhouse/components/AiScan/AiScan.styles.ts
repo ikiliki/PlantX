@@ -76,10 +76,37 @@ export const Layout = styled.div`
   }
 `
 
-export const Frame = styled.div<{ $state: AiScanState }>`
+export const PhotoWell = styled.div`
   position: relative;
   justify-self: center;
   width: min(280px, 100%);
+`
+
+export const Close = styled.button`
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.forest};
+  color: ${theme.colors.creamCard};
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: ${theme.shadow.soft};
+`
+
+export const Frame = styled.div<{ $state: AiScanState }>`
+  position: relative;
+  width: 100%;
   aspect-ratio: 1;
   border-radius: ${theme.radii.lg};
   overflow: hidden;

@@ -14,7 +14,13 @@ export function mockDiagnosis(catalog: Catalog): Diagnosis {
     commonNames: category ? [category.name] : [],
     probability: 0.91,
     isPlant: true,
-    draft: category ? { categoryId: category.id, subcategoryId: sub?.id ?? '' } : {},
+    draft: category
+      ? {
+          categoryId: category.id,
+          subcategoryId: sub?.id ?? '',
+          size: (catalog.properties.find((item) => item.id === 'size')?.options[0]?.id ?? '') as Diagnosis['draft']['size'],
+        }
+      : {},
     tried: [],
   }
 }
