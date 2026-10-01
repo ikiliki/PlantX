@@ -1,122 +1,140 @@
-import { Link } from 'react-router-dom'
-import { Grid, PageHeader } from '../../app/AppShell/AppShell.styles'
-import { Badge } from '../../components/Badge/Badge'
-import { Button } from '../../components/Button/Button'
-import { Card, CardBody, CardMedia } from '../../components/Card/Card'
-import { EmptyState } from '../../components/EmptyState/EmptyState'
-import { PlantImage } from '../../components/PlantImage/PlantImage'
+import { useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
+import { PageGate } from '../../components/PageGate/PageGate'
+import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
+import { CollectionBoard, greenhouseFilter } from '../../features/greenhouse/components/CollectionBoard/CollectionBoard'
+import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
+import { GreenhouseWallet } from '../../features/greenhouse/components/GreenhouseWallet/GreenhouseWallet'
+import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
+import { useSell } from '../../features/sell/SellProvider'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
-import { theme } from '../../theme/tokens'
+import { forAudience } from '../../theme/audience'
+import { isPlacementReady } from '../../theme/release'
+import type { ComponentView } from '../../theme/view'
+import { Description, Eyebrow, GuestAuth, Heading, HeadingCopy, Page } from './GreenhousePage.styles'
 
-export function GreenhousePage() {
-  const { db, currentUser } = useStore()
-  const { t, tr } = useI18n()
+const WIDGET_PLANTS = 2
 
-  if (!currentUser || currentUser.role === 'guest') {
-    return (
-      <div>
-        <PageHeader>
-          <h1>{t.greenhouse.title}</h1>
-        </PageHeader>
-        <EmptyState title={t.greenhouse.empty} hint={t.common.guestBlocked} />
-        <Link to="/claim">
-          <Button>{t.claim.title}</Button>
-        </Link>
-      </div>
-    )
+export function GreenhousePage({
+  view = 'page',
+  ownerId,
+  compact,
+}: {
+  view?: ComponentView
+  /** When set, show the public greenhouse + listings shelves for that owner. */
+  ownerId?: string
+  compact?: boolean
+}) {
+  if (ownerId) {
+    return <GreenhousePublic ownerId={ownerId} compact={compact ?? view === 'widget'} />
   }
+  return <GreenhouseOwner view={view} />
+}
 
-  const mine = db.plants.filter((p) => p.ownerId === currentUser.id)
-  const owned = mine.filter((p) => p.status === 'owned' || p.status === 'listed')
-  const committed = mine.filter((p) => p.status === 'committed')
-  const sold = mine.filter((p) => p.status === 'sold' || p.status === 'recovered')
-  const myCommitments = db.commitments.filter((c) => c.growerId === currentUser.id)
+function GreenhouseOwner({ view }: { view: ComponentView }) {
+  const { db, currentUser, signedIn, refreshPhoto, confirmWater } = useStore()
+  const { openSell } = useSell()
+  const { t, tr, formatMoney } = useI18n()
+  const navigate = useNavigate()
+  const [adding, setAdding] = useState(false)
+  const [params, setParams] = useSearchParams()
+  const filter = greenhouseFilter(params.get('tab'))
+  const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
+
+  const mine = db.plants.filter((p) => p.ownerId === ownerId)
+  const living = mine.filter((p) => p.status === 'owned' || p.status === 'listed')
+  const sold = mine.filter((p) => p.status === 'sold')
+
   const portfolioValue = mine.reduce((sum, p) => {
     const mc = db.marketClasses.find((m) => m.id === p.marketClassId)
     return sum + (mc ? mc.lastPrice * p.quantity : 0)
   }, 0)
-  const committedValue = myCommitments.reduce((sum, c) => sum + c.offeredPrice * c.quantity, 0)
 
-  const PlantTile = ({ id }: { id: string }) => {
-    const p = db.plants.find((x) => x.id === id)
-    if (!p) return null
-    return (
-      <Link to={`/plants/${p.id}`}>
-        <Card $pad={false} $clickable>
-          <CardMedia>
-            <PlantImage src={p.photos[0]} alt="" />
-          </CardMedia>
-          <CardBody>
-            <strong>{tr(p.title, p.titleHe)}</strong>
-            {p.marketClassId && (
-              <div style={{ fontSize: 12, color: theme.colors.muted, fontWeight: 700 }}>
-                {db.marketClasses.find((m) => m.id === p.marketClassId)?.code}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <Badge $tone="muted">{p.status}</Badge>
-              {(() => {
-                const mc = db.marketClasses.find((m) => m.id === p.marketClassId)
-                if (!mc) return null
-                return (
-                  <Badge $tone="lime">
-                    ₪{(mc.lastPrice * p.quantity).toLocaleString()}
-                  </Badge>
-                )
-              })()}
-            </div>
-          </CardBody>
-        </Card>
-      </Link>
+  const activity = mine
+    .flatMap((p) =>
+      p.history.map((h) => ({
+        ...h,
+        plant: tr(p.title, p.titleHe),
+        plantId: p.id,
+        photo: p.photos[0],
+      })),
     )
+    .sort((a, b) => (a.at > b.at ? 1 : a.at < b.at ? -1 : 0))
+    .slice(-40)
+    .map((entry) => ({
+      at: entry.at,
+      plant: entry.plant,
+      plantId: entry.plantId,
+      photo: entry.photo,
+      label: tr(entry.label, entry.labelHe),
+    }))
+
+  const setFilter = (next: typeof filter) => {
+    const nextParams = new URLSearchParams(params)
+    if (next === 'all') nextParams.delete('tab')
+    else nextParams.set('tab', next)
+    setParams(nextParams, { replace: true })
   }
 
-  return (
-    <div>
-      <PageHeader>
-        <div>
+  const board = (
+    <Page>
+      <Heading>
+        <HeadingCopy>
+          <Eyebrow>{t.greenhouse.eyebrow}</Eyebrow>
           <h1>{t.greenhouse.title}</h1>
-          <p style={{ color: theme.colors.muted }}>
-            {t.exchange.portfolio}: <strong>₪{portfolioValue.toLocaleString()}</strong>
-            {committedValue > 0 && ` · ${t.greenhouse.commitments} ₪${committedValue.toLocaleString()}`}
-          </p>
-          <p style={{ color: theme.colors.muted, fontSize: 13 }}>{t.passport.disclaimer}</p>
-        </div>
-        <Link to="/sell">
-          <Button>{t.greenhouse.propagate}</Button>
-        </Link>
-      </PageHeader>
+          <Description>{t.greenhouse.description}</Description>
+        </HeadingCopy>
+        {view === 'page' && (
+          <GreenhouseWallet
+            title={t.greenhouse.wallet}
+            value={formatMoney(portfolioValue)}
+            valueLabel={t.exchange.portfolio}
+            collection={String(living.length)}
+            collectionLabel={t.greenhouse.collectionCount}
+          />
+        )}
+      </Heading>
 
-      <h2 style={{ marginBottom: 12 }}>{t.greenhouse.owned}</h2>
-      {owned.length === 0 ? (
-        <EmptyState title={t.greenhouse.empty} />
-      ) : (
-        <Grid>{owned.map((p) => <PlantTile key={p.id} id={p.id} />)}</Grid>
-      )}
+      <CollectionBoard
+        plants={view === 'widget' ? living.slice(0, WIDGET_PLANTS) : living}
+        sold={view === 'widget' ? [] : sold}
+        activity={view === 'widget' ? [] : activity}
+        filter={filter}
+        onFilter={setFilter}
+        onAdd={() => setAdding(true)}
+        onList={openSell}
+        onRefresh={refreshPhoto}
+        onWater={confirmWater}
+        compact={view === 'widget'}
+      />
 
-      <h2 style={{ margin: '24px 0 12px' }}>{t.greenhouse.commitments}</h2>
-      <div style={{ display: 'grid', gap: 8, marginBottom: 16 }}>
-        {myCommitments.map((c) => {
-          const d = db.demands.find((x) => x.id === c.demandId)
-          return (
-            <Card key={c.id}>
-              <Link to={`/demand/${c.demandId}`}>
-                <strong>{d ? tr(d.title, d.titleHe) : c.demandId}</strong>
-              </Link>
-              <div style={{ color: theme.colors.muted, fontSize: 14 }}>
-                ×{c.quantity} · ₪{c.offeredPrice} · {c.status}
-              </div>
-            </Card>
-          )
-        })}
-        {committed.map((p) => (
-          <PlantTile key={p.id} id={p.id} />
-        ))}
-      </div>
+      {adding && <AddPlantDialog onClose={() => setAdding(false)} />}
+    </Page>
+  )
 
-      <h2 style={{ marginBottom: 12 }}>{t.greenhouse.sold}</h2>
-      <Grid>{sold.map((p) => <PlantTile key={p.id} id={p.id} />)}</Grid>
-    </div>
+  return (
+    <PageGate pageId="greenhouse" title={t.greenhouse.title}>
+      <FeatureGate placement="greenhouse.board" title={t.greenhouse.title}>
+        {!isPlacementReady(db.system, 'greenhouse.board')
+          ? board
+          : forAudience(signedIn, {
+              guest: (
+                <Page>
+                  <GuestAuth>
+                    <AuthPanel
+                      reason="buy"
+                      dialog
+                      titleId="greenhouse-auth-title"
+                      onSuccess={() => navigate('/greenhouse', { replace: true })}
+                    />
+                  </GuestAuth>
+                </Page>
+              ),
+              signedIn: board,
+            })}
+      </FeatureGate>
+    </PageGate>
   )
 }

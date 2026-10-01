@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ptx-seed-1",
+    "kind": "purchase",
+    "userId": "u-maya",
+    "label": "Golden pothos · medium cutting",
+    "labelHe": "פוטוס זהוב · ייחור בינוני",
+    "amount": 45,
+    "createdAt": "2026-09-30T11:20:00.000Z",
+    "status": "pending"
+  },
+  {
+    "id": "ptx-seed-2",
+    "kind": "listing",
+    "userId": "u-daniel",
+    "label": "Monstera standard · XL mature",
+    "labelHe": "מונסטרה סטנדרט · XL בוגר",
+    "amount": 180,
+    "createdAt": "2026-09-30T16:05:00.000Z",
+    "status": "pending"
+  }
+]

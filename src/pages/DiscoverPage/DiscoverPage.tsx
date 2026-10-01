@@ -1,106 +1,83 @@
-import { Link } from 'react-router-dom'
-import styled from 'styled-components'
-import { Grid, PageHeader, SectionTitle } from '../../app/AppShell/AppShell.styles'
-import { Badge } from '../../components/Badge/Badge'
-import { Button } from '../../components/Button/Button'
-import { Card } from '../../components/Card/Card'
-import { DemandCard } from '../../features/demand/components/DemandCard/DemandCard'
-import { ListingCard } from '../../features/market/components/ListingCard/ListingCard'
+import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
+import { PageGate } from '../../components/PageGate/PageGate'
+import { GreenhouseLure } from '../../features/discover/components/GreenhouseLure/GreenhouseLure'
+import { FeedFilter } from '../../features/feed/components/FeedFilter/FeedFilter'
+import { FeedUpdate } from '../../features/feed/components/FeedUpdate/FeedUpdate'
+import { ShortcutRail } from '../../features/feed/components/HomeRails/HomeRails'
+import { MarketRail } from '../../features/feed/components/MarketRail/MarketRail'
+import { RankRail } from '../../features/feed/components/RankRail/RankRail'
+import { TopGreenhouses } from '../../features/feed/components/TopGreenhouses/TopGreenhouses'
+import { WikiRail } from '../../features/feed/components/WikiRail/WikiRail'
+import { useHomeFeed } from '../../features/feed/useHomeFeed'
+import { Reveal } from '../../components/Reveal/Reveal'
 import { useI18n } from '../../i18n/I18nProvider'
-import { useStore } from '../../mock/store'
-import { plantImages } from '../../mock/images'
-import { theme } from '../../theme/tokens'
+import type { ComponentView } from '../../theme/view'
+import { Empty, Feed, Layout, Rail, Shell, Widget } from './DiscoverPage.styles'
 
-const Hero = styled.section`
-  position: relative;
-  border-radius: ${theme.radii.lg};
-  overflow: hidden;
-  min-height: 280px;
-  display: grid;
-  align-items: end;
-  color: white;
-  margin-bottom: ${theme.space.lg};
-  background:
-    linear-gradient(180deg, rgba(11, 31, 20, 0.15), rgba(11, 31, 20, 0.88)),
-    url(${plantImages.hero})
-      center/cover;
-`
+const WIDGET_ITEMS = 2
 
-const HeroInner = styled.div`
-  padding: ${theme.space.xl};
-  display: grid;
-  gap: 12px;
-  max-width: 640px;
-  h1 {
-    font-size: clamp(28px, 5vw, 42px);
-    line-height: 1.15;
-  }
-`
-
-const Chips = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`
-
-export function DiscoverPage() {
-  const { db } = useStore()
+function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) {
   const { t } = useI18n()
-  const listings = db.listings.filter((l) => l.status === 'active').slice(0, 4)
-  const demands = db.demands.filter((d) => d.status === 'open' || d.status === 'sourcing')
+  const { items, hasMore, sentinelRef, friendsOnly } = useHomeFeed({ paged })
+  const empty = friendsOnly ? t.feed.friendsEmpty : t.feed.empty
+  const shown = view === 'widget' ? items.slice(0, WIDGET_ITEMS) : items
+
+  if (view === 'widget') {
+    return (
+      <Widget>
+        <FeedFilter />
+        {shown.length === 0 && <Empty>{empty}</Empty>}
+        {shown.map((item, index) => (
+          <Reveal key={item.id} index={index}>
+            <FeedUpdate update={item.update} />
+          </Reveal>
+        ))}
+      </Widget>
+    )
+  }
 
   return (
-    <div>
-      <Hero>
-        <HeroInner>
-          <Badge $tone="lime">{t.appName}</Badge>
-          <h1>{t.discover.hero}</h1>
-          <p style={{ opacity: 0.9 }}>{t.discover.sub}</p>
-          <p style={{ fontWeight: 700 }}>{t.growVerifyTrade}</p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link to="/market">
-              <Button type="button">{t.discover.viewAll}</Button>
-            </Link>
-            <Link to="/demand">
-              <Button type="button" variant="secondary">
-                {t.discover.viewDemand}
-              </Button>
-            </Link>
-          </div>
-        </HeroInner>
-      </Hero>
+    <Shell>
+      <Layout>
+        <Rail>
+          <GreenhouseLure />
+          <ShortcutRail />
+        </Rail>
+        <Feed>
+          <FeatureGate placement="home.feed" title={t.nav.home}>
+            <FeedFilter />
+            {items.length === 0 && <Empty>{empty}</Empty>}
+            {items.map((item, index) => (
+              <Reveal key={item.id} index={index}>
+                <FeedUpdate update={item.update} />
+              </Reveal>
+            ))}
+            {hasMore ? <div ref={sentinelRef} data-feed-more="" style={{ height: 1 }} /> : null}
+          </FeatureGate>
+        </Feed>
+        <Rail>
+          <TopGreenhouses />
+          <MarketRail />
+          <RankRail />
+          <WikiRail />
+        </Rail>
+      </Layout>
+    </Shell>
+  )
+}
 
-      <PageHeader>
-        <div>
-          <h1 style={{ fontSize: 22 }}>{t.discover.nearby}</h1>
-        </div>
-        <Link to="/market">
-          <Button variant="ghost" size="sm" type="button">
-            {t.discover.viewAll}
-          </Button>
-        </Link>
-      </PageHeader>
-      <Grid>{listings.map((l) => <ListingCard key={l.id} listing={l} />)}</Grid>
+export function DiscoverPage({ view = 'page', paged = true }: { view?: ComponentView; paged?: boolean }) {
+  const { t } = useI18n()
 
-      <SectionTitle>{t.discover.activeDemand}</SectionTitle>
-      <Grid $min="280px">{demands.map((d) => <DemandCard key={d.id} demand={d} />)}</Grid>
-
-      <SectionTitle>{t.discover.categories}</SectionTitle>
-      <Chips>
-        {db.species.map((s) => (
-          <Badge key={s.id} $tone="muted">
-            <Link to={`/market?species=${s.id}`}>{s.commonNameHe}</Link>
-          </Badge>
-        ))}
-      </Chips>
-
-      <SectionTitle>{t.discover.trust}</SectionTitle>
-      <Card>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-          <Badge $tone="lime">{t.market.verified}</Badge>
-          <span>★ ratings · fulfillment · pest-free declaration · local pickup first</span>
-        </div>
-      </Card>
-    </div>
+  return (
+    <PageGate pageId="home" title={t.nav.home}>
+      {view === 'widget' ? (
+        <FeatureGate placement="home.feed" title={t.nav.home}>
+          <DiscoverFeed view={view} paged={paged} />
+        </FeatureGate>
+      ) : (
+        <DiscoverFeed view={view} paged={paged} />
+      )}
+    </PageGate>
   )
 }

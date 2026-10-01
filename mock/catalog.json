@@ -1,0 +1,312 @@
+{
+  "categories": [
+    {
+      "id": "pothos",
+      "speciesId": "sp-pothos",
+      "name": "Pothos",
+      "nameHe": "פוטוס",
+      "ticker": "POT",
+      "photo": "/class-photos/pot-gold-a-xl-mat.jpg"
+    },
+    {
+      "id": "monstera",
+      "speciesId": "sp-monstera",
+      "name": "Monstera",
+      "nameHe": "מונסטרה",
+      "ticker": "MON",
+      "photo": "/class-photos/mon-std-a-xl-mat.jpg"
+    }
+  ],
+  "subcategories": [
+    {
+      "id": "pothos-gold",
+      "categoryId": "pothos",
+      "name": "Golden",
+      "nameHe": "זהוב",
+      "code": "GOLD"
+    },
+    {
+      "id": "pothos-njoy",
+      "categoryId": "pothos",
+      "name": "N'Joy",
+      "nameHe": "אן ג'וי",
+      "code": "NJOY"
+    },
+    {
+      "id": "monstera-std",
+      "categoryId": "monstera",
+      "name": "Standard",
+      "nameHe": "סטנדרט",
+      "code": "STD"
+    },
+    {
+      "id": "monstera-stmt",
+      "categoryId": "monstera",
+      "name": "Statement",
+      "nameHe": "מוקד",
+      "code": "STMT"
+    }
+  ],
+  "properties": [
+    {
+      "id": "grade",
+      "name": "Grade",
+      "nameHe": "דרגה",
+      "required": true,
+      "inMarketName": true,
+      "sign": "GRD",
+      "categoryIds": [],
+      "subcategoryIds": [],
+      "options": [
+        {
+          "id": "A",
+          "label": "A",
+          "labelHe": "A",
+          "sign": "A"
+        },
+        {
+          "id": "B",
+          "label": "B",
+          "labelHe": "B",
+          "sign": "B"
+        },
+        {
+          "id": "C",
+          "label": "C",
+          "labelHe": "C",
+          "sign": "C"
+        }
+      ]
+    },
+    {
+      "id": "size",
+      "name": "Size",
+      "nameHe": "גודל",
+      "required": true,
+      "inMarketName": false,
+      "sign": "",
+      "categoryIds": [],
+      "subcategoryIds": [],
+      "options": [
+        {
+          "id": "S",
+          "label": "S",
+          "labelHe": "S",
+          "sign": "S"
+        },
+        {
+          "id": "M",
+          "label": "M",
+          "labelHe": "M",
+          "sign": "M"
+        },
+        {
+          "id": "L",
+          "label": "L",
+          "labelHe": "L",
+          "sign": "L"
+        },
+        {
+          "id": "XL",
+          "label": "XL",
+          "labelHe": "XL",
+          "sign": "XL"
+        }
+      ]
+    },
+    {
+      "id": "stage",
+      "name": "Stage",
+      "nameHe": "שלב",
+      "required": true,
+      "inMarketName": false,
+      "sign": "",
+      "categoryIds": [],
+      "subcategoryIds": [],
+      "options": [
+        {
+          "id": "CUT",
+          "label": "Cutting",
+          "labelHe": "ייחור",
+          "sign": "CUT"
+        },
+        {
+          "id": "ROOTED",
+          "label": "Rooted",
+          "labelHe": "מושרש",
+          "sign": "R"
+        },
+        {
+          "id": "EST",
+          "label": "Established",
+          "labelHe": "מבוסס",
+          "sign": "EST"
+        },
+        {
+          "id": "MATURE",
+          "label": "Mature",
+          "labelHe": "בוגר",
+          "sign": "MAT"
+        }
+      ]
+    },
+    {
+      "id": "area",
+      "name": "Area",
+      "nameHe": "אזור",
+      "required": true,
+      "inMarketName": false,
+      "sign": "",
+      "categoryIds": [],
+      "subcategoryIds": [],
+      "options": [
+        {
+          "id": "tel-aviv",
+          "label": "Tel Aviv",
+          "labelHe": "תל אביב",
+          "sign": "TEL"
+        },
+        {
+          "id": "central",
+          "label": "Central Israel",
+          "labelHe": "מרכז",
+          "sign": "CEN"
+        },
+        {
+          "id": "sharon",
+          "label": "Sharon",
+          "labelHe": "שרון",
+          "sign": "SHA"
+        },
+        {
+          "id": "haifa",
+          "label": "Haifa",
+          "labelHe": "חיפה",
+          "sign": "HAI"
+        }
+      ]
+    },
+    {
+      "id": "growth-form",
+      "name": "Growth form",
+      "nameHe": "צורת גידול",
+      "required": true,
+      "inMarketName": false,
+      "sign": "",
+      "categoryIds": [
+        "pothos"
+      ],
+      "subcategoryIds": [],
+      "options": [
+        {
+          "id": "climbing",
+          "label": "Climbing",
+          "labelHe": "מטפס",
+          "sign": "CLI"
+        },
+        {
+          "id": "hanging",
+          "label": "Hanging",
+          "labelHe": "תלוי",
+          "sign": "HAN"
+        },
+        {
+          "id": "bush",
+          "label": "Bush",
+          "labelHe": "שיחי",
+          "sign": "BUS"
+        }
+      ]
+    },
+    {
+      "id": "fenestration",
+      "name": "Fenestration",
+      "nameHe": "חלונות",
+      "required": false,
+      "inMarketName": true,
+      "sign": "FEN",
+      "categoryIds": [
+        "monstera"
+      ],
+      "subcategoryIds": [],
+      "options": [
+        {
+          "id": "juvenile",
+          "label": "Juvenile",
+          "labelHe": "צעיר",
+          "sign": "JUV"
+        },
+        {
+          "id": "fenestrated",
+          "label": "Fenestrated",
+          "labelHe": "עם חלונות",
+          "sign": "FEN"
+        },
+        {
+          "id": "full-splits",
+          "label": "Full splits",
+          "labelHe": "שסעים מלאים",
+          "sign": "FUL"
+        }
+      ]
+    },
+    {
+      "id": "variegation",
+      "name": "Variegation",
+      "nameHe": "מגוון",
+      "required": false,
+      "inMarketName": true,
+      "sign": "VAR",
+      "categoryIds": [],
+      "subcategoryIds": [
+        "pothos-gold"
+      ],
+      "options": [
+        {
+          "id": "high",
+          "label": "High",
+          "labelHe": "גבוה",
+          "sign": "HIG"
+        },
+        {
+          "id": "medium",
+          "label": "Medium",
+          "labelHe": "בינוני",
+          "sign": "MED"
+        },
+        {
+          "id": "low",
+          "label": "Low",
+          "labelHe": "נמוך",
+          "sign": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "cream-edge",
+      "name": "Cream edge",
+      "nameHe": "שולי קרם",
+      "required": false,
+      "inMarketName": true,
+      "sign": "CED",
+      "categoryIds": [],
+      "subcategoryIds": [
+        "pothos-njoy"
+      ],
+      "options": [
+        {
+          "id": "wide",
+          "label": "Wide",
+          "labelHe": "רחב",
+          "sign": "WID"
+        },
+        {
+          "id": "narrow",
+          "label": "Narrow",
+          "labelHe": "צר",
+          "sign": "NAR"
+        }
+      ]
+    }
+  ]
+}

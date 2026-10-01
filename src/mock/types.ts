@@ -4,17 +4,38 @@ export type UserRole =
   | 'collector'
   | 'business'
   | 'nursery'
-  | 'event'
   | 'admin'
   | 'guest'
 
 export type QualityGrade = 'A' | 'B' | 'C'
+/** Community swipe grade. Kept off catalog quality so market class codes stay A/B/C. */
+export type CommunityGradeLetter = 'S' | 'A' | 'B' | 'C'
+
+export interface CommunityGrade {
+  letter: CommunityGradeLetter
+  at: string
+  /** Used only to hide a plant this person already graded. Never shown. */
+  graderId: string
+}
+export type PlantRarity = 'common' | 'rare' | 'unique'
+
+export interface GrowthTime {
+  en: string
+  he: string
+}
+
+export interface GrowingConditions {
+  light: string
+  lightHe: string
+  water: string
+  waterHe: string
+  note: string
+  noteHe: string
+}
 export type SizeBand = 'S' | 'M' | 'L' | 'XL'
 export type StageBand = 'CUT' | 'ROOTED' | 'EST' | 'MATURE'
 export type RootingStatus = 'rooted' | 'unrooted' | 'established'
 export type ListingStatus = 'active' | 'reserved' | 'sold' | 'draft'
-export type DemandStatus = 'open' | 'sourcing' | 'confirmed' | 'fulfilled' | 'cancelled'
-export type CommitmentStatus = 'pending' | 'accepted' | 'rejected' | 'fulfilled' | 'cancelled'
 export type OrderStatus =
   | 'intent'
   | 'confirmed'
@@ -22,7 +43,6 @@ export type OrderStatus =
   | 'completed'
   | 'disputed'
   | 'cancelled'
-export type EventPhase = 'sourcing' | 'confirmed' | 'in_use' | 'recovery' | 'graded' | 'redistributed'
 export type ModerationStatus = 'open' | 'resolved' | 'dismissed'
 
 export interface User {
@@ -34,6 +54,8 @@ export interface User {
   businessNameHe?: string
   region: string
   regionHe: string
+  lat?: number
+  lng?: number
   bio: string
   bioHe: string
   rating: number
@@ -43,6 +65,37 @@ export interface User {
   specialties: string[]
   specialtiesHe: string[]
   avatarColor: string
+  email?: string
+  friendIds: string[]
+  /** Absent means active. Disabled accounts cannot sign in. */
+  accountStatus?: 'active' | 'disabled'
+}
+
+export type PendingUserStatus = 'pending' | 'approved' | 'rejected'
+
+export interface PendingUser {
+  id: string
+  name: string
+  email: string
+  note?: string
+  createdAt: string
+  status: PendingUserStatus
+  approvedAt?: string
+  rejectedAt?: string
+  userId?: string
+}
+
+export type PendingTransactionStatus = 'pending' | 'released' | 'cancelled'
+
+export interface PendingTransaction {
+  id: string
+  kind: 'purchase' | 'listing' | 'transfer'
+  userId: string
+  label: string
+  labelHe: string
+  amount?: number
+  createdAt: string
+  status: PendingTransactionStatus
 }
 
 export interface Species {
@@ -52,6 +105,9 @@ export interface Species {
   scientificName: string
   fungibility: 'common' | 'premium'
   ticker: string
+  rarity: PlantRarity
+  growthTime: GrowthTime
+  conditions: GrowingConditions
 }
 
 export interface Plant {
@@ -62,8 +118,13 @@ export interface Plant {
   marketClassId?: string
   variety?: string
   varietyHe?: string
+  subcategoryId?: string
+  /** Extra catalog properties. Grade, size, and stage stay on the plant fields. */
+  traits?: Record<string, string>
   title: string
   titleHe: string
+  description?: string
+  descriptionHe?: string
   photos: string[]
   quantity: number
   sizeGrade: string
@@ -77,12 +138,26 @@ export interface Plant {
   stemLengthCm?: number
   leafCount?: number
   locationZone: string
+  locationZoneHe: string
+  lat: number
+  lng: number
   parentId?: string
   batchId?: string
   propagatedAt?: string
   verifiedAt?: string
   verifiedBy?: string
-  status: 'owned' | 'listed' | 'committed' | 'sold' | 'event' | 'recovered'
+  /** Last time the owner refreshed the listing photo. Falls back to verifiedAt. */
+  photoAt?: string
+  /** Last time the owner confirmed watering. */
+  wateredAt?: string
+  status: 'owned' | 'listed' | 'sold'
+  /** Set by a greenhouse publish. Independent of an active market listing. */
+  publishedAt?: string
+  grades?: CommunityGrade[]
+  /** Overrides the species default when this specimen differs. */
+  rarity?: PlantRarity
+  growthTime?: GrowthTime
+  conditions?: GrowingConditions
   createdAt: string
   history: { at: string; label: string; labelHe: string }[]
   comps?: { price: number; date: string; note: string; noteHe: string }[]
@@ -108,7 +183,6 @@ export interface MarketClass {
   demandUnits: number
   rangeMin: number
   rangeMax: number
-  history: { t: string; price: number }[]
   asks: { qty: number; price: number; sellerLabel: string; sellerLabelHe: string }[]
   bids: { qty: number; price: number; buyerLabel: string; buyerLabelHe: string }[]
 }
@@ -130,47 +204,11 @@ export interface Listing {
   regionHe: string
 }
 
-export interface DemandRequest {
-  id: string
-  buyerId: string
-  title: string
-  titleHe: string
-  speciesId: string
-  marketClassId?: string
-  targetQty: number
-  committedQty: number
-  minSupplierQty: number
-  priceMin: number
-  priceMax: number
-  quality: QualityGrade[]
-  region: string
-  regionHe: string
-  dueDate: string
-  status: DemandStatus
-  notes: string
-  notesHe: string
-  createdAt: string
-}
-
-export interface SupplyCommitment {
-  id: string
-  demandId: string
-  growerId: string
-  quantity: number
-  offeredPrice: number
-  quality: QualityGrade
-  availableDate: string
-  status: CommitmentStatus
-  plantId?: string
-}
-
 export interface Order {
   id: string
   buyerId: string
   sellerIds: string[]
   listingId?: string
-  demandId?: string
-  eventId?: string
   items: {
     plantId: string
     title: string
@@ -207,7 +245,6 @@ export interface MessageThread {
   subject: string
   subjectHe: string
   relatedListingId?: string
-  relatedDemandId?: string
   messages: {
     id: string
     fromUserId: string
@@ -215,26 +252,6 @@ export interface MessageThread {
     bodyHe: string
     at: string
   }[]
-}
-
-export interface EventProject {
-  id: string
-  buyerId: string
-  name: string
-  nameHe: string
-  venue: string
-  venueHe: string
-  eventDate: string
-  phase: EventPhase
-  orderId?: string
-  required: { speciesId: string; qty: number; use: string; useHe: string }[]
-  recovered: {
-    plantId: string
-    grade: QualityGrade | 'lost' | 'damaged'
-    notes: string
-    notesHe: string
-  }[]
-  redistributedTo?: string
 }
 
 export interface ModerationItem {
@@ -264,20 +281,125 @@ export interface ClaimDraft {
   claimedBy?: string
 }
 
+export type FeedUpdateKind = 'photo' | 'water' | 'propagate' | 'grade' | 'passport' | 'listing'
+
+export interface FeedUpdate {
+  id: string
+  kind: FeedUpdateKind
+  userId: string
+  plantId?: string
+  body: string
+  bodyHe: string
+  createdAt: string
+}
+
+export interface TopGreenhouse {
+  id: string
+  userId: string
+  grade: number
+  line: string
+  lineHe: string
+}
+
+export type CatalogPropertyOption = {
+  id: string
+  label: string
+  labelHe: string
+  /** 1–3 capital letters. Replaces the property placeholder in a market name. */
+  sign: string
+}
+
+export type CatalogProperty = {
+  id: string
+  name: string
+  nameHe: string
+  required: boolean
+  /** When set, this property is part of the market name and `sign` is its unique 1–3 letter code. */
+  inMarketName: boolean
+  sign: string
+  categoryIds: string[]
+  subcategoryIds: string[]
+  options: CatalogPropertyOption[]
+}
+
+export type CatalogCategory = {
+  id: string
+  speciesId: string
+  name: string
+  nameHe: string
+  ticker: string
+  photo: string
+}
+
+export type CatalogSubcategory = {
+  id: string
+  categoryId: string
+  name: string
+  nameHe: string
+  code: string
+  photo?: string
+}
+
+export type Catalog = {
+  categories: CatalogCategory[]
+  subcategories: CatalogSubcategory[]
+  properties: CatalogProperty[]
+}
+
+export type UpdateScenario = 'empty' | 'one' | 'multiple' | 'mixed'
+export type TopGreenhouseScenario = 'empty' | 'ranked' | 'tied' | 'single'
+export type MarketScenario =
+  | 'none'
+  | 'one'
+  | 'some'
+  | 'pages'
+  | 'mixed'
+  | 'category'
+  | 'prices'
+  | 'listings'
+export type GreenhouseScenario = 'empty' | 'one' | 'several' | 'mixed' | 'listed'
+export type GradeStackScenario = 'empty' | 'one' | 'few' | 'full'
+export type PublishRequirement = 'none' | 'verified' | 'graded'
+export type MarketBannerScenario = 'empty' | 'few' | 'full'
+export type TradeScenario = 'none' | 'one' | 'some'
+
+export type PublishResult =
+  | { ok: true; id: string }
+  | { ok: false; reason: 'verified' | 'graded' | 'unavailable' }
+
+/** App-wide mock scenarios. Seed rows stay in the db; the store filters them. */
+export interface DemoScenarios {
+  updates: UpdateScenario
+  market: MarketScenario
+  greenhouse: GreenhouseScenario
+  topGreenhouses: TopGreenhouseScenario
+  gradeStack: GradeStackScenario
+  publishRequirement: PublishRequirement
+  marketBanner: MarketBannerScenario
+  trades: TradeScenario
+}
+
 export interface MockDb {
   users: User[]
   species: Species[]
+  catalog: Catalog
   marketClasses: MarketClass[]
   plants: Plant[]
   listings: Listing[]
-  demands: DemandRequest[]
-  commitments: SupplyCommitment[]
   orders: Order[]
   offers: Offer[]
   threads: MessageThread[]
-  events: EventProject[]
   moderation: ModerationItem[]
   claimDrafts: ClaimDraft[]
+  updates: FeedUpdate[]
+  topGreenhouses: TopGreenhouse[]
+  pendingUsers: PendingUser[]
+  pendingTransactions: PendingTransaction[]
   currentUserId: string | null
+  visitorId: string
   locale: Locale
+  flags: DemoScenarios
+  feedFriendsOnly: boolean
+  /** Admin System: page maintenance and feature release status. */
+  system: import('../theme/release').SystemConfig
 }

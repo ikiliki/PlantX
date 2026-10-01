@@ -1,0 +1,17 @@
+{
+  "sources": [
+    {
+      "id": "sample-catalog",
+      "name": "Sample plant catalog",
+      "url": "file:./fixtures/sample-catalog.html",
+      "rowSelector": "table.catalog tbody tr",
+      "fields": {
+        "category": { "selector": "td[data-field='category']" },
+        "variety": { "selector": "td[data-field='variety']" },
+        "grade": { "selector": "td[data-field='grade']" },
+        "size": { "selector": "td[data-field='size']" },
+        "price": { "selector": "td[data-field='price']" }
+      }
+    }
+  ]
+}

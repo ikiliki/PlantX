@@ -5,21 +5,21 @@ export const Badge = styled.span<{ $tone?: 'lime' | 'forest' | 'warn' | 'danger'
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 6px 10px;
   border-radius: ${theme.radii.pill};
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   ${({ $tone = 'forest' }) => {
     switch ($tone) {
       case 'lime':
-        return `background: ${theme.colors.lime}; color: ${theme.colors.forest};`
+        return `background: ${theme.colors.chipGreen}; color: ${theme.colors.forest};`
       case 'warn':
-        return `background: #FFF3CD; color: #7A5A00;`
+        return `background: ${theme.colors.chipWarm}; color: ${theme.colors.forest};`
       case 'danger':
-        return `background: #FDE8E6; color: ${theme.colors.danger};`
+        return `background: #F6DED4; color: ${theme.colors.danger};`
       case 'muted':
-        return `background: #EEF1EF; color: ${theme.colors.muted};`
+        return `background: ${theme.colors.chipNeutral}; color: ${theme.colors.muted};`
       default:
         return `background: ${theme.colors.forest}; color: white;`
     }

@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -23,5 +26,37 @@ dist-ssr
 *.sln
 *.sw?
 
+# Local JSON databases (seeded on first API start)
+data/*.json
+!data/.gitkeep
+server/data/*.json
+!server/data/.gitkeep
+server/data-local/*.json
+!server/data-local/.gitkeep
+server/data-prod/*.json
+!server/data-prod/.gitkeep
+
+# Committed demo mock backup for local runs — keep
+!server/fixtures/
+!server/fixtures/**/*.json
+
 # Smoke test artifacts
 smoke-shot.png
+
+# Catalog scrape output
+scripts/scrape-output.json
+
+# Scraper reports
+scripts/scrape/out/
+
+# Ad recording
+scripts/ad/node_modules/
+scripts/ad/out/
+public/plantx-ad.webm
+public/plantx-ad.mp4
+
+# Local scratch / screenshot harnesses
+_ticker-check.mjs
+scripts/_*/
+scripts/_*.mjs
+base44/

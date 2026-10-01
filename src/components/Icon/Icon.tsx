@@ -1,0 +1,32 @@
+import { Svg } from './Icon.styles'
+
+const paths = {
+  home: 'M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z',
+  market: 'M4 19h16M6 15l4-4.5 3.5 3L19 7M15 7h4v4',
+  greenhouse: 'M12 20v-8m0 0c0-4 2.8-6.5 7-6.5 0 4.2-2.8 6.5-7 6.5Zm0 2.5C12 11 9.6 9 6 9c0 3.5 2.4 5.5 6 5.5Z',
+  rank: 'm12 4 2.3 4.9 5.2.6-3.9 3.6 1.1 5.2L12 15.7l-4.7 2.6 1.1-5.2-3.9-3.6 5.2-.6z',
+  chevron: 'm7 10 5 5 5-5',
+  light: 'M9 3v1.5M3.5 9H5M4.9 4.9 6 6m7.1-1.1L12 6m-6 6.2A4 4 0 1 1 13 9M8.5 20h8a3.5 3.5 0 0 0 .4-7 4.5 4.5 0 0 0-8.6 1.2A2.9 2.9 0 0 0 8.5 20Z',
+  drop: 'M12 3.5c3.2 4 5.5 7 5.5 10a5.5 5.5 0 0 1-11 0c0-3 2.3-6 5.5-10Z',
+  food: 'M4 12h16a8 8 0 0 1-16 0Zm3-3c0-2 2.2-3.5 5-3.5S17 7 17 9M12 5.5V3M9.5 16h5',
+  arrowUp: 'M12 19V5m0 0-6 6m6-6 6 6',
+  chart: 'M4 4v16h16M8 16v-4m4 4V8m4 8v-6',
+  wiki: 'M5 5.5c1.6-1 3.4-1.5 7-1.5s5.4.5 7 1.5V19c-1.6-1-3.4-1.5-7-1.5S6.6 18 5 19V5.5ZM12 4v13.5',
+} as const
+
+export type IconName = keyof typeof paths
+
+export function Icon({ name, size = 22, label }: { name: IconName; size?: number; label?: string }) {
+  return (
+    <Svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+    >
+      <path d={paths[name]} />
+    </Svg>
+  )
+}

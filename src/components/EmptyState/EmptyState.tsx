@@ -14,7 +14,7 @@ const Icon = styled.div`
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #E8EEEA;
+  background: ${theme.colors.chipGreen};
   display: grid;
   place-items: center;
   font-size: 24px;

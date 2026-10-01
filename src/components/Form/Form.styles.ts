@@ -1,43 +1,55 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { theme } from '../../theme/tokens'
+
+const control = css`
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.radii.md};
+  padding: 12px 14px;
+  background: ${theme.colors.creamCard};
+  color: ${theme.colors.ink};
+  width: 100%;
+  transition:
+    border-color ${theme.motion.fast} ${theme.motion.ease},
+    box-shadow ${theme.motion.base} ${theme.motion.ease};
+  &::placeholder {
+    color: ${theme.colors.muted};
+  }
+  &:hover:not(:disabled) {
+    border-color: ${theme.colors.moss};
+  }
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: ${theme.colors.forest};
+    box-shadow: 0 0 0 4px ${theme.colors.chipGreen};
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`
 
 export const Field = styled.label`
   display: grid;
   gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: ${theme.colors.muted};
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${theme.colors.moss};
 `
 
 export const Input = styled.input`
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.md};
-  padding: 12px 14px;
-  background: white;
-  color: ${theme.colors.ink};
-  width: 100%;
-  &:focus {
-    outline: 2px solid ${theme.colors.lime};
-    border-color: transparent;
-  }
+  ${control}
 `
 
 export const Select = styled.select`
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.md};
-  padding: 12px 14px;
-  background: white;
-  color: ${theme.colors.ink};
-  width: 100%;
+  ${control}
+  cursor: pointer;
 `
 
 export const TextArea = styled.textarea`
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.md};
-  padding: 12px 14px;
-  background: white;
-  color: ${theme.colors.ink};
-  width: 100%;
+  ${control}
   min-height: 88px;
   resize: vertical;
 `

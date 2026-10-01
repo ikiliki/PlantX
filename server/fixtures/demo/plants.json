@@ -1,0 +1,654 @@
+[
+  {
+    "id": "pl-maya-mother",
+    "code": "PL-001102",
+    "ownerId": "u-maya",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-gold-a-l-mat",
+    "variety": "Golden",
+    "varietyHe": "זהוב",
+    "title": "Mother Pothos — balcony",
+    "titleHe": "פוטוס אם — מרפסת",
+    "photos": [
+      "/class-photos/pot-gold-a-xl-mat.jpg",
+      "/class-photos/pot-gold-a-l-mat.jpg",
+      "/class-photos/pot-gold-a-s-r.png"
+    ],
+    "quantity": 1,
+    "sizeGrade": "mature",
+    "sizeBand": "L",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "EST",
+    "potFormat": "22cm pot",
+    "potFormatHe": "עציץ 22 ס״מ",
+    "potSizeCm": 22,
+    "leafCount": 48,
+    "locationZone": "Central Israel",
+    "locationZoneHe": "מרכז",
+    "lat": 31.968,
+    "lng": 34.806,
+    "status": "owned",
+    "createdAt": "2025-03-01",
+    "verifiedAt": "2026-08-20",
+    "verifiedBy": "u-maya",
+    "history": [
+      {
+        "at": "2025-03-01",
+        "label": "Registered",
+        "labelHe": "נרשם"
+      },
+      {
+        "at": "2025-11-12",
+        "label": "Propagated 40 cuttings",
+        "labelHe": "התרבה ל־40 ייחורים"
+      },
+      {
+        "at": "2026-08-20",
+        "label": "Health verified",
+        "labelHe": "אומת בריאות"
+      }
+    ]
+  },
+  {
+    "id": "pl-maya-batch",
+    "code": "BT-220814",
+    "ownerId": "u-maya",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-gold-b-m-r",
+    "variety": "Golden",
+    "varietyHe": "זהוב",
+    "title": "Rooted pothos cuttings ×40",
+    "titleHe": "ייחורי פוטוס מושרשים ×40",
+    "photos": [
+      "/class-photos/pot-gold-a-s-r.png"
+    ],
+    "quantity": 40,
+    "sizeGrade": "cutting",
+    "sizeBand": "M",
+    "quality": "B",
+    "rooting": "rooted",
+    "stage": "ROOTED",
+    "potFormat": "Bare-root",
+    "potFormatHe": "שורש חשוף",
+    "stemLengthCm": 12,
+    "leafCount": 3,
+    "locationZone": "Central Israel",
+    "locationZoneHe": "מרכז",
+    "lat": 31.981,
+    "lng": 34.772,
+    "parentId": "pl-maya-mother",
+    "batchId": "BT-220814",
+    "propagatedAt": "2026-07-01",
+    "status": "listed",
+    "createdAt": "2026-07-01",
+    "history": [
+      {
+        "at": "2026-07-01",
+        "label": "Propagated from mother",
+        "labelHe": "הופרד מצמח האם"
+      },
+      {
+        "at": "2026-08-15",
+        "label": "Listed as bundle",
+        "labelHe": "פורסם כחבילה"
+      }
+    ]
+  },
+  {
+    "id": "pl-maya-njoy",
+    "code": "BT-220901",
+    "ownerId": "u-maya",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-njoy-b-m-est",
+    "variety": "N'Joy",
+    "varietyHe": "אן ג'וי",
+    "title": "N'Joy pothos ×6",
+    "titleHe": "פוטוס אן ג'וי ×6",
+    "photos": [
+      "/class-photos/pot-njoy-b-m-est.jpg"
+    ],
+    "quantity": 6,
+    "sizeGrade": "medium",
+    "sizeBand": "M",
+    "quality": "B",
+    "rooting": "established",
+    "stage": "EST",
+    "potFormat": "12cm pot",
+    "potFormatHe": "עציץ 12 ס״מ",
+    "potSizeCm": 12,
+    "locationZone": "Central Israel",
+    "locationZoneHe": "מרכז",
+    "lat": 31.952,
+    "lng": 34.834,
+    "status": "owned",
+    "createdAt": "2026-08-01",
+    "history": [
+      {
+        "at": "2026-08-01",
+        "label": "Batch created",
+        "labelHe": "נוצרה מנה"
+      },
+      {
+        "at": "2026-09-01",
+        "label": "Established on the balcony",
+        "labelHe": "התבסס במרפסת"
+      }
+    ]
+  },
+  {
+    "id": "pl-daniel-monstera",
+    "code": "PX-IL-0084217",
+    "ownerId": "u-daniel",
+    "speciesId": "sp-monstera",
+    "marketClassId": "mc-mon-stmt-a-xl-mat",
+    "variety": "Statement",
+    "varietyHe": "מוקד",
+    "title": "Statement Monstera specimen",
+    "titleHe": "מונסטרה מוקד",
+    "photos": [
+      "/class-photos/mon-std-a-xl-mat.jpg",
+      "/class-photos/mon-std-a-l-mat.jpg",
+      "/class-photos/mon-std-a-l-mat.jpg"
+    ],
+    "quantity": 1,
+    "sizeGrade": "specimen",
+    "sizeBand": "XL",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "MATURE",
+    "potFormat": "35cm pot",
+    "potFormatHe": "עציץ 35 ס״מ",
+    "potSizeCm": 35,
+    "locationZone": "Tel Aviv",
+    "locationZoneHe": "תל אביב",
+    "lat": 32.072,
+    "lng": 34.774,
+    "status": "listed",
+    "createdAt": "2021-05-10",
+    "verifiedAt": "2026-09-12",
+    "verifiedBy": "u-dana",
+    "history": [
+      {
+        "at": "2021-05-10",
+        "label": "Acquired from nursery",
+        "labelHe": "נרכש ממשתלה"
+      },
+      {
+        "at": "2023-02-01",
+        "label": "Transferred to Daniel",
+        "labelHe": "הועבר לדניאל"
+      },
+      {
+        "at": "2026-09-12",
+        "label": "Expert verified",
+        "labelHe": "אומת ע״י מומחה"
+      }
+    ],
+    "comps": [
+      {
+        "price": 980,
+        "date": "2026-04-02",
+        "note": "Similar XL monstera, TA",
+        "noteHe": "מונסטרה XL דומה, ת״א"
+      },
+      {
+        "price": 1200,
+        "date": "2026-06-18",
+        "note": "Statement split-leaf, Haifa",
+        "noteHe": "מוקד עם שסעים, חיפה"
+      },
+      {
+        "price": 1100,
+        "date": "2026-08-01",
+        "note": "Private sale",
+        "noteHe": "מכירה פרטית"
+      }
+    ]
+  },
+  {
+    "id": "pl-gal-monstera",
+    "code": "BT-GAL-88",
+    "ownerId": "u-gal",
+    "speciesId": "sp-monstera",
+    "marketClassId": "mc-mon-std-a-l-est",
+    "variety": "Standard",
+    "varietyHe": "סטנדרט",
+    "title": "Monstera Deliciosa 60cm ×50",
+    "titleHe": "מונסטרה דליסיוסה 60 ס״מ ×50",
+    "photos": [
+      "/class-photos/mon-std-a-l-mat.jpg",
+      "/class-photos/mon-std-a-xl-mat.jpg",
+      "/class-photos/mon-std-a-l-mat.jpg"
+    ],
+    "quantity": 50,
+    "sizeGrade": "60cm",
+    "sizeBand": "L",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "EST",
+    "potFormat": "18cm pot",
+    "potFormatHe": "עציץ 18 ס״מ",
+    "potSizeCm": 18,
+    "locationZone": "Sharon",
+    "locationZoneHe": "שרון",
+    "lat": 32.328,
+    "lng": 34.859,
+    "status": "listed",
+    "createdAt": "2026-08-20",
+    "history": [
+      {
+        "at": "2026-08-20",
+        "label": "Nursery stocked",
+        "labelHe": "הוכנס למלאי"
+      }
+    ]
+  },
+  {
+    "id": "pl-gal-pothos",
+    "code": "BT-GAL-91",
+    "ownerId": "u-gal",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-gold-a-m-r",
+    "variety": "Golden",
+    "varietyHe": "זהוב",
+    "title": "Rooted pothos cuttings ×300",
+    "titleHe": "ייחורי פוטוס מושרשים ×300",
+    "photos": [
+      "/class-photos/pot-gold-a-s-r.png",
+      "/class-photos/pot-gold-a-xl-mat.jpg",
+      "/class-photos/pot-gold-a-l-mat.jpg",
+      "/class-photos/pot-gold-a-s-r.png"
+    ],
+    "quantity": 300,
+    "sizeGrade": "cutting",
+    "sizeBand": "M",
+    "quality": "A",
+    "rooting": "rooted",
+    "stage": "ROOTED",
+    "potFormat": "Bare-root",
+    "potFormatHe": "שורש חשוף",
+    "locationZone": "Sharon",
+    "locationZoneHe": "שרון",
+    "lat": 32.301,
+    "lng": 34.841,
+    "status": "listed",
+    "createdAt": "2026-08-10",
+    "history": [
+      {
+        "at": "2026-08-10",
+        "label": "Batch prepared",
+        "labelHe": "מנה הוכנה"
+      },
+      {
+        "at": "2026-09-05",
+        "label": "Split into 300 cuttings",
+        "labelHe": "חולק ל־300 ייחורים"
+      }
+    ]
+  },
+  {
+    "id": "pl-draft-target",
+    "code": "DR-8891",
+    "ownerId": "u-noa",
+    "speciesId": "sp-pothos",
+    "variety": "N'Joy",
+    "varietyHe": "אן ג'וי",
+    "title": "N'Joy pothos — unverified",
+    "titleHe": "פוטוס אן ג'וי — לא מאומת",
+    "photos": [
+      "/class-photos/pot-njoy-b-m-est.jpg",
+      "/class-photos/pot-gold-a-s-r.png",
+      "/class-photos/pot-njoy-b-m-est.jpg"
+    ],
+    "quantity": 1,
+    "sizeGrade": "medium",
+    "sizeBand": "M",
+    "quality": "B",
+    "rooting": "established",
+    "stage": "EST",
+    "locationZone": "Haifa",
+    "locationZoneHe": "חיפה",
+    "lat": 32.802,
+    "lng": 34.987,
+    "status": "owned",
+    "createdAt": "2026-09-08",
+    "history": [
+      {
+        "at": "2026-09-08",
+        "label": "Pre-filled draft",
+        "labelHe": "טיוטה מוכנה מראש"
+      }
+    ]
+  },
+  {
+    "id": "pl-dana-pothos",
+    "code": "PL-DANA-01",
+    "ownerId": "u-dana",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-gold-a-l-mat",
+    "variety": "Golden",
+    "varietyHe": "זהוב",
+    "title": "Office golden pothos",
+    "titleHe": "פוטוס זהוב מהמשרד",
+    "photos": [
+      "/class-photos/pot-gold-a-xl-mat.jpg",
+      "/class-photos/pot-gold-a-l-mat.jpg"
+    ],
+    "quantity": 1,
+    "sizeGrade": "mature",
+    "sizeBand": "L",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "EST",
+    "potFormat": "18cm pot",
+    "potFormatHe": "עציץ 18 ס״מ",
+    "potSizeCm": 18,
+    "locationZone": "Central Israel",
+    "locationZoneHe": "מרכז",
+    "lat": 31.99,
+    "lng": 34.8,
+    "status": "owned",
+    "createdAt": "2026-06-02",
+    "verifiedAt": "2026-09-01",
+    "verifiedBy": "u-dana",
+    "history": [
+      {
+        "at": "2026-06-02",
+        "label": "Registered",
+        "labelHe": "נרשם"
+      }
+    ]
+  },
+  {
+    "id": "pl-dana-njoy",
+    "code": "PL-DANA-02",
+    "ownerId": "u-dana",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-njoy-b-m-est",
+    "variety": "N'Joy",
+    "varietyHe": "אן ג'וי",
+    "title": "Desk N'Joy",
+    "titleHe": "אן ג'וי מהשולחן",
+    "photos": [
+      "/class-photos/pot-njoy-b-m-est.jpg"
+    ],
+    "quantity": 2,
+    "sizeGrade": "medium",
+    "sizeBand": "M",
+    "quality": "B",
+    "rooting": "established",
+    "stage": "EST",
+    "potFormat": "12cm pot",
+    "potFormatHe": "עציץ 12 ס״מ",
+    "potSizeCm": 12,
+    "locationZone": "Central Israel",
+    "locationZoneHe": "מרכז",
+    "lat": 31.985,
+    "lng": 34.802,
+    "status": "owned",
+    "createdAt": "2026-07-14",
+    "history": [
+      {
+        "at": "2026-07-14",
+        "label": "Registered",
+        "labelHe": "נרשם"
+      }
+    ]
+  },
+  {
+    "id": "pl-dana-monstera",
+    "code": "PL-DANA-03",
+    "ownerId": "u-dana",
+    "speciesId": "sp-monstera",
+    "marketClassId": "mc-mon-std-a-l-est",
+    "variety": "Standard",
+    "varietyHe": "סטנדרט",
+    "title": "Window monstera",
+    "titleHe": "מונסטרה ליד החלון",
+    "photos": [
+      "/class-photos/mon-std-a-l-mat.jpg",
+      "/class-photos/mon-std-a-xl-mat.jpg"
+    ],
+    "quantity": 1,
+    "sizeGrade": "60cm",
+    "sizeBand": "L",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "EST",
+    "potFormat": "22cm pot",
+    "potFormatHe": "עציץ 22 ס״מ",
+    "potSizeCm": 22,
+    "locationZone": "Tel Aviv",
+    "locationZoneHe": "תל אביב",
+    "lat": 32.07,
+    "lng": 34.78,
+    "status": "owned",
+    "createdAt": "2026-04-18",
+    "history": [
+      {
+        "at": "2026-04-18",
+        "label": "Registered",
+        "labelHe": "נרשם"
+      }
+    ]
+  },
+  {
+    "id": "pl-cfg-pot-gold-a-xl-mat",
+    "code": "POT-GOLD-A-XL-MAT",
+    "ownerId": "u-maya",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-gold-a-xl-mat",
+    "variety": "Golden",
+    "varietyHe": "זהוב",
+    "title": "Golden pothos on poles",
+    "titleHe": "פוטוס זהוב על מוטות",
+    "photos": [
+      "/class-photos/pot-gold-a-xl-mat.jpg"
+    ],
+    "quantity": 1,
+    "sizeGrade": "XL",
+    "sizeBand": "XL",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "MATURE",
+    "locationZone": "Tel Aviv",
+    "locationZoneHe": "תל אביב",
+    "lat": 32.08,
+    "lng": 34.78,
+    "status": "listed",
+    "createdAt": "2026-09-20",
+    "verifiedAt": "2026-09-20",
+    "verifiedBy": "u-dana",
+    "photoAt": "2026-09-28",
+    "wateredAt": "2026-09-29",
+    "history": [
+      {
+        "at": "2026-09-20",
+        "label": "Listed from configuration",
+        "labelHe": "פורסם לפי התצורה"
+      }
+    ]
+  },
+  {
+    "id": "pl-cfg-pot-gold-a-l-mat",
+    "code": "POT-GOLD-A-L-MAT",
+    "ownerId": "u-maya",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-gold-a-l-mat",
+    "variety": "Golden",
+    "varietyHe": "זהוב",
+    "title": "Golden pothos climbing a trunk",
+    "titleHe": "פוטוס זהוב מטפס על גזע",
+    "photos": [
+      "/class-photos/pot-gold-a-l-mat.jpg"
+    ],
+    "quantity": 1,
+    "sizeGrade": "L",
+    "sizeBand": "L",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "MATURE",
+    "locationZone": "Central Israel",
+    "locationZoneHe": "מרכז",
+    "lat": 31.97,
+    "lng": 34.81,
+    "status": "listed",
+    "createdAt": "2026-09-20",
+    "verifiedAt": "2026-09-20",
+    "verifiedBy": "u-dana",
+    "photoAt": "2026-09-28",
+    "wateredAt": "2026-09-29",
+    "history": [
+      {
+        "at": "2026-09-20",
+        "label": "Listed from configuration",
+        "labelHe": "פורסם לפי התצורה"
+      }
+    ]
+  },
+  {
+    "id": "pl-cfg-pot-gold-a-s-r",
+    "code": "POT-GOLD-A-S-R",
+    "ownerId": "u-maya",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-gold-a-s-r",
+    "variety": "Golden",
+    "varietyHe": "זהוב",
+    "title": "Rooted golden pothos cutting",
+    "titleHe": "ייחור פוטוס זהוב מושרש",
+    "photos": [
+      "/class-photos/pot-gold-a-s-r.png"
+    ],
+    "quantity": 12,
+    "sizeGrade": "S",
+    "sizeBand": "S",
+    "quality": "A",
+    "rooting": "rooted",
+    "stage": "ROOTED",
+    "locationZone": "Central Israel",
+    "locationZoneHe": "מרכז",
+    "lat": 31.96,
+    "lng": 34.79,
+    "status": "listed",
+    "createdAt": "2026-09-20",
+    "photoAt": "2026-09-10",
+    "wateredAt": "2026-09-18",
+    "history": [
+      {
+        "at": "2026-09-20",
+        "label": "Listed from configuration",
+        "labelHe": "פורסם לפי התצורה"
+      }
+    ]
+  },
+  {
+    "id": "pl-cfg-pot-njoy-b-m-est",
+    "code": "POT-NJOY-B-M-EST",
+    "ownerId": "u-gal",
+    "speciesId": "sp-pothos",
+    "marketClassId": "mc-pot-njoy-b-m-est",
+    "variety": "N'Joy",
+    "varietyHe": "אן ג'וי",
+    "title": "N'Joy pothos",
+    "titleHe": "פוטוס אן ג'וי",
+    "photos": [
+      "/class-photos/pot-njoy-b-m-est.jpg"
+    ],
+    "quantity": 4,
+    "sizeGrade": "M",
+    "sizeBand": "M",
+    "quality": "B",
+    "rooting": "established",
+    "stage": "EST",
+    "locationZone": "Sharon",
+    "locationZoneHe": "שרון",
+    "lat": 32.32,
+    "lng": 34.85,
+    "status": "listed",
+    "createdAt": "2026-09-20",
+    "photoAt": "2026-09-10",
+    "wateredAt": "2026-09-18",
+    "history": [
+      {
+        "at": "2026-09-20",
+        "label": "Listed from configuration",
+        "labelHe": "פורסם לפי התצורה"
+      }
+    ]
+  },
+  {
+    "id": "pl-cfg-mon-std-a-l-mat",
+    "code": "MON-STD-A-L-MAT",
+    "ownerId": "u-gal",
+    "speciesId": "sp-monstera",
+    "marketClassId": "mc-mon-std-a-l-mat",
+    "variety": "Standard",
+    "varietyHe": "סטנדרט",
+    "title": "Mature monstera",
+    "titleHe": "מונסטרה בוגרת",
+    "photos": [
+      "/class-photos/mon-std-a-l-mat.jpg"
+    ],
+    "quantity": 3,
+    "sizeGrade": "L",
+    "sizeBand": "L",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "MATURE",
+    "locationZone": "Sharon",
+    "locationZoneHe": "שרון",
+    "lat": 32.3,
+    "lng": 34.86,
+    "status": "listed",
+    "createdAt": "2026-09-20",
+    "verifiedAt": "2026-09-20",
+    "verifiedBy": "u-dana",
+    "photoAt": "2026-09-28",
+    "wateredAt": "2026-09-29",
+    "history": [
+      {
+        "at": "2026-09-20",
+        "label": "Listed from configuration",
+        "labelHe": "פורסם לפי התצורה"
+      }
+    ]
+  },
+  {
+    "id": "pl-cfg-mon-stmt-a-xl-mat",
+    "code": "MON-STMT-A-XL-MAT",
+    "ownerId": "u-daniel",
+    "speciesId": "sp-monstera",
+    "marketClassId": "mc-mon-stmt-a-xl-mat",
+    "variety": "Statement",
+    "varietyHe": "מוקד",
+    "title": "Statement monstera specimen",
+    "titleHe": "מונסטרה מוקד",
+    "photos": [
+      "/class-photos/mon-std-a-xl-mat.jpg"
+    ],
+    "quantity": 1,
+    "sizeGrade": "XL",
+    "sizeBand": "XL",
+    "quality": "A",
+    "rooting": "established",
+    "stage": "MATURE",
+    "locationZone": "Tel Aviv",
+    "locationZoneHe": "תל אביב",
+    "lat": 32.09,
+    "lng": 34.77,
+    "status": "listed",
+    "createdAt": "2026-09-20",
+    "verifiedAt": "2026-09-20",
+    "verifiedBy": "u-dana",
+    "photoAt": "2026-09-28",
+    "wateredAt": "2026-09-29",
+    "history": [
+      {
+        "at": "2026-09-20",
+        "label": "Listed from configuration",
+        "labelHe": "פורסם לפי התצורה"
+      }
+    ]
+  }
+]

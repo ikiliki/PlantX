@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fixture category page</title>
+    <style>
+      body { font: 16px/1.4 system-ui, sans-serif; margin: 32px; color: #1c241c; background: #f6f7f4; }
+      h1 { font-size: 22px; margin: 0 0 8px; }
+      .note { color: #5c665c; margin: 0 0 20px; }
+      .listing { background: #fff; border: 1px solid #d5ddd4; border-radius: 12px; padding: 16px 18px; margin: 0 0 12px; }
+      h2 { font-size: 18px; margin: 0; }
+      .variety { margin: 4px 0 10px; }
+      .meta { margin: 2px 0; }
+    </style>
+  </head>
+  <body>
+    <!-- Local fixture for scripts/scrape. Not fetched from a website. -->
+    <h1>Pothos configurations</h1>
+    <p class="note">Sample category page for the PlantX scraper. Local file only.</p>
+
+    <article class="listing">
+      <h2 data-field="category">Pothos</h2>
+      <p class="variety" data-field="variety">Golden</p>
+      <p class="meta">Quality <span data-field="quality">Grade A</span></p>
+      <p class="meta">Size <span data-field="size">XL</span></p>
+      <p class="meta">Stage <span data-field="stage">Mature</span></p>
+    </article>
+
+    <article class="listing">
+      <h2 data-field="category">Pothos</h2>
+      <p class="variety" data-field="variety">N'Joy</p>
+      <p class="meta">Quality <span data-field="quality">Grade B</span></p>
+      <p class="meta">Size <span data-field="size">M</span></p>
+      <p class="meta">Stage <span data-field="stage">Established</span></p>
+    </article>
+
+    <article class="listing">
+      <h2 data-field="category">Monstera</h2>
+      <p class="variety" data-field="variety">Standard</p>
+      <p class="meta">Quality <span data-field="quality">Grade C</span></p>
+      <p class="meta">Size <span data-field="size">S</span></p>
+      <p class="meta">Stage <span data-field="stage">Cutting</span></p>
+    </article>
+  </body>
+</html>

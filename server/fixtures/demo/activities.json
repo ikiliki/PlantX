@@ -1,0 +1,73 @@
+[
+  {
+    "id": "up-maya-propagate",
+    "kind": "propagate",
+    "userId": "u-maya",
+    "plantId": "pl-maya-mother",
+    "body": "3 rooted child cuttings recorded on the mother plant.",
+    "bodyHe": "3 ייחורים מושרשים נרשמו על צמח האם.",
+    "createdAt": "2026-10-01T08:55:00.886Z"
+  },
+  {
+    "id": "up-gal-photo",
+    "kind": "photo",
+    "userId": "u-gal",
+    "plantId": "pl-gal-monstera",
+    "body": "Monstera tray photo refreshed.",
+    "bodyHe": "תמונת מגש המונסטרה רועננה.",
+    "createdAt": "2026-10-01T06:55:00.887Z"
+  },
+  {
+    "id": "up-daniel-passport",
+    "kind": "passport",
+    "userId": "u-daniel",
+    "plantId": "pl-daniel-monstera",
+    "body": "Statement monstera passport verified.",
+    "bodyHe": "דרכון מונסטרת המוקד אומת.",
+    "createdAt": "2026-10-01T03:55:00.887Z"
+  },
+  {
+    "id": "up-noa-water",
+    "kind": "water",
+    "userId": "u-noa",
+    "body": "Water confirmed on the office pothos.",
+    "bodyHe": "השקיה אושרה לפוטוס המשרד.",
+    "createdAt": "2026-09-30T23:55:00.887Z"
+  },
+  {
+    "id": "up-maya-grade",
+    "kind": "grade",
+    "userId": "u-maya",
+    "plantId": "pl-maya-mother",
+    "body": "Golden pothos moved from B to A.",
+    "bodyHe": "פוטוס זהוב עלה מדרגה B ל־A.",
+    "createdAt": "2026-09-30T19:55:00.887Z"
+  },
+  {
+    "id": "up-gal-list",
+    "kind": "listing",
+    "userId": "u-gal",
+    "plantId": "pl-gal-pothos",
+    "body": "N’Joy pothos listed from the nursery bench.",
+    "bodyHe": "פוטוס N’Joy פורסם מדף המשתלה.",
+    "createdAt": "2026-09-30T11:55:00.887Z"
+  },
+  {
+    "id": "up-maya-batch",
+    "kind": "propagate",
+    "userId": "u-maya",
+    "plantId": "pl-maya-njoy",
+    "body": "N'Joy batch updated to 6 plants on the balcony.",
+    "bodyHe": "אצוות N’Joy עודכנה ל־6 צמחים במרפסת.",
+    "createdAt": "2026-09-29T09:55:00.887Z"
+  },
+  {
+    "id": "up-daniel-photo",
+    "kind": "photo",
+    "userId": "u-daniel",
+    "plantId": "pl-daniel-monstera",
+    "body": "Listing photo refreshed after 42 days.",
+    "bodyHe": "תמונת המודעה רועננה אחרי 42 ימים.",
+    "createdAt": "2026-09-28T21:55:00.887Z"
+  }
+]

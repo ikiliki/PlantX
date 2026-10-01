@@ -24,6 +24,11 @@ const Meta = styled.div`
   color: ${theme.colors.muted};
 `
 
+const Media = styled(CardMedia)<{ $compact?: boolean }>`
+  aspect-ratio: ${({ $compact }) => ($compact ? '16 / 10' : '4 / 3')};
+  max-height: ${({ $compact }) => ($compact ? '188px' : 'none')};
+`
+
 const Overlay = styled.div`
   position: absolute;
   top: 10px;
@@ -32,11 +37,10 @@ const Overlay = styled.div`
   gap: 6px;
 `
 
-export function ListingCard({ listing }: { listing: Listing }) {
+export function ListingCard({ listing, compact = false }: { listing: Listing; compact?: boolean }) {
   const { db } = useStore()
   const { t, tr, formatMoney, locale } = useI18n()
   const plant = db.plants.find((p) => p.id === listing.plantId)
-  const species = db.species.find((s) => s.id === plant?.speciesId)
   const seller = db.users.find((u) => u.id === listing.sellerId)
   const marketClass = db.marketClasses.find(
     (m) => m.id === listing.marketClassId || m.id === plant?.marketClassId,
@@ -46,7 +50,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link to={marketClass ? `/market/${marketClass.id}` : `/plants/${plant.id}`}>
       <Card $pad={false} $clickable>
-        <CardMedia>
+        <Media $compact={compact}>
           <PlantImage src={plant.photos[0]} alt="" />
           <Overlay>
             {marketClass && <Badge $tone="lime">{marketClass.code}</Badge>}
@@ -56,7 +60,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
               <Badge $tone="warn">{listing.status}</Badge>
             )}
           </Overlay>
-        </CardMedia>
+        </Media>
         <CardBody>
           <strong>
             {marketClass

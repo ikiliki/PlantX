@@ -1,19 +1,7 @@
-import { plantImages } from './images'
+import { classPhotos } from './images'
 import type { MarketClass } from './types'
 
-function hist(base: number, days = 14) {
-  const out: { t: string; price: number }[] = []
-  let p = base * 0.86
-  for (let i = days; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    p = +(p * (1 + (Math.sin(i) * 0.02 + (i % 3 === 0 ? 0.015 : -0.008)))).toFixed(2)
-    out.push({ t: d.toISOString().slice(0, 10), price: Math.max(1, p) })
-  }
-  out[out.length - 1].price = base
-  return out
-}
-
+/** Liquid market rows (aggregated depth). */
 export const seedMarketClasses: MarketClass[] = [
   {
     id: 'mc-pot-gold-a-m-r',
@@ -26,7 +14,7 @@ export const seedMarketClasses: MarketClass[] = [
     stage: 'ROOTED',
     displayName: 'Pothos Golden · A · M · Rooted',
     displayNameHe: 'פוטוס זהוב · A · M · מושרש',
-    photo: plantImages.pothos,
+    photo: classPhotos.potGoldS,
     lastPrice: 12.4,
     changePct: 8.3,
     bidQty: 1250,
@@ -35,26 +23,13 @@ export const seedMarketClasses: MarketClass[] = [
     demandUnits: 2840,
     rangeMin: 10.5,
     rangeMax: 14.2,
-    history: hist(12.4),
     asks: [
       { qty: 120, price: 13, sellerLabel: 'Maya Levi', sellerLabelHe: 'מאיה לוי' },
       { qty: 300, price: 14, sellerLabel: 'Gal Nursery', sellerLabelHe: 'משתלת גל' },
-      { qty: 80, price: 14.5, sellerLabel: 'Home growers', sellerLabelHe: 'מגדלים ביתיים' },
     ],
     bids: [
-      {
-        qty: 1000,
-        price: 11,
-        buyerLabel: 'Event company',
-        buyerLabelHe: 'חברת אירועים',
-      },
-      {
-        qty: 250,
-        price: 12,
-        buyerLabel: 'Office project',
-        buyerLabelHe: 'פרויקט משרדים',
-      },
-      { qty: 90, price: 10.5, buyerLabel: 'Hall designer', buyerLabelHe: 'מעצב אולמות' },
+      { qty: 1000, price: 11, buyerLabel: 'Event company', buyerLabelHe: 'חברת אירועים' },
+      { qty: 250, price: 12, buyerLabel: 'Office project', buyerLabelHe: 'פרויקט משרדים' },
     ],
   },
   {
@@ -68,7 +43,7 @@ export const seedMarketClasses: MarketClass[] = [
     stage: 'ROOTED',
     displayName: 'Pothos Golden · B · M · Rooted',
     displayNameHe: 'פוטוס זהוב · B · M · מושרש',
-    photo: plantImages.cuttings,
+    photo: classPhotos.potGoldS,
     lastPrice: 8.7,
     changePct: 2.1,
     bidQty: 640,
@@ -77,7 +52,6 @@ export const seedMarketClasses: MarketClass[] = [
     demandUnits: 900,
     rangeMin: 7.5,
     rangeMax: 9.8,
-    history: hist(8.7),
     asks: [
       { qty: 200, price: 9, sellerLabel: 'Maya Levi', sellerLabelHe: 'מאיה לוי' },
       { qty: 310, price: 9.5, sellerLabel: 'Gal Nursery', sellerLabelHe: 'משתלת גל' },
@@ -85,66 +59,6 @@ export const seedMarketClasses: MarketClass[] = [
     bids: [
       { qty: 400, price: 8, buyerLabel: 'GreenSpace', buyerLabelHe: 'גרין־ספייס' },
       { qty: 240, price: 8.5, buyerLabel: 'Retailer', buyerLabelHe: 'קמעונאי' },
-    ],
-  },
-  {
-    id: 'mc-pot-gold-a-l-est',
-    code: 'POT-GOLD-A-L-EST',
-    speciesId: 'sp-pothos',
-    variety: 'Golden',
-    varietyHe: 'זהוב',
-    quality: 'A',
-    size: 'L',
-    stage: 'EST',
-    displayName: 'Pothos Golden · A · L · Established',
-    displayNameHe: 'פוטוס זהוב · A · L · מבוסס',
-    photo: plantImages.leaves,
-    lastPrice: 27.2,
-    changePct: 4.6,
-    bidQty: 80,
-    askQty: 45,
-    supplyUnits: 120,
-    demandUnits: 95,
-    rangeMin: 24,
-    rangeMax: 31,
-    history: hist(27.2),
-    asks: [
-      { qty: 20, price: 28, sellerLabel: 'Gal Nursery', sellerLabelHe: 'משתלת גל' },
-      { qty: 25, price: 30, sellerLabel: 'Collectors', sellerLabelHe: 'אספנים' },
-    ],
-    bids: [
-      { qty: 40, price: 25, buyerLabel: 'Lobby refresh', buyerLabelHe: 'חידוש לובי' },
-      { qty: 40, price: 26.5, buyerLabel: 'Boutique hotel', buyerLabelHe: 'מלון בוטיק' },
-    ],
-  },
-  {
-    id: 'mc-pot-mq-a-m-r',
-    code: 'POT-MQ-A-M-R',
-    speciesId: 'sp-pothos',
-    variety: 'Marble Queen',
-    varietyHe: 'מרבל קווין',
-    quality: 'A',
-    size: 'M',
-    stage: 'ROOTED',
-    displayName: 'Pothos Marble Queen · A · M · Rooted',
-    displayNameHe: 'פוטוס מרבל קווין · A · M · מושרש',
-    photo: plantImages.pot,
-    lastPrice: 19.8,
-    changePct: -1.4,
-    bidQty: 180,
-    askQty: 95,
-    supplyUnits: 210,
-    demandUnits: 260,
-    rangeMin: 17,
-    rangeMax: 22,
-    history: hist(19.8),
-    asks: [
-      { qty: 40, price: 20.5, sellerLabel: 'Specialty grower', sellerLabelHe: 'מגדל מומחה' },
-      { qty: 55, price: 21, sellerLabel: 'Gal Nursery', sellerLabelHe: 'משתלת גל' },
-    ],
-    bids: [
-      { qty: 100, price: 18, buyerLabel: 'Plant shop', buyerLabelHe: 'חנות צמחים' },
-      { qty: 80, price: 19, buyerLabel: 'Interior studio', buyerLabelHe: 'סטודיו פנים' },
     ],
   },
   {
@@ -156,114 +70,177 @@ export const seedMarketClasses: MarketClass[] = [
     quality: 'A',
     size: 'L',
     stage: 'EST',
-    displayName: 'Monstera · A · L · Established',
-    displayNameHe: 'מונסטרה · A · L · מבוססת',
-    photo: plantImages.monstera,
-    lastPrice: 35,
+    displayName: 'Monstera Standard · A · L · Established',
+    displayNameHe: 'מונסטרה סטנדרט · A · L · מבוססת',
+    photo: classPhotos.monStdL,
+    lastPrice: 68,
     changePct: 3.2,
     bidQty: 70,
     askQty: 50,
     supplyUnits: 90,
     demandUnits: 110,
-    rangeMin: 28,
-    rangeMax: 40,
-    history: hist(35),
+    rangeMin: 58,
+    rangeMax: 78,
     asks: [
-      { qty: 30, price: 36, sellerLabel: 'Gal Nursery', sellerLabelHe: 'משתלת גל' },
-      { qty: 20, price: 38, sellerLabel: 'Wholesale lot', sellerLabelHe: 'מנה סיטונאית' },
+      { qty: 30, price: 69, sellerLabel: 'Gal Nursery', sellerLabelHe: 'משתלת גל' },
+      { qty: 20, price: 72, sellerLabel: 'Wholesale lot', sellerLabelHe: 'מנה סיטונאית' },
     ],
     bids: [
-      { qty: 40, price: 32, buyerLabel: 'GreenSpace', buyerLabelHe: 'גרין־ספייס' },
-      { qty: 30, price: 34, buyerLabel: 'Event hall', buyerLabelHe: 'אולם אירועים' },
-    ],
-  },
-  {
-    id: 'mc-phi-bra-a-s-r',
-    code: 'PHI-BRA-A-S-R',
-    speciesId: 'sp-philodendron',
-    variety: 'Brasil',
-    varietyHe: 'ברזיל',
-    quality: 'A',
-    size: 'S',
-    stage: 'ROOTED',
-    displayName: 'Philodendron Brasil · A · S · Rooted',
-    displayNameHe: 'פילודנדרון ברזיל · A · S · מושרש',
-    photo: plantImages.philodendron,
-    lastPrice: 14.5,
-    changePct: 5.8,
-    bidQty: 220,
-    askQty: 160,
-    supplyUnits: 300,
-    demandUnits: 280,
-    rangeMin: 12,
-    rangeMax: 16,
-    history: hist(14.5),
-    asks: [
-      { qty: 80, price: 15, sellerLabel: 'Maya Levi', sellerLabelHe: 'מאיה לוי' },
-      { qty: 80, price: 15.5, sellerLabel: 'Gal Nursery', sellerLabelHe: 'משתלת גל' },
-    ],
-    bids: [
-      { qty: 120, price: 13.5, buyerLabel: 'Retail bundle', buyerLabelHe: 'חבילת קמעונאות' },
-      { qty: 100, price: 14, buyerLabel: 'Cafe chain', buyerLabelHe: 'רשת בתי קפה' },
-    ],
-  },
-  {
-    id: 'mc-map-std-a-xl-mat',
-    code: 'MAP-STD-A-XL-MAT',
-    speciesId: 'sp-maple',
-    variety: 'Standard',
-    varietyHe: 'סטנדרט',
-    quality: 'A',
-    size: 'XL',
-    stage: 'MATURE',
-    displayName: 'Japanese Maple · A · XL · Mature',
-    displayNameHe: 'אדר יפני · A · XL · בוגר',
-    photo: plantImages.maple,
-    lastPrice: 1140,
-    changePct: 1.2,
-    bidQty: 2,
-    askQty: 1,
-    supplyUnits: 3,
-    demandUnits: 5,
-    rangeMin: 980,
-    rangeMax: 1200,
-    history: hist(1140),
-    asks: [
-      { qty: 1, price: 1140, sellerLabel: 'Daniel Cohen', sellerLabelHe: 'דניאל כהן' },
-    ],
-    bids: [
-      { qty: 1, price: 980, buyerLabel: 'Office lobby', buyerLabelHe: 'לובי משרדים' },
-      { qty: 1, price: 1050, buyerLabel: 'Collector', buyerLabelHe: 'אספן' },
-    ],
-  },
-  {
-    id: 'mc-pal-ken-a-xl-est',
-    code: 'PAL-KEN-A-XL-EST',
-    speciesId: 'sp-palm',
-    variety: 'Kentia',
-    varietyHe: 'קנטיה',
-    quality: 'A',
-    size: 'XL',
-    stage: 'EST',
-    displayName: 'Kentia Palm · A · XL · Established',
-    displayNameHe: 'דקל קנטיה · A · XL · מבוסס',
-    photo: plantImages.palm,
-    lastPrice: 180,
-    changePct: -0.8,
-    bidQty: 8,
-    askQty: 12,
-    supplyUnits: 18,
-    demandUnits: 14,
-    rangeMin: 160,
-    rangeMax: 200,
-    history: hist(180),
-    asks: [
-      { qty: 6, price: 185, sellerLabel: 'Gal Nursery', sellerLabelHe: 'משתלת גל' },
-      { qty: 6, price: 195, sellerLabel: 'Import lot', sellerLabelHe: 'מנת יבוא' },
-    ],
-    bids: [
-      { qty: 4, price: 170, buyerLabel: 'Hotel lobby', buyerLabelHe: 'לובי מלון' },
-      { qty: 4, price: 175, buyerLabel: 'Office tower', buyerLabelHe: 'מגדל משרדים' },
+      { qty: 40, price: 64, buyerLabel: 'GreenSpace', buyerLabelHe: 'גרין־ספייס' },
+      { qty: 30, price: 66, buyerLabel: 'Event hall', buyerLabelHe: 'אולם אירועים' },
     ],
   },
 ]
+
+type Shelf = {
+  id: string
+  code: string
+  speciesId: string
+  variety: string
+  varietyHe: string
+  quality: MarketClass['quality']
+  size: MarketClass['size']
+  stage: MarketClass['stage']
+  displayName: string
+  displayNameHe: string
+  photo: string
+  price: number
+  seller: string
+  sellerHe: string
+}
+
+function shelf(item: Shelf): MarketClass {
+  const price = item.price
+  return {
+    id: item.id,
+    code: item.code,
+    speciesId: item.speciesId,
+    variety: item.variety,
+    varietyHe: item.varietyHe,
+    quality: item.quality,
+    size: item.size,
+    stage: item.stage,
+    displayName: item.displayName,
+    displayNameHe: item.displayNameHe,
+    photo: item.photo,
+    lastPrice: price,
+    changePct: 1.4,
+    bidQty: 3,
+    askQty: 2,
+    supplyUnits: 4,
+    demandUnits: 5,
+    rangeMin: Math.round(price * 0.86),
+    rangeMax: Math.round(price * 1.12),
+    asks: [{ qty: 1, price, sellerLabel: item.seller, sellerLabelHe: item.sellerHe }],
+    bids: [
+      {
+        qty: 1,
+        price: Math.max(1, Math.round(price * 0.9)),
+        buyerLabel: 'Market bid',
+        buyerLabelHe: 'הצעת שוק',
+      },
+    ],
+  }
+}
+
+/** Graded configuration classes on the market (1:1 with class photos). */
+export const configuredMarketClasses: MarketClass[] = [
+  shelf({
+    id: 'mc-pot-gold-a-xl-mat',
+    code: 'POT-GOLD-A-XL-MAT',
+    speciesId: 'sp-pothos',
+    variety: 'Golden',
+    varietyHe: 'זהוב',
+    quality: 'A',
+    size: 'XL',
+    stage: 'MATURE',
+    displayName: 'Pothos Golden · A · XL · Mature',
+    displayNameHe: 'פוטוס זהוב · A · XL · בוגר',
+    photo: classPhotos.potGoldXl,
+    price: 86,
+    seller: 'Maya Levi',
+    sellerHe: 'מאיה לוי',
+  }),
+  shelf({
+    id: 'mc-pot-gold-a-l-mat',
+    code: 'POT-GOLD-A-L-MAT',
+    speciesId: 'sp-pothos',
+    variety: 'Golden',
+    varietyHe: 'זהוב',
+    quality: 'A',
+    size: 'L',
+    stage: 'MATURE',
+    displayName: 'Pothos Golden · A · L · Mature',
+    displayNameHe: 'פוטוס זהוב · A · L · בוגר',
+    photo: classPhotos.potGoldL,
+    price: 46,
+    seller: 'Maya Levi',
+    sellerHe: 'מאיה לוי',
+  }),
+  shelf({
+    id: 'mc-pot-gold-a-s-r',
+    code: 'POT-GOLD-A-S-R',
+    speciesId: 'sp-pothos',
+    variety: 'Golden',
+    varietyHe: 'זהוב',
+    quality: 'A',
+    size: 'S',
+    stage: 'ROOTED',
+    displayName: 'Pothos Golden · A · S · Rooted',
+    displayNameHe: 'פוטוס זהוב · A · S · מושרש',
+    photo: classPhotos.potGoldS,
+    price: 9,
+    seller: 'Maya Levi',
+    sellerHe: 'מאיה לוי',
+  }),
+  shelf({
+    id: 'mc-pot-njoy-b-m-est',
+    code: 'POT-NJOY-B-M-EST',
+    speciesId: 'sp-pothos',
+    variety: "N'Joy",
+    varietyHe: "אן ג'וי",
+    quality: 'B',
+    size: 'M',
+    stage: 'EST',
+    displayName: "Pothos N'Joy · B · M · Established",
+    displayNameHe: "פוטוס אן ג'וי · B · M · מבוסס",
+    photo: classPhotos.potNjoy,
+    price: 34,
+    seller: 'Gal Nursery',
+    sellerHe: 'משתלת גל',
+  }),
+  shelf({
+    id: 'mc-mon-std-a-l-mat',
+    code: 'MON-STD-A-L-MAT',
+    speciesId: 'sp-monstera',
+    variety: 'Standard',
+    varietyHe: 'סטנדרט',
+    quality: 'A',
+    size: 'L',
+    stage: 'MATURE',
+    displayName: 'Monstera Standard · A · L · Mature',
+    displayNameHe: 'מונסטרה סטנדרט · A · L · בוגר',
+    photo: classPhotos.monStdL,
+    price: 68,
+    seller: 'Gal Nursery',
+    sellerHe: 'משתלת גל',
+  }),
+  shelf({
+    id: 'mc-mon-stmt-a-xl-mat',
+    code: 'MON-STMT-A-XL-MAT',
+    speciesId: 'sp-monstera',
+    variety: 'Statement',
+    varietyHe: 'מוקד',
+    quality: 'A',
+    size: 'XL',
+    stage: 'MATURE',
+    displayName: 'Monstera Statement · A · XL · Mature',
+    displayNameHe: 'מונסטרה מוקד · A · XL · בוגר',
+    photo: classPhotos.monStdXl,
+    price: 145,
+    seller: 'Daniel Cohen',
+    sellerHe: 'דניאל כהן',
+  }),
+]
+
+seedMarketClasses.push(...configuredMarketClasses)

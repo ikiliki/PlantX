@@ -1,248 +1,358 @@
-import { Link, useParams } from 'react-router-dom'
-import styled from 'styled-components'
-import { Badge } from '../../components/Badge/Badge'
+import { useMemo, useState } from 'react'
+import { useLocation, useParams } from 'react-router-dom'
 import { Button } from '../../components/Button/Button'
-import { Card } from '../../components/Card/Card'
-import { PlantImage } from '../../components/PlantImage/PlantImage'
-import { ProgressBar } from '../../components/ProgressBar/ProgressBar'
-import { OrderBook } from '../../features/market/components/OrderBook/OrderBook'
-import { PriceChart } from '../../features/market/components/PriceChart/PriceChart'
+import { EmptyState } from '../../components/EmptyState/EmptyState'
+import { PageGate } from '../../components/PageGate/PageGate'
+import { useAuth } from '../../features/auth/AuthProvider'
+import { className, speciesName } from '../../features/market/categoryData'
+import { ChartPanel } from '../../features/market/components/ChartPanel/ChartPanel'
+import { MarketListingsPanel } from '../../features/market/components/MarketListingsPanel/MarketListingsPanel'
+import { StockChart } from '../../features/market/components/StockChart/StockChart'
+import { emptyMarketFilters } from '../../features/market/marketFilters'
+import { listingsForClass, plantsForClass } from '../../features/market/classLots'
+import { PlantPassport } from '../../features/greenhouse/components/PlantPassport/PlantPassport'
 import { useI18n } from '../../i18n/I18nProvider'
-import { GRADE_MEANING } from '../../mock/marketNaming'
+import { speciesHref } from '../../features/species/components/GuideLink/GuideLink'
+import { classHistory } from '../../mock/marketHistory'
+import { maskedChange, maskedPrice, maskedQty } from '../../features/market/maskedQuote'
 import { useStore } from '../../mock/store'
-import { theme } from '../../theme/tokens'
+import { placementRelease } from '../../theme/release'
+import {
+  Back,
+  Blurred,
+  BlurredText,
+  BookBlock,
+  Change,
+  Crumbs,
+  Desk,
+  HeadRow,
+  Notice,
+  Page,
+  ProfileCard,
+  Row,
+  Sheet,
+  Side,
+  SideColumn,
+  SideStats,
+  Stat,
+  Tab,
+  Tabs,
+  Ticket,
+  TicketLabel,
+  TicketValue,
+  ChartTabBody,
+} from './MarketClassPage.styles'
 
-const Hero = styled.div`
-  display: grid;
-  gap: ${theme.space.lg};
-  margin-bottom: ${theme.space.lg};
-  @media (min-width: 800px) {
-    grid-template-columns: 220px 1fr;
+type Panel = 'chart' | 'book'
+
+function MarketClassReady({ classId }: { classId?: string }) {
+  const { id: routeId } = useParams()
+  const id = classId ?? routeId
+  const location = useLocation()
+  const { db, purchaseClass, signedIn } = useStore()
+  const { openAuth } = useAuth()
+  const { t, formatMoney, locale } = useI18n()
+  const [notice, setNotice] = useState('')
+  const [panel, setPanel] = useState<Panel>('chart')
+  const mc = db.marketClasses.find((item) => item.id === id)
+  const history = useMemo(() => (mc ? classHistory(mc) : []), [mc])
+  const classListings = useMemo(() => (mc ? listingsForClass(db, mc.id) : []), [db, mc])
+  const selectedListingId = useMemo(() => {
+    const picked = (location.state as { listingId?: string } | null)?.listingId
+    if (picked && classListings.some((listing) => listing.id === picked)) return picked
+    return classListings[0]?.id
+  }, [location.state, classListings])
+  const profilePlantId = useMemo(() => {
+    const listing = classListings.find((item) => item.id === selectedListingId)
+    if (listing) return listing.plantId
+    if (!mc) return null
+    return plantsForClass(db, mc.id)[0]?.id ?? null
+  }, [classListings, selectedListingId, db, mc])
+
+  if (!mc) return <p>{t.passport.notFound}</p>
+
+  const buy = () => {
+    const run = () => {
+      const orderId = purchaseClass(mc.id)
+      setNotice(orderId ? `${t.market.intentRecorded} (${orderId})` : t.market.empty)
+    }
+    if (!signedIn) openAuth('buy', run)
+    else run()
   }
-`
 
-const Photo = styled.div`
-  aspect-ratio: 1;
-  border-radius: ${theme.radii.lg};
-  overflow: hidden;
-  border: 1px solid ${theme.colors.border};
-  background: white;
-`
-
-const Price = styled.div`
-  font-size: clamp(36px, 6vw, 52px);
-  font-weight: 800;
-  line-height: 1;
-  color: ${theme.colors.forest};
-`
-
-const Change = styled.span<{ $up: boolean }>`
-  font-size: 18px;
-  font-weight: 700;
-  color: ${({ $up }) => ($up ? theme.colors.greenDark : theme.colors.danger)};
-  margin-inline-start: 10px;
-`
-
-const Stats = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-  margin: ${theme.space.md} 0;
-`
-
-const Stat = styled.div`
-  background: white;
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.md};
-  padding: 12px;
-  font-size: 13px;
-  color: ${theme.colors.muted};
-  strong {
-    display: block;
-    font-size: 18px;
-    margin-top: 4px;
-    color: ${theme.colors.ink};
-  }
-`
-
-const Actions = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: ${theme.space.md};
-`
-
-const Section = styled.section`
-  margin-top: ${theme.space.xl};
-  h2 {
-    color: ${theme.colors.forest};
-    margin-bottom: 12px;
-  }
-`
-
-const Units = styled.div`
-  display: grid;
-  gap: 10px;
-`
-
-const UnitCard = styled(Link)`
-  display: grid;
-  grid-template-columns: 56px 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  background: white;
-  border-radius: ${theme.radii.md};
-  color: ${theme.colors.ink};
-  text-decoration: none;
-  border: 1px solid ${theme.colors.border};
-  box-shadow: ${theme.shadow.soft};
-`
-
-export function MarketClassPage() {
-  const { id } = useParams()
-  const { db } = useStore()
-  const { t, formatMoney, locale, tr } = useI18n()
-  const mc = db.marketClasses.find((x) => x.id === id)
-  if (!mc) return <p>Not found</p>
-
-  const units = db.plants.filter((p) => p.marketClassId === mc.id)
-  const relatedDemand = db.demands.filter(
-    (d) => d.marketClassId === mc.id || d.speciesId === mc.speciesId,
-  )
-  const gradeNote = GRADE_MEANING[mc.quality]
+  const value = mc.lastPrice * Math.max(mc.supplyUnits, 1)
+  const up = mc.changePct >= 0
+  const species = db.species.find((item) => item.id === mc.speciesId)
+  const categoryFilters = emptyMarketFilters(mc.speciesId)
 
   return (
-    <div>
-      <Link to="/market" style={{ color: theme.colors.muted, fontSize: 14 }}>
-        ← {t.exchange.title}
-      </Link>
+    <Page>
+      <Crumbs>
+        <Back to="/market">← {t.exchange.title}</Back>
+        {species && (
+          <>
+            <span aria-hidden>›</span>
+            <Back to={speciesHref(species.id, 'market')}>{speciesName(species, locale)}</Back>
+          </>
+        )}
+      </Crumbs>
 
-      <Hero>
-        <Photo>
-          <PlantImage src={mc.photo} alt="" />
-        </Photo>
-        <div>
-          <Badge $tone="lime">{mc.code}</Badge>
-          <h1
-            style={{
-              marginTop: 10,
-              fontSize: 'clamp(22px, 4vw, 32px)',
-              color: theme.colors.forest,
-            }}
-          >
-            {locale === 'he' ? mc.displayNameHe : mc.displayName}
-          </h1>
-          <div style={{ marginTop: 16 }}>
-            <Price>
+      <Desk>
+        <ProfileCard>
+          {profilePlantId ? (
+            <PlantPassport plantId={profilePlantId} embedded />
+          ) : (
+            <EmptyState title={t.passport.notFound} />
+          )}
+        </ProfileCard>
+
+        <SideColumn>
+          <Ticket>
+            <TicketLabel>{t.market.buy}</TicketLabel>
+            <TicketLabel>{t.exchange.perUnit}</TicketLabel>
+            <TicketValue>
               {formatMoney(mc.lastPrice)}
-              <Change $up={mc.changePct >= 0}>
-                {mc.changePct >= 0 ? '▲' : '▼'} {Math.abs(mc.changePct).toFixed(1)}%
-              </Change>
-            </Price>
-            <div style={{ color: theme.colors.muted, marginTop: 6, fontSize: 14 }}>
-              {t.exchange.perUnit} · {t.exchange.range} {formatMoney(mc.rangeMin)}–
-              {formatMoney(mc.rangeMax)}
-            </div>
-          </div>
+              <span>{mc.code}</span>
+            </TicketValue>
+            <TicketLabel>{t.market.quantity}</TicketLabel>
+            <TicketValue>
+              1<span>{t.market.unitPlant}</span>
+            </TicketValue>
+            <Button type="button" block onClick={buy}>
+              {t.market.buy}
+            </Button>
+            {notice && <Notice>{notice}</Notice>}
+          </Ticket>
 
-          <Stats>
+          <SideStats>
             <Stat>
-              {t.exchange.demand}
-              <strong>{mc.demandUnits.toLocaleString()}</strong>
+              <dt>{t.exchange.portfolio}</dt>
+              <dd>{formatMoney(value)}</dd>
             </Stat>
             <Stat>
-              {t.exchange.supply}
-              <strong>{mc.supplyUnits.toLocaleString()}</strong>
+              <dt>{t.exchange.supply}</dt>
+              <dd>{mc.supplyUnits.toLocaleString()}</dd>
             </Stat>
             <Stat>
-              {t.exchange.bids}
-              <strong>×{mc.bidQty}</strong>
+              <dt>{t.exchange.demand}</dt>
+              <dd>{mc.demandUnits.toLocaleString()}</dd>
             </Stat>
             <Stat>
-              {t.exchange.asks}
-              <strong>×{mc.askQty}</strong>
+              <dt>{t.exchange.bids}</dt>
+              <dd>×{mc.bidQty}</dd>
             </Stat>
-          </Stats>
+            <Stat>
+              <dt>{t.exchange.asks}</dt>
+              <dd>×{mc.askQty}</dd>
+            </Stat>
+            <Stat>
+              <dt>{t.market.change}</dt>
+              <dd>
+                <Change $up={up}>
+                  {up ? '+' : '−'}
+                  {Math.abs(mc.changePct).toFixed(1)}%
+                </Change>
+              </dd>
+            </Stat>
+          </SideStats>
+        </SideColumn>
+      </Desk>
 
-          <Actions>
-            <Link to="/sell">
-              <Button>{t.exchange.sellSupply}</Button>
-            </Link>
-            <Link to={relatedDemand[0] ? `/demand/${relatedDemand[0].id}` : '/demand'}>
-              <Button variant="secondary">{t.exchange.buyAsk}</Button>
-            </Link>
-          </Actions>
-        </div>
-      </Hero>
+      <BookBlock>
+        <Tabs>
+          <Tab type="button" $on={panel === 'chart'} onClick={() => setPanel('chart')}>
+            {t.nav.charts}
+          </Tab>
+          <Tab type="button" $on={panel === 'book'} onClick={() => setPanel('book')}>
+            {t.exchange.orderBook}
+          </Tab>
+        </Tabs>
 
-      <Section>
-        <h2>{t.exchange.chart}</h2>
-        <Card>
-          <PriceChart points={mc.history} up={mc.changePct >= 0} />
-          <p style={{ fontSize: 12, color: theme.colors.muted, marginTop: 8 }}>
-            {t.exchange.chartNote}
-          </p>
-        </Card>
-      </Section>
+        {panel === 'chart' && (
+          <ChartTabBody>
+            <ChartPanel hint={t.exchange.chartNote}>
+              {history.length >= 2 ? (
+                <StockChart
+                  key={mc.id}
+                  label={className(mc, locale)}
+                  points={history}
+                  defaultRange="3M"
+                  height={280}
+                  extraStats={[
+                    {
+                      label: t.charts.marketRange,
+                      value: `${formatMoney(Math.min(mc.rangeMin, mc.lastPrice))}–${formatMoney(Math.max(mc.rangeMax, mc.lastPrice))}`,
+                    },
+                    { label: t.exchange.supply, value: mc.supplyUnits.toLocaleString() },
+                    { label: t.exchange.demand, value: mc.demandUnits.toLocaleString() },
+                  ]}
+                />
+              ) : (
+                <EmptyState title={t.charts.noTrades} />
+              )}
+            </ChartPanel>
+          </ChartTabBody>
+        )}
 
-      <Section>
-        <h2>{t.exchange.orderBook}</h2>
-        <OrderBook mc={mc} />
-      </Section>
+        {panel === 'book' && (
+          <Sheet>
+            <HeadRow>
+              <span>{t.market.seller}</span>
+              <span>{t.common.status}</span>
+              <span>{t.market.quantity}</span>
+              <span>{t.market.price}</span>
+            </HeadRow>
+            {mc.asks.map((row, index) => (
+              <Row key={`ask-${index}`}>
+                <span>{locale === 'he' ? row.sellerLabelHe : row.sellerLabel}</span>
+                <Side>{t.exchange.asks}</Side>
+                <span>×{row.qty}</span>
+                <strong>{formatMoney(row.price)}</strong>
+              </Row>
+            ))}
+            {mc.bids.map((row, index) => (
+              <Row key={`bid-${index}`}>
+                <span>{locale === 'he' ? row.buyerLabelHe : row.buyerLabel}</span>
+                <Side $bid>{t.exchange.bids}</Side>
+                <span>×{row.qty}</span>
+                <strong>{formatMoney(row.price)}</strong>
+              </Row>
+            ))}
+          </Sheet>
+        )}
+      </BookBlock>
 
-      <Section>
-        <h2>{t.exchange.gradeMeaning}</h2>
-        <Card>
-          <p style={{ color: theme.colors.muted, fontSize: 14 }}>
-            <strong style={{ color: theme.colors.ink }}>{mc.quality}:</strong>{' '}
-            {locale === 'he' ? gradeNote.he : gradeNote.en}
-          </p>
-        </Card>
-      </Section>
+      <MarketListingsPanel filters={categoryFilters} title={t.charts.inCategory} selectedId={selectedListingId} />
+    </Page>
+  )
+}
 
-      {relatedDemand.length > 0 && (
-        <Section>
-          <h2>{t.exchange.bulkDemand}</h2>
-          {relatedDemand.map((d) => (
-            <Card key={d.id} style={{ marginBottom: 10 }}>
-              <Link
-                to={`/demand/${d.id}`}
-                style={{ color: theme.colors.forest, fontWeight: 700 }}
-              >
-                {tr(d.title, d.titleHe)}
-              </Link>
-              <div style={{ marginTop: 10 }}>
-                <ProgressBar value={d.committedQty} max={d.targetQty} label={t.demand.progress} />
-              </div>
-              <div style={{ fontSize: 13, color: theme.colors.muted, marginTop: 8 }}>
-                {formatMoney(d.priceMin)}–{formatMoney(d.priceMax)} · {d.dueDate}
-              </div>
-            </Card>
-          ))}
-        </Section>
-      )}
+function MarketClassPending({ classId }: { classId?: string }) {
+  const { id: routeId } = useParams()
+  const id = classId ?? routeId
+  const { db } = useStore()
+  const { t, locale, formatMoney } = useI18n()
+  const [panel, setPanel] = useState<Panel>('chart')
+  const mc = db.marketClasses.find((item) => item.id === id)
+  const history = useMemo(() => {
+    if (!mc) return []
+    return classHistory({
+      ...mc,
+      lastPrice: maskedPrice(mc.id),
+      changePct: maskedChange(mc.id),
+    })
+  }, [mc])
+  const classListings = useMemo(() => (mc ? listingsForClass(db, mc.id) : []), [db, mc])
+  const profilePlantId = useMemo(() => {
+    if (!mc) return null
+    return plantsForClass(db, mc.id)[0]?.id ?? classListings[0]?.plantId ?? null
+  }, [classListings, db, mc])
+  if (!mc) return <p>{t.passport.notFound}</p>
 
-      <Section>
-        <h2>{t.exchange.unitsInClass}</h2>
-        <Units>
-          {units.length === 0 && <p style={{ color: theme.colors.muted }}>—</p>}
-          {units.map((p) => (
-            <UnitCard key={p.id} to={`/plants/${p.id}`}>
-              <div style={{ width: 56, height: 56, borderRadius: 10, overflow: 'hidden' }}>
-                <PlantImage src={p.photos[0]} alt="" />
-              </div>
-              <div>
-                <strong>{p.code}</strong>
-                <div style={{ fontSize: 13, color: theme.colors.muted }}>
-                  {tr(p.title, p.titleHe)}
-                </div>
-              </div>
-              <Badge $tone="muted">{p.quality}</Badge>
-            </UnitCard>
-          ))}
-        </Units>
-      </Section>
-    </div>
+  const species = db.species.find((item) => item.id === mc.speciesId)
+
+  return (
+    <Page>
+      <Crumbs>
+        <Back to="/market">← {t.exchange.title}</Back>
+        {species && (
+          <>
+            <span aria-hidden>›</span>
+            <Back to={speciesHref(species.id, 'market')}>{speciesName(species, locale)}</Back>
+          </>
+        )}
+      </Crumbs>
+
+      <Desk>
+        <ProfileCard>
+          {profilePlantId ? (
+            <PlantPassport plantId={profilePlantId} embedded />
+          ) : (
+            <EmptyState title={t.passport.notFound} />
+          )}
+        </ProfileCard>
+
+        <SideColumn>
+          <Ticket>
+            <TicketLabel>{t.market.buy}</TicketLabel>
+            <TicketValue>
+              <BlurredText>{formatMoney(maskedPrice(mc.id))}</BlurredText>
+              <span>{mc.code}</span>
+            </TicketValue>
+          </Ticket>
+        </SideColumn>
+      </Desk>
+
+      <BookBlock>
+        <Tabs>
+          <Tab type="button" $on={panel === 'chart'} onClick={() => setPanel('chart')}>
+            {t.nav.charts}
+          </Tab>
+          <Tab type="button" $on={panel === 'book'} onClick={() => setPanel('book')}>
+            {t.exchange.orderBook}
+          </Tab>
+        </Tabs>
+        {panel === 'chart' ? (
+          <ChartTabBody>
+            <Blurred>
+              <ChartPanel hint={t.exchange.chartNote}>
+                {history.length >= 2 ? (
+                  <StockChart
+                    key={mc.id}
+                    label={className(mc, locale)}
+                    points={history}
+                    defaultRange="3M"
+                    height={280}
+                  />
+                ) : (
+                  <EmptyState title={t.charts.noTrades} />
+                )}
+              </ChartPanel>
+            </Blurred>
+          </ChartTabBody>
+        ) : (
+          <Sheet>
+            <HeadRow>
+              <span>{t.market.seller}</span>
+              <span>{t.common.status}</span>
+              <span>{t.market.quantity}</span>
+              <span>{t.market.price}</span>
+            </HeadRow>
+            {mc.asks.map((row, index) => (
+              <Row key={`ask-${index}`} $blur>
+                <span>{locale === 'he' ? row.sellerLabelHe : row.sellerLabel}</span>
+                <Side>{t.exchange.asks}</Side>
+                <span>×{maskedQty(`${mc.id}-ask-${index}`)}</span>
+                <strong>{formatMoney(maskedPrice(`${mc.id}-ask-${index}`))}</strong>
+              </Row>
+            ))}
+            {mc.bids.map((row, index) => (
+              <Row key={`bid-${index}`} $blur>
+                <span>{locale === 'he' ? row.buyerLabelHe : row.buyerLabel}</span>
+                <Side $bid>{t.exchange.bids}</Side>
+                <span>×{maskedQty(`${mc.id}-bid-${index}`)}</span>
+                <strong>{formatMoney(maskedPrice(`${mc.id}-bid-${index}`))}</strong>
+              </Row>
+            ))}
+          </Sheet>
+        )}
+      </BookBlock>
+    </Page>
+  )
+}
+
+export function MarketClassPage({ classId }: { classId?: string } = {}) {
+  const { t } = useI18n()
+  const { db } = useStore()
+  const release = placementRelease(db.system, 'market.class')
+
+  return (
+    <PageGate pageId="market" title={t.nav.market}>
+      {release.enabled && release.status === 'ready' ? (
+        <MarketClassReady classId={classId} />
+      ) : release.enabled ? (
+        <MarketClassPending classId={classId} />
+      ) : null}
+    </PageGate>
   )
 }

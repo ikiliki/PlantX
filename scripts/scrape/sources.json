@@ -1,0 +1,47 @@
+{
+  "readme": "Fixture sources only. Real startUrl values will be added when sites are provided. Do not put a live site here until then.",
+  "sources": [
+    {
+      "id": "fixture-category",
+      "enabled": true,
+      "startUrl": "",
+      "fixture": "fixtures/category.html",
+      "recordSelector": "article.listing",
+      "fields": {
+        "category": { "selector": "[data-field='category']", "kind": "text" },
+        "variety": { "selector": "[data-field='variety']", "kind": "text" },
+        "quality": { "selector": "[data-field='quality']", "kind": "quality" },
+        "size": { "selector": "[data-field='size']", "kind": "size" },
+        "stage": { "selector": "[data-field='stage']", "kind": "stage" }
+      }
+    },
+    {
+      "id": "fixture-detail",
+      "enabled": true,
+      "startUrl": "",
+      "fixture": "fixtures/detail.html",
+      "recordSelector": "article.plant-detail",
+      "fields": {
+        "category": { "selector": "[data-field='category']", "kind": "text" },
+        "variety": { "selector": "[data-field='variety']", "kind": "text" },
+        "quality": { "selector": "[data-field='quality']", "kind": "quality" },
+        "size": { "selector": "[data-field='size']", "kind": "size" },
+        "stage": { "selector": "[data-field='stage']", "kind": "stage" }
+      }
+    },
+    {
+      "id": "site-pending",
+      "enabled": false,
+      "startUrl": "",
+      "fixture": "",
+      "recordSelector": "",
+      "fields": {
+        "category": { "selector": "", "kind": "text" },
+        "variety": { "selector": "", "kind": "text" },
+        "quality": { "selector": "", "kind": "quality" },
+        "size": { "selector": "", "kind": "size" },
+        "stage": { "selector": "", "kind": "stage" }
+      }
+    }
+  ]
+}

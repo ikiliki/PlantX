@@ -1,0 +1,204 @@
+[
+  {
+    "id": "u-maya",
+    "name": "Maya Levi",
+    "nameHe": "מאיה לוי",
+    "email": "maya@plantx.dev",
+    "role": "grower",
+    "region": "Central Israel",
+    "regionHe": "מרכז",
+    "bio": "Home grower with surplus golden pothos and N’Joy cuttings.",
+    "bioHe": "מגדלת ביתית עם עודפי ייחורים של פוטוס זהוב ו־N’Joy.",
+    "rating": 4.8,
+    "completedOrders": 14,
+    "verificationRate": 0.62,
+    "cancellations": 1,
+    "specialties": [
+      "Pothos",
+      "N'Joy"
+    ],
+    "specialtiesHe": [
+      "פוטוס",
+      "אן ג'וי"
+    ],
+    "avatarColor": "#1FA85A",
+    "friendIds": [
+      "u-daniel",
+      "u-gal"
+    ],
+    "lat": 31.973,
+    "lng": 34.807,
+    "accountStatus": "active"
+  },
+  {
+    "id": "u-daniel",
+    "name": "Daniel Cohen",
+    "nameHe": "דניאל כהן",
+    "email": "daniel@plantx.dev",
+    "role": "collector",
+    "region": "Tel Aviv",
+    "regionHe": "תל אביב",
+    "bio": "Collector of statement monsteras with full passports.",
+    "bioHe": "אספן מונסטרות מוקד עם דרכון מלא.",
+    "rating": 4.9,
+    "completedOrders": 9,
+    "verificationRate": 0.95,
+    "cancellations": 0,
+    "specialties": [
+      "Monstera",
+      "Statement"
+    ],
+    "specialtiesHe": [
+      "מונסטרה",
+      "מוקד"
+    ],
+    "avatarColor": "#2B6CB0",
+    "friendIds": [
+      "u-maya",
+      "u-noa"
+    ],
+    "lat": 32.0853,
+    "lng": 34.7818,
+    "accountStatus": "active"
+  },
+  {
+    "id": "u-noa",
+    "name": "Noa Barak",
+    "nameHe": "נועה ברק",
+    "email": "noa@plantx.dev",
+    "role": "business",
+    "businessName": "GreenSpace Offices",
+    "businessNameHe": "גרין־ספייס משרדים",
+    "region": "Central Israel",
+    "regionHe": "מרכז",
+    "bio": "Workplace greening buyer aggregating local supply.",
+    "bioHe": "רוכשת ירוק למשרדים ומאגדת אספקה מקומית.",
+    "rating": 4.7,
+    "completedOrders": 6,
+    "verificationRate": 0.4,
+    "cancellations": 0,
+    "specialties": [
+      "Office plants",
+      "Bulk cuttings"
+    ],
+    "specialtiesHe": [
+      "צמחי משרד",
+      "ייחורים בכמות"
+    ],
+    "avatarColor": "#157A42",
+    "friendIds": [
+      "u-daniel",
+      "u-gal"
+    ],
+    "lat": 31.973,
+    "lng": 34.807,
+    "accountStatus": "active"
+  },
+  {
+    "id": "u-gal",
+    "name": "Gal Mizrahi",
+    "nameHe": "גל מזרחי",
+    "email": "gal@plantx.dev",
+    "role": "nursery",
+    "businessName": "Gal Nursery",
+    "businessNameHe": "משתלת גל",
+    "region": "Sharon",
+    "regionHe": "שרון",
+    "bio": "Pro nursery with bulk inventory and wholesale lots.",
+    "bioHe": "משתלה מקצועית עם מלאי גדול ומנות סיטונאיות.",
+    "rating": 4.6,
+    "completedOrders": 48,
+    "verificationRate": 0.78,
+    "cancellations": 3,
+    "specialties": [
+      "Wholesale",
+      "Monstera",
+      "Pothos"
+    ],
+    "specialtiesHe": [
+      "סיטונאות",
+      "מונסטרה",
+      "פוטוס"
+    ],
+    "avatarColor": "#D4A017",
+    "friendIds": [
+      "u-maya",
+      "u-noa"
+    ],
+    "lat": 32.3215,
+    "lng": 34.8532,
+    "accountStatus": "active"
+  },
+  {
+    "id": "u-dana",
+    "name": "Admin Dana",
+    "nameHe": "דנה אדמין",
+    "email": "dana@plantx.dev",
+    "role": "admin",
+    "region": "Israel",
+    "regionHe": "ישראל",
+    "bio": "Trust & safety queue.",
+    "bioHe": "תור אמון ובטיחות.",
+    "rating": 5,
+    "completedOrders": 0,
+    "verificationRate": 1,
+    "cancellations": 0,
+    "specialties": [
+      "Moderation"
+    ],
+    "specialtiesHe": [
+      "מודרציה"
+    ],
+    "avatarColor": "#0B1F14",
+    "friendIds": [
+      "u-maya",
+      "u-daniel",
+      "u-gal",
+      "u-noa"
+    ],
+    "lat": 31.411,
+    "lng": 35.082,
+    "accountStatus": "active"
+  },
+  {
+    "id": "u-ari",
+    "name": "New grower",
+    "nameHe": "מגדל חדש",
+    "email": "ari@plantx.dev",
+    "role": "grower",
+    "region": "Central Israel",
+    "regionHe": "מרכז",
+    "bio": "Just arrived. Nothing planted and nothing on the market yet.",
+    "bioHe": "הרגע הגיע. עוד אין צמחים ואין כלום בשוק.",
+    "rating": 0,
+    "completedOrders": 0,
+    "verificationRate": 0,
+    "cancellations": 0,
+    "specialties": [],
+    "specialtiesHe": [],
+    "avatarColor": "#8AA392",
+    "friendIds": [],
+    "lat": 31.973,
+    "lng": 34.807,
+    "accountStatus": "active"
+  },
+  {
+    "id": "u-guest",
+    "name": "Guest",
+    "nameHe": "אורח/ת",
+    "role": "guest",
+    "region": "—",
+    "regionHe": "—",
+    "bio": "Browse-only guest.",
+    "bioHe": "אורח/ת לצפייה בלבד.",
+    "rating": 0,
+    "completedOrders": 0,
+    "verificationRate": 0,
+    "cancellations": 0,
+    "specialties": [],
+    "specialtiesHe": [],
+    "avatarColor": "#5E6B63",
+    "friendIds": [],
+    "accountStatus": "active"
+  }
+]

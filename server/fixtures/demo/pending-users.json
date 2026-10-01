@@ -1,0 +1,18 @@
+[
+  {
+    "id": "pu-seed-lea",
+    "name": "Lea Cohen",
+    "email": "lea@example.com",
+    "note": "Home grower in Tel Aviv — wants a quiet greenhouse.",
+    "createdAt": "2026-09-28T09:00:00.000Z",
+    "status": "pending"
+  },
+  {
+    "id": "pu-seed-omar",
+    "name": "Omar Haddad",
+    "email": "omar@example.com",
+    "note": "Nursery cuttings, looking to list wholesale lots.",
+    "createdAt": "2026-09-29T14:30:00.000Z",
+    "status": "pending"
+  }
+]

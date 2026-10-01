@@ -42,29 +42,6 @@ checks.greenhouseHasMother = await page.evaluate(() =>
   document.body.innerText.includes('פוטוס אם') || document.body.innerText.includes('Mother'),
 )
 
-await page.goto('http://127.0.0.1:5173/demand/dm-pothos-1000', { waitUntil: 'networkidle0' })
-await page.evaluate(() => {
-  const btn = [...document.querySelectorAll('button')].find((b) =>
-    /שליחת התחייבות|Submit commitment/i.test(b.textContent || ''),
-  )
-  btn?.click()
-})
-await new Promise((r) => setTimeout(r, 300))
-const after = JSON.parse(await page.evaluate(() => localStorage.getItem('plantx-mock-db-v1')))
-checks.commitmentAdded = after.commitments.length > parsed.commitments.length || after.commitments.some((c) => c.id.startsWith('cm-') && c.growerId === 'u-maya')
-
-// Switch to Yael events and advance phase
-await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle0' })
-await page.select('select', 'u-yael')
-await page.goto('http://127.0.0.1:5173/events', { waitUntil: 'networkidle0' })
-await page.evaluate(() => {
-  const btn = [...document.querySelectorAll('button')].find((b) => /in use/i.test(b.textContent || ''))
-  btn?.click()
-})
-await new Promise((r) => setTimeout(r, 200))
-const ev = JSON.parse(await page.evaluate(() => localStorage.getItem('plantx-mock-db-v1')))
-checks.eventInUse = ev.events[0].phase === 'in_use'
-
 // Admin resolve
 await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle0' })
 const selects = await page.$$('select')

@@ -1,0 +1,78 @@
+{
+  "pages": {
+    "home": "live",
+    "market": "maintenance",
+    "greenhouse": "live",
+    "rank": "maintenance",
+    "wiki": "maintenance"
+  },
+  "features": {
+    "news": {
+      "enabled": true,
+      "status": "ready"
+    },
+    "market": {
+      "enabled": false,
+      "status": "comingSoon"
+    },
+    "greenhouse": {
+      "enabled": true,
+      "status": "ready"
+    },
+    "rank": {
+      "enabled": false,
+      "status": "comingSoon"
+    },
+    "wiki": {
+      "enabled": false,
+      "status": "comingSoon"
+    }
+  },
+  "placements": {
+    "home.feed": {
+      "enabled": true
+    },
+    "home.market": {
+      "enabled": true
+    },
+    "home.rank": {
+      "enabled": true
+    },
+    "home.wiki": {
+      "enabled": true
+    },
+    "market.board": {
+      "enabled": true
+    },
+    "market.class": {
+      "enabled": true
+    },
+    "market.categories": {
+      "enabled": true
+    },
+    "market.category": {
+      "enabled": true
+    },
+    "greenhouse.market.wallet": {
+      "enabled": true
+    },
+    "greenhouse.board": {
+      "enabled": true
+    },
+    "greenhouse.card": {
+      "enabled": true
+    },
+    "passport.market": {
+      "enabled": true
+    },
+    "passport.rank": {
+      "enabled": true
+    },
+    "rank.board": {
+      "enabled": true
+    },
+    "wiki.board": {
+      "enabled": true
+    }
+  }
+}

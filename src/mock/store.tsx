@@ -7,39 +7,143 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { createCatalog } from './catalog'
+import { fetchCatalogFile, saveCatalogFile } from './catalogFile'
+import { fieldsFromPlace, resolveArea } from './locations'
 import { createSeed } from './seed'
 import type {
-  CommitmentStatus,
-  EventPhase,
+  Catalog,
+  CommunityGradeLetter,
   Locale,
+  DemoScenarios,
   MockDb,
   ModerationStatus,
+  PublishResult,
   QualityGrade,
+  SizeBand,
+  Species,
+  StageBand,
   User,
 } from './types'
+import { PLACEMENTS, type FeatureId, type PageId, type PageStatus, type PlacementId, type ReleaseMode } from '../theme/release'
+import { publishBlocker } from '../features/greenhouse/communityGrade'
 import { defaultPlantPhoto } from './images'
+import {
+  fetchLive,
+  fetchGoogleAuth,
+  fetchMembers,
+  fetchPendingTransactions,
+  fetchPendingUsers,
+  postApprovePending,
+  postDisableUser,
+  postEnableUser,
+  postGoogleSessionResult,
+  postPlant,
+  postPlantPhoto,
+  postPlantWater,
+  postRegister,
+  postRejectPending,
+  postSession,
+  putSystem,
+  type LivePayload,
+} from './liveApi'
+import { exampleClientDb } from './examples'
+import { personaFlags } from './personas'
+import { projectDb } from './projectDb'
+import { ensureSession, normalizeScenarios } from './session'
+import { applyShellToDb, shellLivePayload } from './shell'
 
-const STORAGE_KEY = 'plantx-mock-db-v3'
+const STORAGE_KEY = 'plantx-mock-db-v8'
+
+export type LiveStatus = 'loading' | 'up' | 'down'
+
+/** QA/prod start empty. Demo plants live only in example mocks and local mode. */
+function emptyDb(): MockDb {
+  const seed = ensureSession(createSeed())
+  return {
+    ...seed,
+    users: [],
+    plants: [],
+    species: [],
+    listings: [],
+    orders: [],
+    offers: [],
+    threads: [],
+    moderation: [],
+    claimDrafts: [],
+    updates: [],
+    topGreenhouses: [],
+    pendingUsers: [],
+    pendingTransactions: [],
+    marketClasses: [],
+    catalog: { categories: [], subcategories: [], properties: [] },
+    currentUserId: null,
+  }
+}
 
 function loadDb(): MockDb {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as MockDb
+    if (raw) return ensureSession(JSON.parse(raw) as MockDb)
   } catch {
     /* ignore */
   }
-  return createSeed()
+  return emptyDb()
 }
 
 function saveDb(db: MockDb) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db))
+  const copy = structuredClone(db)
+  ensureSession(copy)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(copy))
+}
+
+function actorId(db: MockDb) {
+  const user = db.users.find((item) => item.id === db.currentUserId)
+  if (!user || user.role === 'guest') return null
+  return user.id
+}
+
+function uniqueId(base: string, taken: string[]) {
+  if (!taken.includes(base)) return base
+  let n = 2
+  while (taken.includes(`${base}-${n}`)) n += 1
+  return `${base}-${n}`
 }
 
 interface StoreApi {
   db: MockDb
   currentUser: User | null
+  signedIn: boolean
+  /** Live API reachability. Components read this; they do not fetch. */
+  liveStatus: LiveStatus
+  /** True only when the server is up — live writes go through. */
+  liveWritable: boolean
+  /** Server environment: mock (dev fixtures) | local (clean JSON) | prod. */
+  plantxEnv: 'mock' | 'local' | 'prod'
+  plantxEnvLabel: string
+  plantxSeed: 'empty' | 'demo'
+  retryLive: () => Promise<void>
   setLocale: (locale: Locale) => void
+  setDemoScenarios: (patch: Partial<DemoScenarios>) => void
+  setPageStatus: (pageId: PageId, status: PageStatus) => void
+  setFeatureEnabled: (featureId: FeatureId, enabled: boolean) => void
+  setFeatureStatus: (featureId: FeatureId, status: ReleaseMode) => void
+  setPlacementEnabled: (placement: PlacementId, enabled: boolean) => void
   loginAs: (userId: string | null) => void
+  loginByEmail: (email: string) => Promise<boolean>
+  /** Google Identity Services ID token → session. */
+  loginWithGoogle: (credential: string) => Promise<{ ok: true } | { ok: false; reason: string }>
+  /** Landing / auth register — queues for admin approval. Does not sign in. */
+  requestAccess: (input: {
+    name: string
+    email: string
+    note?: string
+  }) => Promise<{ ok: true } | { ok: false; reason: 'invalid' | 'exists' | 'offline' }>
+  approvePendingUser: (id: string) => Promise<boolean>
+  rejectPendingUser: (id: string) => Promise<boolean>
+  disableUser: (id: string) => Promise<boolean>
+  enableUser: (id: string) => Promise<boolean>
+  refreshAccessQueue: () => Promise<void>
   resetDemo: () => void
   createListing: (input: {
     plantId: string
@@ -47,7 +151,37 @@ interface StoreApi {
     quantity: number
     unit: 'plant' | 'cutting' | 'bundle'
     allowOffers: boolean
+  }) => PublishResult
+  /** Anonymous community grade from the Rank stack. */
+  gradePlant: (plantId: string, letter: CommunityGradeLetter) => void
+  ungradePlant: (plantId: string) => void
+  refreshPhoto: (plantId: string) => void
+  confirmWater: (plantId: string) => void
+  addGreenhousePlant: (input: {
+    title: string
+    titleHe: string
+    description: string
+    descriptionHe: string
+    photo?: string
+    speciesId: string
+    variety: string
+    varietyHe: string
+    quality: QualityGrade
+    sizeBand: SizeBand
+    stage: StageBand
+    code: string
+    marketClassId?: string
+    subcategoryId?: string
+    traits?: Record<string, string>
+    location: { region: string; regionHe: string; lat: number; lng: number }
   }) => string
+  commitCatalog: (
+    fn: (ctx: { catalog: Catalog; species: Species[] }) => {
+      catalog: Catalog
+      species?: Species[]
+    },
+  ) => void
+  purchaseClass: (marketClassId: string) => string | null
   createPlantBatch: (input: {
     speciesId: string
     title: string
@@ -57,16 +191,8 @@ interface StoreApi {
     rooting: 'rooted' | 'unrooted' | 'established'
     parentId?: string
     photo?: string
+    location: { region: string; regionHe: string; lat: number; lng: number }
   }) => string
-  commitToDemand: (input: {
-    demandId: string
-    quantity: number
-    offeredPrice: number
-    quality: QualityGrade
-    availableDate: string
-    plantId?: string
-  }) => string
-  setCommitmentStatus: (id: string, status: CommitmentStatus) => void
   makeOffer: (input: {
     listingId: string
     amount: number
@@ -75,64 +201,435 @@ interface StoreApi {
   }) => void
   setOfferStatus: (id: string, status: 'accepted' | 'declined' | 'withdrawn') => void
   completeHandoff: (orderId: string) => void
-  createDemand: (input: {
-    title: string
-    titleHe: string
-    speciesId: string
-    targetQty: number
-    minSupplierQty: number
-    priceMin: number
-    priceMax: number
-    quality: QualityGrade[]
-    region: string
-    regionHe: string
-    dueDate: string
-    notes: string
-    notesHe: string
-  }) => string
-  aggregateAndConfirm: (demandId: string) => string
-  setEventPhase: (eventId: string, phase: EventPhase) => void
-  gradeRecovery: (
-    eventId: string,
-    items: { plantId: string; grade: QualityGrade | 'lost' | 'damaged'; notes: string; notesHe: string }[],
-  ) => void
-  redistributeEvent: (eventId: string, destination: string) => void
   resolveModeration: (id: string, status: ModerationStatus) => void
   claimDraft: (draftId: string) => void
   reserveListing: (listingId: string) => string
   sendMessage: (threadId: string, body: string, bodyHe: string) => void
+  setFeedFriendsOnly: (value: boolean) => void
 }
 
 const StoreContext = createContext<StoreApi | null>(null)
 
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [db, setDb] = useState<MockDb>(() => loadDb())
+export function StoreProvider({
+  source = 'api',
+  children,
+}: {
+  /** `example` = storybook client mocks of the API. `api` = QA or local server. */
+  source?: 'api' | 'example'
+  children: ReactNode
+}) {
+  const example = source === 'example'
+  const [db, setDb] = useState<MockDb>(() => (example ? exampleClientDb() : loadDb()))
+  const [liveStatus, setLiveStatus] = useState<LiveStatus>(example ? 'up' : 'loading')
+  const [runtimeEnv, setRuntimeEnv] = useState<'mock' | 'local' | 'prod'>(
+    () =>
+      example
+        ? 'mock'
+        : (import.meta.env.VITE_PLANTX_ENV as 'mock' | 'local' | 'prod' | undefined) || 'local',
+  )
+  const [runtimeEnvLabel, setRuntimeEnvLabel] = useState(example ? 'mock · demo' : 'local · json db')
+  const [runtimeSeed, setRuntimeSeed] = useState<'empty' | 'demo'>(example ? 'demo' : 'empty')
 
   useEffect(() => {
-    saveDb(db)
-  }, [db])
+    if (!example) saveDb(db)
+  }, [db, example])
 
   const update = useCallback((fn: (prev: MockDb) => MockDb) => {
     setDb((prev) => fn(structuredClone(prev)))
   }, [])
 
+  const applyLive = useCallback((live: LivePayload) => {
+    const userIds = new Set(live.users.map((user) => user.id))
+    const plants = live.plants.filter((plant) => userIds.has(plant.ownerId))
+    const plantIds = new Set(plants.map((plant) => plant.id))
+    const updates = live.updates.filter(
+      (row) => userIds.has(row.userId) && (!row.plantId || plantIds.has(row.plantId)),
+    )
+    update((d) => {
+      if (live.env === 'mock') {
+        const example = exampleClientDb()
+        return {
+          ...example,
+          system: live.system,
+          users: live.users,
+          plants,
+          catalog: live.catalog ?? example.catalog,
+          updates,
+          currentUserId: live.currentUserId,
+          flags: personaFlags(live.currentUserId),
+          listings: example.listings.filter((listing) => plantIds.has(listing.plantId) && userIds.has(listing.sellerId)),
+          locale: d.locale,
+          visitorId: d.visitorId,
+        }
+      }
+      return {
+        ...d,
+        system: live.system,
+        users: live.users,
+        plants,
+        catalog: live.catalog ?? d.catalog,
+        updates,
+        currentUserId: live.currentUserId,
+        flags: personaFlags(live.currentUserId),
+        moderation: [],
+        listings: [],
+        marketClasses: [],
+        orders: [],
+        topGreenhouses: [],
+        pendingUsers: [],
+        pendingTransactions: [],
+      }
+    })
+    if (live.env) setRuntimeEnv(live.env)
+    if (live.envLabel) setRuntimeEnvLabel(live.envLabel)
+    if (live.seed) setRuntimeSeed(live.seed)
+  }, [update])
+
+  const applyShell = useCallback(() => {
+    const shell = shellLivePayload()
+    update((d) => applyShellToDb(d, shell))
+    if (shell.env) setRuntimeEnv(shell.env)
+    if (shell.envLabel) setRuntimeEnvLabel(shell.envLabel)
+    if (shell.seed) setRuntimeSeed(shell.seed)
+  }, [update])
+
+  const retryLive = useCallback(async (opts?: { useShellOnFail?: boolean }) => {
+    setLiveStatus('loading')
+    const live = await fetchLive()
+    if (live) {
+      applyLive(live)
+      setLiveStatus('up')
+      const [pending, members, transactions] = await Promise.all([
+        fetchPendingUsers('pending'),
+        fetchMembers(),
+        fetchPendingTransactions(),
+      ])
+      update((d) => {
+        if (pending) d.pendingUsers = pending.pending
+        if (members) d.users = members.users
+        if (transactions) d.pendingTransactions = transactions.transactions
+        return d
+      })
+      return
+    }
+    if (opts?.useShellOnFail) applyShell()
+    setLiveStatus('down')
+  }, [applyLive, applyShell, update])
+
+  const syncSystem = useCallback((system: MockDb['system']) => {
+    if (liveStatus !== 'up') return
+    void putSystem(system).then((res) => {
+      if (res?.system) {
+        update((d) => ({ ...d, system: res.system }))
+      }
+    })
+  }, [liveStatus, update])
+
+  useEffect(() => {
+    if (example) return
+    void (async () => {
+      const file = await fetchCatalogFile()
+      if (!file) return
+      update((d) => {
+        d.catalog = file
+        return d
+      })
+    })()
+  }, [example, update])
+
+  useEffect(() => {
+    if (example) return
+    void retryLive({ useShellOnFail: import.meta.env.VITE_PLANTX_ENV === 'mock' })
+    // Initial hydrate only — retryLive is exposed for the offline banner.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [example])
+
+  const visible = useMemo(() => projectDb(db), [db])
   const currentUser = useMemo(
     () => db.users.find((u) => u.id === db.currentUserId) ?? null,
     [db],
   )
+  const signedIn = Boolean(currentUser && currentUser.role !== 'guest')
+  const liveWritable = liveStatus === 'up'
 
   const api: StoreApi = {
-    db,
+    db: visible,
     currentUser,
+    signedIn,
+    liveStatus,
+    liveWritable,
+    plantxEnv: runtimeEnv,
+    plantxEnvLabel: runtimeEnvLabel,
+    plantxSeed: runtimeSeed,
+    retryLive: () => retryLive(),
     setLocale: (locale) => update((d) => ({ ...d, locale })),
-    loginAs: (userId) => update((d) => ({ ...d, currentUserId: userId })),
-    resetDemo: () => setDb(createSeed()),
+    setDemoScenarios: (patch) =>
+      update((d) => ({
+        ...d,
+        flags: { ...normalizeScenarios(d.flags), ...patch },
+      })),
+    setPageStatus: (pageId, status) =>
+      update((d) => {
+        d.system = {
+          ...d.system,
+          pages: { ...d.system.pages, [pageId]: status },
+        }
+        syncSystem(d.system)
+        return d
+      }),
+    setFeatureEnabled: (featureId, enabled) =>
+      update((d) => {
+        d.system = {
+          ...d.system,
+          features: {
+            ...d.system.features,
+            [featureId]: { ...d.system.features[featureId], enabled },
+          },
+        }
+        syncSystem(d.system)
+        return d
+      }),
+    setFeatureStatus: (featureId, status) =>
+      update((d) => {
+        d.system = {
+          ...d.system,
+          features: {
+            ...d.system.features,
+            [featureId]: { ...d.system.features[featureId], status },
+          },
+        }
+        syncSystem(d.system)
+        return d
+      }),
+    setPlacementEnabled: (placement, enabled) =>
+      update((d) => {
+        const item = PLACEMENTS.find((entry) => entry.id === placement)
+        if (item?.required && !enabled) return d
+        d.system = {
+          ...d.system,
+          placements: {
+            ...d.system.placements,
+            [placement]: { enabled },
+          },
+        }
+        syncSystem(d.system)
+        return d
+      }),
+    loginAs: (userId) => {
+      update((d) => ({
+        ...d,
+        currentUserId: userId,
+        flags: personaFlags(userId),
+      }))
+      if (!liveWritable) return
+      void postSession({ userId }).then((live) => {
+        if (live) {
+          applyLive(live)
+          setLiveStatus('up')
+        }
+      })
+    },
+    loginByEmail: async (email) => {
+      const trimmed = email.trim()
+      if (!trimmed.includes('@')) return false
+
+      const live = await postSession({ email: trimmed })
+      if (live) {
+        applyLive(live)
+        setLiveStatus('up')
+        return true
+      }
+
+      const user = db.users.find(
+        (u) =>
+          u.role !== 'guest' &&
+          u.email?.toLowerCase() === trimmed.toLowerCase() &&
+          (u.accountStatus ?? 'active') === 'active',
+      )
+      if (!user) return false
+      update((d) => ({ ...d, currentUserId: user.id, flags: personaFlags(user.id) }))
+      return true
+    },
+    loginWithGoogle: async (credential) => {
+      const result = await postGoogleSessionResult(credential)
+      if (!result.ok) return { ok: false as const, reason: result.error }
+      applyLive(result.live)
+      setLiveStatus('up')
+      const [pending, members, transactions] = await Promise.all([
+        fetchPendingUsers('pending'),
+        fetchMembers(),
+        fetchPendingTransactions(),
+      ])
+      update((d) => {
+        if (pending) d.pendingUsers = pending.pending
+        if (members) d.users = members.users
+        if (transactions) d.pendingTransactions = transactions.transactions
+        return d
+      })
+      return { ok: true as const }
+    },
+    requestAccess: async ({ name, email, note }) => {
+      const trimmedName = name.trim()
+      const trimmedEmail = email.trim().toLowerCase()
+      if (!trimmedName || !trimmedEmail.includes('@')) return { ok: false, reason: 'invalid' as const }
+      if (db.users.some((u) => u.email?.toLowerCase() === trimmedEmail)) {
+        return { ok: false, reason: 'exists' as const }
+      }
+      if (db.pendingUsers.some((u) => u.status === 'pending' && u.email === trimmedEmail)) {
+        return { ok: false, reason: 'exists' as const }
+      }
+
+      if (liveWritable) {
+        const res = await postRegister({ name: trimmedName, email: trimmedEmail, note })
+        if (!res) return { ok: false, reason: 'offline' as const }
+        update((d) => {
+          d.pendingUsers = [res.pending, ...d.pendingUsers.filter((row) => row.id !== res.pending.id)]
+          return d
+        })
+        return { ok: true as const }
+      }
+
+      update((d) => {
+        d.pendingUsers.unshift({
+          id: `pu-${Date.now()}`,
+          name: trimmedName,
+          email: trimmedEmail,
+          note: note?.trim() || undefined,
+          createdAt: new Date().toISOString(),
+          status: 'pending',
+        })
+        return d
+      })
+      return { ok: true as const }
+    },
+    approvePendingUser: async (id) => {
+      if (liveWritable) {
+        const res = await postApprovePending(id)
+        if (!res) return false
+        update((d) => {
+          d.pendingUsers = d.pendingUsers.map((row) => (row.id === id ? res.pending : row))
+          if (!d.users.some((u) => u.id === res.user.id)) d.users.push(res.user)
+          return d
+        })
+        return true
+      }
+      update((d) => {
+        const row = d.pendingUsers.find((item) => item.id === id && item.status === 'pending')
+        if (!row) return d
+        const user: User = {
+          id: `u-${Date.now()}`,
+          name: row.name,
+          nameHe: row.name,
+          email: row.email,
+          role: 'grower',
+          region: 'Central Israel',
+          regionHe: 'מרכז',
+          bio: 'Approved community grower.',
+          bioHe: 'מגדל קהילה מאושר.',
+          rating: 0,
+          completedOrders: 0,
+          verificationRate: 0,
+          cancellations: 0,
+          specialties: [],
+          specialtiesHe: [],
+          avatarColor: '#1FA85A',
+          friendIds: [],
+          accountStatus: 'active',
+        }
+        row.status = 'approved'
+        row.approvedAt = new Date().toISOString()
+        row.userId = user.id
+        d.users.push(user)
+        return d
+      })
+      return true
+    },
+    rejectPendingUser: async (id) => {
+      if (liveWritable) {
+        const res = await postRejectPending(id)
+        if (!res) return false
+        update((d) => {
+          d.pendingUsers = d.pendingUsers.map((row) => (row.id === id ? res.pending : row))
+          return d
+        })
+        return true
+      }
+      update((d) => {
+        const row = d.pendingUsers.find((item) => item.id === id && item.status === 'pending')
+        if (!row) return d
+        row.status = 'rejected'
+        row.rejectedAt = new Date().toISOString()
+        return d
+      })
+      return true
+    },
+    disableUser: async (id) => {
+      if (liveWritable) {
+        const res = await postDisableUser(id)
+        if (!res) return false
+        update((d) => {
+          const user = d.users.find((item) => item.id === id)
+          if (user) user.accountStatus = 'disabled'
+          if (d.currentUserId === id) d.currentUserId = null
+          return d
+        })
+        return true
+      }
+      update((d) => {
+        const user = d.users.find((item) => item.id === id)
+        if (!user || user.role === 'admin') return d
+        user.accountStatus = 'disabled'
+        if (d.currentUserId === id) d.currentUserId = null
+        return d
+      })
+      return true
+    },
+    enableUser: async (id) => {
+      if (liveWritable) {
+        const res = await postEnableUser(id)
+        if (!res) return false
+        update((d) => {
+          const user = d.users.find((item) => item.id === id)
+          if (user) user.accountStatus = 'active'
+          return d
+        })
+        return true
+      }
+      update((d) => {
+        const user = d.users.find((item) => item.id === id)
+        if (user) user.accountStatus = 'active'
+        return d
+      })
+      return true
+    },
+    refreshAccessQueue: async () => {
+      const [pending, members, transactions] = await Promise.all([
+        fetchPendingUsers('pending'),
+        fetchMembers(),
+        fetchPendingTransactions(),
+      ])
+      if (!pending && !members && !transactions) return
+      update((d) => {
+        if (pending) d.pendingUsers = pending.pending
+        if (members) d.users = members.users
+        if (transactions) d.pendingTransactions = transactions.transactions
+        return d
+      })
+    },
+    resetDemo: () => setDb(ensureSession(createSeed())),
     createListing: (input) => {
+      const target = db.plants.find((p) => p.id === input.plantId)
+      if (!target || !db.currentUserId) return { ok: false, reason: 'unavailable' }
+      const blocker = publishBlocker(target, normalizeScenarios(db.flags).publishRequirement)
+      if (blocker) return { ok: false, reason: blocker }
       const id = `ls-${Date.now()}`
       update((d) => {
         const plant = d.plants.find((p) => p.id === input.plantId)
         if (!plant || !d.currentUserId) return d
+        const seller = d.users.find((u) => u.id === d.currentUserId)
+        const area = resolveArea(plant.locationZone)
         plant.status = 'listed'
+        plant.publishedAt ??= new Date().toISOString()
         d.listings.unshift({
           id,
           plantId: input.plantId,
@@ -144,17 +641,239 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           allowOffers: input.allowOffers,
           status: 'active',
           createdAt: new Date().toISOString().slice(0, 10),
-          region: d.users.find((u) => u.id === d.currentUserId)?.region ?? '',
-          regionHe: d.users.find((u) => u.id === d.currentUserId)?.regionHe ?? '',
+          region: area?.region ?? seller?.region ?? '',
+          regionHe: plant.locationZoneHe || area?.regionHe || seller?.regionHe || '',
         })
         return d
       })
+      return { ok: true, id }
+    },
+    gradePlant: (plantId, letter) =>
+      update((d) => {
+        const plant = d.plants.find((p) => p.id === plantId)
+        const grader = actorId(d) ?? d.visitorId
+        if (!plant || plant.ownerId === grader) return d
+        plant.grades = (plant.grades ?? []).filter((grade) => grade.graderId !== grader)
+        plant.grades.push({ letter, at: new Date().toISOString(), graderId: grader })
+        return d
+      }),
+    ungradePlant: (plantId) =>
+      update((d) => {
+        const plant = d.plants.find((p) => p.id === plantId)
+        const grader = actorId(d) ?? d.visitorId
+        if (!plant?.grades) return d
+        plant.grades = plant.grades.filter((grade) => grade.graderId !== grader)
+        return d
+      }),
+    refreshPhoto: (plantId) => {
+      if (!liveWritable) return
+      update((d) => {
+        const owner = actorId(d) ?? d.visitorId
+        const plant = d.plants.find((item) => item.id === plantId && item.ownerId === owner)
+        if (!plant) return d
+        const at = new Date().toISOString().slice(0, 10)
+        plant.photoAt = at
+        plant.history = [{ at, label: 'Photo refreshed', labelHe: 'התמונה רועננה' }, ...plant.history]
+        d.updates = d.updates ?? []
+        d.updates.unshift({
+          id: `up-photo-${Date.now()}`,
+          kind: 'photo',
+          userId: owner,
+          plantId: plant.id,
+          body: `${plant.title} photo refreshed.`,
+          bodyHe: `תמונת ${plant.titleHe} רועננה.`,
+          createdAt: new Date().toISOString(),
+        })
+        return d
+      })
+      void postPlantPhoto(plantId).then((res) => {
+        if (!res) return
+        update((d) => {
+          const index = d.plants.findIndex((item) => item.id === res.plant.id)
+          if (index >= 0) d.plants[index] = res.plant
+          d.updates = res.updates
+          return d
+        })
+      })
+    },
+    confirmWater: (plantId) => {
+      if (!liveWritable) return
+      update((d) => {
+        const owner = actorId(d) ?? d.visitorId
+        const plant = d.plants.find((item) => item.id === plantId && item.ownerId === owner)
+        if (!plant) return d
+        const at = new Date().toISOString().slice(0, 10)
+        plant.wateredAt = at
+        plant.history = [{ at, label: 'Watered', labelHe: 'הושקה' }, ...plant.history]
+        d.updates = d.updates ?? []
+        d.updates.unshift({
+          id: `up-water-${Date.now()}`,
+          kind: 'water',
+          userId: owner,
+          plantId: plant.id,
+          body: `Water confirmed on ${plant.title}.`,
+          bodyHe: `השקיה אושרה ל־${plant.titleHe}.`,
+          createdAt: new Date().toISOString(),
+        })
+        return d
+      })
+      void postPlantWater(plantId).then((res) => {
+        if (!res) return
+        update((d) => {
+          const index = d.plants.findIndex((item) => item.id === res.plant.id)
+          if (index >= 0) d.plants[index] = res.plant
+          d.updates = res.updates
+          return d
+        })
+      })
+    },
+    addGreenhousePlant: (input) => {
+      if (!liveWritable) return ''
+      const area = resolveArea(input.location.region)
+      if (!area || !Number.isFinite(input.location.lat) || !Number.isFinite(input.location.lng)) return ''
+      const id = `pl-${Date.now()}`
+      const place = {
+        region: area.region,
+        regionHe: input.location.regionHe || area.regionHe,
+        lat: input.location.lat,
+        lng: input.location.lng,
+      }
+      let created: MockDb['plants'][number] | null = null
+      update((d) => {
+        const signed = d.users.find((u) => u.id === d.currentUserId && u.role !== 'guest')
+        const ownerId = signed?.id ?? d.visitorId
+        if (signed && !resolveArea(signed.region)) {
+          signed.region = place.region
+          signed.regionHe = place.regionHe
+          signed.lat = place.lat
+          signed.lng = place.lng
+        }
+        const species =
+          d.species.find((item) => item.id === input.speciesId) ??
+          d.species.find((item) => item.ticker && input.code.startsWith(item.ticker))
+        const marketClassId =
+          input.marketClassId ?? d.marketClasses.find((item) => item.code === input.code)?.id
+        created = {
+          id,
+          code: input.code,
+          ownerId,
+          speciesId: species?.id ?? input.speciesId,
+          marketClassId,
+          variety: input.variety,
+          varietyHe: input.varietyHe,
+          subcategoryId: input.subcategoryId,
+          traits: input.traits,
+          title: input.title.trim(),
+          titleHe: input.titleHe.trim(),
+          description: input.description.trim(),
+          descriptionHe: input.descriptionHe.trim(),
+          photos: [input.photo || defaultPlantPhoto],
+          quantity: 1,
+          sizeGrade: input.sizeBand,
+          sizeBand: input.sizeBand,
+          quality: input.quality,
+          stage: input.stage,
+          rooting: input.stage === 'CUT' ? 'unrooted' : input.stage === 'ROOTED' ? 'rooted' : 'established',
+          ...fieldsFromPlace(place),
+          status: 'owned',
+          createdAt: new Date().toISOString().slice(0, 10),
+          history: [
+            {
+              at: new Date().toISOString().slice(0, 10),
+              label: 'Added to greenhouse',
+              labelHe: 'נוסף לחממה',
+            },
+          ],
+        }
+        d.plants.unshift(created)
+        return d
+      })
+      if (created) {
+        void postPlant(created).then((res) => {
+          if (!res) return
+          update((d) => {
+            const index = d.plants.findIndex((item) => item.id === res.plant.id)
+            if (index >= 0) d.plants[index] = res.plant
+            else d.plants.unshift(res.plant)
+            if (res.updates) d.updates = res.updates
+            return d
+          })
+        })
+      }
       return id
     },
+    commitCatalog: (fn) => {
+      update((d) => {
+        d.catalog ??= createCatalog()
+        const result = fn({
+          catalog: structuredClone(d.catalog),
+          species: structuredClone(d.species),
+        })
+        d.catalog = result.catalog
+        if (result.species) d.species = result.species
+        void saveCatalogFile(d.catalog)
+        return d
+      })
+    },
+    purchaseClass: (marketClassId) => {
+      const listing = db.listings.find(
+        (l) =>
+          l.status === 'active' &&
+          (l.marketClassId === marketClassId ||
+            db.plants.some((p) => p.id === l.plantId && p.marketClassId === marketClassId)),
+      )
+      if (!listing) return null
+      const orderId = `or-${Date.now()}`
+      update((d) => {
+        if (!d.currentUserId || d.users.find((u) => u.id === d.currentUserId)?.role === 'guest') return d
+        const row = d.listings.find((l) => l.id === listing.id)
+        if (!row || row.status !== 'active') return d
+        row.status = 'reserved'
+        const plant = d.plants.find((p) => p.id === row.plantId)
+        d.orders.unshift({
+          id: orderId,
+          buyerId: d.currentUserId,
+          sellerIds: [row.sellerId],
+          listingId: row.id,
+          items: [
+            {
+              plantId: row.plantId,
+              title: plant?.title ?? 'Plant',
+              titleHe: plant?.titleHe ?? 'צמח',
+              qty: 1,
+              unitPrice: row.price,
+              photo: plant?.photos[0] ?? '',
+            },
+          ],
+          total: row.price,
+          status: 'intent',
+          createdAt: new Date().toISOString().slice(0, 10),
+          deliveryPlace: row.region,
+          deliveryPlaceHe: row.regionHe,
+        })
+        return d
+      })
+      return orderId
+    },
     createPlantBatch: (input) => {
+      const area = resolveArea(input.location.region)
+      if (!area || !Number.isFinite(input.location.lat) || !Number.isFinite(input.location.lng)) return ''
       const id = `pl-${Date.now()}`
+      const place = {
+        region: area.region,
+        regionHe: input.location.regionHe || area.regionHe,
+        lat: input.location.lat,
+        lng: input.location.lng,
+      }
       update((d) => {
         if (!d.currentUserId) return d
+        const user = d.users.find((u) => u.id === d.currentUserId)
+        if (user && !resolveArea(user.region)) {
+          user.region = place.region
+          user.regionHe = place.regionHe
+          user.lat = place.lat
+          user.lng = place.lng
+        }
         d.plants.unshift({
           id,
           code: `BT-${Math.floor(Math.random() * 90000 + 10000)}`,
@@ -169,7 +888,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           sizeGrade: 'cutting',
           quality: input.quality,
           rooting: input.rooting,
-          locationZone: d.users.find((u) => u.id === d.currentUserId)?.region ?? '',
+          ...fieldsFromPlace(place),
           parentId: input.parentId,
           propagatedAt: new Date().toISOString().slice(0, 10),
           status: 'owned',
@@ -186,39 +905,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })
       return id
     },
-    commitToDemand: (input) => {
-      const id = `cm-${Date.now()}`
-      update((d) => {
-        if (!d.currentUserId) return d
-        const demand = d.demands.find((x) => x.id === input.demandId)
-        if (!demand) return d
-        d.commitments.unshift({
-          id,
-          demandId: input.demandId,
-          growerId: d.currentUserId,
-          quantity: input.quantity,
-          offeredPrice: input.offeredPrice,
-          quality: input.quality,
-          availableDate: input.availableDate,
-          status: 'pending',
-          plantId: input.plantId,
-        })
-        demand.committedQty += input.quantity
-        if (demand.status === 'open') demand.status = 'sourcing'
-        if (input.plantId) {
-          const plant = d.plants.find((p) => p.id === input.plantId)
-          if (plant) plant.status = 'committed'
-        }
-        return d
-      })
-      return id
-    },
-    setCommitmentStatus: (id, status) =>
-      update((d) => {
-        const c = d.commitments.find((x) => x.id === id)
-        if (c) c.status = status
-        return d
-      }),
     makeOffer: (input) =>
       update((d) => {
         if (!d.currentUserId) return d
@@ -255,85 +941,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
         return d
       }),
-    createDemand: (input) => {
-      const id = `dm-${Date.now()}`
-      update((d) => {
-        if (!d.currentUserId) return d
-        d.demands.unshift({
-          id,
-          buyerId: d.currentUserId,
-          ...input,
-          committedQty: 0,
-          status: 'open',
-          createdAt: new Date().toISOString().slice(0, 10),
-        })
-        return d
-      })
-      return id
-    },
-    aggregateAndConfirm: (demandId) => {
-      const orderId = `or-${Date.now()}`
-      update((d) => {
-        const demand = d.demands.find((x) => x.id === demandId)
-        if (!demand || !d.currentUserId) return d
-        const accepted = d.commitments.filter(
-          (c) => c.demandId === demandId && (c.status === 'accepted' || c.status === 'pending'),
-        )
-        accepted.forEach((c) => {
-          c.status = 'accepted'
-        })
-        demand.status = 'confirmed'
-        const species = d.species.find((s) => s.id === demand.speciesId)
-        d.orders.unshift({
-          id: orderId,
-          buyerId: d.currentUserId,
-          sellerIds: [...new Set(accepted.map((c) => c.growerId))],
-          demandId,
-          items: accepted.map((c) => ({
-            plantId: c.plantId ?? 'aggregated',
-            title: `${species?.commonName ?? 'Plant'} ×${c.quantity}`,
-            titleHe: `${species?.commonNameHe ?? 'צמח'} ×${c.quantity}`,
-            qty: c.quantity,
-            unitPrice: c.offeredPrice,
-            photo: defaultPlantPhoto,
-          })),
-          total: accepted.reduce((sum, c) => sum + c.quantity * c.offeredPrice, 0),
-          status: 'confirmed',
-          createdAt: new Date().toISOString().slice(0, 10),
-          deliveryDate: demand.dueDate,
-          deliveryPlace: demand.region,
-          deliveryPlaceHe: demand.regionHe,
-        })
-        return d
-      })
-      return orderId
-    },
-    setEventPhase: (eventId, phase) =>
-      update((d) => {
-        const e = d.events.find((x) => x.id === eventId)
-        if (e) e.phase = phase
-        return d
-      }),
-    gradeRecovery: (eventId, items) =>
-      update((d) => {
-        const e = d.events.find((x) => x.id === eventId)
-        if (!e) return d
-        e.recovered = items
-        e.phase = 'graded'
-        items.forEach((item) => {
-          const plant = d.plants.find((p) => p.id === item.plantId)
-          if (plant) plant.status = item.grade === 'lost' ? 'sold' : 'recovered'
-        })
-        return d
-      }),
-    redistributeEvent: (eventId, destination) =>
-      update((d) => {
-        const e = d.events.find((x) => x.id === eventId)
-        if (!e) return d
-        e.phase = 'redistributed'
-        e.redistributedTo = destination
-        return d
-      }),
     resolveModeration: (id, status) =>
       update((d) => {
         const m = d.moderation.find((x) => x.id === id)
@@ -345,6 +952,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (!d.currentUserId || d.currentUserId === 'u-guest') return d
         const draft = d.claimDrafts.find((x) => x.id === draftId)
         if (!draft || draft.claimedBy) return d
+        const area = resolveArea(draft.region)
+        if (!area) return d
         draft.claimedBy = d.currentUserId
         const plantId = `pl-claimed-${Date.now()}`
         d.plants.unshift({
@@ -359,7 +968,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           sizeGrade: 'claimed',
           quality: 'B',
           rooting: 'established',
-          locationZone: draft.region,
+          ...fieldsFromPlace({
+            region: area.region,
+            regionHe: draft.regionHe || area.regionHe,
+            lat: area.lat,
+            lng: area.lng,
+          }),
           status: 'listed',
           createdAt: new Date().toISOString().slice(0, 10),
           history: [
@@ -421,6 +1035,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })
       return orderId
     },
+    setFeedFriendsOnly: (value) => update((d) => ({ ...d, feedFriendsOnly: value })),
     sendMessage: (threadId, body, bodyHe) =>
       update((d) => {
         if (!d.currentUserId) return d

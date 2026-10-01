@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fixture plant detail</title>
+    <style>
+      body { font: 16px/1.4 system-ui, sans-serif; margin: 32px; color: #1c241c; background: #f6f7f4; }
+      article { background: #fff; border: 1px solid #d5ddd4; border-radius: 12px; padding: 20px 22px; max-width: 520px; }
+      h1 { font-size: 22px; margin: 0; }
+      .variety { margin: 4px 0 16px; color: #3d4a3d; }
+      .note { color: #5c665c; font-size: 14px; }
+      dl { display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; margin: 0; }
+      dt { color: #5c665c; }
+      dd { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <!-- Local fixture for scripts/scrape. Not fetched from a website. -->
+    <article class="plant-detail">
+      <p class="note">Sample detail page for the PlantX scraper. Local file only.</p>
+      <h1 data-field="category">Monstera</h1>
+      <p class="variety" data-field="variety">Standard</p>
+      <dl>
+        <dt>Quality</dt>
+        <dd data-field="quality">Grade A</dd>
+        <dt>Size</dt>
+        <dd data-field="size">Large (L)</dd>
+        <dt>Stage</dt>
+        <dd data-field="stage">Established</dd>
+      </dl>
+    </article>
+  </body>
+</html>
