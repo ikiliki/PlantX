@@ -1,5 +1,15 @@
 import { plantFetch } from '../lib/httpNotice'
-import type { FeedUpdate, Plant, User } from './types'
+import type {
+  Diagnosis,
+  FeedUpdate,
+  IdentifyMode,
+  IdentifyProviderStatus,
+  IdentifyRequestRecord,
+  IdentifyTestRequest,
+  IdentifyTried,
+  Plant,
+  User,
+} from './types'
 import type { SystemConfig } from '../theme/release'
 
 /** Counts only. Full rows are separate requests. */
@@ -210,4 +220,61 @@ export function postPlantPhoto(plantId: string) {
     `/api/plants/${encodeURIComponent(plantId)}/photo`,
     { method: 'POST' },
   )
+}
+
+const IDENTIFY_TIMEOUT_MS = 30_000
+
+type IdentifyResult =
+  | { ok: true; diagnosis: Diagnosis; record?: IdentifyRequestRecord }
+  | { ok: false; error: string; tried: IdentifyTried[]; record?: IdentifyRequestRecord }
+
+/** Identify calls can walk three providers, so they get a longer timeout than `request`. */
+async function identifyRequest(path: string, body: unknown): Promise<IdentifyResult> {
+  const controller = new AbortController()
+  const timer = window.setTimeout(() => controller.abort(), IDENTIFY_TIMEOUT_MS)
+  try {
+    const res = await plantFetch(path, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+    const json = (await res.json().catch(() => null)) as {
+      diagnosis?: Diagnosis
+      record?: IdentifyRequestRecord
+      error?: string
+      tried?: IdentifyTried[]
+    } | null
+    if (res.ok && json?.diagnosis) return { ok: true, diagnosis: json.diagnosis, record: json.record }
+    return { ok: false, error: json?.error ?? 'unavailable', tried: json?.tried ?? [], record: json?.record }
+  } catch {
+    return { ok: false, error: 'offline', tried: [] }
+  } finally {
+    window.clearTimeout(timer)
+  }
+}
+
+/** Add Plant. The server picks mock or live from `IDENTIFY_MODE`. */
+export function postIdentify(image: string, thumb?: string) {
+  return identifyRequest('/api/identify', { image, thumb })
+}
+
+/** Admin playground. Mode, target, and mock scenario are chosen per run. */
+export function postIdentifyTest(body: IdentifyTestRequest) {
+  return identifyRequest('/api/identify/test', body)
+}
+
+export function fetchIdentifyProviders() {
+  return request<{ providers: IdentifyProviderStatus[]; defaultMode: IdentifyMode }>(
+    '/api/identify/providers',
+  )
+}
+
+export function fetchIdentifyHistory(query?: { mode?: IdentifyMode; limit?: number }) {
+  const params = new URLSearchParams()
+  if (query?.mode) params.set('mode', query.mode)
+  if (query?.limit != null) params.set('limit', String(query.limit))
+  const qs = params.toString()
+  return request<{ requests: IdentifyRequestRecord[] }>(`/api/identify/history${qs ? `?${qs}` : ''}`)
 }

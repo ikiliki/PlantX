@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { Button } from '../../../../components/Button/Button'
 import {
   Field,
@@ -7,14 +7,13 @@ import {
   Select,
   TextArea,
 } from '../../../../components/Form/Form'
-import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { catalogName, optionLabel, propertiesForPlant } from '../../../catalog/catalog'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { createCatalog } from '../../../../mock/catalog'
 import { AREAS, areaById, greenhousePlace } from '../../../../mock/locations'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { useStore } from '../../../../mock/store'
-import type { QualityGrade, SizeBand, StageBand } from '../../../../mock/types'
+import type { Diagnosis, QualityGrade, SizeBand, StageBand } from '../../../../mock/types'
 import {
   emptyClassDraft,
   gradeChoices,
@@ -22,52 +21,18 @@ import {
   sizeChoices,
   stageChoices,
   subcategoryChoices,
-  catalogChoicePhoto,
+  catalogChoiceSource,
   synthesizeClass,
   type PlantClassDraft,
 } from '../../plantClass'
-import {
-  CatalogMark,
-  ClassCode,
-  Form,
-  PhotoButton,
-  PhotoCopy,
-  Preview,
-  Saved,
-  SubmitRow,
-} from './AddPlantForm.styles'
-
-function readPhoto(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onerror = () => reject(reader.error)
-    reader.onload = () => {
-      const image = new Image()
-      image.onload = () => {
-        const max = 900
-        const scale = Math.min(1, max / Math.max(image.width, image.height))
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.round(image.width * scale)
-        canvas.height = Math.round(image.height * scale)
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          resolve(String(reader.result))
-          return
-        }
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
-        resolve(canvas.toDataURL('image/jpeg', 0.72))
-      }
-      image.onerror = () => resolve(String(reader.result))
-      image.src = String(reader.result)
-    }
-    reader.readAsDataURL(file)
-  })
-}
+import { CatalogMark } from '../CatalogMark/CatalogMark'
+import { CatalogSelect } from '../CatalogSelect/CatalogSelect'
+import { PhotoIdentify } from '../PhotoIdentify/PhotoIdentify'
+import { CatalogInfo, ClassCode, Form, Saved, SubmitRow } from './AddPlantForm.styles'
 
 export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
   const { db, currentUser, signedIn, addGreenhousePlant } = useStore()
   const { t, locale } = useI18n()
-  const fileRef = useRef<HTMLInputElement>(null)
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
   const home = greenhousePlace({ user: currentUser, signedIn, ownerId, plants: db.plants })
   const defaultAreaId = AREAS.find((area) => area.region === home?.region)?.id ?? ''
@@ -80,9 +45,9 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
   const [saved, setSaved] = useState(false)
 
   const matched = synthesizeClass(catalog, draft)
-  const choicePhoto = catalogChoicePhoto(catalog, draft)
-  const selectedSub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
-  const catalogPhotoLabel = selectedSub?.photo ? t.admin.subcategoryPhoto : t.admin.categoryPhoto
+  const choice = catalogChoiceSource(catalog, draft)
+  const catalogPhotoLabel =
+    choice && 'categoryId' in choice.source ? t.admin.subcategoryPhoto : t.admin.categoryPhoto
   const varieties = subcategoryChoices(catalog, draft)
   const grades = gradeChoices(catalog, draft)
   const sizes = sizeChoices(catalog, draft)
@@ -101,6 +66,10 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
     setDraft((current) => narrowDraft(catalog, { ...current, ...partial }))
   }
 
+  const onDiagnosis = (diagnosis: Diagnosis) => {
+    setClass(diagnosis.draft)
+  }
+
   const onSubmit = (event: FormEvent) => {
     event.preventDefault()
     const area = areaById(areaId)
@@ -115,7 +84,6 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
       description: descriptionTouched ? description : matched.observed,
       descriptionHe: descriptionTouched ? description : matched.observedHe,
       photo: photo || undefined,
-      catalogPhoto: choicePhoto || undefined,
       speciesId: species.id,
       variety: sub?.name ?? category.name,
       varietyHe: sub?.nameHe ?? category.nameHe,
@@ -144,153 +112,103 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
 
   return (
     <Form onSubmit={onSubmit}>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(event) => {
-          const file = event.target.files?.[0]
-          if (!file) return
-          void readPhoto(file).then(setPhoto)
-        }}
-      />
-
       <FormSection title={t.greenhouse.formPhoto} hint={t.greenhouse.addPhotoHint}>
-        <PhotoButton type="button" onClick={() => fileRef.current?.click()}>
-          <Preview>
-            {photo ? <PlantImage src={photo} fallbackSrc={photo} alt="" /> : null}
-          </Preview>
-          <PhotoCopy>
-            <strong>{t.greenhouse.addPhoto}</strong>
-            <small>{t.greenhouse.addClassNote}</small>
-          </PhotoCopy>
-        </PhotoButton>
+        <PhotoIdentify photo={photo} onPhoto={setPhoto} onDiagnosis={onDiagnosis} />
       </FormSection>
 
       <FormSection title={t.greenhouse.formCatalog} hint={t.greenhouse.formCatalogHint}>
-        {choicePhoto ? (
-          <CatalogMark>
-            <Preview>
-              <PlantImage src={choicePhoto} fallbackSrc={choicePhoto} alt="" />
-            </Preview>
-            <PhotoCopy>
-              <strong>{catalogPhotoLabel}</strong>
-            </PhotoCopy>
-          </CatalogMark>
+        {choice ? (
+          <CatalogInfo>
+            <CatalogMark
+              photo={choice.photo}
+              name={catalogName(choice.source, locale)}
+              label={catalogPhotoLabel}
+              size={32}
+            />
+          </CatalogInfo>
         ) : null}
         <FormRow>
-          <Field>
-            {t.admin.category}
-            <Select
-              value={draft.categoryId}
-              required
-              aria-label={t.admin.category}
-              onChange={(event) =>
-                setClass({ categoryId: event.target.value, subcategoryId: '', quality: '', size: '', stage: '', traits: {} })
-              }
-            >
-              <option value="">{t.greenhouse.choose}</option>
-              {catalog.categories.map((plant) => (
-                <option key={plant.id} value={plant.id}>
-                  {catalogName(plant, locale)}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field>
-            {t.admin.subcategory}
-            <Select
-              value={draft.subcategoryId}
-              required={varieties.length > 0}
-              disabled={!draft.categoryId || varieties.length === 0}
-              aria-label={t.admin.subcategory}
-              onChange={(event) => setClass({ subcategoryId: event.target.value, quality: '', size: '', stage: '' })}
-            >
-              <option value="">{t.greenhouse.choose}</option>
-              {varieties.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {catalogName(item, locale)}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          <CatalogSelect
+            label={t.admin.category}
+            value={draft.categoryId}
+            required
+            chooseLabel={t.greenhouse.choose}
+            options={catalog.categories.map((plant) => ({
+              id: plant.id,
+              label: catalogName(plant, locale),
+            }))}
+            onChange={(value) =>
+              setClass({
+                categoryId: value,
+                subcategoryId: '',
+                quality: '',
+                size: '',
+                stage: '',
+                traits: {},
+              })
+            }
+          />
+          <CatalogSelect
+            label={t.admin.subcategory}
+            value={draft.subcategoryId}
+            required={varieties.length > 0}
+            disabled={!draft.categoryId || varieties.length === 0}
+            chooseLabel={t.greenhouse.choose}
+            options={varieties.map((item) => ({
+              id: item.id,
+              label: catalogName(item, locale),
+            }))}
+            onChange={(value) => setClass({ subcategoryId: value, quality: '', size: '', stage: '' })}
+          />
         </FormRow>
       </FormSection>
 
       <FormSection title={t.greenhouse.formRequired} hint={t.greenhouse.formRequiredHint}>
         <FormRow>
-          <Field>
-            {t.admin.grade}
-            <Select
-              value={draft.quality}
-              required
-              disabled={!draft.categoryId || grades.length === 0}
-              aria-label={t.admin.grade}
-              onChange={(event) => setClass({ quality: event.target.value as QualityGrade | '', size: '', stage: '' })}
-            >
-              <option value="">{t.greenhouse.choose}</option>
-              {grades.map((grade) => (
-                <option key={grade} value={grade}>
-                  {grade}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field>
-            {t.admin.size}
-            <Select
-              value={draft.size}
-              required
-              disabled={!draft.quality || sizes.length === 0}
-              aria-label={t.admin.size}
-              onChange={(event) => setClass({ size: event.target.value as SizeBand | '', stage: '' })}
-            >
-              <option value="">{t.greenhouse.choose}</option>
-              {sizes.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field>
-            {t.admin.stage}
-            <Select
-              value={draft.stage}
-              required
-              disabled={!draft.size || stages.length === 0}
-              aria-label={t.admin.stage}
-              onChange={(event) => setClass({ stage: event.target.value as StageBand | '' })}
-            >
-              <option value="">{t.greenhouse.choose}</option>
-              {stages.map((stage) => (
-                <option key={stage} value={stage}>
-                  {STAGE_LABEL[stage as StageBand]?.[locale] ?? stage}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          <CatalogSelect
+            label={t.admin.grade}
+            value={draft.quality}
+            required
+            disabled={!draft.categoryId || grades.length === 0}
+            chooseLabel={t.greenhouse.choose}
+            options={grades.map((grade) => ({ id: grade, label: grade }))}
+            onChange={(value) => setClass({ quality: value as QualityGrade | '', size: '', stage: '' })}
+          />
+          <CatalogSelect
+            label={t.admin.size}
+            value={draft.size}
+            required
+            disabled={!draft.quality || sizes.length === 0}
+            chooseLabel={t.greenhouse.choose}
+            options={sizes.map((size) => ({ id: size, label: size }))}
+            onChange={(value) => setClass({ size: value as SizeBand | '', stage: '' })}
+          />
+          <CatalogSelect
+            label={t.admin.stage}
+            value={draft.stage}
+            required
+            disabled={!draft.size || stages.length === 0}
+            chooseLabel={t.greenhouse.choose}
+            options={stages.map((stage) => ({
+              id: stage,
+              label: STAGE_LABEL[stage as StageBand]?.[locale] ?? stage,
+            }))}
+            onChange={(value) => setClass({ stage: value as StageBand | '' })}
+          />
         </FormRow>
         {requiredExtra.map((property) => (
-          <Field key={property.id}>
-            {catalogName(property, locale)}
-            <Select
-              value={draft.traits[property.id] ?? ''}
-              required
-              aria-label={catalogName(property, locale)}
-              onChange={(event) =>
-                setClass({ traits: { ...draft.traits, [property.id]: event.target.value } })
-              }
-            >
-              <option value="">{t.greenhouse.choose}</option>
-              {property.options.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {optionLabel(option, locale)}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          <CatalogSelect
+            key={property.id}
+            label={catalogName(property, locale)}
+            value={draft.traits[property.id] ?? ''}
+            required
+            chooseLabel={t.greenhouse.choose}
+            options={property.options.map((option) => ({
+              id: option.id,
+              label: optionLabel(option, locale),
+            }))}
+            onChange={(value) => setClass({ traits: { ...draft.traits, [property.id]: value } })}
+          />
         ))}
       </FormSection>
 
@@ -298,28 +216,24 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
         <FormSection title={t.greenhouse.moreProperties} hint={t.greenhouse.formOptionalHint}>
           <FormRow>
             {uniqueProps.map((property) => (
-              <Field key={property.id}>
-                {catalogName(property, locale)}
-                <Select
-                  value={draft.traits[property.id] ?? ''}
-                  aria-label={catalogName(property, locale)}
-                  onChange={(event) =>
-                    setClass({
-                      traits: {
-                        ...draft.traits,
-                        [property.id]: event.target.value,
-                      },
-                    })
-                  }
-                >
-                  <option value="">{t.greenhouse.choose}</option>
-                  {property.options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {optionLabel(option, locale)}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
+              <CatalogSelect
+                key={property.id}
+                label={catalogName(property, locale)}
+                value={draft.traits[property.id] ?? ''}
+                chooseLabel={t.greenhouse.choose}
+                options={property.options.map((option) => ({
+                  id: option.id,
+                  label: optionLabel(option, locale),
+                }))}
+                onChange={(value) =>
+                  setClass({
+                    traits: {
+                      ...draft.traits,
+                      [property.id]: value,
+                    },
+                  })
+                }
+              />
             ))}
           </FormRow>
         </FormSection>

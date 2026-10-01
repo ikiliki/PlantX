@@ -1,18 +1,25 @@
 import { classDictionary, type DictClass, type DictPlant } from '../../mock/classDictionary'
 import { isGrade, isSize, isStage } from '../../mock/catalog'
 import { buildMarketCode, buildMarketDisplay } from '../../mock/marketNaming'
-import type { Catalog, CatalogSubcategory, QualityGrade, SizeBand, StageBand } from '../../mock/types'
-import { categoryById, propertyById, subcategoriesFor } from '../catalog/catalog'
+import type {
+  Catalog,
+  CatalogCategory,
+  CatalogSubcategory,
+  Plant,
+  PlantClassDraft,
+  QualityGrade,
+  SizeBand,
+  StageBand,
+} from '../../mock/types'
+import {
+  categoryById,
+  categoryBySpeciesId,
+  propertyById,
+  subcategoriesFor,
+  subcategoryOfPlant,
+} from '../catalog/catalog'
 
-/** The class fields a person confirms before saving. A later photo pass can fill this same shape. */
-export type PlantClassDraft = {
-  categoryId: string
-  subcategoryId: string
-  quality: QualityGrade | ''
-  size: SizeBand | ''
-  stage: StageBand | ''
-  traits: Record<string, string>
-}
+export type { PlantClassDraft }
 
 export const emptyClassDraft: PlantClassDraft = {
   categoryId: '',
@@ -91,12 +98,43 @@ export function matchClass(draft: PlantClassDraft): DictClass | undefined {
   )
 }
 
+export type CatalogPhotoSource = {
+  photo: string
+  /** The row that owns the photo: the subcategory when it has one, else the category. */
+  source: CatalogCategory | CatalogSubcategory
+}
+
+function catalogPhotoSource(
+  category: CatalogCategory | undefined,
+  sub: CatalogSubcategory | undefined,
+): CatalogPhotoSource | undefined {
+  if (sub?.photo) return { photo: sub.photo, source: sub }
+  if (category?.photo) return { photo: category.photo, source: category }
+  return undefined
+}
+
 /** Photo follows the category, then the subcategory when that row has one. Property combinations do not pick a photo yet. */
-export function catalogChoicePhoto(catalog: Catalog, draft: PlantClassDraft) {
+export function catalogChoiceSource(catalog: Catalog, draft: PlantClassDraft) {
   const category = categoryById(catalog, draft.categoryId)
-  if (!category) return ''
+  if (!category) return undefined
   const sub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
-  return sub?.photo || category.photo
+  return catalogPhotoSource(category, sub)
+}
+
+export function catalogChoicePhoto(catalog: Catalog, draft: PlantClassDraft) {
+  return catalogChoiceSource(catalog, draft)?.photo ?? ''
+}
+
+/** Catalog icon for a saved plant. Derived from its category and subcategory, never stored in `plant.photos`. */
+export function plantCatalogSource(catalog: Catalog | undefined, plant: Plant) {
+  if (!catalog) return undefined
+  const sub = subcategoryOfPlant(catalog, plant)
+  const category = sub ? categoryById(catalog, sub.categoryId) : categoryBySpeciesId(catalog, plant.speciesId)
+  return catalogPhotoSource(category, sub)
+}
+
+export function plantCatalogPhoto(catalog: Catalog | undefined, plant: Plant) {
+  return plantCatalogSource(catalog, plant)?.photo ?? ''
 }
 
 export function synthesizeClass(

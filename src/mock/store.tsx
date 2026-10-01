@@ -119,12 +119,10 @@ function uniqueId(base: string, taken: string[]) {
   return `${base}-${n}`
 }
 
-/** Owner uploads stay first. The catalog photo stays on the plant even when they add their own. */
-function plantPhotos(own?: string, catalog?: string) {
-  const photos = [own?.trim(), catalog?.trim()].filter(
-    (src, index, all): src is string => Boolean(src) && all.indexOf(src) === index,
-  )
-  return photos.length ? photos : [defaultPlantPhoto]
+/** Only owner uploads. The catalog photo is derived from the category, never stored here. */
+function plantPhotos(own?: string) {
+  const photo = own?.trim()
+  return photo ? [photo] : [defaultPlantPhoto]
 }
 
 interface StoreApi {
@@ -187,7 +185,6 @@ interface StoreApi {
     description: string
     descriptionHe: string
     photo?: string
-    catalogPhoto?: string
     speciesId: string
     variety: string
     varietyHe: string
@@ -833,7 +830,7 @@ export function StoreProvider({
           titleHe: input.titleHe.trim(),
           description: input.description.trim(),
           descriptionHe: input.descriptionHe.trim(),
-          photos: plantPhotos(input.photo, input.catalogPhoto),
+          photos: plantPhotos(input.photo),
           quantity: 1,
           sizeGrade: input.sizeBand,
           sizeBand: input.sizeBand,

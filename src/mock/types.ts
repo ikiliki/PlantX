@@ -346,6 +346,99 @@ export type Catalog = {
   properties: CatalogProperty[]
 }
 
+/** Class fields a person confirms before saving. Photo identify can fill this shape. */
+export type PlantClassDraft = {
+  categoryId: string
+  subcategoryId: string
+  quality: QualityGrade | ''
+  size: SizeBand | ''
+  stage: StageBand | ''
+  traits: Record<string, string>
+}
+
+export type IdentifyProviderId = 'plantid' | 'plantnet' | 'gemini'
+
+export type IdentifySkipReason = 'missingKey' | 'exhausted' | 'error' | 'timeout'
+
+export type IdentifyTried = {
+  provider: IdentifyProviderId
+  reason: IdentifySkipReason
+  detail?: string
+}
+
+export type Diagnosis = {
+  provider: IdentifyProviderId
+  mode: IdentifyMode
+  label: string
+  scientificName: string
+  commonNames: string[]
+  probability: number
+  isPlant: boolean
+  draft: Partial<PlantClassDraft>
+  tried: IdentifyTried[]
+}
+
+/** `mock` parses canned provider responses and spends no credits. `live` calls the real APIs. */
+export type IdentifyMode = 'mock' | 'live'
+
+/** Which providers a request may use. `chain` walks the fallback order. */
+export type IdentifyTarget = 'chain' | IdentifyProviderId
+
+/** Mock-only answer shape, so every Add Plant state can be exercised. */
+export type IdentifyMockScenario = 'match' | 'notInCatalog' | 'notPlant' | 'error'
+
+export type IdentifySource = 'addPlant' | 'playground'
+
+export type IdentifyRequestStatus = 'ok' | 'unavailable'
+
+export type IdentifyRequestRecord = {
+  id: string
+  createdAt: string
+  userId: string
+  userName?: string
+  source: IdentifySource
+  mode: IdentifyMode
+  target: IdentifyTarget
+  scenario?: IdentifyMockScenario
+  status: IdentifyRequestStatus
+  /** Small JPEG data URL of the photo that was sent. */
+  thumb?: string
+  durationMs: number
+  diagnosis?: Diagnosis
+  tried: IdentifyTried[]
+}
+
+export type IdentifyTestRequest = {
+  image: string
+  thumb?: string
+  mode: IdentifyMode
+  target: IdentifyTarget
+  scenario?: IdentifyMockScenario
+}
+
+export type IdentifyProviderStatusKind = 'ready' | 'missingKey' | 'exhausted' | 'unreachable'
+
+export type IdentifyCredits = {
+  remaining?: number
+  used?: number
+  total?: number
+  period?: 'day' | 'week' | 'month' | 'total'
+}
+
+export type IdentifyProviderStatus = {
+  id: IdentifyProviderId
+  order: number
+  name: string
+  returns: string
+  docsUrl: string
+  keySet: boolean
+  status: IdentifyProviderStatusKind
+  credits?: IdentifyCredits
+  model?: string
+  lastError?: string
+  lastUsedAt?: string
+}
+
 export type UpdateScenario = 'empty' | 'one' | 'multiple' | 'mixed'
 export type TopGreenhouseScenario = 'empty' | 'ranked' | 'tied' | 'single'
 export type MarketScenario =

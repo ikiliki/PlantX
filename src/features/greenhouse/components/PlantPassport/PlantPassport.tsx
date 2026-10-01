@@ -20,6 +20,7 @@ import { useStore } from '../../../../mock/store'
 import { isPlacementEnabled } from '../../../../theme/release'
 import type { StageBand } from '../../../../mock/types'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
+import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
 import {
@@ -243,6 +244,7 @@ export function PlantPassport({
           <NameBlock>
             {(categoryLabel || subLabel) && (
               <TaxonomyRow>
+                <PlantCatalogMark plant={plant} size={24} />
                 {categoryLabel &&
                   (species ? (
                     <CategoryName as={Link} to={speciesHref(species.id)}>

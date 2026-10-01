@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { PlantCatalogMark } from '../../../greenhouse/components/CatalogMark/CatalogMark'
 import { wikiHref } from '../../../species/components/GuideLink/GuideLink'
 import { speciesPhoto } from '../../../species/speciesPhoto'
 import { listedQuantity, listingsForClass, lotPhotos, stageLabelFor } from '../../classLots'
@@ -16,6 +17,7 @@ import {
   Copy,
   Fact,
   Name,
+  NameLine,
   PeekGallery,
   PeekMore,
   PeekShot,
@@ -64,6 +66,15 @@ export function MarketPeekCard({
   const wikiTo = species ? wikiHref(species.id) : undefined
   const stage = mc ? stageLabelFor(t.market, mc.stage) : undefined
   const dialog = variant === 'dialog'
+  const nameEl = <Name id={dialog && !masked ? 'market-peek-title' : undefined}>{name}</Name>
+  const nameLine = plant ? (
+    <NameLine>
+      <PlantCatalogMark plant={plant} size={24} />
+      {nameEl}
+    </NameLine>
+  ) : (
+    nameEl
+  )
 
   if (masked) {
     const facts = [mc?.quality, mc?.size, stage].filter(Boolean).join(' · ')
@@ -75,7 +86,7 @@ export function MarketPeekCard({
           </Photo>
           <Copy>
             {species && <Code>{speciesName(species, locale)}</Code>}
-            <Name>{name}</Name>
+            {nameLine}
             {facts && <Fact>{facts}</Fact>}
           </Copy>
         </Top>
@@ -113,7 +124,7 @@ export function MarketPeekCard({
         )}
         <Copy>
           {mc && <Code>{mc.code}</Code>}
-          <Name id={dialog ? 'market-peek-title' : undefined}>{name}</Name>
+          {nameLine}
         </Copy>
       </Top>
       {mc && (

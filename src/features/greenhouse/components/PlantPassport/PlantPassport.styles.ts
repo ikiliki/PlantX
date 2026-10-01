@@ -153,7 +153,7 @@ export const NameBlock = styled.div`
 export const TaxonomyRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   min-width: 0;
   font-size: 14px;

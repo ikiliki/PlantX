@@ -4,6 +4,7 @@ import { Row, Tab } from './AdminTabs.styles'
 export const adminNav = [
   { id: 'server', to: '/admin/server' },
   { id: 'system', to: '/admin/system' },
+  { id: 'apis', to: '/admin/apis' },
 ] as const
 
 export function AdminTabs({ current }: { current: (typeof adminNav)[number]['id'] }) {

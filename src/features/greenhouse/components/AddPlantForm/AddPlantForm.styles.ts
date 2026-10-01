@@ -6,46 +6,11 @@ export const Form = styled.form`
   gap: ${theme.space.lg};
 `
 
-export const PhotoButton = styled.button`
-  display: grid;
-  grid-template-columns: 72px 1fr;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border-radius: ${theme.radii.md};
-  border: 1px dashed ${theme.colors.border};
-  background: ${theme.colors.creamCard};
-  text-align: start;
-  cursor: pointer;
-  color: ${theme.colors.ink};
-  width: 100%;
-`
-
-export const Preview = styled.div`
-  width: 72px;
-  height: 72px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: ${theme.colors.chipGreen};
-`
-
-export const CatalogMark = styled.div`
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-`
-
-export const PhotoCopy = styled.span`
-  display: grid;
-  gap: 4px;
-  strong {
-    font-size: 14px;
-  }
-  small {
-    font-size: 12px;
-    color: ${theme.colors.muted};
-  }
+/** Catalog icon sits at the inline end, info only. It is not a photo slot. */
+export const CatalogInfo = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
 `
 
 export const ClassCode = styled.p`

@@ -86,6 +86,18 @@ export const Code = styled.p`
   color: ${theme.colors.moss};
 `
 
+export const NameLine = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 2px;
+  > p {
+    margin: 0;
+    min-width: 0;
+  }
+`
+
 export const Name = styled.p`
   margin: 2px 0 0;
   font-size: 14px;

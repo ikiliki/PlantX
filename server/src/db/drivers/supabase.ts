@@ -4,6 +4,7 @@ import type { FeatureId, PageId, PlacementId, SystemConfig } from '../../../../s
 import type { Activity } from '../../features/activity/activity.types.ts'
 import type { PendingTransaction, PendingUser } from '../../features/users/users.types.ts'
 import type { PlantxStore } from '../store.ts'
+import { supabaseIdentifyRequests } from './supabaseIdentifyRequests.ts'
 
 const { Pool } = pg
 type PoolClient = pg.PoolClient
@@ -102,6 +103,7 @@ export function createSupabaseStore(): PlantxStore {
       get: () => withTx(getSystem),
       save: (system) => withTx((client) => saveSystem(client, system)),
     },
+    identifyRequests: supabaseIdentifyRequests(pool),
   }
 
   async function listUsers(client: PoolClient): Promise<User[]> {

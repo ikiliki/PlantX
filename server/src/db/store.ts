@@ -1,4 +1,10 @@
-import type { Catalog, Plant, User } from '../../../src/mock/types.ts'
+import type {
+  Catalog,
+  IdentifyMode,
+  IdentifyRequestRecord,
+  Plant,
+  User,
+} from '../../../src/mock/types.ts'
 import type { SystemConfig } from '../../../src/theme/release.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
@@ -39,5 +45,10 @@ export interface PlantxStore {
   system: {
     get(): Promise<Partial<SystemConfig> | null>
     save(system: SystemConfig): Promise<void>
+  }
+  identifyRequests: {
+    /** Newest first. `userName` is filled from users. */
+    list(query: { mode?: IdentifyMode; limit: number }): Promise<IdentifyRequestRecord[]>
+    add(record: IdentifyRequestRecord): Promise<void>
   }
 }

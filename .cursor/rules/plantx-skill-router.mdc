@@ -1,0 +1,10 @@
+---
+description: Route every PlantX task through the project skill index before coding.
+alwaysApply: true
+---
+
+# PlantX skill router
+
+Before any PlantX task, read `.cursor/skills/plantx-skills/SKILL.md` and follow it.
+
+Do not paste skill bodies into subagent prompts. Pass skill paths instead.

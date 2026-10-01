@@ -13,6 +13,7 @@ export const openApiDocument = {
     { name: 'session', description: 'Demo login and register' },
     { name: 'system', description: 'Admin release config' },
     { name: 'catalog', description: 'Market catalog taxonomy' },
+    { name: 'identify', description: 'Photo diagnosis providers and fallback chain' },
     { name: 'activities', description: 'Generic activity log (news + plant timeline)' },
     { name: 'plants', description: 'Greenhouse plants and care' },
   ],
@@ -104,6 +105,66 @@ export const openApiDocument = {
         },
         required: ['name', 'email'],
       },
+      IdentifyTried: {
+        type: 'object',
+        properties: {
+          provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          reason: { type: 'string', enum: ['missingKey', 'exhausted', 'error', 'timeout'] },
+          detail: { type: 'string' },
+        },
+        required: ['provider', 'reason'],
+      },
+      Diagnosis: {
+        type: 'object',
+        properties: {
+          provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          mode: { type: 'string', enum: ['mock', 'live'] },
+          label: { type: 'string' },
+          scientificName: { type: 'string' },
+          commonNames: { type: 'array', items: { type: 'string' } },
+          probability: { type: 'number' },
+          isPlant: { type: 'boolean' },
+          draft: { type: 'object', additionalProperties: true, description: 'Existing catalog ids only' },
+          tried: { type: 'array', items: { $ref: '#/components/schemas/IdentifyTried' } },
+        },
+        required: ['provider', 'mode', 'label', 'scientificName', 'commonNames', 'probability', 'isPlant', 'draft', 'tried'],
+      },
+      IdentifyRequestRecord: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          userId: { type: 'string' },
+          userName: { type: 'string' },
+          source: { type: 'string', enum: ['addPlant', 'playground'] },
+          mode: { type: 'string', enum: ['mock', 'live'] },
+          target: { type: 'string', enum: ['chain', 'plantid', 'plantnet', 'gemini'] },
+          scenario: { type: 'string', enum: ['match', 'notInCatalog', 'notPlant', 'error'], description: 'Mock only' },
+          status: { type: 'string', enum: ['ok', 'unavailable'] },
+          thumb: { type: 'string', description: 'Small image data URL; dropped when over ~40KB' },
+          durationMs: { type: 'integer' },
+          diagnosis: { $ref: '#/components/schemas/Diagnosis' },
+          tried: { type: 'array', items: { $ref: '#/components/schemas/IdentifyTried' } },
+        },
+        required: ['id', 'createdAt', 'userId', 'source', 'mode', 'target', 'status', 'durationMs', 'tried'],
+      },
+      IdentifyOk: {
+        type: 'object',
+        properties: {
+          diagnosis: { $ref: '#/components/schemas/Diagnosis' },
+          record: { $ref: '#/components/schemas/IdentifyRequestRecord' },
+        },
+        required: ['diagnosis', 'record'],
+      },
+      IdentifyUnavailable: {
+        type: 'object',
+        properties: {
+          error: { type: 'string', enum: ['unavailable'] },
+          tried: { type: 'array', items: { $ref: '#/components/schemas/IdentifyTried' } },
+          record: { $ref: '#/components/schemas/IdentifyRequestRecord' },
+        },
+        required: ['error', 'tried', 'record'],
+      },
       PlantActionResult: {
         type: 'object',
         properties: {
@@ -175,6 +236,177 @@ export const openApiDocument = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+    '/api/identify': {
+      post: {
+        tags: ['identify'],
+        summary: 'Diagnose a plant photo',
+        description:
+          'Signed-in only. Tries Plant.id, then Pl@ntNet, then Gemini. Stops on the first answer (including is_plant false). Mode comes from IDENTIFY_MODE (default live in prod, mock elsewhere); mock parses canned provider bodies and spends no credits. Every request is saved to history.',
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  image: {
+                    type: 'string',
+                    description: 'JPEG/PNG data URL from the client photo picker',
+                  },
+                  thumb: { type: 'string', description: 'Small JPEG data URL kept in history' },
+                },
+                required: ['image'],
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Diagnosis with mapped draft and skipped providers, plus the saved request',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/IdentifyOk' } } },
+          },
+          '400': {
+            description: 'Missing or non-image body',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '401': {
+            description: 'Not signed in',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '503': {
+            description: 'Every provider skipped or failed',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/IdentifyUnavailable' } } },
+          },
+        },
+      },
+    },
+    '/api/identify/test': {
+      post: {
+        tags: ['identify'],
+        summary: 'Admin identify playground',
+        description:
+          'Admin only. Runs the chain or one provider in the chosen mode. Live spends real credits; mock uses the scenario (default match).',
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  image: { type: 'string', description: 'Image data URL' },
+                  thumb: { type: 'string' },
+                  mode: { type: 'string', enum: ['mock', 'live'] },
+                  target: { type: 'string', enum: ['chain', 'plantid', 'plantnet', 'gemini'] },
+                  scenario: { type: 'string', enum: ['match', 'notInCatalog', 'notPlant', 'error'] },
+                },
+                required: ['image', 'mode', 'target'],
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Diagnosis plus the saved request',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/IdentifyOk' } } },
+          },
+          '400': {
+            description: 'Invalid image, mode, target, or scenario',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '401': {
+            description: 'Not signed in',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '403': {
+            description: 'Not admin',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '503': {
+            description: 'Every tried provider skipped or failed',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/IdentifyUnavailable' } } },
+          },
+        },
+      },
+    },
+    '/api/identify/history': {
+      get: {
+        tags: ['identify'],
+        summary: 'Identify request history',
+        description: 'Admin only. Newest first. Empty when the identify_requests table is not migrated yet.',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'mode', in: 'query', schema: { type: 'string', enum: ['mock', 'live'] } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 50, minimum: 1, maximum: 200 } },
+        ],
+        responses: {
+          '200': {
+            description: 'Saved requests',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    requests: { type: 'array', items: { $ref: '#/components/schemas/IdentifyRequestRecord' } },
+                  },
+                  required: ['requests'],
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid mode',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '401': {
+            description: 'Not signed in',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '403': {
+            description: 'Not admin',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+        },
+      },
+    },
+    '/api/identify/providers': {
+      get: {
+        tags: ['identify'],
+        summary: 'Provider status and credits',
+        description: 'Admin only. Reports key set or not, never the secret. Credits fetched in parallel.',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          '200': {
+            description: 'Provider statuses',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    providers: { type: 'array', items: { type: 'object', additionalProperties: true } },
+                    defaultMode: {
+                      type: 'string',
+                      enum: ['mock', 'live'],
+                      description: 'Mode POST /api/identify uses',
+                    },
+                  },
+                  required: ['providers', 'defaultMode'],
+                },
+              },
+            },
+          },
+          '401': {
+            description: 'Not signed in',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '403': {
+            description: 'Not admin',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
           },
         },
       },

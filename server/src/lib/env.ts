@@ -1,3 +1,5 @@
+import type { IdentifyMode } from '../../../src/mock/types.ts'
+
 export type PlantxEnv = 'mock' | 'qa' | 'prod'
 export type PlantxSeed = 'empty' | 'demo'
 export type PlantxDb = 'supabase'
@@ -35,6 +37,13 @@ export function plantxSeed(): PlantxSeed {
   if (explicit === 'demo') return 'demo'
   if (explicit === 'empty') return 'empty'
   return plantxEnv() === 'mock' ? 'demo' : 'empty'
+}
+
+/** IDENTIFY_MODE wins. Otherwise only prod spends provider credits. */
+export function identifyMode(): IdentifyMode {
+  const explicit = (process.env.IDENTIFY_MODE || '').trim().toLowerCase()
+  if (explicit === 'mock' || explicit === 'live') return explicit
+  return plantxEnv() === 'prod' ? 'live' : 'mock'
 }
 
 export function plantxEnvLabel(env: PlantxEnv = plantxEnv()): string {

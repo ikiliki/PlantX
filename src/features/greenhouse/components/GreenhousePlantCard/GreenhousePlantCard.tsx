@@ -5,6 +5,7 @@ import { useStore } from '../../../../mock/store'
 import { isPlacementEnabled, isPlacementReady } from '../../../../theme/release'
 import { isPhotoStale, isWaterDue } from '../../plantCare'
 import type { Plant } from '../../../../mock/types'
+import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import {
   Actions,
   AddRoot,
@@ -160,6 +161,7 @@ export function GreenhousePlantCard({
       </PhotoLink>
       <Details>
         <NameRow>
+          <PlantCatalogMark plant={plant} size={24} />
           <Name to={`/plants/${plant.id}`}>{tr(plant.title, plant.titleHe)}</Name>
           {verified ? <PassportMark>✓ {t.greenhouse.passportOk}</PassportMark> : null}
         </NameRow>
