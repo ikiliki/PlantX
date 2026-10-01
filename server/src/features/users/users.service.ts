@@ -44,6 +44,14 @@ export const usersService = {
       .filter((row) => row.status === status)
       .slice()
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((row) => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        note: row.note,
+        createdAt: row.createdAt,
+        status: row.status,
+      }))
   },
 
   getPending(id: string) {
@@ -137,6 +145,18 @@ export const usersService = {
       .map(withAccountStatus)
   },
 
+  countMembers() {
+    return loadUsers().filter((item) => item.role !== 'guest').length
+  },
+
+  countPending(status: PendingUser['status'] = 'pending') {
+    return loadPending().filter((row) => row.status === status).length
+  },
+
+  countPendingTransactions() {
+    return loadTransactions().filter((row) => row.status === 'pending').length
+  },
+
   setAccountStatus(userId: string, accountStatus: AccountStatus) {
     const users = loadUsers()
     const user = users.find((item) => item.id === userId && item.role !== 'guest')
@@ -151,7 +171,18 @@ export const usersService = {
 
   listPendingTransactions() {
     return loadTransactions()
+      .filter((row) => row.status === 'pending')
       .slice()
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((row) => ({
+        id: row.id,
+        kind: row.kind,
+        userId: row.userId,
+        label: row.label,
+        labelHe: row.labelHe,
+        amount: row.amount,
+        createdAt: row.createdAt,
+        status: row.status,
+      }))
   },
 }

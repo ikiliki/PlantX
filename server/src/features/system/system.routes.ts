@@ -8,6 +8,6 @@ export const systemRoutes = new Hono()
 systemRoutes.put('/', async (c) => {
   requireAdmin(c)
   const body = (await c.req.json()) as Partial<SystemConfig>
-  const system = systemService.save(body)
+  const system = await systemService.save(body)
   return c.json({ system })
 })

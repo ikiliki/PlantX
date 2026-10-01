@@ -4,8 +4,13 @@ import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
-/** `data` local clean db. `data-local` mock fixtures. `data-prod` production JSON db. */
+/**
+ * `data` QA JSON db (its own files, until a separate QA database).
+ * `data-prod` production JSON db. On Vercel the process uses its own files under /tmp.
+ * Vercel functions can only write to /tmp, and that disk resets when the instance stops.
+ */
 function resolveDataDir() {
+  if (process.env.VERCEL) return path.join('/tmp', 'plantx-data')
   const name = (process.env.PLANTX_DATA || 'data').trim()
   if (name !== 'data' && name !== 'data-local' && name !== 'data-prod') return path.join(root, 'data')
   return path.join(root, name)

@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
 export const Shell = styled.div`
@@ -310,9 +310,33 @@ export const Switch = styled.button<{ $on: boolean }>`
   font-weight: 700;
   cursor: pointer;
 
+  &:disabled {
+    cursor: progress;
+  }
+
   &:focus-visible {
     outline: none;
     box-shadow: ${theme.shadow.focus};
+  }
+`
+
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`
+
+export const Spinner = styled.span`
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-inline: 10px 2px;
+  border-radius: 50%;
+  border: 2px solid ${theme.colors.border};
+  border-top-color: ${theme.colors.forest};
+  animation: ${spin} 700ms linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    border-top-color: ${theme.colors.moss};
   }
 `
 

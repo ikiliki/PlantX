@@ -19,7 +19,7 @@ sessionRoutes.post('/', async (c) => {
   const body = (await c.req.json()) as { email?: string; userId?: string | null }
   if (body.userId === null || body.email === '') {
     setSession(c, null)
-    return c.json(liveService.payload(null))
+    return c.json(await liveService.payload(null))
   }
 
   let user
@@ -28,7 +28,7 @@ sessionRoutes.post('/', async (c) => {
   else throw Errors.invalid('email or userId required')
 
   setSession(c, user.id)
-  return c.json(liveService.payload(user.id))
+  return c.json(await liveService.payload(user.id))
 })
 
 sessionRoutes.post('/google', async (c) => {
@@ -36,7 +36,7 @@ sessionRoutes.post('/google', async (c) => {
   const profile = await verifyGoogleIdToken(body.credential ?? '')
   const user = sessionService.loginWithGoogle(profile)
   setSession(c, user.id)
-  return c.json(liveService.payload(user.id))
+  return c.json(await liveService.payload(user.id))
 })
 
 /** Legacy path — same as POST /api/users/pending (no session until approved). */

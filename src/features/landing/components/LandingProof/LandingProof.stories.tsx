@@ -1,0 +1,20 @@
+import type { ReactNode } from 'react'
+import { I18nProvider } from '../../../../i18n/I18nProvider'
+import { StoreProvider } from '../../../../mock/store'
+import { LandingProof } from './LandingProof'
+
+const withApp = (Story: () => ReactNode) => (
+  <StoreProvider source="example">
+    <I18nProvider>
+      <Story />
+    </I18nProvider>
+  </StoreProvider>
+)
+
+export default {
+  title: 'Features/Landing/LandingProof',
+  component: LandingProof,
+  decorators: [withApp],
+}
+
+export const Row = () => <LandingProof />

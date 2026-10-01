@@ -13,6 +13,7 @@ import {
   type ReleaseMode,
 } from '../../../../theme/release'
 import { PagePreview } from './PagePreview'
+import { RedirectPreview } from './RedirectPreview'
 import { PlacementPreview } from './PlacementPreview'
 import { PlainPreview } from './PlainPreview'
 import {
@@ -44,6 +45,7 @@ import {
   Section,
   Select,
   Shell,
+  Spinner,
   Switch,
   Track,
 } from './SystemPanel.styles'
@@ -91,7 +93,11 @@ function featureStatusLabel(status: ReleaseMode, t: ReturnType<typeof useI18n>['
 
 export function SystemPanel() {
   const { t } = useI18n()
-  const { db, setPageStatus, setFeatureEnabled, setFeatureStatus, setPlacementEnabled } = useStore()
+  const { db, systemPending, setAppLaunched, setPageStatus, setFeatureEnabled, setFeatureStatus, setPlacementEnabled } =
+    useStore()
+  const locked = systemPending !== null
+  const [appOpen, setAppOpen] = useState(true)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const [pagesOpen, setPagesOpen] = useState(true)
   const [featuresOpen, setFeaturesOpen] = useState(true)
   const [openPages, setOpenPages] = useState<ReadonlySet<PageId>>(() => new Set())
@@ -109,6 +115,52 @@ export function SystemPanel() {
 
   return (
     <Shell>
+      <Section>
+        <Head>
+          <HeadToggle type="button" aria-expanded={appOpen} onClick={() => setAppOpen((open) => !open)}>
+            {t.admin.systemApp}
+            <Chevron aria-hidden $open={appOpen} />
+          </HeadToggle>
+        </Head>
+        {appOpen && (
+          <Block>
+            <Lead>{t.admin.systemAppLead}</Lead>
+            <Switch
+              type="button"
+              role="switch"
+              disabled={locked}
+              aria-busy={systemPending === 'app'}
+              $on={db.system.launched}
+              aria-checked={db.system.launched}
+              aria-label={t.admin.systemApp}
+              onClick={() => setAppLaunched(!db.system.launched)}
+            >
+              {systemPending === 'app' ? <Spinner /> : <Track aria-hidden $on={db.system.launched} />}
+              {systemPending === 'app' ? t.common.loading : db.system.launched ? t.admin.systemAppOn : t.admin.systemAppOff}
+            </Switch>
+          </Block>
+        )}
+      </Section>
+
+      <Section>
+        <Head>
+          <HeadToggle
+            type="button"
+            aria-expanded={previewOpen}
+            onClick={() => setPreviewOpen((open) => !open)}
+          >
+            {t.admin.systemRedirects}
+            <Chevron aria-hidden $open={previewOpen} />
+          </HeadToggle>
+        </Head>
+        {previewOpen && (
+          <Block>
+            <Lead>{t.admin.systemRedirectsLead}</Lead>
+            <RedirectPreview />
+          </Block>
+        )}
+      </Section>
+
       <Section>
         <Head>
           <HeadToggle
@@ -144,6 +196,8 @@ export function SystemPanel() {
                       </PageToggle>
                       <Select
                         aria-label={`${label} ${t.admin.systemStatus}`}
+                        aria-busy={systemPending === `page:${pageId}`}
+                        disabled={locked}
                         value={db.system.pages[pageId]}
                         onChange={(event) => setPageStatus(pageId, event.target.value as PageStatus)}
                       >
@@ -212,17 +266,29 @@ export function SystemPanel() {
                         <Switch
                           type="button"
                           role="switch"
+                          disabled={locked}
+                          aria-busy={systemPending === `feature:${featureId}`}
                           $on={feature.enabled}
                           aria-checked={feature.enabled}
                           aria-label={`${label} ${feature.enabled ? t.admin.systemEnabled : t.admin.systemDisabled}`}
                           onClick={() => setFeatureEnabled(featureId, !feature.enabled)}
                         >
-                          <Track aria-hidden $on={feature.enabled} />
-                          {feature.enabled ? t.admin.systemEnabled : t.admin.systemDisabled}
+                          {systemPending === `feature:${featureId}` ? (
+                            <Spinner />
+                          ) : (
+                            <Track aria-hidden $on={feature.enabled} />
+                          )}
+                          {systemPending === `feature:${featureId}`
+                            ? t.common.loading
+                            : feature.enabled
+                              ? t.admin.systemEnabled
+                              : t.admin.systemDisabled}
                         </Switch>
                         {feature.enabled && (
                           <Select
                             aria-label={`${label} ${t.admin.systemStatus}`}
+                            aria-busy={systemPending === `feature:${featureId}:status`}
+                            disabled={locked}
                             value={feature.status}
                             onChange={(event) => setFeatureStatus(featureId, event.target.value as ReleaseMode)}
                           >
@@ -266,13 +332,23 @@ export function SystemPanel() {
                                               <Switch
                                                 type="button"
                                                 role="switch"
+                                                disabled={locked}
+                                                aria-busy={systemPending === `placement:${item.id}`}
                                                 $on={shown}
                                                 aria-checked={shown}
                                                 aria-label={`${name} ${shown ? t.admin.systemShown : t.admin.systemHidden}`}
                                                 onClick={() => setPlacementEnabled(item.id as PlacementId, !shown)}
                                               >
-                                                <Track aria-hidden $on={shown} />
-                                                {shown ? t.admin.systemShown : t.admin.systemHidden}
+                                                {systemPending === `placement:${item.id}` ? (
+                                                  <Spinner />
+                                                ) : (
+                                                  <Track aria-hidden $on={shown} />
+                                                )}
+                                                {systemPending === `placement:${item.id}`
+                                                  ? t.common.loading
+                                                  : shown
+                                                    ? t.admin.systemShown
+                                                    : t.admin.systemHidden}
                                               </Switch>
                                             )}
                                           </Controls>

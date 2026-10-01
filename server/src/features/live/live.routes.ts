@@ -4,7 +4,7 @@ import { liveService } from './live.service.ts'
 
 export const liveRoutes = new Hono()
 
-liveRoutes.get('/', (c) => {
+liveRoutes.get('/', async (c) => {
   const user = userFromSession(c)
-  return c.json(liveService.payload(user?.id ?? null))
+  return c.json(await liveService.payload(user?.id ?? null))
 })

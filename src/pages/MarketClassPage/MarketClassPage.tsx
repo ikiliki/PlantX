@@ -16,6 +16,7 @@ import { speciesHref } from '../../features/species/components/GuideLink/GuideLi
 import { classHistory } from '../../mock/marketHistory'
 import { maskedChange, maskedPrice, maskedQty } from '../../features/market/maskedQuote'
 import { useStore } from '../../mock/store'
+import { useServerSlices } from '../../mock/useServerSlices'
 import { placementRelease } from '../../theme/release'
 import {
   Back,
@@ -342,6 +343,7 @@ function MarketClassPending({ classId }: { classId?: string }) {
 }
 
 export function MarketClassPage({ classId }: { classId?: string } = {}) {
+  useServerSlices(['users', 'plants', 'catalog'])
   const { t } = useI18n()
   const { db } = useStore()
   const release = placementRelease(db.system, 'market.class')

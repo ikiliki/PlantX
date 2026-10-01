@@ -7,6 +7,7 @@ import { WikiIndex } from '../../features/species/components/WikiIndex/WikiIndex
 import { useI18n } from '../../i18n/I18nProvider'
 import { configuredSpeciesIds } from '../../mock/classDictionary'
 import { useStore } from '../../mock/store'
+import { useServerSlices } from '../../mock/useServerSlices'
 import type { ComponentView } from '../../theme/view'
 import { Back, Header, Missing, Page } from './WikiPage.styles'
 
@@ -61,6 +62,7 @@ function WikiReady({ view }: { view: ComponentView }) {
 }
 
 export function WikiPage({ view = 'page' }: { view?: ComponentView }) {
+  useServerSlices(['plants', 'catalog'])
   const { t } = useI18n()
 
   return (

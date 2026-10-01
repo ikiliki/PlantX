@@ -16,6 +16,7 @@ import { TradeChart } from '../../features/market/components/TradeChart/TradeCha
 import { TradeTable } from '../../features/market/components/TradeTable/TradeTable'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
+import { useServerSlices } from '../../mock/useServerSlices'
 import { Back, Header, Page, Summary, SummaryItem, Toolbar } from './CategoriesPage.styles'
 
 function CategoriesReady() {
@@ -93,6 +94,7 @@ function CategoriesReady() {
 }
 
 export function CategoriesPage() {
+  useServerSlices(['users', 'plants', 'catalog'])
   const { t } = useI18n()
 
   return (

@@ -96,7 +96,7 @@ export function ensureBootstrapAdmin() {
     if (!row.nameHe) row.nameHe = BOOTSTRAP_ADMIN.nameHe
   }
 
-  // local/prod: this Gmail is the only admin. Mock keeps the example persona roles.
+  // qa/prod: this Gmail is the only admin. Mock keeps the example persona roles.
   if (plantxEnv() !== 'mock') {
     for (const user of users) {
       if (user.id === row?.id) continue
@@ -159,7 +159,7 @@ function ensureAccessAndCatalog() {
   }
 }
 
-/** Write launch JSON files when the data folder is empty. mock → demo fixtures; local/prod → empty live. */
+/** Write launch JSON files when the data folder is empty. mock → demo fixtures; qa/prod → empty live. */
 export function ensureDataFiles() {
   if (!hasDataFiles()) {
     if (seedMode() === 'demo') copyDemoFixtures()

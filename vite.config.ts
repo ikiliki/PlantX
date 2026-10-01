@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiPort = process.env.VITE_API_PORT || env.VITE_API_PORT || '8787'
+  const apiPort = process.env.VITE_API_PORT || env.VITE_API_PORT
   return {
   plugins: [
     react(),
@@ -29,12 +29,14 @@ export default defineConfig(({ mode }) => {
       },
     }),
   ],
-  server: {
-    proxy: {
-      '/api': {
-        target: `http://127.0.0.1:${apiPort}`,
-      },
-    },
-  },
+  server: apiPort
+    ? {
+        proxy: {
+          '/api': {
+            target: `http://127.0.0.1:${apiPort}`,
+          },
+        },
+      }
+    : undefined,
   }
 })

@@ -4,7 +4,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { Body, Copy, ErrorText, Form, Panel, Submit, Success, Title } from './CommunityRegister.styles'
 
-export function CommunityRegister() {
+export function CommunityRegister({ embedded = false }: { embedded?: boolean }) {
   const { t } = useI18n()
   const { requestAccess, signedIn } = useStore()
   const [name, setName] = useState('')
@@ -40,22 +40,26 @@ export function CommunityRegister() {
 
   if (done) {
     return (
-      <Panel id="register">
-        <Copy>
-          <Title>{t.landing.registerPendingTitle}</Title>
-          <Body>{t.landing.registerPendingBody}</Body>
-        </Copy>
+      <Panel id={embedded ? undefined : 'register'}>
+        {embedded ? null : (
+          <Copy>
+            <Title>{t.landing.registerPendingTitle}</Title>
+            <Body>{t.landing.registerPendingBody}</Body>
+          </Copy>
+        )}
         <Success>{t.landing.registerPendingHint}</Success>
       </Panel>
     )
   }
 
   return (
-    <Panel id="register">
-      <Copy>
-        <Title>{t.landing.registerTitle}</Title>
-        <Body>{t.landing.registerBody}</Body>
-      </Copy>
+    <Panel id={embedded ? undefined : 'register'}>
+      {embedded ? null : (
+        <Copy>
+          <Title>{t.landing.registerTitle}</Title>
+          <Body>{t.landing.registerBody}</Body>
+        </Copy>
+      )}
       <Form onSubmit={(event) => void onSubmit(event)}>
         <Field>
           {t.landing.registerName}

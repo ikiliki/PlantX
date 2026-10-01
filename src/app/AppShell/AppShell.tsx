@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import { Icon, type IconName } from '../../components/Icon/Icon'
+import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { LiveBanner } from '../../components/LiveBanner/LiveBanner'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -70,7 +71,9 @@ export function AppShell() {
       <TopBar />
       <LiveBanner />
       <Main ref={mainRef} $wide={loc.pathname === '/home'}>
-        <Outlet />
+        <LoaderShell>
+          <Outlet />
+        </LoaderShell>
       </Main>
       <ScrollTopButton label={t.common.backToTop} />
       <BottomNav>

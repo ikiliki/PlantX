@@ -1,8 +1,8 @@
 /**
  * Reset a JSON db folder.
  * Usage: tsx scripts/reset-data.ts [empty|demo]
- *   empty → clear server/data (clean local). Next API start seeds the bootstrap admin.
- *   demo  → copy fixtures into server/data-local (mock development).
+ *   empty → clear server/data (QA JSON files). Next QA API start seeds the bootstrap admin.
+ *   demo  → copy fixtures into server/data-local (kept for fixture dumps; the local UI does not read them).
  */
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 import path from 'node:path'

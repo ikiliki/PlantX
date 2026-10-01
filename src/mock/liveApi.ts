@@ -1,15 +1,36 @@
+import { plantFetch } from '../lib/httpNotice'
 import type { FeedUpdate, Plant, User } from './types'
 import type { SystemConfig } from '../theme/release'
 
+/** Counts only. Full rows are separate requests. */
+export type LiveMeta = {
+  users: number
+  plants: number
+  updates: number
+  pending: number
+  transactions: number
+  catalog: {
+    categories: number
+    subcategories: number
+    properties: number
+  }
+}
+
+export type ServerSlice = 'users' | 'plants' | 'updates' | 'catalog' | 'pending' | 'transactions'
+
 export type LivePayload = {
   system: SystemConfig
-  users: User[]
-  plants: Plant[]
+  /** Present on the server. Storybook still sends the full mock arrays below. */
+  currentUser?: User | null
+  meta?: LiveMeta
+  /** Storybook / offline shell only. The server does not send these. */
+  users?: User[]
+  plants?: Plant[]
   catalog?: import('./types').Catalog
-  updates: FeedUpdate[]
+  updates?: FeedUpdate[]
   activities?: FeedUpdate[]
   currentUserId: string | null
-  env?: 'mock' | 'local' | 'prod'
+  env?: 'mock' | 'qa' | 'prod'
   seed?: 'empty' | 'demo'
   envLabel?: string
 }
@@ -20,7 +41,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T | null> {
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    const res = await fetch(path, {
+    const res = await plantFetch(path, {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
       ...init,
@@ -37,7 +58,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T | null> {
 }
 
 export function fetchEnv() {
-  return request<{ env: 'mock' | 'local' | 'prod'; seed: 'empty' | 'demo'; label: string }>('/api/env')
+  return request<{ env: 'mock' | 'qa' | 'prod'; seed: 'empty' | 'demo'; label: string }>('/api/env')
 }
 
 export function fetchLive() {
@@ -51,6 +72,10 @@ export function fetchActivities(query?: { plantId?: string; userId?: string; lim
   if (query?.limit != null) params.set('limit', String(query.limit))
   const qs = params.toString()
   return request<{ activities: FeedUpdate[] }>(`/api/activities${qs ? `?${qs}` : ''}`)
+}
+
+export function fetchPlants() {
+  return request<{ plants: Plant[] }>('/api/plants')
 }
 
 export function fetchPlant(plantId: string) {
@@ -83,7 +108,7 @@ export async function postGoogleSessionResult(credential: string) {
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    const res = await fetch('/api/session/google', {
+    const res = await plantFetch('/api/session/google', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

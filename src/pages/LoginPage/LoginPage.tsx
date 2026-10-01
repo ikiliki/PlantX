@@ -1,13 +1,21 @@
 import { useNavigate } from 'react-router-dom'
 import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
 import { useI18n } from '../../i18n/I18nProvider'
+import { useStore } from '../../mock/store'
+import { isOperator } from '../../theme/operator'
 import { Close, Page, Popup } from './LoginPage.styles'
 
 export function LoginPage() {
   const { t } = useI18n()
+  const { currentUser, db } = useStore()
   const navigate = useNavigate()
+  const inside = db.system.launched || isOperator(currentUser)
 
   const close = () => {
+    if (!inside) {
+      navigate('/')
+      return
+    }
     if (window.history.length > 1) navigate(-1)
     else navigate('/home')
   }

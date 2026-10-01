@@ -7,7 +7,7 @@ export const openApiDocument = {
     description:
       'Feature-based JSON API. Greenhouse care records into the activity service. Home feed and plant cards read activities separately from plant state. Session cookie: `plantx_session`.',
   },
-  servers: [{ url: 'http://127.0.0.1:8787', description: 'Local API' }],
+  servers: [{ url: 'http://127.0.0.1:8787', description: 'QA API' }],
   tags: [
     { name: 'live', description: 'Boot payload' },
     { name: 'session', description: 'Demo login and register' },
@@ -46,22 +46,35 @@ export const openApiDocument = {
         },
         required: ['id', 'kind', 'userId', 'body', 'bodyHe', 'createdAt'],
       },
+      LiveMeta: {
+        type: 'object',
+        properties: {
+          users: { type: 'integer' },
+          plants: { type: 'integer' },
+          updates: { type: 'integer' },
+          pending: { type: 'integer' },
+          transactions: { type: 'integer' },
+          catalog: {
+            type: 'object',
+            properties: {
+              categories: { type: 'integer' },
+              subcategories: { type: 'integer' },
+              properties: { type: 'integer' },
+            },
+            required: ['categories', 'subcategories', 'properties'],
+          },
+        },
+        required: ['users', 'plants', 'updates', 'pending', 'transactions', 'catalog'],
+      },
       Live: {
         type: 'object',
         properties: {
           system: { type: 'object', additionalProperties: true },
-          users: { type: 'array', items: { type: 'object', additionalProperties: true } },
-          plants: { type: 'array', items: { $ref: '#/components/schemas/Plant' } },
-          catalog: { type: 'object', additionalProperties: true },
-          updates: {
-            type: 'array',
-            items: { $ref: '#/components/schemas/Activity' },
-            description: 'Alias of activities for the existing client',
-          },
-          activities: { type: 'array', items: { $ref: '#/components/schemas/Activity' } },
+          currentUser: { type: 'object', additionalProperties: true, nullable: true },
           currentUserId: { type: 'string', nullable: true },
+          meta: { $ref: '#/components/schemas/LiveMeta' },
         },
-        required: ['system', 'users', 'plants', 'catalog', 'updates', 'activities', 'currentUserId'],
+        required: ['system', 'currentUser', 'currentUserId', 'meta'],
       },
       Plant: {
         type: 'object',
@@ -108,8 +121,8 @@ export const openApiDocument = {
     '/api/live': {
       get: {
         tags: ['live'],
-        summary: 'Load live slices',
-        description: 'Aggregates system, users, plants, catalog, and activities for boot.',
+        summary: 'Live metadata',
+        description: 'Boot metadata for every collection: members, plants, updates, pending members, pending transactions, and catalog counts. Full rows are loaded from their own routes.',
         responses: {
           '200': {
             description: 'Live payload',

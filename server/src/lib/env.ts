@@ -1,18 +1,18 @@
-export type PlantxEnv = 'mock' | 'local' | 'prod'
+export type PlantxEnv = 'mock' | 'qa' | 'prod'
 export type PlantxSeed = 'empty' | 'demo'
 
 function normalizeEnv(raw: string | undefined): PlantxEnv {
   const value = (raw || '').trim().toLowerCase()
-  if (value === 'mock' || value === 'demo') return 'mock'
   if (value === 'prod' || value === 'production') return 'prod'
-  if (value === 'local' || value === 'qa' || value === 'staging') return 'local'
-  return 'local'
+  if (value === 'qa' || value === 'staging') return 'qa'
+  if (value === 'mock' || value === 'demo' || value === 'local') return 'mock'
+  return 'qa'
 }
 
 /**
- * mock → development fixtures.
- * local → clean JSON db you run on this machine.
- * prod → clean JSON db for the deployed client → server → storage stack.
+ * mock → browser UI only. This process should not be started for it.
+ * qa → QA database. JSON files in server/data until a separate QA database exists.
+ * prod → production database. JSON files on the Vercel server (server/data-prod when run here).
  */
 export function plantxEnv(): PlantxEnv {
   return normalizeEnv(process.env.PLANTX_ENV)
@@ -20,7 +20,7 @@ export function plantxEnv(): PlantxEnv {
 
 /**
  * Which JSON world to seed when the data folder is empty.
- * mock → demo fixtures. local and prod → empty live (bootstrap admin only).
+ * mock → demo fixtures. qa and prod → empty live (bootstrap admin only).
  * PLANTX_SEED overrides when set explicitly.
  */
 export function plantxSeed(): PlantxSeed {
@@ -31,7 +31,7 @@ export function plantxSeed(): PlantxSeed {
 }
 
 export function plantxEnvLabel(env: PlantxEnv = plantxEnv()): string {
-  if (env === 'mock') return 'mock · demo'
+  if (env === 'mock') return 'local · ui mocks'
   if (env === 'prod') return 'prod · json db'
-  return 'local · json db'
+  return 'qa · json db'
 }

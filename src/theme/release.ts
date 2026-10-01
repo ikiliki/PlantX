@@ -3,6 +3,7 @@
  * A page is a container. A feature owns the status. Each component is shown or hidden.
  * Do not encode faces as TypeScript interfaces — status lives in the mock store.
  */
+import { defaultAppLaunched } from './launch'
 
 export const FEATURE_IDS = ['greenhouse', 'market', 'rank', 'wiki', 'news'] as const
 export type FeatureId = (typeof FEATURE_IDS)[number]
@@ -62,6 +63,8 @@ export const PLAIN = [
 export type PlainId = (typeof PLAIN)[number]['id']
 
 export interface SystemConfig {
+  /** Visitors see the app when this is on. Admin still sees it when it is off. */
+  launched: boolean
   pages: Record<PageId, PageStatus>
   features: Record<FeatureId, PlacementConfig>
   placements: Record<PlacementId, ComponentConfig>
@@ -77,6 +80,7 @@ export const PAGE_FEATURE: Record<PageId, FeatureId> = {
 }
 
 export const DEFAULT_SYSTEM: SystemConfig = {
+  launched: defaultAppLaunched(),
   pages: {
     home: 'live',
     market: 'maintenance',
@@ -138,11 +142,13 @@ function readEnabled(value: unknown, fallback: boolean): boolean {
 
 export function normalizeSystem(
   raw: {
+    launched?: unknown
     pages?: Partial<Record<PageId, PageStatus>>
     features?: Partial<Record<FeatureId, unknown>>
     placements?: Partial<Record<string, unknown>>
   } | undefined,
 ): SystemConfig {
+  const launched = typeof raw?.launched === 'boolean' ? raw.launched : DEFAULT_SYSTEM.launched
   const pages = { ...DEFAULT_SYSTEM.pages }
   const features = { ...DEFAULT_SYSTEM.features }
   const placements = { ...DEFAULT_SYSTEM.placements }
@@ -160,7 +166,7 @@ export function normalizeSystem(
     const saved = raw?.placements?.[item.id] ?? legacy
     placements[item.id] = { enabled: readEnabled(saved, DEFAULT_SYSTEM.placements[item.id].enabled) }
   }
-  return { pages, features, placements }
+  return { launched, pages, features, placements }
 }
 
 /** Status lives on the feature. A shown component follows it. A hidden component stays off unless the feature itself is off, which locks every component. */

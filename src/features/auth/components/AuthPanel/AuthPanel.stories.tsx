@@ -35,3 +35,9 @@ export const Gate = () => (
 )
 
 export const Register = () => <AuthPanel start="register" reason="sell" onSuccess={() => undefined} />
+
+export const GoogleOnly = () => (
+  <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: 16, background: '#F4F1E8' }}>
+    <AuthPanel ssoOnly dialog onSuccess={() => undefined} />
+  </div>
+)

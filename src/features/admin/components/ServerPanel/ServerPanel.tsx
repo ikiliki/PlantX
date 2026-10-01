@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Badge } from '../../../../components/Badge/Badge'
@@ -7,6 +7,7 @@ import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { FeedUpdate, ModerationItem, PendingUser, Plant, User } from '../../../../mock/types'
 import { useStore, type LiveStatus } from '../../../../mock/store'
+import { useServerSlices } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { CatalogTree, CatalogTreeDialog } from '../CatalogTree/CatalogTree'
@@ -502,7 +503,7 @@ export function ServerPanel() {
     enableUser,
     approvePendingUser,
     rejectPendingUser,
-    refreshAccessQueue,
+    liveMeta,
     resolveModeration,
   } = useStore()
   const { t, tr, locale, formatMoney } = useI18n()
@@ -525,14 +526,18 @@ export function ServerPanel() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ users: true })
   const [categoryPopupId, setCategoryPopupId] = useState<string | null>(null)
 
+  useServerSlices([
+    ...(openSections.users ? (['users'] as const) : []),
+    ...(openSections.plants ? (['plants'] as const) : []),
+    ...(openSections.activities ? (['updates'] as const) : []),
+    ...(openSections.catalog ? (['catalog'] as const) : []),
+    ...(openSections.pending ? (['pending'] as const) : []),
+    ...(openSections.transactions ? (['transactions'] as const) : []),
+  ])
+
   const toggleSection = (id: string) => {
     setOpenSections((current) => ({ ...current, [id]: !current[id] }))
   }
-
-  useEffect(() => {
-    void refreshAccessQueue()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const users = db.users.filter((user) => user.role !== 'guest')
   const plants = db.plants
@@ -641,20 +646,29 @@ export function ServerPanel() {
           <Pill $tone={statusTone(liveStatus)}>{statusLabel(liveStatus, t)}</Pill>
           <p>
             <strong>{plantxEnvLabel}</strong>
-            {liveWritable
-              ? ` · ${plantxEnv === 'mock' ? t.admin.serverLocalBody : t.admin.serverUpBody}`
-              : liveStatus === 'down'
-                ? ` · ${t.admin.serverDownBody}`
-                : ` · ${t.admin.serverLoadingBody}`}
+            {plantxEnv === 'mock'
+              ? ` · ${t.admin.serverLocalBody}`
+              : liveWritable
+                ? ` · ${t.admin.serverUpBody}`
+                : liveStatus === 'down'
+                  ? ` · ${t.admin.serverDownBody}`
+                  : ` · ${t.admin.serverLoadingBody}`}
           </p>
         </StatusCopy>
         <StatusActions>
-          <Button size="sm" variant="secondary" onClick={() => void retryLive()} disabled={liveStatus === 'loading'}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => void retryLive()}
+            disabled={plantxEnv === 'mock' || liveStatus === 'loading'}
+          >
             {t.common.retry}
           </Button>
-          <DocsLink href="/api/docs" target="_blank" rel="noreferrer">
-            {t.admin.serverDocs}
-          </DocsLink>
+          {plantxEnv !== 'mock' && (
+            <DocsLink href="/api/docs" target="_blank" rel="noreferrer">
+              {t.admin.serverDocs}
+            </DocsLink>
+          )}
         </StatusActions>
       </StatusCard>
 
@@ -732,7 +746,7 @@ export function ServerPanel() {
         <SectionHead type="button" $open={Boolean(openSections.pending)} onClick={() => toggleSection('pending')}>
           <h2>{t.admin.pendingMembers}</h2>
           <HeadMeta>
-            <span>{pending.length}</span>
+            <span>{openSections.pending || liveMeta == null ? pending.length : liveMeta.pending}</span>
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
@@ -791,7 +805,7 @@ export function ServerPanel() {
         <SectionHead type="button" $open={Boolean(openSections.users)} onClick={() => toggleSection('users')}>
           <h2>{t.admin.serverUsers}</h2>
           <HeadMeta>
-            <span>{users.length}</span>
+            <span>{openSections.users || liveMeta == null ? users.length : liveMeta.users}</span>
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
@@ -880,7 +894,7 @@ export function ServerPanel() {
         <SectionHead type="button" $open={Boolean(openSections.plants)} onClick={() => toggleSection('plants')}>
           <h2>{t.admin.serverPlants}</h2>
           <HeadMeta>
-            <span>{plants.length}</span>
+            <span>{openSections.plants || liveMeta == null ? plants.length : liveMeta.plants}</span>
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
@@ -964,7 +978,7 @@ export function ServerPanel() {
         <SectionHead type="button" $open={Boolean(openSections.activities)} onClick={() => toggleSection('activities')}>
           <h2>{t.admin.serverActivities}</h2>
           <HeadMeta>
-            <span>{activities.length}</span>
+            <span>{openSections.activities || liveMeta == null ? activities.length : liveMeta.updates}</span>
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
@@ -1026,7 +1040,7 @@ export function ServerPanel() {
         <SectionHead type="button" $open={Boolean(openSections.transactions)} onClick={() => toggleSection('transactions')}>
           <h2>{t.admin.transactions}</h2>
           <HeadMeta>
-            <span>{transactions.length}</span>
+            <span>{openSections.transactions || liveMeta == null ? transactions.length : liveMeta.transactions}</span>
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
@@ -1076,7 +1090,11 @@ export function ServerPanel() {
         <SectionHead type="button" $open={Boolean(openSections.catalog)} onClick={() => toggleSection('catalog')}>
           <h2>{t.admin.serverCatalog}</h2>
           <HeadMeta>
-            <span>{categories.length + subcategories.length + properties.length}</span>
+            <span>
+              {openSections.catalog || liveMeta == null
+                ? categories.length + subcategories.length + properties.length
+                : liveMeta.catalog.categories + liveMeta.catalog.subcategories + liveMeta.catalog.properties}
+            </span>
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>

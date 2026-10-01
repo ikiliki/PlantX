@@ -16,6 +16,7 @@ import { useOpenMarketListing } from '../../features/market/useOpenMarketListing
 import { useI18n } from '../../i18n/I18nProvider'
 import { userPlace } from '../../mock/locations'
 import { useStore } from '../../mock/store'
+import { useServerSlices } from '../../mock/useServerSlices'
 import { PageGate } from '../../components/PageGate/PageGate'
 import type { ComponentView } from '../../theme/view'
 import { MarketPending } from '../../features/market/components/MarketPending/MarketPending'
@@ -155,6 +156,7 @@ function MarketReady({ view }: { view: ComponentView }) {
 
 export function MarketPage({ view = 'page' }: { view?: ComponentView }) {
   const { t } = useI18n()
+  useServerSlices(['users', 'plants', 'catalog'])
 
   return (
     <PageGate pageId="market" title={t.nav.market}>

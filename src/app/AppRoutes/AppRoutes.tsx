@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { matchPath, Navigate, Route, Routes, useLocation, useNavigate, type Location } from 'react-router-dom'
+import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
+import { NotLaunched } from '../../components/NotLaunched/NotLaunched'
+import { AdminGate } from '../../features/admin/components/AdminGate/AdminGate'
+import { useStore } from '../../mock/store'
+import { isOperator } from '../../theme/operator'
 import { AppShell } from '../AppShell/AppShell'
 import { PassportDialog } from '../../features/greenhouse/components/PassportDialog/PassportDialog'
 import { SellerDialog } from '../../features/sellers/components/SellerDialog/SellerDialog'
@@ -8,6 +13,7 @@ import { CategoryPage } from '../../pages/CategoryPage/CategoryPage'
 import { DiscoverPage } from '../../pages/DiscoverPage/DiscoverPage'
 import { GreenhousePage } from '../../pages/GreenhousePage/GreenhousePage'
 import { LandingPage } from '../../pages/LandingPage/LandingPage'
+import { LandingStillsPage } from '../../pages/LandingStills/LandingStills'
 import { LoginPage } from '../../pages/LoginPage/LoginPage'
 import { MarketClassPage } from '../../pages/MarketClassPage/MarketClassPage'
 import { MarketPage } from '../../pages/MarketPage/MarketPage'
@@ -24,6 +30,15 @@ function staticLocation(pathname: string): Location {
 }
 
 type SellerState = { sellerFull?: boolean } | null
+
+/** Closed app paints a full page. The operator sees the real app anyway. */
+function ProductShell() {
+  const { currentUser, db, liveStatus } = useStore()
+  if (isOperator(currentUser)) return <AppShell />
+  if (liveStatus === 'loading') return <LoaderShell fill />
+  if (!db.system.launched) return <NotLaunched />
+  return <AppShell />
+}
 
 export function AppRoutes() {
   const location = useLocation()
@@ -59,10 +74,13 @@ export function AppRoutes() {
   return (
     <>
       <Routes location={overlay ? background : location}>
-        <Route path="/" element={<LandingPage />} />
-        <Route element={<AppShell />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="stills" element={<LandingStillsPage />} />
+          <Route path="not-launched" element={<NotLaunched />} />
+        <Route element={<ProductShell />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="home" element={<DiscoverPage />} />
+          <Route path="dashboard" element={<Navigate to="/home" replace />} />
           <Route path="market" element={<MarketPage />} />
           <Route path="market/categories" element={<CategoriesPage />} />
           <Route path="market/categories/:speciesId" element={<CategoryPage />} />
@@ -73,13 +91,15 @@ export function AppRoutes() {
           <Route path="wiki/:speciesId" element={<WikiPage />} />
           <Route path="sellers/:id" element={<SellerProfilePage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+        <Route element={<AdminGate />}>
           <Route path="admin" element={<Navigate to="/admin/server" replace />} />
           <Route path="admin/configurations" element={<Navigate to="/admin/server" replace />} />
           <Route path="admin/system" element={<SystemPage />} />
           <Route path="admin/server" element={<ServerPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {plantId && fromGreenhouse && <PassportDialog plantId={plantId} onClose={closeOverlay} />}
       {sellerId && !sellerFull && <SellerDialog userId={sellerId} onClose={closeOverlay} />}

@@ -15,6 +15,8 @@ dist-ssr
 .env.*
 !.env.example
 
+.vercel
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -60,3 +62,9 @@ _ticker-check.mjs
 scripts/_*/
 scripts/_*.mjs
 base44/
+
+.vercel
+.env*
+
+# Server bundle rebuilt by npm run build:prod
+api/

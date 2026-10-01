@@ -30,6 +30,15 @@ function assemble(): Catalog {
 }
 
 export const catalogService = {
+  counts() {
+    const catalog = catalogService.get()
+    return {
+      categories: catalog.categories.length,
+      subcategories: catalog.subcategories.length,
+      properties: catalog.properties.length,
+    }
+  },
+
   /** Categories, subcategories, and properties are separate JSON tables. */
   get() {
     if (tablesExist()) return assemble()

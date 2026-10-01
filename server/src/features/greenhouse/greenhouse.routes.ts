@@ -6,6 +6,8 @@ import { greenhouseService } from './greenhouse.service.ts'
 
 export const greenhouseRoutes = new Hono()
 
+greenhouseRoutes.get('/', (c) => c.json({ plants: greenhouseService.list() }))
+
 greenhouseRoutes.get('/:id', (c) => {
   const plant = greenhouseService.get(c.req.param('id'))
   return c.json({ plant })

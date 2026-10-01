@@ -12,15 +12,28 @@ export function exampleApiLive(): LivePayload {
   const seed = createSeed()
   const live: LivePayload = {
     system: seed.system,
+    currentUser: null,
+    meta: {
+      users: seed.users.filter((user) => user.role !== 'guest').length,
+      plants: seed.plants.length,
+      updates: seed.updates.length,
+      pending: seed.pendingUsers.filter((row) => row.status === 'pending').length,
+      transactions: seed.pendingTransactions.filter((row) => row.status === 'pending').length,
+      catalog: {
+        categories: seed.catalog.categories.length,
+        subcategories: seed.catalog.subcategories.length,
+        properties: seed.catalog.properties.length,
+      },
+    },
     users: seed.users,
     plants: seed.plants,
     catalog: seed.catalog,
     updates: seed.updates,
     activities: seed.updates,
     currentUserId: null,
-    env: 'local',
+    env: 'mock',
     seed: 'demo',
-    envLabel: 'local · example mocks',
+    envLabel: 'local · ui mocks',
   }
   return live
 }
@@ -35,10 +48,10 @@ export function exampleClientDb(): MockDb {
   return {
     ...seed,
     system: api.system,
-    users: api.users,
-    plants: api.plants,
+    users: api.users ?? seed.users,
+    plants: api.plants ?? seed.plants,
     catalog: api.catalog ?? seed.catalog,
-    updates: api.updates,
+    updates: api.updates ?? seed.updates,
     currentUserId: api.currentUserId,
   }
 }

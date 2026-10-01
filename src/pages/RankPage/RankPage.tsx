@@ -4,6 +4,7 @@ import { GuestView } from '../../components/GuestView/GuestView'
 import { GradeStack, useGradeQueue } from '../../features/greenhouse/components/GradeStack/GradeStack'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
+import { useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
 import { isPlacementReady } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
@@ -43,6 +44,7 @@ function RankReady({ view }: { view: ComponentView }) {
 }
 
 export function RankPage({ view = 'page' }: { view?: ComponentView }) {
+  useServerSlices(['users', 'plants'])
   const { t } = useI18n()
 
   return (

@@ -14,6 +14,7 @@ import { WikiArticle } from '../../features/species/components/WikiArticle/WikiA
 import { useI18n } from '../../i18n/I18nProvider'
 import { averageHistory } from '../../mock/marketHistory'
 import { useStore } from '../../mock/store'
+import { useServerSlices } from '../../mock/useServerSlices'
 import { Crumb, Crumbs, Head, Mark, Missing, Page, Scientific, Summary, SummaryStat } from './CategoryPage.styles'
 
 function CategoryReady({ speciesId: speciesIdProp }: { speciesId?: string }) {
@@ -130,6 +131,7 @@ function CategoryReady({ speciesId: speciesIdProp }: { speciesId?: string }) {
 }
 
 export function CategoryPage({ speciesId }: { speciesId?: string } = {}) {
+  useServerSlices(['users', 'plants', 'catalog'])
   const { t } = useI18n()
 
   return (

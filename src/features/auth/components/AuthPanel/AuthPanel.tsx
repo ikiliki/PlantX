@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { fetchGoogleAuth } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
+import { clientEnv } from '../../../../theme/plantxEnv'
 import type { AuthReason } from '../../AuthProvider'
 import {
   Brand,
@@ -96,6 +97,8 @@ export function AuthPanel({
   start,
   dialog = false,
   gate = false,
+  ssoOnly = false,
+  embedded = false,
   titleId = 'auth-dialog-title',
   onSuccess,
   onContinue,
@@ -107,13 +110,17 @@ export function AuthPanel({
   dialog?: boolean
   /** Same card as login; primary CTA only (e.g. go to /login). */
   gate?: boolean
+  /** Google button only. No email, password, or register. */
+  ssoOnly?: boolean
+  /** Google control only, for the shared public hold card. */
+  embedded?: boolean
   titleId?: string
   onSuccess: () => void
   onGuest?: () => void
   onContinue?: () => void
 }) {
   const { t, locale } = useI18n()
-  const { loginByEmail, loginWithGoogle, requestAccess } = useStore()
+  const { loginByEmail, loginWithGoogle, loginWithMockSso, requestAccess } = useStore()
   const [mode, setMode] = useState<'login' | 'register'>(start ?? (reason === 'sell' ? 'register' : 'login'))
   const [loginStep, setLoginStep] = useState<'sso' | 'manual'>('sso')
   const [name, setName] = useState('')
@@ -127,28 +134,57 @@ export function AuthPanel({
   const googleRef = useRef<HTMLDivElement>(null)
 
   const googleReady = Boolean(googleClientId)
-  const showSso = !gate && mode === 'login' && !pending && googleReady && loginStep === 'sso'
-  const showManualLogin = !gate && mode === 'login' && !pending && (!googleReady || loginStep === 'manual')
+  const mockSso = ssoOnly && clientEnv() === 'mock'
+  const showSso = mockSso
+    ? !pending
+    : ssoOnly
+      ? googleReady && !pending
+      : !gate && mode === 'login' && !pending && googleReady && loginStep === 'sso'
+  const showManualLogin =
+    !ssoOnly && !gate && mode === 'login' && !pending && (!googleReady || loginStep === 'manual')
   const googleLocale = locale === 'he' ? 'he' : 'en'
 
-  const heading = gate
-    ? t.auth.login
-    : pending
-      ? t.auth.pendingTitle
-      : mode === 'register'
-        ? t.auth.register
-        : t.auth.login
-  const copy = gate ? '' : pending ? t.auth.pendingBody : mode === 'register' ? reasonBody(reason, t) : ''
+  const heading = ssoOnly
+    ? t.admin.title
+    : gate
+      ? t.auth.login
+      : pending
+        ? t.auth.pendingTitle
+        : mode === 'register'
+          ? t.auth.register
+          : t.auth.login
+  const copy = ssoOnly
+    ? t.admin.operatorOnly
+    : gate
+      ? ''
+      : pending
+        ? t.auth.pendingBody
+        : mode === 'register'
+          ? reasonBody(reason, t)
+          : ''
 
   useEffect(() => {
+    if (clientEnv() === 'mock') return
     void fetchGoogleAuth().then((res) => {
       if (res?.enabled && res.clientId) setGoogleClientId(res.clientId)
       else if (!envGoogleClientId()) setGoogleClientId(null)
     })
   }, [])
 
+  const onMockSso = async () => {
+    setBusy(true)
+    setError('')
+    const result = await loginWithMockSso()
+    setBusy(false)
+    if (!result.ok) {
+      setError(t.auth.googleFailed)
+      return
+    }
+    onSuccess()
+  }
+
   useEffect(() => {
-    if (!showSso || !googleClientId) return
+    if (mockSso || !showSso || !googleClientId) return
     let cancelled = false
     void (async () => {
       try {
@@ -189,14 +225,14 @@ export function AuthPanel({
       } catch {
         if (!cancelled) {
           setGoogleClientId(null)
-          setLoginStep('manual')
+          if (!ssoOnly) setLoginStep('manual')
         }
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [showSso, googleClientId, googleLocale, loginWithGoogle, onSuccess, t.auth.googleFailed])
+  }, [mockSso, showSso, googleClientId, googleLocale, loginWithGoogle, onSuccess, ssoOnly, t.auth.googleFailed])
 
   const onLogin = async (event: FormEvent) => {
     event.preventDefault()
@@ -245,6 +281,27 @@ export function AuthPanel({
     setLoginStep(googleReady ? 'sso' : 'manual')
   }
 
+  if (embedded) {
+    if (mockSso) {
+      return (
+        <>
+          <Submit type="button" onClick={() => void onMockSso()} disabled={busy}>
+            {busy ? t.common.loading : t.auth.google}
+          </Submit>
+          {error && <ErrorText>{error}</ErrorText>}
+        </>
+      )
+    }
+    return showSso ? (
+      <>
+        <GoogleSlot ref={googleRef} aria-label={t.auth.google} />
+        {error && <ErrorText>{error}</ErrorText>}
+      </>
+    ) : (
+      <ErrorText>{t.auth.googleFailed}</ErrorText>
+    )
+  }
+
   return (
     <Shell $dialog={dialog}>
       <Stack $dialog={dialog}>
@@ -282,23 +339,33 @@ export function AuthPanel({
             </Foot>
           ) : showSso ? (
             <>
-              <GoogleSlot ref={googleRef} aria-label={t.auth.google} />
+              {mockSso ? (
+                <Submit type="button" onClick={() => void onMockSso()} disabled={busy}>
+                  {busy ? t.common.loading : t.auth.google}
+                </Submit>
+              ) : (
+                <GoogleSlot ref={googleRef} aria-label={t.auth.google} />
+              )}
               {error && <ErrorText>{error}</ErrorText>}
-              <Foot>
-                <TextButton
-                  type="button"
-                  onClick={() => {
-                    setError('')
-                    setLoginStep('manual')
-                  }}
-                >
-                  {t.auth.useEmail}
-                </TextButton>
-                <TextButton type="button" onClick={() => switchMode('register')}>
-                  {t.auth.switchToRegister}
-                </TextButton>
-              </Foot>
+              {!ssoOnly && (
+                <Foot>
+                  <TextButton
+                    type="button"
+                    onClick={() => {
+                      setError('')
+                      setLoginStep('manual')
+                    }}
+                  >
+                    {t.auth.useEmail}
+                  </TextButton>
+                  <TextButton type="button" onClick={() => switchMode('register')}>
+                    {t.auth.switchToRegister}
+                  </TextButton>
+                </Foot>
+              )}
             </>
+          ) : ssoOnly ? (
+            <ErrorText>{t.auth.googleFailed}</ErrorText>
           ) : showManualLogin ? (
             <>
               <Form onSubmit={(event) => void onLogin(event)}>

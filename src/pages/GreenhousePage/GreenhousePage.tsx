@@ -10,6 +10,7 @@ import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDia
 import { useSell } from '../../features/sell/SellProvider'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
+import { useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
 import { isPlacementReady } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
@@ -27,6 +28,7 @@ export function GreenhousePage({
   ownerId?: string
   compact?: boolean
 }) {
+  useServerSlices(['users', 'plants', 'updates', 'catalog'])
   if (ownerId) {
     return <GreenhousePublic ownerId={ownerId} compact={compact ?? view === 'widget'} />
   }

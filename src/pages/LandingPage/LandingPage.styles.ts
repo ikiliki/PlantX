@@ -18,14 +18,15 @@ export const HowWrap = styled.div`
   }
 `
 
-export const Foot = styled.p`
-  width: min(100%, 1180px);
+export const Foot = styled.footer`
+  width: min(1180px, 100%);
   margin: 0 auto;
-  padding: 0 ${theme.space.md} 40px;
-  font-size: 13px;
+  padding: 26px ${theme.space.md} 40px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid ${theme.colors.border};
+  font-size: 12px;
   color: ${theme.colors.muted};
-
-  @media (min-width: ${theme.breakpoints.md}) {
-    padding: 0 56px 48px;
-  }
 `

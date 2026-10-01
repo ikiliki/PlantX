@@ -24,6 +24,7 @@ export function LandingNav() {
       <Links>
         <Jump href="#how">{t.landing.navHow}</Jump>
         <Jump href="#product">{t.landing.navProduct}</Jump>
+        <Jump href="#access">{t.landing.navWhy}</Jump>
       </Links>
       <Actions>
         <Lang>
@@ -46,7 +47,7 @@ export function LandingNav() {
             {t.landing.langEn}
           </LangBtn>
         </Lang>
-        <Enter href="#register">{t.landing.navRegister}</Enter>
+        <Enter href="#access">{t.landing.navRegister}</Enter>
       </Actions>
     </Bar>
   )

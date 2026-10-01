@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -29,11 +30,13 @@ import { PLACEMENTS, type FeatureId, type PageId, type PageStatus, type Placemen
 import { publishBlocker } from '../features/greenhouse/communityGrade'
 import { defaultPlantPhoto } from './images'
 import {
+  fetchActivities,
   fetchLive,
   fetchGoogleAuth,
   fetchMembers,
   fetchPendingTransactions,
   fetchPendingUsers,
+  fetchPlants,
   postApprovePending,
   postDisableUser,
   postEnableUser,
@@ -45,13 +48,18 @@ import {
   postRejectPending,
   postSession,
   putSystem,
+  type LiveMeta,
   type LivePayload,
+  type ServerSlice,
 } from './liveApi'
 import { exampleClientDb } from './examples'
 import { personaFlags } from './personas'
+import { normalizeSystem } from '../theme/release'
 import { projectDb } from './projectDb'
 import { ensureSession, normalizeScenarios } from './session'
 import { applyShellToDb, shellLivePayload } from './shell'
+import { clientEnv, clientEnvLabel, type ClientEnv } from '../theme/plantxEnv'
+import { OPERATOR_EMAIL } from '../theme/operator'
 
 const STORAGE_KEY = 'plantx-mock-db-v8'
 
@@ -118,13 +126,16 @@ interface StoreApi {
   liveStatus: LiveStatus
   /** True only when the server is up — live writes go through. */
   liveWritable: boolean
-  /** Server environment: mock (dev fixtures) | local (clean JSON) | prod. */
-  plantxEnv: 'mock' | 'local' | 'prod'
+  /** mock = browser UI, no server. qa = QA JSON files. prod = production files. */
+  plantxEnv: ClientEnv
   plantxEnvLabel: string
   plantxSeed: 'empty' | 'demo'
   retryLive: () => Promise<void>
   setLocale: (locale: Locale) => void
   setDemoScenarios: (patch: Partial<DemoScenarios>) => void
+  /** Which system control is waiting on the server. Null when idle. */
+  systemPending: string | null
+  setAppLaunched: (launched: boolean) => void
   setPageStatus: (pageId: PageId, status: PageStatus) => void
   setFeatureEnabled: (featureId: FeatureId, enabled: boolean) => void
   setFeatureStatus: (featureId: FeatureId, status: ReleaseMode) => void
@@ -133,6 +144,8 @@ interface StoreApi {
   loginByEmail: (email: string) => Promise<boolean>
   /** Google Identity Services ID token → session. */
   loginWithGoogle: (credential: string) => Promise<{ ok: true } | { ok: false; reason: string }>
+  /** Local UI only. Any admin SSO click signs in the operator. No server. */
+  loginWithMockSso: () => Promise<{ ok: true } | { ok: false; reason: string }>
   /** Landing / auth register — queues for admin approval. Does not sign in. */
   requestAccess: (input: {
     name: string
@@ -143,7 +156,9 @@ interface StoreApi {
   rejectPendingUser: (id: string) => Promise<boolean>
   disableUser: (id: string) => Promise<boolean>
   enableUser: (id: string) => Promise<boolean>
-  refreshAccessQueue: () => Promise<void>
+  liveMeta: LiveMeta | null
+  loadSlice: (part: ServerSlice) => Promise<void>
+  refreshAccessQueue: (part: 'pending' | 'transactions') => Promise<void>
   resetDemo: () => void
   createListing: (input: {
     plantId: string
@@ -214,43 +229,44 @@ export function StoreProvider({
   source = 'api',
   children,
 }: {
-  /** `example` = storybook client mocks of the API. `api` = QA or local server. */
+  /** `example` = storybook UI mocks. `api` = QA or production server, unless the client env is mock. */
   source?: 'api' | 'example'
   children: ReactNode
 }) {
   const example = source === 'example'
-  const [db, setDb] = useState<MockDb>(() => (example ? exampleClientDb() : loadDb()))
-  const [liveStatus, setLiveStatus] = useState<LiveStatus>(example ? 'up' : 'loading')
-  const [runtimeEnv, setRuntimeEnv] = useState<'mock' | 'local' | 'prod'>(
-    () =>
-      example
-        ? 'mock'
-        : (import.meta.env.VITE_PLANTX_ENV as 'mock' | 'local' | 'prod' | undefined) || 'local',
-  )
-  const [runtimeEnvLabel, setRuntimeEnvLabel] = useState(example ? 'mock · demo' : 'local · json db')
-  const [runtimeSeed, setRuntimeSeed] = useState<'empty' | 'demo'>(example ? 'demo' : 'empty')
+  const uiMocks = example || clientEnv() === 'mock'
+  const [db, setDb] = useState<MockDb>(() => (uiMocks ? exampleClientDb() : loadDb()))
+  const [liveStatus, setLiveStatus] = useState<LiveStatus>(uiMocks ? 'up' : 'loading')
+  const [runtimeEnv, setRuntimeEnv] = useState<ClientEnv>(() => (uiMocks ? 'mock' : clientEnv()))
+  const [runtimeEnvLabel, setRuntimeEnvLabel] = useState(() => clientEnvLabel(uiMocks ? 'mock' : clientEnv()))
+  const [runtimeSeed, setRuntimeSeed] = useState<'empty' | 'demo'>(uiMocks ? 'demo' : 'empty')
 
   useEffect(() => {
-    if (!example) saveDb(db)
-  }, [db, example])
+    if (!uiMocks) saveDb(db)
+  }, [db, uiMocks])
 
   const update = useCallback((fn: (prev: MockDb) => MockDb) => {
     setDb((prev) => fn(structuredClone(prev)))
   }, [])
 
+  const [liveMeta, setLiveMeta] = useState<LiveMeta | null>(null)
+  const loadedSlices = useRef(new Set<ServerSlice>())
+
   const applyLive = useCallback((live: LivePayload) => {
-    const userIds = new Set(live.users.map((user) => user.id))
-    const plants = live.plants.filter((plant) => userIds.has(plant.ownerId))
+    if (live.meta) setLiveMeta(live.meta)
+    const listedUsers = live.users ?? (live.currentUser ? [live.currentUser] : [])
+    const userIds = new Set(listedUsers.map((user) => user.id))
+    const plants = (live.plants ?? []).filter((plant) => userIds.size === 0 || userIds.has(plant.ownerId))
     const plantIds = new Set(plants.map((plant) => plant.id))
-    const updates = live.updates.filter(
-      (row) => userIds.has(row.userId) && (!row.plantId || plantIds.has(row.plantId)),
+    const updates = (live.updates ?? []).filter(
+      (row) => userIds.size === 0 || (userIds.has(row.userId) && (!row.plantId || plantIds.has(row.plantId))),
     )
     update((d) => {
-      if (live.env === 'mock') {
+      if (live.env === 'mock' && live.users && live.plants && live.updates) {
         const example = exampleClientDb()
         return {
           ...example,
-          system: live.system,
+          system: normalizeSystem(live.system),
           users: live.users,
           plants,
           catalog: live.catalog ?? example.catalog,
@@ -262,13 +278,14 @@ export function StoreProvider({
           visitorId: d.visitorId,
         }
       }
+      const emptyCatalog = { categories: [], subcategories: [], properties: [] }
       return {
         ...d,
-        system: live.system,
-        users: live.users,
-        plants,
-        catalog: live.catalog ?? d.catalog,
-        updates,
+        system: normalizeSystem(live.system),
+        users: listedUsers,
+        plants: live.plants ? plants : [],
+        catalog: live.catalog ?? emptyCatalog,
+        updates: live.updates ? updates : [],
         currentUserId: live.currentUserId,
         flags: personaFlags(live.currentUserId),
         moderation: [],
@@ -280,7 +297,7 @@ export function StoreProvider({
         pendingTransactions: [],
       }
     })
-    if (live.env) setRuntimeEnv(live.env)
+    if (live.env === 'mock' || live.env === 'qa' || live.env === 'prod') setRuntimeEnv(live.env)
     if (live.envLabel) setRuntimeEnvLabel(live.envLabel)
     if (live.seed) setRuntimeSeed(live.seed)
   }, [update])
@@ -294,55 +311,102 @@ export function StoreProvider({
   }, [update])
 
   const retryLive = useCallback(async (opts?: { useShellOnFail?: boolean }) => {
+    loadedSlices.current.clear()
     setLiveStatus('loading')
     const live = await fetchLive()
     if (live) {
       applyLive(live)
       setLiveStatus('up')
-      const [pending, members, transactions] = await Promise.all([
-        fetchPendingUsers('pending'),
-        fetchMembers(),
-        fetchPendingTransactions(),
-      ])
-      update((d) => {
-        if (pending) d.pendingUsers = pending.pending
-        if (members) d.users = members.users
-        if (transactions) d.pendingTransactions = transactions.transactions
-        return d
-      })
       return
     }
     if (opts?.useShellOnFail) applyShell()
     setLiveStatus('down')
   }, [applyLive, applyShell, update])
 
-  const syncSystem = useCallback((system: MockDb['system']) => {
-    if (liveStatus !== 'up') return
-    void putSystem(system).then((res) => {
-      if (res?.system) {
-        update((d) => ({ ...d, system: res.system }))
-      }
-    })
-  }, [liveStatus, update])
+  const [systemPending, setSystemPending] = useState<string | null>(null)
+  const systemSave = useRef(false)
+  const saveSystem = useCallback(async (key: string, next: MockDb['system']) => {
+    if (uiMocks) {
+      update((d) => ({ ...d, system: normalizeSystem(next) }))
+      return
+    }
+    if (systemSave.current) return
+    systemSave.current = true
+    setSystemPending(key)
+    try {
+      const res = await putSystem(next)
+      if (res?.system) update((d) => ({ ...d, system: normalizeSystem(res.system) }))
+    } finally {
+      systemSave.current = false
+      setSystemPending(null)
+    }
+  }, [uiMocks, update])
 
-  useEffect(() => {
-    if (example) return
-    void (async () => {
+  const loadSlice = useCallback(async (part: ServerSlice) => {
+    if (uiMocks || loadedSlices.current.has(part)) return
+    loadedSlices.current.add(part)
+    const miss = () => {
+      loadedSlices.current.delete(part)
+    }
+    if (part === 'users') {
+      const res = await fetchMembers()
+      if (!res) return miss()
+      update((d) => {
+        d.users = res.users
+        return d
+      })
+      return
+    }
+    if (part === 'plants') {
+      const res = await fetchPlants()
+      if (!res) return miss()
+      update((d) => {
+        d.plants = res.plants
+        return d
+      })
+      return
+    }
+    if (part === 'updates') {
+      const res = await fetchActivities()
+      if (!res) return miss()
+      update((d) => {
+        d.updates = res.activities
+        return d
+      })
+      return
+    }
+    if (part === 'catalog') {
       const file = await fetchCatalogFile()
-      if (!file) return
+      if (!file) return miss()
       update((d) => {
         d.catalog = file
         return d
       })
-    })()
-  }, [example, update])
+      return
+    }
+    if (part === 'pending') {
+      const pending = await fetchPendingUsers('pending')
+      if (!pending) return miss()
+      update((d) => {
+        d.pendingUsers = pending.pending
+        return d
+      })
+      return
+    }
+    const transactions = await fetchPendingTransactions()
+    if (!transactions) return miss()
+    update((d) => {
+      d.pendingTransactions = transactions.transactions
+      return d
+    })
+  }, [uiMocks, update])
 
   useEffect(() => {
-    if (example) return
-    void retryLive({ useShellOnFail: import.meta.env.VITE_PLANTX_ENV === 'mock' })
+    if (uiMocks) return
+    void retryLive({ useShellOnFail: false })
     // Initial hydrate only — retryLive is exposed for the offline banner.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [example])
+  }, [uiMocks])
 
   const visible = useMemo(() => projectDb(db), [db])
   const currentUser = useMemo(
@@ -350,7 +414,7 @@ export function StoreProvider({
     [db],
   )
   const signedIn = Boolean(currentUser && currentUser.role !== 'guest')
-  const liveWritable = liveStatus === 'up'
+  const liveWritable = !uiMocks && liveStatus === 'up'
 
   const api: StoreApi = {
     db: visible,
@@ -361,6 +425,8 @@ export function StoreProvider({
     plantxEnv: runtimeEnv,
     plantxEnvLabel: runtimeEnvLabel,
     plantxSeed: runtimeSeed,
+    liveMeta,
+    loadSlice,
     retryLive: () => retryLive(),
     setLocale: (locale) => update((d) => ({ ...d, locale })),
     setDemoScenarios: (patch) =>
@@ -368,53 +434,39 @@ export function StoreProvider({
         ...d,
         flags: { ...normalizeScenarios(d.flags), ...patch },
       })),
-    setPageStatus: (pageId, status) =>
-      update((d) => {
-        d.system = {
-          ...d.system,
-          pages: { ...d.system.pages, [pageId]: status },
-        }
-        syncSystem(d.system)
-        return d
-      }),
-    setFeatureEnabled: (featureId, enabled) =>
-      update((d) => {
-        d.system = {
-          ...d.system,
-          features: {
-            ...d.system.features,
-            [featureId]: { ...d.system.features[featureId], enabled },
-          },
-        }
-        syncSystem(d.system)
-        return d
-      }),
-    setFeatureStatus: (featureId, status) =>
-      update((d) => {
-        d.system = {
-          ...d.system,
-          features: {
-            ...d.system.features,
-            [featureId]: { ...d.system.features[featureId], status },
-          },
-        }
-        syncSystem(d.system)
-        return d
-      }),
-    setPlacementEnabled: (placement, enabled) =>
-      update((d) => {
-        const item = PLACEMENTS.find((entry) => entry.id === placement)
-        if (item?.required && !enabled) return d
-        d.system = {
-          ...d.system,
-          placements: {
-            ...d.system.placements,
-            [placement]: { enabled },
-          },
-        }
-        syncSystem(d.system)
-        return d
-      }),
+    systemPending,
+    setAppLaunched: (launched) => {
+      void saveSystem('app', { ...db.system, launched })
+    },
+    setPageStatus: (pageId, status) => {
+      void saveSystem(`page:${pageId}`, { ...db.system, pages: { ...db.system.pages, [pageId]: status } })
+    },
+    setFeatureEnabled: (featureId, enabled) => {
+      void saveSystem(`feature:${featureId}`, {
+        ...db.system,
+        features: {
+          ...db.system.features,
+          [featureId]: { ...db.system.features[featureId], enabled },
+        },
+      })
+    },
+    setFeatureStatus: (featureId, status) => {
+      void saveSystem(`feature:${featureId}:status`, {
+        ...db.system,
+        features: {
+          ...db.system.features,
+          [featureId]: { ...db.system.features[featureId], status },
+        },
+      })
+    },
+    setPlacementEnabled: (placement, enabled) => {
+      const item = PLACEMENTS.find((entry) => entry.id === placement)
+      if (item?.required && !enabled) return
+      void saveSystem(`placement:${placement}`, {
+        ...db.system,
+        placements: { ...db.system.placements, [placement]: { enabled } },
+      })
+    },
     loginAs: (userId) => {
       update((d) => ({
         ...d,
@@ -450,22 +502,20 @@ export function StoreProvider({
       update((d) => ({ ...d, currentUserId: user.id, flags: personaFlags(user.id) }))
       return true
     },
+    loginWithMockSso: async () => {
+      if (!uiMocks) return { ok: false as const, reason: 'offline' }
+      const operator = db.users.find(
+        (user) => user.role === 'admin' && user.email?.trim().toLowerCase() === OPERATOR_EMAIL,
+      )
+      if (!operator) return { ok: false as const, reason: 'unknown' }
+      update((d) => ({ ...d, currentUserId: operator.id, flags: personaFlags(operator.id) }))
+      return { ok: true as const }
+    },
     loginWithGoogle: async (credential) => {
       const result = await postGoogleSessionResult(credential)
       if (!result.ok) return { ok: false as const, reason: result.error }
       applyLive(result.live)
       setLiveStatus('up')
-      const [pending, members, transactions] = await Promise.all([
-        fetchPendingUsers('pending'),
-        fetchMembers(),
-        fetchPendingTransactions(),
-      ])
-      update((d) => {
-        if (pending) d.pendingUsers = pending.pending
-        if (members) d.users = members.users
-        if (transactions) d.pendingTransactions = transactions.transactions
-        return d
-      })
       return { ok: true as const }
     },
     requestAccess: async ({ name, email, note }) => {
@@ -602,17 +652,20 @@ export function StoreProvider({
       })
       return true
     },
-    refreshAccessQueue: async () => {
-      const [pending, members, transactions] = await Promise.all([
-        fetchPendingUsers('pending'),
-        fetchMembers(),
-        fetchPendingTransactions(),
-      ])
-      if (!pending && !members && !transactions) return
+    refreshAccessQueue: async (part) => {
+      if (part === 'pending') {
+        const pending = await fetchPendingUsers('pending')
+        if (!pending) return
+        update((d) => {
+          d.pendingUsers = pending.pending
+          return d
+        })
+        return
+      }
+      const transactions = await fetchPendingTransactions()
+      if (!transactions) return
       update((d) => {
-        if (pending) d.pendingUsers = pending.pending
-        if (members) d.users = members.users
-        if (transactions) d.pendingTransactions = transactions.transactions
+        d.pendingTransactions = transactions.transactions
         return d
       })
     },

@@ -2,6 +2,7 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 import type { Context } from 'hono'
 import type { User } from '../../../src/mock/types.ts'
 import { Errors } from './errors.ts'
+import { plantxEnv } from './env.ts'
 import { readJson } from './jsonStore.ts'
 
 export const SESSION_COOKIE = 'plantx_session'
@@ -38,6 +39,7 @@ export function setSession(c: Context, userId: string | null) {
     path: '/',
     httpOnly: true,
     sameSite: 'Lax',
+    secure: plantxEnv() === 'prod',
     maxAge: 60 * 60 * 24 * 365,
   })
 }

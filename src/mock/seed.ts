@@ -28,6 +28,7 @@ export function createSeed(): MockDb {
     feedFriendsOnly: false,
     flags: personaFlags(null),
     system: {
+      launched: DEFAULT_SYSTEM.launched,
       pages: { ...DEFAULT_SYSTEM.pages },
       features: { ...DEFAULT_SYSTEM.features },
       placements: { ...DEFAULT_SYSTEM.placements },

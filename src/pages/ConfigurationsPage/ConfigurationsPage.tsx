@@ -16,10 +16,12 @@ import { emptyMarketFilters } from '../../features/market/marketFilters'
 import { useI18n } from '../../i18n/I18nProvider'
 import { userPlace } from '../../mock/locations'
 import { useStore } from '../../mock/store'
+import { useServerSlices } from '../../mock/useServerSlices'
 import { Page } from '../SystemPage/SystemPage.styles'
 
 export function ConfigurationsPage() {
   const { currentUser, db } = useStore()
+  useServerSlices(['plants', 'catalog'])
   const { t, locale } = useI18n()
   const [filters, setFilters] = useState(() => emptyMarketFilters())
   const origin = userPlace(currentUser)

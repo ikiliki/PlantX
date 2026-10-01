@@ -11,6 +11,7 @@ import { WikiRail } from '../../features/feed/components/WikiRail/WikiRail'
 import { useHomeFeed } from '../../features/feed/useHomeFeed'
 import { Reveal } from '../../components/Reveal/Reveal'
 import { useI18n } from '../../i18n/I18nProvider'
+import { useServerSlices } from '../../mock/useServerSlices'
 import type { ComponentView } from '../../theme/view'
 import { Empty, Feed, Layout, Rail, Shell, Widget } from './DiscoverPage.styles'
 
@@ -68,6 +69,7 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
 
 export function DiscoverPage({ view = 'page', paged = true }: { view?: ComponentView; paged?: boolean }) {
   const { t } = useI18n()
+  useServerSlices(['users', 'plants', 'updates', 'catalog'])
 
   return (
     <PageGate pageId="home" title={t.nav.home}>
