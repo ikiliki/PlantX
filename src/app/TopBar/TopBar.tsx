@@ -65,6 +65,7 @@ export function TopBar() {
   const pageBoard: Partial<Record<PageId, PlacementId>> = {
     market: 'market.board',
     greenhouse: 'greenhouse.board',
+    todo: 'todo.board',
     rank: 'rank.board',
     wiki: 'wiki.board',
   }
@@ -145,6 +146,11 @@ export function TopBar() {
             aria-current={isActive('/greenhouse') ? 'page' : undefined}
           >
             {t.nav.greenhouse}
+          </NavItem>
+        )}
+        {show('todo') && (
+          <NavItem to="/tasks" $active={isActive('/tasks')} aria-current={isActive('/tasks') ? 'page' : undefined}>
+            {t.nav.todo}
           </NavItem>
         )}
         {show('rank') && (

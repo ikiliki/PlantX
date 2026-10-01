@@ -5,10 +5,10 @@
  */
 import { defaultAppLaunched } from './launch'
 
-export const FEATURE_IDS = ['greenhouse', 'market', 'rank', 'wiki', 'news'] as const
+export const FEATURE_IDS = ['greenhouse', 'market', 'rank', 'wiki', 'news', 'todo'] as const
 export type FeatureId = (typeof FEATURE_IDS)[number]
 
-export const PAGE_IDS = ['home', 'market', 'greenhouse', 'rank', 'wiki'] as const
+export const PAGE_IDS = ['home', 'market', 'greenhouse', 'todo', 'rank', 'wiki'] as const
 export type PageId = (typeof PAGE_IDS)[number]
 
 /** Shown only while the placement is enabled. */
@@ -33,6 +33,7 @@ export const PLACEMENTS = [
   { id: 'home.market', pageId: 'home', featureId: 'market', required: false },
   { id: 'home.rank', pageId: 'home', featureId: 'rank', required: false },
   { id: 'home.wiki', pageId: 'home', featureId: 'wiki', required: false },
+  { id: 'home.todo', pageId: 'home', featureId: 'todo', required: true },
   { id: 'market.board', pageId: 'market', featureId: 'market', required: true },
   { id: 'market.class', pageId: 'market', featureId: 'market', required: true },
   { id: 'market.categories', pageId: 'market', featureId: 'market', required: true },
@@ -42,11 +43,14 @@ export const PLACEMENTS = [
   { id: 'profile.market.trust', pageId: 'market', featureId: 'market', required: true },
   { id: 'greenhouse.board', pageId: 'greenhouse', featureId: 'greenhouse', required: true },
   { id: 'greenhouse.card', pageId: 'greenhouse', featureId: 'greenhouse', required: true },
+  { id: 'todo.board', pageId: 'todo', featureId: 'todo', required: true },
   { id: 'passport.market', pageId: 'greenhouse', featureId: 'market', required: false },
   { id: 'passport.rank', pageId: 'greenhouse', featureId: 'rank', required: false },
+  { id: 'passport.todo', pageId: 'greenhouse', featureId: 'todo', required: false },
   { id: 'rank.board', pageId: 'rank', featureId: 'rank', required: true },
   { id: 'wiki.board', pageId: 'wiki', featureId: 'wiki', required: true },
 ] as const
+
 
 export type PlacementId = (typeof PLACEMENTS)[number]['id']
 
@@ -76,6 +80,7 @@ export const PAGE_FEATURE: Record<PageId, FeatureId> = {
   home: 'news',
   market: 'market',
   greenhouse: 'greenhouse',
+  todo: 'todo',
   rank: 'rank',
   wiki: 'wiki',
 }
@@ -86,6 +91,7 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     home: 'live',
     market: 'maintenance',
     greenhouse: 'live',
+    todo: 'live',
     rank: 'maintenance',
     wiki: 'maintenance',
   },
@@ -93,6 +99,7 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     news: { enabled: true, status: 'ready' },
     market: { enabled: false, status: 'comingSoon' },
     greenhouse: { enabled: true, status: 'ready' },
+    todo: { enabled: true, status: 'ready' },
     rank: { enabled: false, status: 'comingSoon' },
     wiki: { enabled: false, status: 'comingSoon' },
   },
@@ -101,6 +108,7 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     'home.market': { enabled: true },
     'home.rank': { enabled: true },
     'home.wiki': { enabled: true },
+    'home.todo': { enabled: true },
     'market.board': { enabled: true },
     'market.class': { enabled: true },
     'market.categories': { enabled: true },
@@ -110,8 +118,10 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     'profile.market.trust': { enabled: true },
     'greenhouse.board': { enabled: true },
     'greenhouse.card': { enabled: true },
+    'todo.board': { enabled: true },
     'passport.market': { enabled: true },
     'passport.rank': { enabled: true },
+    'passport.todo': { enabled: true },
     'rank.board': { enabled: true },
     'wiki.board': { enabled: true },
   },
@@ -198,6 +208,16 @@ export function isPlacementEnabled(system: SystemConfig, id: PlacementId): boole
 export function isPlacementReady(system: SystemConfig, id: PlacementId): boolean {
   const placement = placementRelease(system, id)
   return placement.enabled && placement.status === 'ready'
+}
+
+/** Feature switch only — used by routes that have no page status (todo). */
+export function isFeatureEnabled(system: SystemConfig, id: FeatureId): boolean {
+  return Boolean(system.features[id]?.enabled)
+}
+
+export function isFeatureReady(system: SystemConfig, id: FeatureId): boolean {
+  const feature = system.features[id]
+  return Boolean(feature?.enabled && feature.status === 'ready')
 }
 
 /** Nav shows the page when the page is live. Component status gates that component, not the link. */

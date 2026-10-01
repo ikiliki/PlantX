@@ -53,12 +53,13 @@ import {
 
 const PAGE_STATUSES: PageStatus[] = ['live', 'maintenance']
 const RELEASE_MODES: ReleaseMode[] = ['ready', 'comingSoon', 'maintenance']
-const FEATURE_ORDER: FeatureId[] = ['news', 'market', 'greenhouse', 'rank', 'wiki']
+const FEATURE_ORDER: FeatureId[] = ['news', 'market', 'greenhouse', 'todo', 'rank', 'wiki']
 
 const PAGE_SLICES = {
-  home: ['users', 'plants', 'updates', 'catalog'],
+  home: ['users', 'plants', 'updates', 'todos', 'catalog'],
   market: ['users', 'plants', 'catalog'],
-  greenhouse: ['users', 'plants', 'updates', 'catalog'],
+  greenhouse: ['users', 'plants', 'updates', 'todos', 'catalog'],
+  todo: ['users', 'plants', 'todos', 'updates'],
   rank: ['users', 'plants'],
   wiki: ['plants', 'catalog'],
 } as const satisfies Record<PageId, readonly ServerSlice[]>
@@ -67,6 +68,7 @@ const FEATURE_SLICES = {
   news: PAGE_SLICES.home,
   market: PAGE_SLICES.market,
   greenhouse: PAGE_SLICES.greenhouse,
+  todo: PAGE_SLICES.todo,
   rank: PAGE_SLICES.rank,
   wiki: PAGE_SLICES.wiki,
 } as const satisfies Record<FeatureId, readonly ServerSlice[]>
@@ -88,6 +90,7 @@ function pageLabel(id: PageId, t: ReturnType<typeof useI18n>['t']) {
   if (id === 'home') return t.nav.home
   if (id === 'market') return t.nav.market
   if (id === 'greenhouse') return t.nav.greenhouse
+  if (id === 'todo') return t.nav.todo
   if (id === 'rank') return t.nav.rank
   return t.nav.wiki
 }
@@ -100,6 +103,7 @@ function featureLabel(id: FeatureId, t: ReturnType<typeof useI18n>['t']) {
   if (id === 'news') return t.nav.home
   if (id === 'market') return t.nav.market
   if (id === 'greenhouse') return t.nav.greenhouse
+  if (id === 'todo') return t.nav.todo
   if (id === 'rank') return t.nav.rank
   return t.nav.wiki
 }

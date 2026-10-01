@@ -13,6 +13,7 @@ import { identifyRoutes } from './features/identify/identify.routes.ts'
 import { liveRoutes } from './features/live/live.routes.ts'
 import { sessionRoutes } from './features/session/session.routes.ts'
 import { systemRoutes } from './features/system/system.routes.ts'
+import { todoRoutes } from './features/todo/todo.routes.ts'
 import { usersRoutes } from './features/users/users.routes.ts'
 
 let booted: Promise<void> | null = null
@@ -69,4 +70,5 @@ app.route('/api/system', systemRoutes)
 app.route('/api/catalog', catalogRoutes)
 app.route('/api/identify', identifyRoutes)
 app.route('/api/activities', activityRoutes)
+app.route('/api/todos', todoRoutes)
 app.route('/api/plants', greenhouseRoutes)

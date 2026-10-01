@@ -9,6 +9,7 @@ import type {
 } from '../../../../src/mock/types.ts'
 import type { FeatureId, PageId, PlacementId, SystemConfig } from '../../../../src/theme/release.ts'
 import type { Activity } from '../../features/activity/activity.types.ts'
+import type { Todo } from '../../features/todo/todo.types.ts'
 import type { PendingTransaction, PendingUser } from '../../features/users/users.types.ts'
 import type { PlantxStore } from '../store.ts'
 import { supabaseCatalogSuggestions } from './supabaseCatalogSuggestions.ts'
@@ -134,6 +135,10 @@ export function createSupabaseStore(): PlantxStore {
     activities: {
       list: () => withTx(listActivities),
       saveAll: (items) => withTx((client) => saveActivities(client, items)),
+    },
+    todos: {
+      list: () => withTx(listTodos),
+      saveAll: (items) => withTx((client) => saveTodos(client, items)),
     },
     catalog: {
       get: () => withTx(getCatalog),
@@ -623,6 +628,68 @@ export function createSupabaseStore(): PlantxStore {
     await client.query('delete from plants where not (id = any($1::text[]))', [kept])
   }
 
+  /** Care todos. Missing until the todos migration runs. */
+  async function hasTodos(client: PoolClient) {
+    const found = await rows(client, `select to_regclass('public.todos') as name`)
+    return Boolean(found[0]?.name)
+  }
+
+  async function listTodos(client: PoolClient): Promise<Todo[]> {
+    if (!(await hasTodos(client))) return []
+    const found = await rows(client, 'select * from todos order by position, id')
+    return found.map((row) => {
+      const todo: Todo = {
+        id: text(row, 'id'),
+        ownerId: text(row, 'owner_id'),
+        plantId: text(row, 'plant_id'),
+        category: text(row, 'category') as Todo['category'],
+        subcategory: text(row, 'subcategory') as Todo['subcategory'],
+        dueOn: optional(row, 'due_on') ?? null,
+        completedOn: optional(row, 'completed_on') ?? null,
+        createdAt: text(row, 'created_at'),
+      }
+      return todo
+    })
+  }
+
+  async function saveTodos(client: PoolClient, items: Todo[]) {
+    if (!(await hasTodos(client))) return
+    const userIds = await ids(client, 'select id from users')
+    const plantIds = await ids(client, 'select id from plants')
+    const kept = items.filter((item) => userIds.has(item.ownerId) && plantIds.has(item.plantId))
+    if (kept.length === 0) {
+      await client.query('delete from todos')
+      return
+    }
+    for (const [position, item] of kept.entries()) {
+      await client.query(
+        `insert into todos (id, position, owner_id, plant_id, category, subcategory, due_on, completed_on, created_at)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         on conflict (id) do update set
+           position = excluded.position,
+           owner_id = excluded.owner_id,
+           plant_id = excluded.plant_id,
+           category = excluded.category,
+           subcategory = excluded.subcategory,
+           due_on = excluded.due_on,
+           completed_on = excluded.completed_on,
+           created_at = excluded.created_at`,
+        [
+          item.id,
+          position,
+          item.ownerId,
+          item.plantId,
+          item.category,
+          item.subcategory,
+          item.dueOn,
+          item.completedOn,
+          item.createdAt,
+        ],
+      )
+    }
+    await client.query('delete from todos where not (id = any($1::text[]))', [kept.map((item) => item.id)])
+  }
+
   async function listActivities(client: PoolClient): Promise<Activity[]> {
     const found = await rows(client, 'select * from activities order by position, id')
     return found.map((row) => {
@@ -906,6 +973,7 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.propagatedAt ?? null,
     plant.verifiedAt ?? null,
     plant.verifiedBy ?? null,
+    // Cleared after todo.backfillFromPlants. Still written while legacy dates exist.
     plant.photoAt ?? null,
     plant.wateredAt ?? null,
     plant.status,
@@ -999,6 +1067,7 @@ function plantFrom(
   assign(plant, 'propagatedAt', optional(row, 'propagated_at'))
   assign(plant, 'verifiedAt', optional(row, 'verified_at'))
   assign(plant, 'verifiedBy', optional(row, 'verified_by'))
+  // Legacy care dates — todo.backfillFromPlants moves them into todos, then clears these.
   assign(plant, 'photoAt', optional(row, 'photo_at'))
   assign(plant, 'wateredAt', optional(row, 'watered_at'))
   assign(plant, 'publishedAt', optional(row, 'published_at'))

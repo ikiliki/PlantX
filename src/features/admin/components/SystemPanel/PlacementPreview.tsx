@@ -14,6 +14,7 @@ import { GreenhousePage } from '../../../../pages/GreenhousePage/GreenhousePage'
 import { MarketClassPage } from '../../../../pages/MarketClassPage/MarketClassPage'
 import { MarketPage } from '../../../../pages/MarketPage/MarketPage'
 import { RankPage } from '../../../../pages/RankPage/RankPage'
+import { TodoPage } from '../../../../pages/TodoPage/TodoPage'
 import { WikiPage } from '../../../../pages/WikiPage/WikiPage'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
 import { PLACEMENTS, placementRelease, type FeatureId, type PlacementId } from '../../../../theme/release'
@@ -46,6 +47,7 @@ function WalletPreview() {
 
 function featureName(id: FeatureId, t: ReturnType<typeof useI18n>['t']) {
   if (id === 'news') return t.nav.home
+  if (id === 'todo') return t.nav.todo
   if (id === 'market') return t.nav.market
   if (id === 'greenhouse') return t.nav.greenhouse
   if (id === 'rank') return t.nav.rank
@@ -87,6 +89,14 @@ function RankPassportPreview() {
   return <PlantPassport plantId={plant.id} embedded initialTab="grading" />
 }
 
+function TodoPassportPreview() {
+  const { db, currentUser, signedIn } = useStore()
+  const ownerId = ownerIdOf(signedIn, currentUser?.id, db.visitorId)
+  const plant = db.plants.find((item) => item.ownerId === ownerId) ?? db.plants[0]
+  if (!plant) return null
+  return <PlantPassport plantId={plant.id} embedded initialTab="todo" />
+}
+
 function ClassPreview() {
   const { db } = useStore()
   const classId = db.marketClasses[0]?.id
@@ -111,6 +121,8 @@ function previewFor(id: PlacementId): ReactNode {
       return <RankRail />
     case 'home.wiki':
       return <WikiRail />
+    case 'home.todo':
+      return <TodoPage />
     case 'market.board':
       return <MarketPage />
     case 'market.class':
@@ -121,6 +133,8 @@ function previewFor(id: PlacementId): ReactNode {
       return <SpeciesPreview />
     case 'greenhouse.board':
       return <GreenhousePage />
+    case 'todo.board':
+      return <TodoPage />
     case 'greenhouse.market.wallet':
       return <WalletPreview />
     case 'profile.market.stats':
@@ -132,6 +146,8 @@ function previewFor(id: PlacementId): ReactNode {
       return <PassportPreview />
     case 'passport.rank':
       return <RankPassportPreview />
+    case 'passport.todo':
+      return <TodoPassportPreview />
     case 'rank.board':
       return <RankPage />
     case 'wiki.board':

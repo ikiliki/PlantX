@@ -2,6 +2,7 @@ import { DiscoverPage } from '../../../../pages/DiscoverPage/DiscoverPage'
 import { GreenhousePage } from '../../../../pages/GreenhousePage/GreenhousePage'
 import { MarketPage } from '../../../../pages/MarketPage/MarketPage'
 import { RankPage } from '../../../../pages/RankPage/RankPage'
+import { TodoPage } from '../../../../pages/TodoPage/TodoPage'
 import { WikiPage } from '../../../../pages/WikiPage/WikiPage'
 import type { PageId } from '../../../../theme/release'
 import { Page, Stage } from './PagePreview.styles'
@@ -10,6 +11,7 @@ function pageBody(pageId: PageId) {
   if (pageId === 'home') return <DiscoverPage />
   if (pageId === 'market') return <MarketPage />
   if (pageId === 'greenhouse') return <GreenhousePage />
+  if (pageId === 'todo') return <TodoPage />
   if (pageId === 'rank') return <RankPage />
   return <WikiPage />
 }

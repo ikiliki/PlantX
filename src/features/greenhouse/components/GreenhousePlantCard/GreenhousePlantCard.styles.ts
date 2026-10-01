@@ -9,7 +9,7 @@ const freshGlow = keyframes`
   100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0); transform: none; }
 `
 
-export const Root = styled.article<{ $fresh?: boolean }>`
+export const Root = styled.article<{ $fresh?: boolean; $care?: boolean }>`
   display: grid;
   grid-template-rows: auto 1fr;
   border-radius: ${theme.radii.lg};
@@ -19,6 +19,16 @@ export const Root = styled.article<{ $fresh?: boolean }>`
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease};
+  ${({ $care }) =>
+    $care &&
+    css`
+      cursor: pointer;
+
+      &:focus-visible {
+        outline: 2px solid ${theme.colors.growth};
+        outline-offset: 2px;
+      }
+    `}
   ${({ $fresh }) =>
     $fresh &&
     css`
@@ -105,14 +115,23 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
   }
 `
 
-export const Details = styled.div`
+export const Details = styled.div<{ $care?: boolean }>`
   display: grid;
   gap: 10px;
   align-content: start;
   padding: 14px 16px 16px;
 
   @container (max-width: 559px) {
-    display: none;
+    ${({ $care }) =>
+      $care
+        ? css`
+            display: grid;
+            gap: 6px;
+            padding: 8px 8px 10px;
+          `
+        : css`
+            display: none;
+          `}
   }
 `
 
@@ -134,6 +153,46 @@ export const Name = styled(Link)`
   &:hover {
     text-decoration: underline;
   }
+
+  @container (max-width: 559px) {
+    font-size: 14px;
+  }
+`
+
+export const CareName = styled.span`
+  font-family: ${theme.fonts.display};
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: ${theme.colors.ink};
+
+  @container (max-width: 559px) {
+    font-size: 14px;
+  }
+`
+
+export const CareActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+`
+
+export const CareAction = styled.span<{ $tone: 'water' | 'photo' }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: ${theme.radii.pill};
+  background: ${({ $tone }) => ($tone === 'photo' ? '#8B929A' : '#3B7CC9')};
+  color: ${theme.colors.creamCard};
+  font-size: 12px;
+  font-weight: 700;
+
+  span {
+    color: ${theme.colors.creamCard};
+  }
 `
 
 export const PassportMark = styled.span`
@@ -154,6 +213,28 @@ export const Tags = styled.div`
   align-items: center;
   gap: 6px;
   min-width: 0;
+`
+
+export const CareDate = styled.span`
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 10px;
+  inset-inline-end: 10px;
+  padding: 5px 10px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.forest};
+  color: ${theme.colors.creamCard};
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: ${theme.shadow.soft};
+
+  @container (max-width: 559px) {
+    inset-block-start: 4px;
+    inset-inline-end: 4px;
+    padding: 2px 5px;
+    font-size: 8px;
+  }
 `
 
 export const PhotoCount = styled.span`

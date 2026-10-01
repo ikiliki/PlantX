@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import type { TodoSubcategory } from '../../../../mock/types'
 import { PlantPassport } from '../PlantPassport/PlantPassport'
 import { Backdrop, Close, CloseBar, Dialog } from './PassportDialog.styles'
 
@@ -9,11 +10,13 @@ export function PassportDialog({
   onClose,
   tab = 'grading',
   activityKey,
+  careMark,
 }: {
   plantId: string
   onClose: () => void
-  tab?: 'grading' | 'activity' | 'market'
+  tab?: 'grading' | 'todo' | 'activity' | 'market'
   activityKey?: string
+  careMark?: TodoSubcategory
 }) {
   const { t } = useI18n()
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -50,7 +53,7 @@ export function PassportDialog({
             ×
           </Close>
         </CloseBar>
-        <PlantPassport key={plantId} plantId={plantId} embedded dialog initialTab={tab} activityKey={activityKey} />
+        <PlantPassport key={plantId} plantId={plantId} embedded dialog initialTab={tab} activityKey={activityKey} careMark={careMark} />
       </Dialog>
     </Backdrop>,
     document.body,

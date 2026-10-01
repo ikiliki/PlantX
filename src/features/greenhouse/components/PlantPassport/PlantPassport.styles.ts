@@ -151,6 +151,7 @@ export const PhotoIconButton = styled.button`
 `
 
 export const PhotoIcon = styled.div`
+  position: relative;
   width: 84px;
   height: 84px;
   padding: 4px;
@@ -158,7 +159,7 @@ export const PhotoIcon = styled.div`
   background: rgba(255, 254, 250, 0.72);
   box-shadow: 0 0 0 1px rgba(18, 60, 45, 0.12);
   animation: ${popIn} ${theme.motion.slow} ${theme.motion.spring} backwards;
-  overflow: hidden;
+  overflow: visible;
   img {
     display: block;
     width: 100%;
@@ -174,6 +175,15 @@ export const PhotoIcon = styled.div`
     width: 68px;
     height: 68px;
   }
+`
+
+export const CareMarkSlot = styled.span`
+  position: absolute;
+  inset-inline-end: -4px;
+  bottom: -4px;
+  z-index: 2;
+  line-height: 0;
+  animation: ${popIn} ${theme.motion.slow} ${theme.motion.spring} both;
 `
 
 export const NameBlock = styled.div`

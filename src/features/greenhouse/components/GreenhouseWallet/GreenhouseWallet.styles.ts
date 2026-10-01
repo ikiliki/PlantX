@@ -37,15 +37,15 @@ export const Label = styled.span`
   color: ${theme.colors.moss};
 `
 
-export const Stats = styled.div<{ $solo?: boolean }>`
+export const Stats = styled.div`
   display: grid;
-  grid-template-columns: ${({ $solo }) => ($solo ? 'minmax(0, 1fr)' : 'minmax(0, 1.35fr) minmax(0, 1fr)')};
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   gap: 0;
   min-width: 0;
   align-items: stretch;
 
   @container (max-width: 720px) {
-    grid-template-columns: ${({ $solo }) => ($solo ? 'minmax(0, 1fr)' : 'repeat(2, minmax(0, 1fr))')};
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px 16px;
   }
 `

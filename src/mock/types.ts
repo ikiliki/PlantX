@@ -149,9 +149,9 @@ export interface Plant {
   propagatedAt?: string
   verifiedAt?: string
   verifiedBy?: string
-  /** Last time the owner refreshed the listing photo. Falls back to verifiedAt. */
+  /** Last time the owner refreshed the listing photo. Legacy — moved into todos. */
   photoAt?: string
-  /** Last time the owner confirmed watering. */
+  /** Last time the owner confirmed watering. Legacy — moved into todos. */
   wateredAt?: string
   status: 'owned' | 'listed' | 'sold'
   /** Set by a greenhouse publish. Independent of an active market listing. */
@@ -341,6 +341,24 @@ export interface FeedUpdate {
   identifyRequestId?: string
   body: string
   bodyHe: string
+  createdAt: string
+}
+
+/** Top-level todo bucket. Later: market. */
+export type TodoCategory = 'plant'
+
+/** Action under the category. Later under market: verify. */
+export type TodoSubcategory = 'water' | 'photo'
+
+export interface Todo {
+  id: string
+  ownerId: string
+  plantId: string
+  category: TodoCategory
+  subcategory: TodoSubcategory
+  /** ISO date YYYY-MM-DD. Null for a first-watering session awaiting a calendar pick. */
+  dueOn: string | null
+  completedOn: string | null
   createdAt: string
 }
 
@@ -609,6 +627,7 @@ export interface MockDb {
   moderation: ModerationItem[]
   claimDrafts: ClaimDraft[]
   updates: FeedUpdate[]
+  todos: Todo[]
   topGreenhouses: TopGreenhouse[]
   pendingUsers: PendingUser[]
   pendingTransactions: PendingTransaction[]

@@ -12,6 +12,7 @@ import type {
 } from '../../../src/mock/types.ts'
 import type { SystemConfig } from '../../../src/theme/release.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
+import type { Todo } from '../features/todo/todo.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
 
 /**
@@ -44,6 +45,10 @@ export interface PlantxStore {
   activities: {
     list(): Promise<Activity[]>
     saveAll(rows: Activity[]): Promise<void>
+  }
+  todos: {
+    list(): Promise<Todo[]>
+    saveAll(rows: Todo[]): Promise<void>
   }
   catalog: {
     get(): Promise<Catalog>

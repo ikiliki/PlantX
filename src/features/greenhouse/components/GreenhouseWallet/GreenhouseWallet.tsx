@@ -18,25 +18,24 @@ export function GreenhouseWallet({
   const { db } = useStore()
   const market = placementRelease(db.system, 'greenhouse.market.wallet')
   const marketOn = isPlacementEnabled(db.system, 'greenhouse.market.wallet')
-  const held = marketOn && market.status !== 'ready'
+  if (!marketOn) return null
+  const held = market.status !== 'ready'
 
   return (
     <Root aria-label={title}>
       <Label>{title}</Label>
-      <Stats $solo={!marketOn}>
-        {marketOn ? (
-          <Stat>
-            <MarketValue
-              $held={held}
-              data-placement="greenhouse.market.wallet"
-              data-feature="market"
-              data-feature-mode={market.status}
-            >
-              <Value $tone="money">{value}</Value>
-            </MarketValue>
-            <ValueLabel>{valueLabel}</ValueLabel>
-          </Stat>
-        ) : null}
+      <Stats>
+        <Stat>
+          <MarketValue
+            $held={held}
+            data-placement="greenhouse.market.wallet"
+            data-feature="market"
+            data-feature-mode={market.status}
+          >
+            <Value $tone="money">{value}</Value>
+          </MarketValue>
+          <ValueLabel>{valueLabel}</ValueLabel>
+        </Stat>
         <Stat>
           <Value $tone="count">{collection}</Value>
           <ValueLabel>{collectionLabel}</ValueLabel>

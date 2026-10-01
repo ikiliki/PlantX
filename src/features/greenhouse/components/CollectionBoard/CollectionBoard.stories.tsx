@@ -5,7 +5,7 @@ import { StoreProvider, useStore } from '../../../../mock/store'
 import { CollectionBoard } from './CollectionBoard'
 
 function BoardStory({ compact = false }: { compact?: boolean }) {
-  const { db, currentUser, refreshPhoto, confirmWater } = useStore()
+  const { db, currentUser } = useStore()
   const { tr } = useI18n()
   const ownerId = currentUser?.id ?? db.visitorId
   const mine = db.plants.filter((plant) => plant.ownerId === ownerId)
@@ -30,8 +30,6 @@ function BoardStory({ compact = false }: { compact?: boolean }) {
       sold={sold}
       activity={activity}
       onAdd={() => undefined}
-      onRefresh={refreshPhoto}
-      onWater={confirmWater}
       compact={compact}
     />
   )
@@ -65,7 +63,5 @@ export const EmptyGreenhouse = () => (
     sold={[]}
     activity={[]}
     onAdd={() => undefined}
-    onRefresh={() => undefined}
-    onWater={() => undefined}
   />
 )

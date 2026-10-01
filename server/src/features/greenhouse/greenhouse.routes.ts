@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import type { Plant } from '../../../../src/mock/types.ts'
 import { requireUser } from '../../lib/session.ts'
 import { activityService } from '../activity/activity.service.ts'
+import { todoService } from '../todo/todo.service.ts'
 import { greenhouseService } from './greenhouse.service.ts'
 
 export const greenhouseRoutes = new Hono()
@@ -34,37 +35,15 @@ greenhouseRoutes.post('/', async (c) => {
     user.id,
     ids.map((id) => (typeof id === 'string' && id ? id : undefined)),
   )
-  const activities = await activityService.list()
+  const [activities, todos] = await Promise.all([
+    activityService.list(),
+    todoService.list({ ownerId: user.id }),
+  ])
   return c.json({
     plant: created,
     /** Client still expects `updates` on live merges. */
     updates: activities,
     activities,
-  })
-})
-
-greenhouseRoutes.post('/:id/water', async (c) => {
-  const user = await requireUser(c)
-  const result = await greenhouseService.water(c.req.param('id'), user.id)
-  const activities = await activityService.list()
-  return c.json({
-    plant: result.plant,
-    update: result.activity,
-    activity: result.activity,
-    updates: activities,
-    activities,
-  })
-})
-
-greenhouseRoutes.post('/:id/photo', async (c) => {
-  const user = await requireUser(c)
-  const result = await greenhouseService.refreshPhoto(c.req.param('id'), user.id)
-  const activities = await activityService.list()
-  return c.json({
-    plant: result.plant,
-    update: result.activity,
-    activity: result.activity,
-    updates: activities,
-    activities,
+    todos,
   })
 })

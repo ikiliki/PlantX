@@ -46,67 +46,51 @@ export const Growing = styled.section`
   min-width: 0;
 `
 
+export const CareSections = styled.div`
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+`
+
+export const CareSection = styled.section`
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+`
+
+export const CareSectionHead = styled.h3`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${theme.colors.moss};
+`
+
+export const CareGrid = styled.div`
+  display: grid;
+  gap: ${theme.space.sm};
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-width: 0;
+
+  @container (min-width: 560px) {
+    gap: ${theme.space.md};
+  }
+
+  > * {
+    min-width: 0;
+  }
+`
+
 export const Toolbar = styled.div`
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
   gap: 8px 12px;
   min-width: 0;
-`
-
-export const SearchBox = styled.label`
-  display: flex;
-  align-items: center;
-  gap: ${theme.space.sm};
-  flex: 0 1 220px;
-  width: min(220px, 100%);
-  max-width: 220px;
-  min-width: 0;
-  height: 40px;
-  padding: 0 14px;
-
-  @container (max-width: 720px) {
-    flex: 0 0 120px;
-    width: 120px;
-    max-width: 34%;
-    height: 36px;
-    padding: 0 10px;
-    gap: 6px;
-  }
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.creamCard};
-  border: 1px solid ${theme.colors.border};
-
-  img {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-  }
-
-  input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    background: transparent;
-    font-size: 14px;
-    color: ${theme.colors.ink};
-
-    &:focus,
-    &:focus-visible {
-      outline: none;
-      box-shadow: none;
-    }
-
-    &::placeholder {
-      color: ${theme.colors.muted};
-    }
-  }
-
-  &:focus-within {
-    border-color: ${theme.colors.forest};
-    box-shadow: 0 0 0 4px ${theme.colors.chipGreen};
-  }
 `
 
 export const FilterBar = styled.div`

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { matchPath, Navigate, Outlet, Route, Routes, useLocation, useNavigate, type Location } from 'react-router-dom'
+import { matchPath, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams, type Location } from 'react-router-dom'
 import { HoldNotice } from '../../components/HoldNotice/HoldNotice'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { NotLaunched } from '../../components/NotLaunched/NotLaunched'
@@ -25,11 +25,17 @@ import { ApisPage } from '../../pages/ApisPage/ApisPage'
 import { RequestsPage } from '../../pages/RequestsPage/RequestsPage'
 import { ServerPage } from '../../pages/ServerPage/ServerPage'
 import { WikiPage } from '../../pages/WikiPage/WikiPage'
+import { TodoPage } from '../../pages/TodoPage/TodoPage'
 import { SettingsPage } from '../../pages/SettingsPage/SettingsPage'
 import { SystemPage } from '../../pages/SystemPage/SystemPage'
 
 function staticLocation(pathname: string): Location {
   return { pathname, search: '', hash: '', state: null, key: pathname }
+}
+
+function TodoRedirect() {
+  const { todoId } = useParams()
+  return <Navigate to={todoId ? `/tasks/${todoId}` : '/tasks'} replace />
 }
 
 type SellerState = { sellerFull?: boolean; profilePreview?: string } | null
@@ -94,6 +100,10 @@ export function AppRoutes() {
           <Route path="market/categories/:speciesId" element={<CategoryPage />} />
           <Route path="market/:id" element={<MarketClassPage />} />
           <Route path="greenhouse" element={<GreenhousePage />} />
+          <Route path="tasks" element={<TodoPage />} />
+          <Route path="tasks/:todoId" element={<TodoPage />} />
+          <Route path="todo" element={<Navigate to="/tasks" replace />} />
+          <Route path="todo/:todoId" element={<TodoRedirect />} />
           <Route path="rank" element={<RankPage />} />
           <Route path="wiki" element={<WikiPage />} />
           <Route path="wiki/:speciesId" element={<WikiPage />} />

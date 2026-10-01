@@ -29,7 +29,7 @@ export function GreenhousePage({
   ownerId?: string
   compact?: boolean
 }) {
-  useServerSlices(['users', 'plants', 'updates', 'catalog'])
+  useServerSlices(['users', 'plants', 'updates', 'todos', 'catalog'])
   if (ownerId) {
     return <GreenhousePublic ownerId={ownerId} compact={compact ?? view === 'widget'} />
   }
@@ -48,7 +48,7 @@ const ACTIVITY_KIND_KEY = {
 } as const satisfies Record<FeedUpdateKind, 'updatePhoto' | 'updateWater' | 'updatePropagate' | 'updateGrade' | 'updatePassport' | 'updateListing' | 'updateScan' | 'updateAdded'>
 
 function GreenhouseOwner({ view }: { view: ComponentView }) {
-  const { db, fullDb, currentUser, signedIn, refreshPhoto, confirmWater } = useStore()
+  const { db, fullDb, currentUser, signedIn } = useStore()
   const { t, tr, formatMoney } = useI18n()
   const navigate = useNavigate()
   const [adding, setAdding] = useState(false)
@@ -117,8 +117,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
         filter={filter}
         onFilter={setFilter}
         onAdd={() => setAdding(true)}
-        onRefresh={refreshPhoto}
-        onWater={confirmWater}
         compact={view === 'widget'}
         freshId={freshId}
       />

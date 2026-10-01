@@ -670,6 +670,7 @@ export function createSeed(): MockDb {
       },
     ],
     updates: seedUpdates(),
+    todos: [],
     topGreenhouses: seedTopGreenhouses(),
     moderation: [
       {

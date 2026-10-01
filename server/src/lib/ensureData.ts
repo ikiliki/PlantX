@@ -7,6 +7,7 @@ import { explainDbError, getStore } from '../db/index.ts'
 import type { PlantxStore } from '../db/store.ts'
 import { activityService } from '../features/activity/activity.service.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
+import { todoService } from '../features/todo/todo.service.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
 import { plantxDb, plantxEnv, plantxEnvLabel, plantxSeed } from './env.ts'
 import { logger } from './logger.ts'
@@ -71,6 +72,7 @@ async function seedEmpty(store: PlantxStore) {
   })
   await store.plants.saveAll([])
   await store.activities.saveAll([])
+  await store.todos.saveAll([])
   await store.pendingUsers.saveAll([])
   await store.pendingTransactions.saveAll([])
   logger.info('Seeded empty live data (bootstrap admin, one category, one subcategory)')
@@ -86,6 +88,7 @@ async function seedDemo(store: PlantxStore) {
   await store.catalog.save(readFixture<Catalog>('catalog.json'))
   await store.plants.saveAll(readFixture<Plant[]>('plants.json'))
   await store.activities.saveAll(readFixture<Activity[]>('activities.json'))
+  await store.todos.saveAll([])
   await store.pendingUsers.saveAll(readFixture<PendingUser[]>('pending-users.json'))
   await store.pendingTransactions.saveAll(readFixture<PendingTransaction[]>('pending-transactions.json'))
   logger.info('Seeded demo fixtures')
@@ -212,6 +215,13 @@ async function pruneBrokenRelations(store: PlantxStore) {
     await store.activities.saveAll(keptActivities)
     logger.info(`Removed ${activities.length - keptActivities.length} activities with missing user or plant`)
   }
+
+  const todos = await store.todos.list()
+  const keptTodos = todos.filter((row) => userIds.has(row.ownerId) && keptIds.has(row.plantId))
+  if (keptTodos.length !== todos.length) {
+    await store.todos.saveAll(keptTodos)
+    logger.info(`Removed ${todos.length - keptTodos.length} todos with missing owner or plant`)
+  }
 }
 
 /** Write launch data when this environment has not been seeded. mock → demo fixtures; qa/prod → empty live. */
@@ -229,6 +239,12 @@ export async function ensureDataFiles() {
       await activityService.ensureMains()
     } catch (err) {
       logger.warn('activity backfill skipped', undefined, err)
+    }
+    try {
+      const result = await todoService.backfillFromPlants()
+      if (result.plants > 0) logger.info('todo backfill applied', result)
+    } catch (err) {
+      logger.warn('todo backfill skipped', undefined, err)
     }
   } catch (err) {
     throw explainDbError(err)

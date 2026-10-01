@@ -11,6 +11,7 @@ import { Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
 import { activityService } from '../activity/activity.service.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
+import { todoService } from '../todo/todo.service.ts'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -72,8 +73,7 @@ async function linkRequests(plant: Plant, records: (IdentifyRequestRecord | unde
 }
 
 /**
- * Greenhouse plant state. Care actions update the plant, then record an activity
- * through the activity service (later: emit an event that activity listens to).
+ * Greenhouse plant state. Care lives on todos; water and photo completion go through todo.service.
  */
 export const greenhouseService = {
   async list() {
@@ -104,7 +104,8 @@ export const greenhouseService = {
       catalog,
     )
     const plants = await store.plants.list()
-    const row: Plant = { ...plant, photos, ownerId, identification }
+    const { wateredAt: _w, photoAt: _p, ...rest } = plant as Plant & { wateredAt?: string; photoAt?: string }
+    const row: Plant = { ...rest, photos, ownerId, identification }
     plants.unshift(row)
     await store.plants.saveAll(plants)
     try {
@@ -112,44 +113,12 @@ export const greenhouseService = {
     } catch (err) {
       logger.error('identify link failed', { plantId: row.id }, err)
     }
+    try {
+      await todoService.ensureFirstWater(row.id, ownerId)
+      if (photos.length > 0) await todoService.schedulePhoto(row.id, ownerId, today())
+    } catch (err) {
+      logger.error('todo schedule failed', { plantId: row.id }, err)
+    }
     return row
-  },
-
-  async water(plantId: string, userId: string) {
-    const store = getStore()
-    const plants = await store.plants.list()
-    const plant = plants.find((item) => item.id === plantId && item.ownerId === userId)
-    if (!plant) throw Errors.missing(`Plant ${plantId} not found for owner`)
-    const at = today()
-    plant.wateredAt = at
-    plant.history = [{ at, label: 'Watered', labelHe: 'הושקה' }, ...plant.history]
-    await store.plants.saveAll(plants)
-    const activity = await activityService.record({
-      kind: 'water',
-      userId,
-      plantId: plant.id,
-      body: `Water confirmed on ${plant.title}.`,
-      bodyHe: `השקיה אושרה ל־${plant.titleHe}.`,
-    })
-    return { plant, activity }
-  },
-
-  async refreshPhoto(plantId: string, userId: string) {
-    const store = getStore()
-    const plants = await store.plants.list()
-    const plant = plants.find((item) => item.id === plantId && item.ownerId === userId)
-    if (!plant) throw Errors.missing(`Plant ${plantId} not found for owner`)
-    const at = today()
-    plant.photoAt = at
-    plant.history = [{ at, label: 'Photo refreshed', labelHe: 'התמונה רועננה' }, ...plant.history]
-    await store.plants.saveAll(plants)
-    const activity = await activityService.record({
-      kind: 'photo',
-      userId,
-      plantId: plant.id,
-      body: `${plant.title} photo refreshed.`,
-      bodyHe: `תמונת ${plant.titleHe} רועננה.`,
-    })
-    return { plant, activity }
   },
 }

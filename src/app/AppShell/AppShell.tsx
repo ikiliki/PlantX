@@ -52,14 +52,16 @@ export function AppShell() {
       { to: '/home', label: t.nav.home, icon: 'home' as const, pageId: 'home' as const },
       { to: '/market', label: t.nav.market, icon: 'market' as const, pageId: 'market' as const },
       { to: '/greenhouse', label: t.nav.greenhouse, icon: 'greenhouse' as const, pageId: 'greenhouse' as const },
+      { to: '/tasks', label: t.nav.todo, icon: 'drop' as const, pageId: 'todo' as const },
       { to: '/rank', label: t.nav.rank, icon: 'rank' as const, pageId: 'rank' as const },
       { to: '/wiki', label: t.nav.wiki, icon: 'wiki' as const, pageId: 'wiki' as const },
     ] satisfies { to: string; label: string; icon: IconName; pageId: PageId }[]
   ).filter((item) => {
-    if (!isPageNavigable(db.system, item.pageId)) return false
+    if (!item.pageId || !isPageNavigable(db.system, item.pageId)) return false
     const board: Partial<Record<PageId, PlacementId>> = {
       market: 'market.board',
       greenhouse: 'greenhouse.board',
+      todo: 'todo.board',
       rank: 'rank.board',
       wiki: 'wiki.board',
     }

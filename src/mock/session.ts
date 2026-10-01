@@ -8,6 +8,7 @@ import { ensureCatalog } from './catalog'
 import { personaFlags } from './personas'
 import { createSeed } from './seed'
 import { normalizeSystem } from '../theme/release'
+import { backfillTodos } from '../features/todo/todoSchedule'
 import type { DemoScenarios, MarketClass, MockDb, User } from './types'
 
 const VISITOR_COOKIE = 'plantx_visitor'
@@ -237,6 +238,7 @@ export function ensureSession(db: MockDb) {
     db.visitorId = readCookie(VISITOR_COOKIE) || `visitor-${Date.now().toString(36)}`
   }
   if (!Array.isArray(db.updates)) db.updates = seedUpdates()
+  if (!Array.isArray(db.todos)) db.todos = []
   if (!Array.isArray(db.topGreenhouses)) db.topGreenhouses = seedTopGreenhouses()
   if (!Array.isArray(db.pendingUsers)) db.pendingUsers = createSeed().pendingUsers
   if (!Array.isArray(db.pendingTransactions)) db.pendingTransactions = createSeed().pendingTransactions
@@ -253,6 +255,17 @@ export function ensureSession(db: MockDb) {
   for (const plant of db.plants) {
     if (plant.status !== 'listed' || plant.photoAt) continue
     plant.photoAt = stalePhotos.has(plant.id) ? '2026-09-10' : '2026-09-28'
+  }
+  const filled = backfillTodos(db.plants, db.todos)
+  db.plants = filled.plants
+  db.todos = filled.todos
+  // Demo: a few listed plants keep an overdue photo todo so Needs care has rows.
+  for (const plant of db.plants) {
+    if (!stalePhotos.has(plant.id)) continue
+    const open = db.todos.find(
+      (row) => row.plantId === plant.id && row.subcategory === 'photo' && row.completedOn == null,
+    )
+    if (open) open.dueOn = '2026-09-10'
   }
   for (const item of db.marketClasses) delete (item as MarketClass & { history?: unknown }).history
   const galleryPhotos: Record<string, readonly string[]> = {

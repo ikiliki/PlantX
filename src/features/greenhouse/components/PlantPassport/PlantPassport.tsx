@@ -18,11 +18,13 @@ import { speciesHref } from '../../../species/components/GuideLink/GuideLink'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isPlacementEnabled } from '../../../../theme/release'
-import type { StageBand } from '../../../../mock/types'
+import type { StageBand, TodoSubcategory } from '../../../../mock/types'
+import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
+import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo'
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
@@ -52,6 +54,7 @@ import {
   PhotoIcon,
   PhotoIconButton,
   PhotoMore,
+  CareMarkSlot,
   PriceTip,
   Qty,
   Rating,
@@ -71,7 +74,7 @@ import {
   Toast,
 } from './PlantPassport.styles'
 
-type TabId = 'grading' | 'activity' | 'market'
+type TabId = 'grading' | 'todo' | 'activity' | 'market'
 
 /** Drop trailing ×N (or xN) quantity suffixes baked into listing titles. */
 function titleWithoutQuantity(text: string) {
@@ -101,6 +104,7 @@ export function PlantPassport({
   dialog = false,
   initialTab = 'grading',
   activityKey,
+  careMark,
 }: {
   plantId: string
   embedded?: boolean
@@ -109,6 +113,8 @@ export function PlantPassport({
   initialTab?: TabId
   /** History row to mark when the activity tab is open. */
   activityKey?: string
+  /** Care assignment stamp after watering / photo. */
+  careMark?: TodoSubcategory
 }) {
   const { db, currentUser, signedIn, reserveListing } = useStore()
   const { openAuth } = useAuth()
@@ -193,13 +199,20 @@ export function PlantPassport({
 
   const marketOn = isPlacementEnabled(db.system, 'passport.market')
   const rankOn = isPlacementEnabled(db.system, 'passport.rank')
+  const todoOn = isPlacementEnabled(db.system, 'passport.todo')
   const tabs: { id: TabId; label: string }[] = [
     ...(rankOn ? [{ id: 'grading' as const, label: t.passport.gradingTab }] : []),
+    ...(todoOn ? [{ id: 'todo' as const, label: t.passport.todoTab }] : []),
     { id: 'activity', label: t.passport.activityTab },
     ...(marketOn ? [{ id: 'market' as const, label: t.passport.marketTab }] : []),
   ]
+  const fallbackTab: TabId = rankOn ? 'grading' : todoOn ? 'todo' : 'activity'
   const activeTab: TabId =
-    tab === 'market' && !marketOn ? (rankOn ? 'grading' : 'activity') : tab === 'grading' && !rankOn ? 'activity' : tab
+    (tab === 'market' && !marketOn) ||
+    (tab === 'grading' && !rankOn) ||
+    (tab === 'todo' && !todoOn)
+      ? fallbackTab
+      : tab
 
   const onBuy = () => {
     if (!listing) return
@@ -261,6 +274,11 @@ export function PlantPassport({
           >
             <PhotoIcon>
               <PlantImage src={photos[0]} alt="" />
+              {careMark ? (
+                <CareMarkSlot>
+                  <TodoKindIcon kind={careMark} size={16} mark />
+                </CareMarkSlot>
+              ) : null}
             </PhotoIcon>
             {photos.length > 1 ? (
               <PhotoMore title={t.addPlant.photosCount.replace('{n}', String(photos.length))}>
@@ -409,6 +427,16 @@ export function PlantPassport({
                   ))}
                 </Timeline>
               )}
+            </FeatureGate>
+          )}
+
+          {activeTab === 'todo' && todoOn && (
+            <FeatureGate placement="passport.todo" title={t.passport.todoTab}>
+              <PassportTodo
+                plant={plant}
+                todos={(db.todos ?? []).filter((todo) => todo.plantId === plant.id)}
+                careMark={careMark}
+              />
             </FeatureGate>
           )}
 

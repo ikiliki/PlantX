@@ -26,6 +26,7 @@ import type {
   SizeBand,
   Species,
   StageBand,
+  Todo,
   User,
 } from './types'
 import { PLACEMENTS, type FeatureId, type PageId, type PageStatus, type PlacementId, type ReleaseMode } from '../theme/release'
@@ -50,12 +51,12 @@ import {
   postPreapproved,
   postGoogleSessionResult,
   postPlant,
-  postPlantPhoto,
-  postPlantWater,
+  postTodoComplete,
   postRegister,
   postRejectPending,
   postSession,
   putSystem,
+  fetchTodosOutcome,
   type LiveMeta,
   type LivePayload,
   type ServerSlice,
@@ -67,6 +68,17 @@ import { projectDb } from './projectDb'
 import { ensureSession, normalizeScenarios } from './session'
 import { clientEnv, clientEnvLabel, type ClientEnv } from '../theme/plantxEnv'
 import { OPERATOR_EMAIL } from '../theme/operator'
+import {
+  addDays,
+  addMonths,
+  ensureFirstWaterTodo,
+  isFirstWaterTodo,
+  openTodo,
+  PHOTO_GAP_MONTHS,
+  schedulePhotoTodo,
+  todayIso,
+  WATER_GAP_DAYS,
+} from '../features/todo/todoSchedule'
 
 const STORAGE_KEY = 'plantx-mock-db-v8'
 
@@ -87,6 +99,7 @@ function emptyDb(): MockDb {
     moderation: [],
     claimDrafts: [],
     updates: [],
+    todos: [],
     topGreenhouses: [],
     pendingUsers: [],
     pendingTransactions: [],
@@ -192,6 +205,8 @@ interface StoreApi {
   ungradePlant: (plantId: string) => void
   refreshPhoto: (plantId: string) => void
   confirmWater: (plantId: string) => void
+  /** Complete a care todo. First watering requires `completedOn`. */
+  completeTodo: (todoId: string, completedOn?: string) => void
   addGreenhousePlant: (input: {
     title: string
     titleHe: string
@@ -427,6 +442,20 @@ export function StoreProvider({
         sliceReady.current.updates = true
         update((d) => {
           d.updates = res.data.activities
+          return d
+        })
+        return true
+      }
+      if (part === 'todos') {
+        const res = await fetchTodosOutcome()
+        if (!res.ok) {
+          noteSlice(part, res.failure)
+          return false
+        }
+        noteSlice(part, null)
+        sliceReady.current.todos = true
+        update((d) => {
+          d.todos = res.data.todos
           return d
         })
         return true
@@ -823,61 +852,98 @@ export function StoreProvider({
       }),
     refreshPhoto: (plantId) => {
       if (!liveWritable) return
-      update((d) => {
-        const owner = actorId(d) ?? d.visitorId
-        const plant = d.plants.find((item) => item.id === plantId && item.ownerId === owner)
-        if (!plant) return d
-        const at = new Date().toISOString().slice(0, 10)
-        plant.photoAt = at
-        plant.history = [{ at, label: 'Photo refreshed', labelHe: 'התמונה רועננה' }, ...plant.history]
-        d.updates = d.updates ?? []
-        d.updates.unshift({
-          id: `up-photo-${Date.now()}`,
-          kind: 'photo',
-          userId: owner,
-          plantId: plant.id,
-          body: `${plant.title} photo refreshed.`,
-          bodyHe: `תמונת ${plant.titleHe} רועננה.`,
-          createdAt: new Date().toISOString(),
-        })
-        return d
-      })
-      void postPlantPhoto(plantId).then((res) => {
-        if (!res) return
-        update((d) => {
-          const index = d.plants.findIndex((item) => item.id === res.plant.id)
-          if (index >= 0) d.plants[index] = res.plant
-          d.updates = res.updates
-          return d
-        })
-      })
+      const owner = actorId(db) ?? db.visitorId
+      const open = openTodo(db.todos ?? [], plantId, 'photo')
+      if (open && open.ownerId === owner) {
+        api.completeTodo(open.id)
+      }
     },
     confirmWater: (plantId) => {
       if (!liveWritable) return
+      const owner = actorId(db) ?? db.visitorId
+      const open = openTodo(db.todos ?? [], plantId, 'water')
+      if (!open || open.ownerId !== owner) return
+      if (isFirstWaterTodo(open, db.todos ?? [])) {
+        api.completeTodo(open.id, todayIso())
+        return
+      }
+      api.completeTodo(open.id)
+    },
+    completeTodo: (todoId, completedOn) => {
+      if (!liveWritable) return
       update((d) => {
         const owner = actorId(d) ?? d.visitorId
-        const plant = d.plants.find((item) => item.id === plantId && item.ownerId === owner)
+        const todos = d.todos ?? []
+        const todo = todos.find((row) => row.id === todoId)
+        if (!todo || todo.ownerId !== owner || todo.completedOn != null) return d
+        const plant = d.plants.find((item) => item.id === todo.plantId && item.ownerId === owner)
         if (!plant) return d
-        const at = new Date().toISOString().slice(0, 10)
-        plant.wateredAt = at
-        plant.history = [{ at, label: 'Watered', labelHe: 'הושקה' }, ...plant.history]
-        d.updates = d.updates ?? []
-        d.updates.unshift({
-          id: `up-water-${Date.now()}`,
-          kind: 'water',
-          userId: owner,
-          plantId: plant.id,
-          body: `Water confirmed on ${plant.title}.`,
-          bodyHe: `השקיה אושרה ל־${plant.titleHe}.`,
-          createdAt: new Date().toISOString(),
-        })
+        const firstWater = isFirstWaterTodo(todo, todos)
+        const at = completedOn ?? todayIso()
+        if (firstWater && !completedOn) return d
+        if (firstWater && completedOn && completedOn > todayIso()) return d
+        if (!firstWater && (todo.dueOn == null || todo.dueOn > todayIso())) return d
+
+        todo.completedOn = at
+        if (todo.dueOn == null) todo.dueOn = at
+
+        if (todo.subcategory === 'water') {
+          plant.history = [{ at, label: 'Watered', labelHe: 'הושקה' }, ...plant.history]
+          d.updates = d.updates ?? []
+          d.updates.unshift({
+            id: `up-water-${Date.now()}`,
+            kind: 'water',
+            userId: owner,
+            plantId: plant.id,
+            body: `Water confirmed on ${plant.title}.`,
+            bodyHe: `השקיה אושרה ל־${plant.titleHe}.`,
+            createdAt: new Date().toISOString(),
+          })
+          todos.unshift({
+            id: `todo-${Date.now()}-w`,
+            ownerId: owner,
+            plantId: plant.id,
+            category: 'plant',
+            subcategory: 'water',
+            dueOn: addDays(at, WATER_GAP_DAYS),
+            completedOn: null,
+            createdAt: new Date().toISOString(),
+          })
+        }
+
+        if (todo.subcategory === 'photo') {
+          plant.history = [{ at, label: 'Photo refreshed', labelHe: 'התמונה רועננה' }, ...plant.history]
+          d.updates = d.updates ?? []
+          d.updates.unshift({
+            id: `up-photo-${Date.now()}`,
+            kind: 'photo',
+            userId: owner,
+            plantId: plant.id,
+            body: `${plant.title} photo refreshed.`,
+            bodyHe: `תמונת ${plant.titleHe} רועננה.`,
+            createdAt: new Date().toISOString(),
+          })
+          todos.unshift({
+            id: `todo-${Date.now()}-p`,
+            ownerId: owner,
+            plantId: plant.id,
+            category: 'plant',
+            subcategory: 'photo',
+            dueOn: addMonths(at, PHOTO_GAP_MONTHS),
+            completedOn: null,
+            createdAt: new Date().toISOString(),
+          })
+        }
+
+        d.todos = todos
         return d
       })
-      void postPlantWater(plantId).then((res) => {
+      void postTodoComplete(todoId, completedOn).then((res) => {
         if (!res) return
         update((d) => {
           const index = d.plants.findIndex((item) => item.id === res.plant.id)
           if (index >= 0) d.plants[index] = res.plant
+          d.todos = res.todos
           d.updates = res.updates
           return d
         })
@@ -943,6 +1009,8 @@ export function StoreProvider({
           ],
         }
         d.plants.unshift(created)
+        d.todos = ensureFirstWaterTodo(d.todos ?? [], created)
+        if (created.photos.length > 0) d.todos = schedulePhotoTodo(d.todos, created)
         return d
       })
       if (created) {
@@ -953,6 +1021,7 @@ export function StoreProvider({
             if (index >= 0) d.plants[index] = res.plant
             else d.plants.unshift(res.plant)
             if (res.updates) d.updates = res.updates
+            if (res.todos) d.todos = res.todos
             return d
           })
         })

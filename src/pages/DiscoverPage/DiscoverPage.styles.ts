@@ -43,26 +43,7 @@ export const Layout = styled.div`
   }
 `
 
-/** The left rail hides below 900px, so the feed keeps a copy of the friends filter there. */
-export const RailFilter = styled.div`
-  @container (max-width: 899px) {
-    display: none;
-  }
-`
-
-export const FeedFilterSlot = styled.div`
-  @container (min-width: 900px) {
-    display: none;
-  }
-`
-
-export const MobileLure = styled.div`
-  @container (min-width: 900px) {
-    display: none;
-  }
-`
-
-/** Left-rail lure only; the feed keeps a phone copy. */
+/** Left-rail lure only; phones use HomeMobileFloats. */
 export const RailLure = styled.div`
   @container (max-width: 899px) {
     display: none;
@@ -77,6 +58,12 @@ export const Rail = styled.aside`
   @container (min-width: 1180px) {
     position: sticky;
     top: calc(${theme.layout.topBar} + ${theme.space.md});
+  }
+
+  @container (max-width: 1179px) {
+    > [data-todo-rail] {
+      display: none;
+    }
   }
 `
 

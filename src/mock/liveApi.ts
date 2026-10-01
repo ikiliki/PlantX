@@ -11,6 +11,7 @@ import type {
   IdentifyTestRequest,
   IdentifyTried,
   Plant,
+  Todo,
   User,
 } from './types'
 import type { SystemConfig } from '../theme/release'
@@ -29,7 +30,7 @@ export type LiveMeta = {
   }
 }
 
-export type ServerSlice = 'users' | 'plants' | 'updates' | 'catalog' | 'pending' | 'transactions'
+export type ServerSlice = 'users' | 'plants' | 'updates' | 'todos' | 'catalog' | 'pending' | 'transactions'
 
 export type LivePayload = {
   system: SystemConfig
@@ -110,6 +111,17 @@ export function fetchActivities(query?: { plantId?: string; userId?: string; lim
 
 export function fetchActivitiesOutcome() {
   return requestOutcome<{ activities: FeedUpdate[] }>('/api/activities')
+}
+
+export function fetchTodos(query?: { open?: boolean }) {
+  const params = new URLSearchParams()
+  if (query?.open) params.set('open', '1')
+  const qs = params.toString()
+  return request<{ todos: Todo[] }>(`/api/todos${qs ? `?${qs}` : ''}`)
+}
+
+export function fetchTodosOutcome() {
+  return requestOutcome<{ todos: Todo[] }>('/api/todos')
 }
 
 export function fetchPlants() {
@@ -286,24 +298,24 @@ export function putSystem(system: SystemConfig) {
 /** `identifyRequestId` lets the server credit the provider. The server sets `identification` itself. */
 /** `identifyRequestIds[i]` belongs to `plant.photos[i]`. */
 export function postPlant(plant: Plant, identifyRequestIds: (string | undefined)[] = []) {
-  return request<{ plant: Plant; updates: FeedUpdate[] }>('/api/plants', {
+  return request<{ plant: Plant; updates: FeedUpdate[]; todos?: Todo[] }>('/api/plants', {
     method: 'POST',
     body: JSON.stringify({ ...plant, identifyRequestIds: identifyRequestIds.map((id) => id ?? null) }),
   })
 }
 
-export function postPlantWater(plantId: string) {
-  return request<{ plant: Plant; update: FeedUpdate; updates: FeedUpdate[] }>(
-    `/api/plants/${encodeURIComponent(plantId)}/water`,
-    { method: 'POST' },
-  )
-}
-
-export function postPlantPhoto(plantId: string) {
-  return request<{ plant: Plant; update: FeedUpdate; updates: FeedUpdate[] }>(
-    `/api/plants/${encodeURIComponent(plantId)}/photo`,
-    { method: 'POST' },
-  )
+export function postTodoComplete(todoId: string, completedOn?: string) {
+  return request<{
+    todo: Todo
+    todos: Todo[]
+    plant: Plant
+    activity: FeedUpdate | null
+    update: FeedUpdate | null
+    updates: FeedUpdate[]
+  }>(`/api/todos/${encodeURIComponent(todoId)}/complete`, {
+    method: 'POST',
+    body: JSON.stringify(completedOn ? { completedOn } : {}),
+  })
 }
 
 const IDENTIFY_TIMEOUT_MS = 30_000
