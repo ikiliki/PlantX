@@ -112,10 +112,17 @@ export const SearchBox = styled.label`
 export const FilterBar = styled.div`
   display: flex;
   flex: 1 1 auto;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `
 
 export const Filter = styled.button<{ $on?: boolean }>`
@@ -130,9 +137,11 @@ export const Filter = styled.button<{ $on?: boolean }>`
   border-radius: ${theme.radii.pill};
   background: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.creamCard)};
   color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.ink)};
+  flex-shrink: 0;
   font: inherit;
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
 
   &:hover {
