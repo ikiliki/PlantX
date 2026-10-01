@@ -112,6 +112,9 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
     padding: 2px 5px;
     font-size: 8px;
     letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `
 
@@ -165,9 +168,14 @@ export const CareName = styled.span`
   font-weight: 400;
   line-height: 1.15;
   color: ${theme.colors.ink};
+  overflow-wrap: anywhere;
 
   @container (max-width: 559px) {
-    font-size: 14px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: clamp(11px, 3.4cqw, 14px);
   }
 `
 
@@ -176,6 +184,11 @@ export const CareActions = styled.div`
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
+
+  @container (max-width: 559px) {
+    display: grid;
+    gap: 4px;
+  }
 `
 
 export const CareAction = styled.span<{ $tone: 'water' | 'photo' }>`
@@ -189,9 +202,26 @@ export const CareAction = styled.span<{ $tone: 'water' | 'photo' }>`
   color: ${theme.colors.creamCard};
   font-size: 12px;
   font-weight: 700;
+  max-width: 100%;
+  min-width: 0;
 
   span {
     color: ${theme.colors.creamCard};
+  }
+
+  @container (max-width: 559px) {
+    justify-content: center;
+    gap: 3px;
+    min-height: 24px;
+    padding: 3px 6px;
+    font-size: clamp(9px, 3cqw, 11px);
+    line-height: 1.15;
+    text-align: center;
+    overflow-wrap: anywhere;
+
+    > :first-child {
+      flex-shrink: 0;
+    }
   }
 `
 
@@ -230,10 +260,14 @@ export const CareDate = styled.span`
   box-shadow: ${theme.shadow.soft};
 
   @container (max-width: 559px) {
-    inset-block-start: 4px;
-    inset-inline-end: 4px;
+    inset-block: auto 4px;
+    inset-inline: 4px auto;
+    max-width: calc(100% - 8px);
     padding: 2px 5px;
     font-size: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `
 
@@ -252,6 +286,14 @@ export const PhotoCount = styled.span`
   font-size: 11px;
   font-weight: 800;
   backdrop-filter: blur(6px);
+
+  @container (max-width: 559px) {
+    inset-block-end: 4px;
+    inset-inline-end: 4px;
+    gap: 2px;
+    padding: 2px 5px;
+    font-size: 9px;
+  }
 `
 
 export const CollectionGrid = styled.div`

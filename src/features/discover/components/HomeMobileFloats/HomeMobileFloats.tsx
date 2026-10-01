@@ -40,26 +40,27 @@ export function HomeMobileFloats() {
 
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
   const mine = db.plants.filter((plant) => plant.ownerId === ownerId && plant.photos[0]).slice(0, 3)
+  const emptySlots = 3 - mine.length
   const todoOn = isFeatureEnabled(db.system, 'todo') && signedIn && currentUser
   const todos = todoOn ? db.todos.filter((todo) => todo.ownerId === currentUser.id) : []
   const plants = todoOn ? db.plants.filter((plant) => plant.ownerId === currentUser.id) : []
   const due = dueTodos(todos).filter((todo) => canFillTodo(todo, todos))
   const carePlant = careTodo ? plants.find((plant) => plant.id === careTodo.plantId) : undefined
 
-  const greenhouseFace =
-    mine.length > 0 ? (
-      <FaceStack>
-        {mine.map((plant, index) => (
-          <FaceTile key={plant.id} $i={index}>
-            <PlantImage src={plant.photos[0]} alt="" />
-          </FaceTile>
-        ))}
-      </FaceStack>
-    ) : (
-      <FaceStack>
-        <FaceAdd $i={0}>+</FaceAdd>
-      </FaceStack>
-    )
+  const greenhouseFace = (
+    <FaceStack>
+      {mine.map((plant, index) => (
+        <FaceTile key={plant.id} $i={index}>
+          <PlantImage src={plant.photos[0]} alt="" />
+        </FaceTile>
+      ))}
+      {Array.from({ length: emptySlots }, (_, index) => (
+        <FaceAdd key={`add-${index}`} $i={mine.length + index}>
+          +
+        </FaceAdd>
+      ))}
+    </FaceStack>
+  )
 
   return (
     <>

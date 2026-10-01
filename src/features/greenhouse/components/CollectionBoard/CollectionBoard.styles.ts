@@ -6,17 +6,22 @@ export const Board = styled.div<{ $split?: boolean }>`
   display: grid;
   gap: ${theme.space.xl};
   min-width: 0;
+  min-height: 0;
   align-items: start;
 
   ${({ $split }) =>
     $split &&
     `
+    height: 100%;
+
     @container (min-width: 961px) {
       grid-template-columns: minmax(0, 1fr) min(300px, 32%);
+      column-gap: 0;
     }
 
     @container (max-width: 960px) {
       grid-template-columns: 1fr;
+      grid-template-rows: minmax(0, 1fr) auto;
     }
   `}
 `
@@ -24,7 +29,15 @@ export const Board = styled.div<{ $split?: boolean }>`
 export const Shelf = styled.div`
   display: grid;
   gap: ${theme.space.lg};
+  align-content: start;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+
+  @container (min-width: 961px) {
+    padding-inline-end: ${theme.space.lg};
+  }
 `
 
 export const Rail = styled.aside`
@@ -34,9 +47,24 @@ export const Rail = styled.aside`
   align-content: start;
 
   @container (min-width: 961px) {
-    position: sticky;
-    top: calc(${theme.layout.topBar} + ${theme.space.md});
+    position: relative;
     width: min(300px, 100%);
+    padding-inline-start: ${theme.space.xxl};
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      width: 1px;
+      pointer-events: none;
+      background: linear-gradient(
+        180deg,
+        rgba(93, 124, 78, 0.32) 0%,
+        rgba(93, 124, 78, 0.22) 70%,
+        transparent 100%
+      );
+    }
   }
 `
 

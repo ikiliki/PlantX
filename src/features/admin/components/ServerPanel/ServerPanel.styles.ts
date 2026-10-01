@@ -156,6 +156,8 @@ export const UserFilter = styled.label`
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
+  min-width: 0;
   margin-inline-start: auto;
   color: ${theme.colors.muted};
   font-size: 12px;
@@ -164,7 +166,11 @@ export const UserFilter = styled.label`
 
 export const UserSelect = styled.select`
   appearance: none;
-  min-width: min(220px, 100%);
+  flex: 0 1 220px;
+  width: 220px;
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
   min-height: 36px;
   padding-block: 6px;
   padding-inline: 12px 28px;

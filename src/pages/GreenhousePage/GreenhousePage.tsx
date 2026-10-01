@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
+import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
 import type { ActivityEntry } from '../../features/greenhouse/components/ActivityThread/ActivityThread'
@@ -11,7 +12,7 @@ import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDia
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
 import type { FeedUpdateKind } from '../../mock/types'
-import { useServerSlices } from '../../mock/useServerSlices'
+import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
 import { isPlacementReady } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
@@ -48,6 +49,7 @@ const ACTIVITY_KIND_KEY = {
 } as const satisfies Record<FeedUpdateKind, 'updatePhoto' | 'updateWater' | 'updatePropagate' | 'updateGrade' | 'updatePassport' | 'updateListing' | 'updateScan' | 'updateAdded'>
 
 function GreenhouseOwner({ view }: { view: ComponentView }) {
+  const fetching = useSectionFetch(true, ['plants', 'updates', 'todos'])
   const { db, fullDb, currentUser, signedIn } = useStore()
   const { t, tr, formatMoney } = useI18n()
   const navigate = useNavigate()
@@ -92,7 +94,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   }
 
   const board = (
-    <Page>
+    <Page $fill={view === 'page'}>
       <Heading>
         <HeadingCopy>
           <Eyebrow>{t.greenhouse.eyebrow}</Eyebrow>
@@ -110,16 +112,20 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
         )}
       </Heading>
 
-      <CollectionBoard
-        plants={view === 'widget' ? living.slice(0, WIDGET_PLANTS) : living}
-        sold={view === 'widget' ? [] : sold}
-        activity={view === 'widget' ? [] : activity}
-        filter={filter}
-        onFilter={setFilter}
-        onAdd={() => setAdding(true)}
-        compact={view === 'widget'}
-        freshId={freshId}
-      />
+      {fetching ? (
+        <LoaderShell busy compact={view === 'widget'} />
+      ) : (
+        <CollectionBoard
+          plants={view === 'widget' ? living.slice(0, WIDGET_PLANTS) : living}
+          sold={view === 'widget' ? [] : sold}
+          activity={view === 'widget' ? [] : activity}
+          filter={filter}
+          onFilter={setFilter}
+          onAdd={() => setAdding(true)}
+          compact={view === 'widget'}
+          freshId={freshId}
+        />
+      )}
 
       {adding && (
         <AddPlantDialog

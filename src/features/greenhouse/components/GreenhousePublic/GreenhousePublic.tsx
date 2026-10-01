@@ -1,6 +1,8 @@
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import {
   Count,
   Empty,
@@ -28,8 +30,11 @@ export function GreenhousePublic({
 }) {
   const { db } = useStore()
   const { t, tr } = useI18n()
+  const fetching = useSectionFetch(true, ['plants'])
 
   const plants = db.plants.filter((p) => p.ownerId === ownerId && p.status !== 'sold').slice().reverse()
+
+  if (fetching) return <LoaderShell busy compact={compact} />
 
   return (
     <Root $compact={compact}>

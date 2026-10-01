@@ -1,13 +1,24 @@
 import styled from 'styled-components'
 import { theme } from '../../theme/tokens'
 
-export const Page = styled.div`
+export const Page = styled.div<{ $fill?: boolean }>`
   display: grid;
   gap: ${theme.space.lg};
   container-type: inline-size;
   min-width: 0;
   width: 100%;
   margin-top: -20px;
+  ${({ $fill }) =>
+    $fill &&
+    `
+    grid-template-rows: auto minmax(0, 1fr);
+    height: calc(100svh - ${theme.layout.topBar} - 56px - 72px);
+    overflow: hidden;
+
+    @media (max-width: ${theme.breakpoints.md}) {
+      height: calc(100svh - ${theme.layout.topBar} - ${theme.space.md} - ${theme.layout.bottomNav} - ${theme.space.xl});
+    }
+  `}
 `
 
 export const Heading = styled.header`

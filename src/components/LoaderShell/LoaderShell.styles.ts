@@ -11,18 +11,18 @@ const sweep = keyframes`
   to { background-position: -100% 0; }
 `
 
-export const Shell = styled.div<{ $fill?: boolean }>`
+export const Shell = styled.div<{ $fill?: boolean; $compact?: boolean }>`
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 16px;
-  min-height: ${({ $fill }) => ($fill ? '100svh' : '320px')};
-  padding: 48px 16px 64px;
+  gap: ${({ $compact }) => ($compact ? '10px' : '16px')};
+  min-height: ${({ $fill, $compact }) => ($fill ? '100svh' : $compact ? '140px' : '320px')};
+  padding: ${({ $compact }) => ($compact ? '20px 12px' : '48px 16px 64px')};
 `
 
-export const Orb = styled.span`
-  width: 46px;
-  height: 46px;
+export const Orb = styled.span<{ $compact?: boolean }>`
+  width: ${({ $compact }) => ($compact ? '32px' : '46px')};
+  height: ${({ $compact }) => ($compact ? '32px' : '46px')};
   border-radius: 50%;
   background:
     radial-gradient(circle at 35% 30%, #fff 0 3px, transparent 4px),

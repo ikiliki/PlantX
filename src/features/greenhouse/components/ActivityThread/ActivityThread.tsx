@@ -1,9 +1,9 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { Empty, Event, Head, Message, Meta, Photo, Root, Scroll, Tag, Title, Toggle, When } from './ActivityThread.styles'
+import { Empty, Event, Head, Message, Meta, Photo, Root, Scroll, Tag, Title, When } from './ActivityThread.styles'
 
 export type ActivityEntry = {
   at: string
@@ -47,9 +47,8 @@ function ActivityMessage({ entry }: { entry: ActivityEntry }) {
   return <Message $scan={scan}>{body}</Message>
 }
 
-export function ActivityThread({ activity }: { activity: ActivityEntry[] }) {
+export function ActivityThread({ activity, height }: { activity: ActivityEntry[]; height?: number }) {
   const { t } = useI18n()
-  const [expanded, setExpanded] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const stick = useRef(true)
   const before = useRef({ height: 0, top: 0 })
@@ -79,16 +78,9 @@ export function ActivityThread({ activity }: { activity: ActivityEntry[] }) {
   }, [list.shown.length, signature])
 
   return (
-    <Root $expanded={expanded} aria-label={t.greenhouse.activityTitle}>
+    <Root $height={height} aria-label={t.greenhouse.activityTitle}>
       <Head>
         <Title>{t.greenhouse.activityTitle}</Title>
-        <Toggle
-          type="button"
-          aria-expanded={expanded}
-          onClick={() => setExpanded((value) => !value)}
-        >
-          {expanded ? t.greenhouse.activityCollapse : t.greenhouse.activityExpand}
-        </Toggle>
       </Head>
       <Scroll ref={scrollRef}>
         {list.total === 0 ? (

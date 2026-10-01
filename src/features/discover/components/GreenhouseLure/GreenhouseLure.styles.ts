@@ -99,23 +99,6 @@ export const Photos = styled.div`
   flex-shrink: 0;
 `
 
-export const CompactTrigger = styled.button`
-  display: flex;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  text-align: start;
-
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.growth};
-    outline-offset: 4px;
-    border-radius: ${theme.radii.md};
-  }
-`
-
 const tile = css<{ $i: number; $compact?: boolean }>`
   width: ${({ $compact }) => ($compact ? '56px' : '76px')};
   height: ${({ $compact }) => ($compact ? '72px' : '98px')};
@@ -139,16 +122,23 @@ export const Photo = styled(Link)<{ $i: number; $compact?: boolean }>`
   }
 `
 
-export const PhotoTile = styled.span<{ $i: number; $compact?: boolean }>`
+export const PhotoTile = styled.button<{ $i: number; $compact?: boolean }>`
   ${tile}
+  appearance: none;
   display: block;
   overflow: hidden;
-  pointer-events: none;
+  padding: 0;
+  cursor: pointer;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.growth};
+    outline-offset: 2px;
   }
 `
 

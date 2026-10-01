@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useAuth } from '../../../auth/AuthProvider'
 import { AddPlantDialog } from '../../../greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import {
   AddSlot,
   Backdrop,
   Body,
   Card,
-  CompactTrigger,
   Copy,
   Eyebrow,
   Lure,
@@ -42,11 +43,12 @@ export function GreenhouseLure({ compact = false }: { compact?: boolean }) {
   const { db, currentUser, signedIn } = useStore()
   const { openAuth } = useAuth()
   const { t } = useI18n()
+  const fetching = useSectionFetch(true, ['plants'])
   const [adding, setAdding] = useState(false)
   const [open, setOpen] = useState(false)
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
   const mine = db.plants.filter((plant) => plant.ownerId === ownerId && plant.photos[0]).slice(0, SLOTS)
-  const emptySlots = mine.length === 0 ? 1 : 0
+  const emptySlots = SLOTS - mine.length
   const hasPlants = mine.length > 0
 
   useEffect(() => {
@@ -71,7 +73,16 @@ export function GreenhouseLure({ compact = false }: { compact?: boolean }) {
             <PlantImage src={plant.photos[0]} alt="" />
           </Photo>
         ) : (
-          <PhotoTile key={plant.id} $i={index} $compact={mode === 'compact'}>
+          <PhotoTile
+            key={plant.id}
+            type="button"
+            $i={index}
+            $compact={mode === 'compact'}
+            aria-label={t.discover.lureEyebrow}
+            aria-haspopup={mode === 'compact' ? 'dialog' : undefined}
+            aria-expanded={mode === 'compact' ? open : undefined}
+            onClick={() => setOpen(true)}
+          >
             <PlantImage src={plant.photos[0]} alt="" />
           </PhotoTile>
         ),
@@ -94,22 +105,18 @@ export function GreenhouseLure({ compact = false }: { compact?: boolean }) {
     </Photos>
   )
 
+  if (fetching) {
+    return (
+      <Card $compact={compact}>
+        <LoaderShell busy compact />
+      </Card>
+    )
+  }
+
   if (compact) {
     return (
       <Card $compact>
-        {hasPlants ? (
-          <CompactTrigger
-            type="button"
-            aria-label={t.discover.lureEyebrow}
-            aria-haspopup="dialog"
-            aria-expanded={open}
-            onClick={() => setOpen(true)}
-          >
-            {photoStack('compact')}
-          </CompactTrigger>
-        ) : (
-          photoStack('compact')
-        )}
+        {photoStack('compact')}
 
         {open &&
           createPortal(

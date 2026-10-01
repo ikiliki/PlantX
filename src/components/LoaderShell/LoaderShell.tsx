@@ -8,11 +8,14 @@ export function LoaderShell({
   children,
   busy,
   fill = false,
+  compact = false,
 }: {
   children?: ReactNode
   /** Story override. Otherwise follows the live API. */
   busy?: boolean
   fill?: boolean
+  /** Smaller placeholder for a rail or widget. */
+  compact?: boolean
 }) {
   const { t } = useI18n()
   const { liveStatus } = useStore()
@@ -20,15 +23,17 @@ export function LoaderShell({
   if (!waiting) return <>{children}</>
 
   return (
-    <Shell $fill={fill} role="status" aria-live="polite" aria-busy="true">
-      <Orb aria-hidden />
+    <Shell $fill={fill} $compact={compact} role="status" aria-live="polite" aria-busy="true">
+      <Orb $compact={compact} aria-hidden />
       <Label>{t.common.loading}</Label>
-      <Rows aria-hidden>
-        <Row $wide />
-        <Row />
-        <Row $wide />
-        <Row />
-      </Rows>
+      {compact ? null : (
+        <Rows aria-hidden>
+          <Row $wide />
+          <Row />
+          <Row $wide />
+          <Row />
+        </Rows>
+      )}
     </Shell>
   )
 }

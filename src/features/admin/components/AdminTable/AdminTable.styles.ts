@@ -3,6 +3,7 @@ import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 export const Scroll = styled.div<{ $embedded?: boolean }>`
+  container-type: inline-size;
   max-width: 100%;
   min-width: 0;
   max-height: ${({ $embedded }) => ($embedded ? 'none' : '360px')};
@@ -156,6 +157,13 @@ export const ExpandBtn = styled.button`
 
 export const ExpandCell = styled.td`
   padding: 12px 16px 16px !important;
+`
+
+export const ExpandBody = styled.div`
+  position: sticky;
+  inset-inline-start: 16px;
+  width: calc(100cqw - 32px);
+  min-width: 0;
 `
 
 export const RowActions = styled.div`

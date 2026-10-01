@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { useI18n } from '../../i18n/I18nProvider'
 import { Backdrop, Chip, Face, Sheet, SheetBody, SheetClose, SheetTitle } from './FloatChip.styles'
@@ -78,7 +86,7 @@ export function FloatChip({
     }
   }, [open])
 
-  const clamp = (next: Point): Point => {
+  const clamp = useCallback((next: Point): Point => {
     const el = chipRef.current
     const w = el?.offsetWidth ?? 72
     const h = el?.offsetHeight ?? 72
@@ -88,7 +96,19 @@ export function FloatChip({
       x: Math.min(maxX, Math.max(8, next.x)),
       y: Math.min(maxY, Math.max(8, next.y)),
     }
-  }
+  }, [])
+
+  useLayoutEffect(() => {
+    const fit = () => {
+      const next = clamp(pointRef.current)
+      if (next.x === pointRef.current.x && next.y === pointRef.current.y) return
+      pointRef.current = next
+      setPoint(next)
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [clamp])
 
   const onPointerDown = (event: ReactPointerEvent) => {
     if (event.button !== 0) return

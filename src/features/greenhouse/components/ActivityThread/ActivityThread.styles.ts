@@ -1,16 +1,14 @@
 import styled from 'styled-components'
-import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-export const Root = styled.aside<{ $expanded?: boolean }>`
+export const Root = styled.aside<{ $height?: number }>`
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
   width: min(300px, 100%);
-  height: ${({ $expanded }) =>
-    $expanded
-      ? `min(calc(100svh - ${theme.layout.topBar} - ${theme.space.xl}), 640px)`
-      : '220px'};
+  height: ${({ $height }) => ($height ? `${$height}px` : 'min(52svh, 420px)')};
+  min-height: ${({ $height }) => ($height ? `${$height}px` : '220px')};
+  max-height: ${({ $height }) => ($height ? `${$height}px` : 'min(52svh, 420px)')};
   border-radius: ${theme.radii.lg};
   border: 1px solid ${theme.colors.border};
   background:
@@ -18,7 +16,6 @@ export const Root = styled.aside<{ $expanded?: boolean }>`
     ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
   overflow: hidden;
-  transition: height ${theme.motion.base} ${theme.motion.ease};
 
   @container (min-width: 961px) {
     align-self: start;
@@ -26,18 +23,12 @@ export const Root = styled.aside<{ $expanded?: boolean }>`
 
   @container (max-width: 960px) {
     width: 100%;
-    height: ${({ $expanded }) =>
-      $expanded
-        ? `min(calc(100svh - ${theme.layout.topBar} - ${theme.space.xl}), 640px)`
-        : '200px'};
   }
 `
 
 export const Head = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
   min-width: 0;
   padding: 10px 12px 8px;
   border-bottom: 1px solid ${theme.colors.border};
@@ -51,31 +42,6 @@ export const Title = styled.h2`
   font-size: 18px;
   line-height: 1.2;
   color: ${theme.colors.forest};
-`
-
-export const Toggle = styled.button`
-  ${pressable}
-  flex: 0 0 auto;
-  margin: 0;
-  padding: 6px 10px;
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.creamCard};
-  color: ${theme.colors.forest};
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:hover {
-    background: ${theme.colors.chipGreen};
-    border-color: ${theme.colors.moss};
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.growth};
-    outline-offset: 2px;
-  }
 `
 
 export const Scroll = styled.div`

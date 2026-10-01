@@ -9,7 +9,8 @@ export const Card = styled.div<{ $tone: 'water' | 'photo' }>`
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px;
-  width: min(280px, 72vw);
+  width: 100%;
+  min-width: 0;
   padding: 10px;
   border-radius: ${theme.radii.lg};
   border: 1px solid ${({ $tone }) => ($tone === 'water' ? water : metal)};

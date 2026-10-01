@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { ActivityThread, type ActivityEntry } from '../ActivityThread/ActivityThread'
 import { AddPlantCard } from '../AddPlantCard/AddPlantCard'
@@ -153,6 +153,50 @@ export function CollectionBoard({
       : []),
   ]
 
+  const shelfRef = useRef<HTMLDivElement>(null)
+  const railRef = useRef<HTMLElement>(null)
+  const [activityHeight, setActivityHeight] = useState<number>()
+
+  useLayoutEffect(() => {
+    if (compact) return
+    const shelf = shelfRef.current
+    const rail = railRef.current
+    if (!shelf || !rail) return
+
+    const measure = () => {
+      const grid = shelf.querySelector('[data-plant-grid]')
+      if (!(grid instanceof HTMLElement) || grid.children.length === 0) {
+        setActivityHeight(undefined)
+        return
+      }
+      const railBox = rail.getBoundingClientRect()
+      const shelfBox = shelf.getBoundingClientRect()
+      if (railBox.top > shelfBox.top + 48) {
+        setActivityHeight(undefined)
+        return
+      }
+      const kids = [...grid.children] as HTMLElement[]
+      const firstTop = kids[0].offsetTop
+      let bottom = kids[0].getBoundingClientRect().bottom
+      for (const el of kids) {
+        if (el.offsetTop > firstTop + 1) break
+        bottom = Math.max(bottom, el.getBoundingClientRect().bottom)
+      }
+      setActivityHeight(Math.max(220, Math.round(bottom - railBox.top)))
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(shelf)
+    const grid = shelf.querySelector('[data-plant-grid]')
+    if (grid) observer.observe(grid)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [compact, filter, careMode, list.shown.length, waterList.shown.length, photoList.shown.length])
+
   const careDialog =
     careTodo && carePlant ? (
       <TodoCareDialog
@@ -202,7 +246,7 @@ export function CollectionBoard({
                   {t.greenhouse.careWatering}
                   <Count>({waterPlants.length})</Count>
                 </CareSectionHead>
-                <CareGrid>
+                <CareGrid data-plant-grid>
                   {waterList.shown.map((plant) => (
                     <GreenhousePlantCard
                       key={`${filter}-water-${plant.id}`}
@@ -217,6 +261,7 @@ export function CollectionBoard({
                 <InfiniteSentinel
                   hasMore={waterList.hasMore}
                   onLoadMore={waterList.loadMore}
+                  root={shelfRef}
                   tick={waterList.shown.length}
                 />
               </CareSection>
@@ -228,7 +273,7 @@ export function CollectionBoard({
                   {t.greenhouse.carePicture}
                   <Count>({photoPlants.length})</Count>
                 </CareSectionHead>
-                <CareGrid>
+                <CareGrid data-plant-grid>
                   {photoList.shown.map((plant) => (
                     <GreenhousePlantCard
                       key={`${filter}-photo-${plant.id}`}
@@ -243,6 +288,7 @@ export function CollectionBoard({
                 <InfiniteSentinel
                   hasMore={photoList.hasMore}
                   onLoadMore={photoList.loadMore}
+                  root={shelfRef}
                   tick={photoList.shown.length}
                 />
               </CareSection>
@@ -252,13 +298,18 @@ export function CollectionBoard({
       ) : (
         <>
           {visible.length === 0 && !empty ? <Empty>{t.greenhouse.filterEmpty}</Empty> : null}
-          <CollectionGrid>
+          <CollectionGrid data-plant-grid>
             {filter === 'all' && <AddPlantCard onClick={onAdd} hero={empty} />}
             {list.shown.map((plant) => (
               <GreenhousePlantCard key={plant.id} plant={plant} fresh={plant.id === freshId} />
             ))}
           </CollectionGrid>
-          <InfiniteSentinel hasMore={list.hasMore} onLoadMore={list.loadMore} tick={list.shown.length} />
+          <InfiniteSentinel
+            hasMore={list.hasMore}
+            onLoadMore={list.loadMore}
+            root={shelfRef}
+            tick={list.shown.length}
+          />
         </>
       )}
     </Growing>
@@ -275,9 +326,9 @@ export function CollectionBoard({
 
   return (
     <Board $split>
-      <Shelf>{shelf}</Shelf>
-      <Rail>
-        <ActivityThread activity={activity} />
+      <Shelf ref={shelfRef}>{shelf}</Shelf>
+      <Rail ref={railRef}>
+        <ActivityThread activity={activity} height={activityHeight} />
       </Rail>
       {careDialog}
     </Board>

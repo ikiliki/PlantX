@@ -22,6 +22,10 @@ export const Board = styled.div`
   border: 1px solid ${theme.colors.border};
   background: ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
+
+  @container (max-width: 400px) {
+    padding: 12px 10px;
+  }
 `
 
 export const Filters = styled.div`
@@ -156,6 +160,16 @@ export const Week = styled.div`
   text-transform: uppercase;
   color: ${theme.colors.moss};
   text-align: center;
+
+  > * {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  @container (max-width: 400px) {
+    font-size: 9px;
+    letter-spacing: 0;
+  }
 `
 
 export const Grid = styled.div`
@@ -203,6 +217,11 @@ export const Day = styled.div<{
   font: inherit;
   text-align: start;
   cursor: pointer;
+
+  @container (max-width: 400px) {
+    padding-inline: 2px;
+    border-radius: ${theme.radii.sm};
+  }
 `
 
 export const DayNum = styled.span`
@@ -223,8 +242,9 @@ export const Icons = styled.div`
 export const PlantBtn = styled.span<{ $tone: 'water' | 'photo'; $open?: boolean }>`
   position: relative;
   display: block;
-  width: 28px;
-  height: 28px;
+  flex: 0 0 auto;
+  width: min(28px, 100%);
+  aspect-ratio: 1;
   border: 2px solid ${({ $tone, $open }) => ($open ? ($tone === 'water' ? water : metal) : theme.colors.creamCard)};
   border-radius: 999px;
   overflow: visible;
@@ -309,6 +329,10 @@ export const DayPanel = styled.section`
   border: 1px solid ${theme.colors.border};
   background: ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
+
+  @container (max-width: 400px) {
+    padding: 12px 10px;
+  }
 `
 
 export const DayPanelHead = styled.div`
@@ -335,7 +359,8 @@ export const DayPanelHead = styled.div`
 export const DayList = styled.div`
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  min-width: 0;
 `
 
 export const EmptyDay = styled.p`

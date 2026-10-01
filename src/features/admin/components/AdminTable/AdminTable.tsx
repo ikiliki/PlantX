@@ -11,6 +11,7 @@ import {
   DetailItem,
   Empty,
   ExpandBtn,
+  ExpandBody,
   ExpandCell,
   HeadActions,
   RowActions,
@@ -245,7 +246,9 @@ export function AdminTable<T>({
                     </tr>
                     {expandable && open && renderExpand && (
                       <tr className="expand-row">
-                        <ExpandCell colSpan={colSpan}>{renderExpand(row)}</ExpandCell>
+                        <ExpandCell colSpan={colSpan}>
+                          <ExpandBody>{renderExpand(row)}</ExpandBody>
+                        </ExpandCell>
                       </tr>
                     )}
                   </Fragment>

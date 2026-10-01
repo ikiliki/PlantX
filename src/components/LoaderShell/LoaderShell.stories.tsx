@@ -19,6 +19,8 @@ export default {
 
 export const Waiting = () => <LoaderShell busy />
 
+export const CompactWidget = () => <LoaderShell busy compact />
+
 export const Ready = () => (
   <LoaderShell busy={false}>
     <p>Tables</p>
