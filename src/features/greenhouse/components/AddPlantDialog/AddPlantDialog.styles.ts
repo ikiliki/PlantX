@@ -8,10 +8,16 @@ export const Backdrop = styled.div`
   z-index: ${theme.z.dialogTop};
   display: grid;
   place-items: center;
-  padding: ${theme.space.lg};
+  padding: ${theme.space.md};
   background: ${theme.colors.overlay};
   ${backdropEnter}
   ${sheetBackdrop}
+
+  @media (max-width: ${theme.breakpoints.md}) {
+    padding: ${theme.space.sm};
+    padding-bottom: calc(${theme.space.sm} + env(safe-area-inset-bottom));
+    align-items: end;
+  }
 `
 
 export const Dialog = styled.div`
@@ -22,8 +28,17 @@ export const Dialog = styled.div`
   padding: 28px ${theme.space.lg} ${theme.space.lg};
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.cream};
+  container-type: inline-size;
+  min-width: 0;
   ${dialogEnter}
   ${sheetSurface}
+
+  @media (max-width: ${theme.breakpoints.md}) {
+    width: 100%;
+    max-height: min(92svh, 900px);
+    padding: 22px ${theme.space.md} ${theme.space.md};
+    border-radius: ${theme.radii.lg} ${theme.radii.lg} 0 0;
+  }
 `
 
 export const Close = styled.button`

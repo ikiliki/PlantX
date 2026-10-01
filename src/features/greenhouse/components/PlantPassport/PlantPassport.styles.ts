@@ -5,11 +5,23 @@ import { theme } from '../../../../theme/tokens'
 import type { PlantRarity } from '../../../../mock/types'
 
 const onForest = (alpha: number) => `rgba(244, 241, 232, ${alpha})`
-const stacked = '@media (max-width: 760px)'
+const stacked = '@container (max-width: 760px)'
+
+export const Frame = styled.div`
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+`
 
 export const Board = styled.article<{ $embedded?: boolean; $dialog?: boolean }>`
   display: grid;
   grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
   background: ${theme.colors.creamCard};
@@ -25,7 +37,7 @@ export const Board = styled.article<{ $embedded?: boolean; $dialog?: boolean }>`
         ? css`
             flex: 1 1 auto;
             height: 100%;
-            @media (min-width: 761px) {
+            @container (min-width: 761px) {
               overflow: visible;
               & > aside,
               & > div {
@@ -39,9 +51,15 @@ export const Board = styled.article<{ $embedded?: boolean; $dialog?: boolean }>`
             box-shadow: ${theme.shadow.soft};
           `}
   ${stacked} {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
     overflow-y: auto;
     overscroll-behavior: contain;
+    background:
+      linear-gradient(165deg, rgba(207, 234, 120, 0.5), rgba(255, 254, 250, 0.18) 42%, rgba(243, 246, 236, 0.96) 100%),
+      #f3f6ec;
   }
 `
 
@@ -49,6 +67,8 @@ export const Aside = styled.aside<{ $embedded?: boolean; $dialog?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  grid-column: 1;
+  grid-row: 1 / -1;
   gap: ${theme.space.md};
   min-width: 0;
   padding: ${theme.space.xl} ${theme.space.lg} ${theme.space.lg};
@@ -76,7 +96,7 @@ export const Aside = styled.aside<{ $embedded?: boolean; $dialog?: boolean }>`
         `
       : $embedded &&
         css`
-          @media (min-width: 761px) {
+          @container (min-width: 761px) {
             overflow: visible;
             height: 100%;
             padding: ${theme.space.lg} ${theme.space.lg} ${theme.space.xl};
@@ -84,7 +104,16 @@ export const Aside = styled.aside<{ $embedded?: boolean; $dialog?: boolean }>`
           }
         `}
   ${stacked} {
+    order: 2;
+    flex: 0 0 auto;
+    grid-column: auto;
+    grid-row: auto;
+    height: auto;
+    min-height: auto;
     overflow: visible;
+    padding: 4px 14px 12px;
+    gap: 10px;
+    background: transparent;
   }
 `
 
@@ -95,6 +124,7 @@ export const IdentityHead = styled.div`
   min-width: 0;
   ${stacked} {
     padding-inline-end: 48px;
+    gap: 0;
   }
 `
 
@@ -114,6 +144,9 @@ export const PhotoIconButton = styled.button`
   &:focus-visible {
     outline: 2px solid ${theme.colors.growth};
     outline-offset: 3px;
+  }
+  ${stacked} {
+    display: none;
   }
 `
 
@@ -151,6 +184,24 @@ export const NameBlock = styled.div`
   padding-top: 2px;
 `
 
+/** Full AI badge on desktop; compact one-line chip on the stacked sheet. */
+export const IdBadgeSlot = styled.div`
+  min-width: 0;
+  max-width: 100%;
+
+  ${stacked} {
+    > span {
+      padding: 4px 9px 4px 5px;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    small {
+      display: none;
+    }
+  }
+`
+
 export const TaxonomyRow = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -185,8 +236,7 @@ export const StatSpacer = styled.div`
   flex: 1 1 36px;
   min-height: 36px;
   ${stacked} {
-    flex: 0 0 12px;
-    min-height: 12px;
+    display: none;
   }
 `
 
@@ -292,6 +342,8 @@ export const AsideLabel = styled.span`
 export const Main = styled.div<{ $embedded?: boolean; $dialog?: boolean }>`
   display: flex;
   flex-direction: column;
+  grid-column: 2;
+  grid-row: 2;
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -304,11 +356,18 @@ export const Main = styled.div<{ $embedded?: boolean; $dialog?: boolean }>`
         `
       : $embedded &&
         css`
-          @media (min-width: 761px) {
+          @container (min-width: 761px) {
             overflow: hidden;
           }
         `}
   ${stacked} {
+    display: flex;
+    order: 3;
+    flex: 0 0 auto;
+    grid-column: auto;
+    grid-row: auto;
+    height: auto;
+    min-height: auto;
     overflow: visible;
   }
 `
@@ -338,6 +397,11 @@ export const Title = styled.h1`
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
+
+  ${stacked} {
+    font-size: clamp(20px, 5.5cqi, 24px);
+    -webkit-line-clamp: 2;
+  }
 `
 
 export const OwnerLink = styled(Link)`
@@ -575,8 +639,12 @@ export const TabBar = styled.div`
   border-bottom: 1px solid ${theme.colors.border};
   background: ${theme.colors.creamCard};
   ${stacked} {
+    order: 3;
     top: -1px;
     padding: 0 8px;
+    background: rgba(243, 246, 236, 0.94);
+    backdrop-filter: blur(10px);
+    border-bottom-color: rgba(18, 60, 45, 0.12);
   }
 `
 
@@ -606,6 +674,10 @@ export const Tab = styled.button<{ $on?: boolean }>`
   &:focus-visible {
     outline: 2px solid ${theme.colors.moss};
     outline-offset: -2px;
+  }
+  ${stacked} {
+    padding: 8px 10px 8px;
+    font-size: 14px;
   }
 `
 
@@ -639,14 +711,21 @@ export const Panel = styled.div<{ $embedded?: boolean; $dialog?: boolean }>`
         `
       : $embedded &&
         css`
-          @media (min-width: 761px) {
+          @container (min-width: 761px) {
             flex: 0 0 auto;
             gap: 10px;
             padding: 12px 20px 16px;
           }
         `}
   ${stacked} {
-    padding: 14px 16px 20px;
+    order: 4;
+    flex: 0 0 auto;
+    max-height: none;
+    min-height: auto;
+    overflow: visible;
+    padding: 12px 14px 28px;
+    gap: 10px;
+    background: transparent;
   }
 `
 
@@ -664,7 +743,7 @@ export const Muted = styled.p`
 export const Facts = styled.div`
   display: grid;
   gap: 14px;
-  @media (min-width: 720px) {
+  @container (min-width: 720px) {
     grid-template-columns: 1fr 1fr;
   }
 `
@@ -725,10 +804,21 @@ export const ActivityBody = styled.div`
   gap: 8px;
   justify-items: start;
   min-width: 0;
+  width: 100%;
 
   > span:first-child {
     font-size: 15px;
     color: ${theme.colors.ink};
+  }
+
+  ${stacked} {
+    gap: 6px;
+
+    > ul {
+      width: 100%;
+      max-width: none;
+      grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    }
   }
 `
 
@@ -757,9 +847,19 @@ export const TimelineRow = styled.li<{ $mark?: boolean }>`
   &:last-child {
     border-bottom: 0;
   }
-  @media (min-width: 720px) {
+  @container (min-width: 720px) {
     grid-template-columns: 148px minmax(0, 1fr);
     align-items: baseline;
+  }
+  ${stacked} {
+    gap: 4px 10px;
+    padding: 10px 0;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+
+    time {
+      font-size: 12px;
+    }
   }
   time {
     font-size: 13px;

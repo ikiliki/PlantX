@@ -13,6 +13,11 @@ export const Backdrop = styled.div`
   overflow: hidden;
   ${backdropEnter}
   ${sheetBackdrop}
+
+  ${media.sm} {
+    padding: 0;
+    align-items: end;
+  }
 `
 
 export const Dialog = styled.div`
@@ -26,12 +31,16 @@ export const Dialog = styled.div`
   scrollbar-width: none;
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.creamCard};
+  container-type: inline-size;
+  min-width: 0;
   ${dialogEnter}
   ${sheetSurface}
   ${media.sm} {
-    height: 94vh;
-    max-height: 94vh;
+    width: 100%;
+    height: 94svh;
+    max-height: 94svh;
     padding-bottom: 0;
+    border-radius: ${theme.radii.lg} ${theme.radii.lg} 0 0;
   }
   &::-webkit-scrollbar {
     display: none;

@@ -31,3 +31,31 @@ export const Default = () => (
     collectionLabel="Plants in greenhouse"
   />
 )
+
+export const Desktop = () => (
+  <div style={{ maxWidth: 1100, width: '100%', containerType: 'inline-size', display: 'grid', gridTemplateColumns: '1fr auto', gap: 32, alignItems: 'center' }}>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#5D7C4E' }}>Living collection</div>
+      <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 40, color: '#173128' }}>Greenhouse</div>
+    </div>
+    <GreenhouseWallet
+      title="Wallet"
+      value="₪7,468"
+      valueLabel="Estimated market value"
+      collection="6"
+      collectionLabel="Plants in greenhouse"
+    />
+  </div>
+)
+
+export const Phone = () => (
+  <div style={{ maxWidth: 360, width: '100%', containerType: 'inline-size' }}>
+    <GreenhouseWallet
+      title="Wallet"
+      value="₪838"
+      valueLabel="Estimated market value"
+      collection="6"
+      collectionLabel="Plants in greenhouse"
+    />
+  </div>
+)

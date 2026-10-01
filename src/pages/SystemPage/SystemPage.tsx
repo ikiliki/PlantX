@@ -10,7 +10,7 @@ export function SystemPage() {
   const { liveStatus, liveFailure, plantxEnv } = useStore()
   const down = plantxEnv !== 'mock' && liveStatus === 'down'
   return (
-    <AdminPage tab="system" title={t.admin.system} lead={t.admin.systemLead}>
+    <AdminPage tab="system">
       {down ? <ApiDown detail={formatApiFailure(liveFailure, t.admin)} /> : <SystemPanel />}
     </AdminPage>
   )

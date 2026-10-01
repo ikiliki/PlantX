@@ -30,14 +30,14 @@ export default {
 
 export const Default = () => (
   <SignedIn id="u-dana">
-    <AdminPage tab="server" title="Server" lead="Backoffice tables for live data.">
+    <AdminPage tab="server">
       <p>Admin content</p>
     </AdminPage>
   </SignedIn>
 )
 
 export const GuestBlocked = () => (
-  <AdminPage tab="server" title="Server" lead="Backoffice tables for live data.">
+  <AdminPage tab="server">
     <p>Hidden</p>
   </AdminPage>
 )

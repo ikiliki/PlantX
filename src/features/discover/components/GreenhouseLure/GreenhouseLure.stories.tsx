@@ -23,3 +23,9 @@ export default {
 }
 
 export const Rail = () => <GreenhouseLure />
+
+export const CompactMobile = () => (
+  <div style={{ width: 360 }}>
+    <GreenhouseLure compact />
+  </div>
+)

@@ -1,6 +1,6 @@
 import { useStore } from '../../../../mock/store'
 import { isPlacementEnabled, placementRelease } from '../../../../theme/release'
-import { Label, MarketValue, Root, Value, ValueLabel } from './GreenhouseWallet.styles'
+import { Label, MarketValue, Root, Stat, Stats, Value, ValueLabel } from './GreenhouseWallet.styles'
 
 export function GreenhouseWallet({
   title,
@@ -18,28 +18,30 @@ export function GreenhouseWallet({
   const { db } = useStore()
   const market = placementRelease(db.system, 'greenhouse.market.wallet')
   const marketOn = isPlacementEnabled(db.system, 'greenhouse.market.wallet')
+  const held = marketOn && market.status !== 'ready'
 
   return (
     <Root aria-label={title}>
       <Label>{title}</Label>
-      {marketOn ? (
-        <>
-          <MarketValue
-            $held={market.status !== 'ready'}
-            data-placement="greenhouse.market.wallet"
-            data-feature="market"
-            data-feature-mode={market.status}
-          >
-            <Value>{value}</Value>
-          </MarketValue>
-          <ValueLabel>{valueLabel}</ValueLabel>
-        </>
-      ) : (
-        <>
-          <Value>{collection}</Value>
+      <Stats $solo={!marketOn}>
+        {marketOn ? (
+          <Stat>
+            <MarketValue
+              $held={held}
+              data-placement="greenhouse.market.wallet"
+              data-feature="market"
+              data-feature-mode={market.status}
+            >
+              <Value $tone="money">{value}</Value>
+            </MarketValue>
+            <ValueLabel>{valueLabel}</ValueLabel>
+          </Stat>
+        ) : null}
+        <Stat>
+          <Value $tone="count">{collection}</Value>
           <ValueLabel>{collectionLabel}</ValueLabel>
-        </>
-      )}
+        </Stat>
+      </Stats>
     </Root>
   )
 }

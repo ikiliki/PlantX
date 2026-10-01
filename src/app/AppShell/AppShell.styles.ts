@@ -25,13 +25,13 @@ export const Main = styled.main<{ $wide?: boolean }>`
   }
 `
 
-export const BottomNav = styled.nav`
+export const BottomNav = styled.nav<{ $cols?: number }>`
   position: fixed;
   bottom: 0;
   inset-inline: 0;
   z-index: ${theme.z.bottomNav};
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(${({ $cols = 5 }) => Math.max($cols, 1)}, minmax(0, 1fr));
   background: rgba(255, 254, 250, 0.94);
   backdrop-filter: blur(12px);
   border-top: 1px solid ${theme.colors.border};

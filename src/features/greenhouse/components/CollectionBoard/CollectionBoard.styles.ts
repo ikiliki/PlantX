@@ -48,31 +48,32 @@ export const Growing = styled.section`
 
 export const Toolbar = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 16px;
+  gap: 8px 12px;
   min-width: 0;
-
-  @container (max-width: 720px) {
-    flex-direction: column;
-    align-items: stretch;
-  }
 `
 
 export const SearchBox = styled.label`
   display: flex;
   align-items: center;
   gap: ${theme.space.sm};
-  flex: 1 1 200px;
-  max-width: 280px;
+  flex: 0 1 220px;
+  width: min(220px, 100%);
+  max-width: 220px;
+  min-width: 0;
   height: 40px;
+  padding: 0 14px;
 
   @container (max-width: 720px) {
-    flex: 1 1 100%;
-    max-width: none;
+    flex: 0 0 120px;
+    width: 120px;
+    max-width: 34%;
+    height: 36px;
+    padding: 0 10px;
+    gap: 6px;
   }
-  padding: 0 14px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};

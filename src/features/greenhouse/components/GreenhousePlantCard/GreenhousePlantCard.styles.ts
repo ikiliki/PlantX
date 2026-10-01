@@ -39,6 +39,10 @@ export const Root = styled.article<{ $fresh?: boolean }>`
   &:hover img {
     transform: scale(1.04);
   }
+
+  @container (max-width: 559px) {
+    border-radius: ${theme.radii.md};
+  }
 `
 
 export const PhotoLink = styled(Link)`
@@ -90,6 +94,15 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
   letter-spacing: 0.05em;
   text-transform: uppercase;
   box-shadow: ${theme.shadow.soft};
+
+  @container (max-width: 559px) {
+    inset-block-start: 4px;
+    inset-inline-start: 4px;
+    max-width: calc(100% - 8px);
+    padding: 2px 5px;
+    font-size: 8px;
+    letter-spacing: 0.03em;
+  }
 `
 
 export const Details = styled.div`
@@ -97,6 +110,10 @@ export const Details = styled.div`
   gap: 10px;
   align-content: start;
   padding: 14px 16px 16px;
+
+  @container (max-width: 559px) {
+    display: none;
+  }
 `
 
 export const NameRow = styled.div`
@@ -158,11 +175,21 @@ export const PhotoCount = styled.span`
 
 export const CollectionGrid = styled.div`
   display: grid;
-  gap: ${theme.space.md};
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: ${theme.space.sm};
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  @container (min-width: 560px) {
+    gap: ${theme.space.md};
+    grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
+  }
+
+  @container (min-width: 900px) {
+    grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  }
 
   > * {
     animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
+    min-width: 0;
   }
 
   ${Array.from({ length: 8 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 45}ms; }`).join('\n')}

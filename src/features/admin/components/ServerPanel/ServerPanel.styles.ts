@@ -94,6 +94,7 @@ export const Section = styled.section<{ $demo?: boolean }>`
   display: grid;
   gap: 12px;
   order: ${({ $demo }) => ($demo ? 1 : 0)};
+  min-width: 0;
   padding: 16px 18px;
   border-radius: ${theme.radii.lg};
   border: 1px solid ${theme.colors.border};

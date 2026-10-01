@@ -1,11 +1,16 @@
 import styled from 'styled-components'
+import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-export const Root = styled.aside`
+export const Root = styled.aside<{ $expanded?: boolean }>`
   display: grid;
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
   width: min(300px, 100%);
+  height: ${({ $expanded }) =>
+    $expanded
+      ? `min(calc(100svh - ${theme.layout.topBar} - ${theme.space.xl}), 640px)`
+      : '220px'};
   border-radius: ${theme.radii.lg};
   border: 1px solid ${theme.colors.border};
   background:
@@ -13,17 +18,63 @@ export const Root = styled.aside`
     ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
   overflow: hidden;
+  transition: height ${theme.motion.base} ${theme.motion.ease};
 
   @container (min-width: 961px) {
-    position: sticky;
-    top: ${theme.space.md};
     align-self: start;
-    height: min(72svh, 640px);
   }
 
   @container (max-width: 960px) {
     width: 100%;
-    height: min(42svh, 360px);
+    height: ${({ $expanded }) =>
+      $expanded
+        ? `min(calc(100svh - ${theme.layout.topBar} - ${theme.space.xl}), 640px)`
+        : '200px'};
+  }
+`
+
+export const Head = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid ${theme.colors.border};
+`
+
+export const Title = styled.h2`
+  margin: 0;
+  min-width: 0;
+  font-family: ${theme.fonts.display};
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.2;
+  color: ${theme.colors.forest};
+`
+
+export const Toggle = styled.button`
+  ${pressable}
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.creamCard};
+  color: ${theme.colors.forest};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: ${theme.colors.chipGreen};
+    border-color: ${theme.colors.moss};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.growth};
+    outline-offset: 2px;
   }
 `
 
@@ -34,7 +85,7 @@ export const Scroll = styled.div`
   min-height: 0;
   height: 100%;
   overflow-y: auto;
-  padding: 14px 12px;
+  padding: 12px;
 `
 
 export const Message = styled.div<{ $scan?: boolean }>`

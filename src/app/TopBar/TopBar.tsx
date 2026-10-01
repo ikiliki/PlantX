@@ -1,18 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { adminNav } from '../../features/admin/components/AdminTabs/AdminTabs'
 import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
 import { groupByRarity, wikiRarityTitle } from '../../features/species/wikiGroups'
 import { categoryName, classDictionary } from '../../mock/classDictionary'
 import { useStore } from '../../mock/store'
+import { isOperator } from '../../theme/operator'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { NavMenu } from './NavMenu/NavMenu'
 import {
   Account,
-  AccountCluster,
   Actions,
-  AvatarLink,
+  AvatarBubble,
   Bar,
   Brand,
   BrandMark,
@@ -22,10 +21,9 @@ import {
   Menu,
   MenuButton,
   MenuItem,
-  MenuToggle,
+  MenuLang,
   NavItem,
   NavItems,
-  NavMark,
 } from './TopBar.styles'
 
 function initials(name: string) {
@@ -45,6 +43,7 @@ export function TopBar() {
   const [openNav, setOpenNav] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const accountRef = useRef<HTMLDivElement>(null)
+  const chooseLocale = canChooseLocale()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -100,6 +99,27 @@ export function TopBar() {
     }
   }, [open])
 
+  const langToggle = (
+    <Lang role="group" aria-label={t.nav.language}>
+      <LangBtn
+        type="button"
+        $on={locale === 'he'}
+        aria-pressed={locale === 'he'}
+        onClick={() => setLocale('he')}
+      >
+        {t.landing.langHe}
+      </LangBtn>
+      <LangBtn
+        type="button"
+        $on={locale === 'en'}
+        aria-pressed={locale === 'en'}
+        onClick={() => setLocale('en')}
+      >
+        {t.landing.langEn}
+      </LangBtn>
+    </Lang>
+  )
+
   return (
     <Bar $scrolled={scrolled}>
       <Brand to="/home">
@@ -115,7 +135,6 @@ export function TopBar() {
         )}
         {show('market') && (
           <NavItem to="/market" $active={isActive('/market')} aria-current={isActive('/market') ? 'page' : undefined}>
-            <NavMark aria-hidden>◈</NavMark>
             {t.nav.market}
           </NavItem>
         )}
@@ -125,19 +144,16 @@ export function TopBar() {
             $active={isActive('/greenhouse')}
             aria-current={isActive('/greenhouse') ? 'page' : undefined}
           >
-            <NavMark aria-hidden>⚘</NavMark>
             {t.nav.greenhouse}
           </NavItem>
         )}
         {show('rank') && (
           <NavItem to="/rank" $active={isActive('/rank')} aria-current={isActive('/rank') ? 'page' : undefined}>
-            <NavMark aria-hidden>✦</NavMark>
             {t.nav.rank}
           </NavItem>
         )}
         {show('wiki') && (
           <NavMenu
-            mark="❧"
             label={t.nav.wiki}
             to="/wiki"
             open={openNav === 'wiki'}
@@ -157,56 +173,37 @@ export function TopBar() {
             ]}
           />
         )}
+        {isOperator(currentUser) && (
+          <NavItem to="/admin/server" $active={isActive('/admin')} aria-current={isActive('/admin') ? 'page' : undefined}>
+            {t.admin.title}
+          </NavItem>
+        )}
       </NavItems>
 
       <Actions>
-        {canChooseLocale() && (
-        <Lang role="group" aria-label={t.nav.language}>
-          <LangBtn
-            type="button"
-            $on={locale === 'he'}
-            aria-pressed={locale === 'he'}
-            onClick={() => setLocale('he')}
-          >
-            {t.landing.langHe}
-          </LangBtn>
-          <LangBtn
-            type="button"
-            $on={locale === 'en'}
-            aria-pressed={locale === 'en'}
-            onClick={() => setLocale('en')}
-          >
-            {t.landing.langEn}
-          </LangBtn>
-        </Lang>
-        )}
         {signedIn && currentUser ? (
           <Account ref={accountRef}>
-            <AccountCluster>
-              <AvatarLink to="/profile" aria-label={locale === 'he' ? currentUser.nameHe : currentUser.name}>
-                {initials(locale === 'he' ? currentUser.nameHe : currentUser.name)}
-              </AvatarLink>
-              <MenuToggle
-                type="button"
-                aria-label={t.nav.profile}
-                aria-expanded={open}
-                aria-haspopup="menu"
-                onClick={() => setOpen((value) => !value)}
-              >
-                ▾
-              </MenuToggle>
-            </AccountCluster>
+            <AvatarBubble
+              type="button"
+              $open={open}
+              aria-label={locale === 'he' ? currentUser.nameHe : currentUser.name}
+              aria-expanded={open}
+              aria-haspopup="menu"
+              onClick={() => setOpen((value) => !value)}
+            >
+              {initials(locale === 'he' ? currentUser.nameHe : currentUser.name)}
+            </AvatarBubble>
             {open && (
               <Menu role="menu">
-                <MenuItem to="/profile" role="menuitem" $active={isActive('/profile')}>
+                <MenuItem to="/profile" role="menuitem" $active={isActive('/profile')} onClick={() => setOpen(false)}>
                   {t.nav.profile}
                 </MenuItem>
-                {currentUser.role === 'admin' &&
-                  adminNav.map((item) => (
-                    <MenuItem key={item.to} to={item.to} role="menuitem" $active={loc.pathname === item.to}>
-                      {t.admin[item.id]}
-                    </MenuItem>
-                  ))}
+                {chooseLocale && (
+                  <MenuLang>
+                    <span>{t.nav.language}</span>
+                    {langToggle}
+                  </MenuLang>
+                )}
                 <MenuButton
                   type="button"
                   role="menuitem"
@@ -222,9 +219,12 @@ export function TopBar() {
             )}
           </Account>
         ) : (
-          <LoginButton to="/login" aria-current={isActive('/login') ? 'page' : undefined}>
-            {t.auth.login}
-          </LoginButton>
+          <>
+            {chooseLocale && langToggle}
+            <LoginButton to="/login" aria-current={isActive('/login') ? 'page' : undefined}>
+              {t.auth.login}
+            </LoginButton>
+          </>
         )}
       </Actions>
     </Bar>

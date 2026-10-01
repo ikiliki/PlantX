@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 import { theme } from '../../theme/tokens'
 
@@ -12,7 +11,7 @@ const bleed = css`
 export const Page = styled.div<{ $bleed?: boolean }>`
   container-type: inline-size;
   display: grid;
-  gap: 18px;
+  gap: 20px;
   width: 100%;
   min-width: 0;
   ${({ $bleed }) =>
@@ -29,14 +28,17 @@ export const Banner = styled.header<{ $bleed?: boolean }>`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 18px 22px;
-  padding: 28px 22px;
-  background: ${theme.colors.forest};
+  gap: 16px 20px;
+  padding: 24px 20px;
+  background:
+    radial-gradient(90% 120% at 100% 0%, rgba(207, 234, 120, 0.22), transparent 55%),
+    ${theme.colors.forest};
   color: ${theme.colors.creamCard};
   ${({ $bleed }) => $bleed && bleed}
 
   @container (min-width: 720px) {
-    padding: 32px 36px;
+    padding: 28px 32px;
+    gap: 18px 24px;
   }
 `
 
@@ -50,7 +52,7 @@ export const AvatarRing = styled.span`
 export const Identity = styled.div`
   display: grid;
   gap: 4px;
-  flex: 1 1 240px;
+  flex: 1 1 220px;
   min-width: 0;
 `
 
@@ -60,13 +62,20 @@ export const NameRow = styled.div`
   align-items: center;
   gap: 10px;
   h1 {
-    font-size: clamp(32px, 6cqw, 44px);
+    margin: 0;
+    font-family: ${theme.fonts.display};
+    font-weight: 400;
+    font-size: clamp(28px, 6cqw, 40px);
+    line-height: 1.1;
     color: ${theme.colors.creamCard};
+    overflow-wrap: anywhere;
   }
 `
 
 export const Meta = styled.p`
+  margin: 0;
   font-size: 14px;
+  line-height: 1.4;
   color: rgba(255, 254, 250, 0.78);
 `
 
@@ -82,8 +91,17 @@ export const Stats = styled.dl<{ $bleed?: boolean }>`
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0;
   background: ${theme.colors.creamCard};
-  border-block: 1px solid ${theme.colors.border};
-  ${({ $bleed }) => $bleed && bleed}
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.radii.lg};
+  overflow: hidden;
+  box-shadow: ${theme.shadow.soft};
+  ${({ $bleed }) =>
+    $bleed &&
+    css`
+      ${bleed}
+      border-radius: 0;
+      border-inline: 0;
+    `}
 
   @container (min-width: 760px) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -124,14 +142,14 @@ export const Columns = styled.div<{ $rails?: boolean }>`
   min-width: 0;
 
   @container (min-width: 860px) {
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
   }
 
   ${({ $rails }) =>
     $rails &&
     css`
       @container (min-width: 1120px) {
-        grid-template-columns: minmax(220px, 0.82fr) minmax(0, 1.35fr) minmax(220px, 0.9fr);
+        grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.85fr);
       }
     `}
 `
@@ -147,7 +165,7 @@ export const Card = styled.section`
   gap: 14px;
   align-content: start;
   min-width: 0;
-  padding: 20px;
+  padding: 18px 20px;
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};
@@ -155,6 +173,7 @@ export const Card = styled.section`
 `
 
 export const Body = styled.p`
+  margin: 0;
   font-size: 14px;
   line-height: 1.5;
   color: ${theme.colors.ink};
@@ -182,6 +201,7 @@ export const Chips = styled.ul`
 `
 
 export const Place = styled.p`
+  margin: 0;
   font-size: 13px;
   color: ${theme.colors.muted};
 `
@@ -227,7 +247,7 @@ export const Rows = styled.div`
 
 export const ActivityButton = styled.button`
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: minmax(72px, 92px) minmax(0, 1fr);
   gap: 2px 12px;
   width: 100%;
   padding: 12px 0;
@@ -238,6 +258,13 @@ export const ActivityButton = styled.button`
   font: inherit;
   text-align: start;
   cursor: pointer;
+  border-radius: ${theme.radii.sm};
+  transition: background ${theme.motion.fast} ${theme.motion.ease};
+
+  &:first-child {
+    border-top: 0;
+    padding-top: 2px;
+  }
 
   time {
     grid-row: 1 / span 2;
@@ -250,11 +277,17 @@ export const ActivityButton = styled.button`
     font-size: 15px;
     font-weight: 700;
     color: ${theme.colors.forest};
+    overflow-wrap: anywhere;
   }
 
   span {
     font-size: 13px;
     color: ${theme.colors.muted};
+    overflow-wrap: anywhere;
+  }
+
+  &:hover {
+    background: ${theme.colors.chipNeutral};
   }
 
   &:hover strong {
@@ -267,4 +300,3 @@ export const Empty = styled.p`
   color: ${theme.colors.muted};
   font-size: 14px;
 `
-

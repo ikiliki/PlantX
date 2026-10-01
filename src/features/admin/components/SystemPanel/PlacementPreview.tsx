@@ -123,6 +123,9 @@ function previewFor(id: PlacementId): ReactNode {
       return <GreenhousePage />
     case 'greenhouse.market.wallet':
       return <WalletPreview />
+    case 'profile.market.stats':
+    case 'profile.market.trust':
+      return <GreenhousePage />
     case 'greenhouse.card':
       return <CardPreview />
     case 'passport.market':

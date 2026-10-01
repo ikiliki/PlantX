@@ -45,6 +45,23 @@ export const Root = styled.button<{ $hero?: boolean }>`
   }
 
   ${({ $hero }) =>
+    !$hero &&
+    css`
+      @container (max-width: 559px) {
+        min-height: 0;
+        aspect-ratio: 1;
+        gap: 0;
+        padding: 8px;
+        border-radius: ${theme.radii.md};
+
+        > strong,
+        > span:last-of-type {
+          display: none;
+        }
+      }
+    `}
+
+  ${({ $hero }) =>
     $hero &&
     css`
       grid-column: 1 / -1;
@@ -82,6 +99,11 @@ export const Orb = styled.span`
   place-items: center;
   width: 84px;
   height: 84px;
+
+  @container (max-width: 559px) {
+    width: 42px;
+    height: 42px;
+  }
 `
 
 export const Plus = styled.span`
@@ -96,6 +118,12 @@ export const Plus = styled.span`
   font-weight: 400;
   line-height: 1;
   animation: ${breathe} 2.4s ${theme.motion.ease} infinite;
+
+  @container (max-width: 559px) {
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
+  }
 `
 
 export const Spark = styled.span`
@@ -107,6 +135,10 @@ export const Spark = styled.span`
   animation: ${orbit} 1.8s ${theme.motion.ease} infinite both;
 
   @media (prefers-reduced-motion: reduce) {
+    display: none;
+  }
+
+  @container (max-width: 559px) {
     display: none;
   }
 `

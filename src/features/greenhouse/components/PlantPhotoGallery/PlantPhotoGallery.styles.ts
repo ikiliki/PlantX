@@ -2,13 +2,18 @@ import styled, { css } from 'styled-components'
 import { backdropEnter, closeButton, fadeIn, popIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-const stacked = '@media (max-width: 760px)'
+const stacked = '@container (max-width: 760px)'
 
 export const Gallery = styled.section<{ $embedded?: boolean; $dialog?: boolean }>`
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
+  grid-column: 2;
+  grid-row: 1;
   min-height: 0;
+  @container (min-width: 761px) {
+    height: 100%;
+  }
   gap: 10px;
   padding: ${theme.space.lg} ${theme.space.lg} ${theme.space.md};
   ${({ $embedded, $dialog }) =>
@@ -21,13 +26,21 @@ export const Gallery = styled.section<{ $embedded?: boolean; $dialog?: boolean }
         `
       : $embedded &&
         css`
-          @media (min-width: 761px) {
+          @container (min-width: 761px) {
             padding: ${theme.space.md} ${theme.space.lg} ${theme.space.sm};
             gap: 8px;
           }
         `}
   ${stacked} {
-    padding: ${theme.space.md};
+    order: 1;
+    grid-column: auto;
+    grid-row: auto;
+    flex: 0 0 auto;
+    min-height: auto;
+    width: 100%;
+    padding: 12px 12px 8px;
+    gap: 6px;
+    background: transparent;
   }
 `
 
@@ -49,7 +62,7 @@ export const PhotoFrame = styled.button<{ $embedded?: boolean; $dialog?: boolean
         `
       : $embedded &&
         css`
-          @media (min-width: 761px) {
+          @container (min-width: 761px) {
             flex: 1 1 0;
             min-height: 200px;
           }
@@ -92,6 +105,14 @@ export const PhotoFrame = styled.button<{ $embedded?: boolean; $dialog?: boolean
   &:focus-visible {
     outline: 2px solid ${theme.colors.moss};
     outline-offset: 3px;
+  }
+
+  ${stacked} {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    max-height: 220px;
   }
 `
 

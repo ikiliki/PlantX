@@ -35,9 +35,6 @@ export const Brand = styled(Link)`
   font-weight: 400;
   font-size: 24px;
   color: ${theme.colors.forest};
-  @media (min-width: 900px) {
-    font-size: 28px;
-  }
 `
 
 export const BrandMark = styled.img`
@@ -82,9 +79,9 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
   padding: 6px 0;
-  font-family: ${theme.fonts.display};
-  font-size: 20px;
-  font-weight: 400;
+  font-family: ${theme.fonts.body};
+  font-size: 14px;
+  font-weight: ${({ $active }) => ($active ? 700 : 500)};
   white-space: nowrap;
   color: ${({ $active }) => ($active ? theme.colors.forest : theme.colors.muted)};
   transition: color ${theme.motion.fast} ${theme.motion.ease};
@@ -126,6 +123,7 @@ export const Lang = styled.div`
 
 export const LangBtn = styled.button<{ $on?: boolean }>`
   ${pressable}
+  flex: 1;
   min-height: 30px;
   margin: 0;
   padding: 0 10px;
@@ -144,11 +142,39 @@ export const LangBtn = styled.button<{ $on?: boolean }>`
   }
 `
 
+export const MenuLang = styled.div`
+  display: grid;
+  gap: 8px;
+  margin: 2px 0;
+  padding: 10px 12px 12px;
+  border-radius: ${theme.radii.sm};
+
+  > span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: ${theme.colors.muted};
+  }
+
+  ${Lang} {
+    width: 100%;
+    justify-content: stretch;
+    background: ${theme.colors.chipNeutral};
+  }
+
+  ${LangBtn} {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+`
+
 export const Account = styled.div`
   position: relative;
 `
 
-export const AvatarBubble = styled.button`
+export const AvatarBubble = styled.button<{ $open?: boolean }>`
   ${pressable}
   display: grid;
   place-items: center;
@@ -163,51 +189,13 @@ export const AvatarBubble = styled.button`
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
+  box-shadow: ${({ $open }) => ($open ? `0 0 0 3px ${theme.colors.chipGreen}` : 'none')};
   &:hover {
     box-shadow: 0 0 0 3px ${theme.colors.chipGreen};
   }
-`
-
-export const AvatarLink = styled(Link)`
-  ${pressable}
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border: 0;
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.chipGreen};
-  color: ${theme.colors.forest};
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: none;
-  &:hover {
-    box-shadow: 0 0 0 3px ${theme.colors.chipGreen};
-  }
-`
-
-export const AccountCluster = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`
-
-export const MenuToggle = styled.button`
-  ${pressable}
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: ${theme.radii.pill};
-  background: transparent;
-  color: ${theme.colors.forest};
-  font-size: 14px;
-  cursor: pointer;
-  &:hover {
-    background: ${theme.colors.chipGreen};
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.growth};
+    outline-offset: 2px;
   }
 `
 
@@ -220,7 +208,7 @@ export const Menu = styled.div`
   position: absolute;
   top: calc(100% + 8px);
   inset-inline-end: 0;
-  min-width: 168px;
+  min-width: 188px;
   padding: 6px;
   background: ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};

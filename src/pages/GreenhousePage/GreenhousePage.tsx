@@ -25,7 +25,7 @@ export function GreenhousePage({
   compact,
 }: {
   view?: ComponentView
-  /** When set, show the public greenhouse + listings shelves for that owner. */
+  /** When set, show that owner's shared plants. */
   ownerId?: string
   compact?: boolean
 }) {

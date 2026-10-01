@@ -1,9 +1,11 @@
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Avatar } from '../../../../components/Avatar/Avatar'
 import { formatFeedTime } from '../../formatFeedTime'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { personaScenarioId } from '../../../../mock/personas'
 import { useStore } from '../../../../mock/store'
 import type { FeedUpdate as FeedUpdateData, FeedUpdateKind } from '../../../../mock/types'
-import { Card, CardLink, Grower, Kind, Line, Meta, When } from './FeedUpdate.styles'
+import { Body, BodyLink, Card, Grower, Kind, Line, Meta, ProfileButton, When } from './FeedUpdate.styles'
 
 function kindLabel(kind: FeedUpdateKind, t: ReturnType<typeof useI18n>['t']) {
   if (kind === 'photo') return t.feed.updatePhoto
@@ -19,15 +21,22 @@ function kindLabel(kind: FeedUpdateKind, t: ReturnType<typeof useI18n>['t']) {
 export function FeedUpdate({ update }: { update: FeedUpdateData }) {
   const { t, tr, locale } = useI18n()
   const { db } = useStore()
+  const navigate = useNavigate()
+  const location = useLocation()
   const scenario = personaScenarioId(update.userId)
   const scenarioLabel = t.demo.personaScenarios[scenario]
-  const href = update.plantId
-    ? `/plants/${update.plantId}`
-    : db.users.some((user) => user.id === update.userId)
-      ? `/sellers/${update.userId}`
-      : undefined
+  const user = db.users.find((item) => item.id === update.userId && item.role !== 'guest')
+  const name = user ? tr(user.name, user.nameHe) : ''
+  const plantHref = update.plantId ? `/plants/${update.plantId}` : undefined
 
-  const body = (
+  const openProfile = () => {
+    navigate(
+      { pathname: location.pathname, search: location.search, hash: location.hash },
+      { state: { profilePreview: update.userId } },
+    )
+  }
+
+  const copy = (
     <>
       <Meta>
         <Kind>{kindLabel(update.kind, t)}</Kind>
@@ -38,13 +47,14 @@ export function FeedUpdate({ update }: { update: FeedUpdateData }) {
     </>
   )
 
-  if (href) {
-    return (
-      <CardLink to={href} data-feed-update={update.id}>
-        {body}
-      </CardLink>
-    )
-  }
-
-  return <Card data-feed-update={update.id}>{body}</Card>
+  return (
+    <Card data-feed-update={update.id}>
+      {user ? (
+        <ProfileButton type="button" aria-label={name} onClick={openProfile}>
+          <Avatar name={user.name} color={user.avatarColor} size={36} />
+        </ProfileButton>
+      ) : null}
+      {plantHref ? <BodyLink to={plantHref}>{copy}</BodyLink> : <Body>{copy}</Body>}
+    </Card>
+  )
 }

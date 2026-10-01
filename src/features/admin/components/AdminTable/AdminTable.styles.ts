@@ -3,8 +3,11 @@ import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 export const Scroll = styled.div<{ $embedded?: boolean }>`
+  max-width: 100%;
+  min-width: 0;
   max-height: ${({ $embedded }) => ($embedded ? 'none' : '360px')};
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 `
 
 export const ActionBar = styled.div`

@@ -1,49 +1,149 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useAuth } from '../../../auth/AuthProvider'
 import { AddPlantDialog } from '../../../greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
-import { AddSlot, Body, Card, Copy, Eyebrow, Lure, Open, Photo, Photos, Title } from './GreenhouseLure.styles'
+import {
+  AddSlot,
+  Backdrop,
+  Body,
+  Card,
+  CompactTrigger,
+  Copy,
+  Eyebrow,
+  Lure,
+  Open,
+  Photo,
+  Photos,
+  PhotoTile,
+  Sheet,
+  SheetCard,
+  SheetClose,
+  Title,
+} from './GreenhouseLure.styles'
 
 const SLOTS = 3
 
-export function GreenhouseLure() {
+function LureCopy({ hasPlants }: { hasPlants: boolean }) {
+  const { t } = useI18n()
+  return (
+    <Copy to="/greenhouse">
+      <Eyebrow>{t.discover.lureEyebrow}</Eyebrow>
+      <Title>{hasPlants ? t.discover.lureYours : t.discover.lureTitle}</Title>
+      <Lure>{hasPlants ? t.discover.lureYoursBody : t.discover.lureBody}</Lure>
+      <Open>{t.discover.lureOpen}</Open>
+    </Copy>
+  )
+}
+
+export function GreenhouseLure({ compact = false }: { compact?: boolean }) {
   const { db, currentUser, signedIn } = useStore()
   const { openAuth } = useAuth()
   const { t } = useI18n()
   const [adding, setAdding] = useState(false)
+  const [open, setOpen] = useState(false)
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
   const mine = db.plants.filter((plant) => plant.ownerId === ownerId && plant.photos[0]).slice(0, SLOTS)
-  const empty = SLOTS - mine.length
+  const emptySlots = mine.length === 0 ? 1 : 0
+  const hasPlants = mine.length > 0
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const onAdd = () => {
+    if (signedIn) setAdding(true)
+    else openAuth('buy')
+  }
+
+  const photoStack = (mode: 'links' | 'tiles' | 'compact') => (
+    <Photos>
+      {mine.map((plant, index) =>
+        mode === 'links' ? (
+          <Photo key={plant.id} to="/greenhouse" $i={index}>
+            <PlantImage src={plant.photos[0]} alt="" />
+          </Photo>
+        ) : (
+          <PhotoTile key={plant.id} $i={index} $compact={mode === 'compact'}>
+            <PlantImage src={plant.photos[0]} alt="" />
+          </PhotoTile>
+        ),
+      )}
+      {Array.from({ length: emptySlots }, (_, index) => (
+        <AddSlot
+          key={`add-${index}`}
+          type="button"
+          $i={mine.length + index}
+          $compact={mode === 'compact'}
+          aria-label={t.greenhouse.add}
+          onClick={(event) => {
+            event.stopPropagation()
+            onAdd()
+          }}
+        >
+          +
+        </AddSlot>
+      ))}
+    </Photos>
+  )
+
+  if (compact) {
+    return (
+      <Card $compact>
+        {hasPlants ? (
+          <CompactTrigger
+            type="button"
+            aria-label={t.discover.lureEyebrow}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            onClick={() => setOpen(true)}
+          >
+            {photoStack('compact')}
+          </CompactTrigger>
+        ) : (
+          photoStack('compact')
+        )}
+
+        {open &&
+          createPortal(
+            <Backdrop role="presentation" onClick={() => setOpen(false)}>
+              <Sheet
+                role="dialog"
+                aria-modal="true"
+                aria-label={t.discover.lureEyebrow}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <SheetClose type="button" aria-label={t.common.cancel} onClick={() => setOpen(false)}>
+                  ×
+                </SheetClose>
+                <SheetCard>
+                  <Body>
+                    <LureCopy hasPlants={hasPlants} />
+                    {photoStack('links')}
+                  </Body>
+                </SheetCard>
+              </Sheet>
+            </Backdrop>,
+            document.body,
+          )}
+
+        {adding && <AddPlantDialog onClose={() => setAdding(false)} />}
+      </Card>
+    )
+  }
 
   return (
     <Card>
       <Body>
-        <Copy to="/greenhouse">
-          <Eyebrow>{t.discover.lureEyebrow}</Eyebrow>
-          <Title>{mine.length > 0 ? t.discover.lureYours : t.discover.lureTitle}</Title>
-          <Lure>{mine.length > 0 ? t.discover.lureYoursBody : t.discover.lureBody}</Lure>
-          <Open>{t.discover.lureOpen}</Open>
-        </Copy>
-        <Photos>
-          {mine.map((plant, index) => (
-            <Photo key={plant.id} to="/greenhouse" $i={index}>
-              <PlantImage src={plant.photos[0]} alt="" />
-            </Photo>
-          ))}
-          {Array.from({ length: empty }, (_, index) => (
-            <AddSlot
-              key={`add-${index}`}
-              type="button"
-              $i={mine.length + index}
-              aria-label={t.greenhouse.add}
-              onClick={() => (signedIn ? setAdding(true) : openAuth('buy'))}
-            >
-              +
-            </AddSlot>
-          ))}
-        </Photos>
+        <LureCopy hasPlants={hasPlants} />
+        {photoStack('links')}
       </Body>
       {adding && <AddPlantDialog onClose={() => setAdding(false)} />}
     </Card>

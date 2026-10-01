@@ -10,6 +10,12 @@ export const Dock = styled.div`
   transform: translateX(-50%);
   width: max-content;
   max-width: calc(100vw - 16px);
+
+  @media (max-width: ${theme.breakpoints.md}) {
+    left: auto;
+    inset-inline-start: 10px;
+    transform: none;
+  }
 `
 
 export const Tab = styled.button<{ $open: boolean }>`

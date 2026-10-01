@@ -34,10 +34,12 @@ import {
   AsideStat,
   AsideStats,
   Board,
+  Frame,
   Code,
   AsideStatButton,
   GradeRow,
   IdentityHead,
+  IdBadgeSlot,
   Main,
   Missing,
   Muted,
@@ -133,9 +135,11 @@ export function PlantPassport({
 
   if (!plant) {
     return (
-      <Board $embedded={embedded} $dialog={dialog}>
-        <Missing id="plant-passport-title">{t.passport.notFound}</Missing>
-      </Board>
+      <Frame>
+        <Board $embedded={embedded} $dialog={dialog}>
+          <Missing id="plant-passport-title">{t.passport.notFound}</Missing>
+        </Board>
+      </Frame>
     )
   }
 
@@ -231,7 +235,20 @@ export function PlantPassport({
   const title = titleWithoutQuantity(tr(plant.title, plant.titleHe))
 
   return (
+    <Frame>
     <Board $embedded={embedded} $dialog={dialog}>
+      <PlantPhotoGallery
+        photos={photos}
+        checks={plant.identification?.photos}
+        alt={title}
+        embedded={embedded}
+        dialog={dialog}
+        index={safeIndex}
+        onIndexChange={setPhotoIndex}
+        viewerOpen={photoViewerOpen}
+        onViewerOpenChange={setPhotoViewerOpen}
+      />
+
       <Aside $embedded={embedded} $dialog={dialog}>
         <IdentityHead>
           <PhotoIconButton
@@ -271,7 +288,9 @@ export function PlantPassport({
             <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
               {title}
             </Title>
-            <IdentifyBadge identification={plant.identification} />
+            <IdBadgeSlot>
+              <IdentifyBadge identification={plant.identification} />
+            </IdBadgeSlot>
           </NameBlock>
         </IdentityHead>
 
@@ -356,18 +375,6 @@ export function PlantPassport({
       </Aside>
 
       <Main $embedded={embedded} $dialog={dialog}>
-        <PlantPhotoGallery
-          photos={photos}
-          checks={plant.identification?.photos}
-          alt={title}
-          embedded={embedded}
-          dialog={dialog}
-          index={safeIndex}
-          onIndexChange={setPhotoIndex}
-          viewerOpen={photoViewerOpen}
-          onViewerOpenChange={setPhotoViewerOpen}
-        />
-
         <TabBar role="tablist" aria-label={t.passport.title}>
           {tabs.map((item) => (
             <Tab
@@ -475,5 +482,6 @@ export function PlantPassport({
         </Panel>
       </Main>
     </Board>
+    </Frame>
   )
 }

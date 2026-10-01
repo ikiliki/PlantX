@@ -30,7 +30,7 @@ A pattern appears twice or more (same Field + Select + "Choose", same admin head
 
 ## Examples
 
-- `AdminPage` — admin check, header, lead, tabs
+- `AdminPage` — admin check, tabs
 - `CatalogSelect` — labeled catalog select with choose option
 - `PhotoIdentify` — `max` photos (default `MAX_PLANT_PHOTOS`, 3), each scanned separately; Add Plant passes `ADD_PLANT_UPLOAD_LIMIT` (1). Renders `AiScan` for the selected photo. A single photo has the remove control on that scan and no thumbnail or hint under it. More than one photo keeps the strip of slots with stickers. Stories keep the multi-photo frames.
 - `PhotoCheckSticker` — tilted "test passed" stamp with one photo's AI result (`sm` on thumbs, `md` on big photos)

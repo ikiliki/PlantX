@@ -56,6 +56,19 @@ export const FeedFilterSlot = styled.div`
   }
 `
 
+export const MobileLure = styled.div`
+  @container (min-width: 900px) {
+    display: none;
+  }
+`
+
+/** Left-rail lure only; the feed keeps a phone copy. */
+export const RailLure = styled.div`
+  @container (max-width: 899px) {
+    display: none;
+  }
+`
+
 export const Rail = styled.aside`
   display: grid;
   gap: 16px;

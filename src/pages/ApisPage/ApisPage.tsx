@@ -149,7 +149,7 @@ export function ApisPage() {
   }
 
   return (
-    <AdminPage tab="apis" title={t.admin.apis} lead={t.admin.apisLead}>
+    <AdminPage tab="apis">
       <Stack>
         {providersError ? (
           <ApiDown detail={formatApiFailure(providersError, t.admin)} />

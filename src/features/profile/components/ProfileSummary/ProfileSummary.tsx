@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import { isPlacementReady } from '../../../../theme/release'
 import {
   AvatarButton,
   AvatarRing,
@@ -31,7 +32,7 @@ export function ProfileSummary({
   /** Tighter padding for dialog / seller overlay. */
   compact?: boolean
 }) {
-  const { db, currentUser } = useStore()
+  const { db } = useStore()
   const { t, tr, locale } = useI18n()
   const navigate = useNavigate()
   const user = db.users.find((item) => item.id === userId && item.role !== 'guest')
@@ -40,14 +41,10 @@ export function ProfileSummary({
   const name = tr(user.name, user.nameHe)
   const business = locale === 'he' ? user.businessNameHe : user.businessName
   const specialties = locale === 'he' ? user.specialtiesHe : user.specialties
-  const isSelf = currentUser?.id === user.id
+  const showMarketStats = isPlacementReady(db.system, 'profile.market.stats')
 
   const openFull = () => {
-    if (isSelf) {
-      navigate('/profile')
-      return
-    }
-    navigate(`/sellers/${user.id}`, { state: { sellerFull: true } })
+    navigate(`/profile/${user.id}`)
   }
 
   return (
@@ -82,24 +79,26 @@ export function ProfileSummary({
       <div />
 
       <Foot>
-        <Stats>
-          <Stat>
-            <dt>{t.seller.rating}</dt>
-            <dd>★ {user.rating}</dd>
-          </Stat>
-          <Stat>
-            <dt>{t.seller.orders}</dt>
-            <dd>{user.completedOrders}</dd>
-          </Stat>
-          <Stat>
-            <dt>{t.seller.verification}</dt>
-            <dd>{Math.round(user.verificationRate * 100)}%</dd>
-          </Stat>
-          <Stat>
-            <dt>{t.seller.cancellations}</dt>
-            <dd>{user.cancellations}</dd>
-          </Stat>
-        </Stats>
+        {showMarketStats && (
+          <Stats>
+            <Stat>
+              <dt>{t.seller.rating}</dt>
+              <dd>★ {user.rating}</dd>
+            </Stat>
+            <Stat>
+              <dt>{t.seller.orders}</dt>
+              <dd>{user.completedOrders}</dd>
+            </Stat>
+            <Stat>
+              <dt>{t.seller.verification}</dt>
+              <dd>{Math.round(user.verificationRate * 100)}%</dd>
+            </Stat>
+            <Stat>
+              <dt>{t.seller.cancellations}</dt>
+              <dd>{user.cancellations}</dd>
+            </Stat>
+          </Stats>
+        )}
         {specialties.length > 0 && (
           <SpecialtyBlock>
             <Label>{t.seller.specialties}</Label>

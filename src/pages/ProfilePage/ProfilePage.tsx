@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../../components/Avatar/Avatar'
 import { Badge } from '../../components/Badge/Badge'
 import { Button } from '../../components/Button/Button'
+import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { SectionHeading } from '../../components/SectionHeading/SectionHeading'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { GreenhouseLure } from '../../features/discover/components/GreenhouseLure/GreenhouseLure'
@@ -11,24 +12,21 @@ import { ProfileSummary } from '../../features/profile/components/ProfileSummary
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
 import type { User } from '../../mock/types'
+import { isPlacementReady } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
 import {
   Actions,
   ActivityButton,
   AvatarRing,
   Banner,
-  Body,
   Bullets,
   Card,
-  Chips,
   Columns,
   Empty,
   Identity,
-  Label,
   Meta,
   NameRow,
   Page,
-  Place,
   Quote,
   Rows,
   Stack,
@@ -77,6 +75,8 @@ function ProfileOwner({ view }: { view: ComponentView }) {
   const [copied, setCopied] = useState(false)
   const [focus, setFocus] = useState<{ plantId: string; key: string } | null>(null)
   const bleed = view === 'page'
+  const showMarketStats = isPlacementReady(db.system, 'profile.market.stats')
+  const showTrust = isPlacementReady(db.system, 'profile.market.trust')
 
   if (!signedIn || !currentUser) {
     return (
@@ -103,8 +103,6 @@ function ProfileOwner({ view }: { view: ComponentView }) {
 
   const name = locale === 'he' ? currentUser.nameHe : currentUser.name
   const region = tr(currentUser.region, currentUser.regionHe)
-  const bio = tr(currentUser.bio, currentUser.bioHe) || t.profile.bio
-  const specialties = locale === 'he' ? currentUser.specialtiesHe : currentUser.specialties
   const handle = currentUser.email?.split('@')[0]
   const verified = currentUser.verificationRate >= 0.5
   const hasTrust = currentUser.rating > 0 || currentUser.completedOrders > 0
@@ -124,7 +122,7 @@ function ProfileOwner({ view }: { view: ComponentView }) {
   const shown = view === 'widget' ? activity.slice(0, WIDGET_ACTIVITY) : activity
 
   const share = async () => {
-    const url = `${window.location.origin}/sellers/${currentUser.id}`
+    const url = `${window.location.origin}/profile/${currentUser.id}`
     try {
       if (navigator.share) {
         await navigator.share({ title: name, url })
@@ -176,65 +174,55 @@ function ProfileOwner({ view }: { view: ComponentView }) {
         </Actions>
       </Banner>
 
-      <Stats $bleed={bleed}>
-        <Stat>
-          <dd>{hasTrust ? currentUser.rating.toFixed(1) : t.profile.unknown}</dd>
-          <dt>{t.seller.rating}</dt>
-        </Stat>
-        <Stat>
-          <dd>{hasTrust ? String(currentUser.completedOrders) : t.profile.unknown}</dd>
-          <dt>{t.seller.orders}</dt>
-        </Stat>
-        <Stat>
-          <dd>{hasTrust ? `${Math.round(currentUser.verificationRate * 100)}%` : t.profile.unknown}</dd>
-          <dt>{t.seller.verification}</dt>
-        </Stat>
-        <Stat>
-          <dd>{hasTrust ? `${cancelPct(currentUser)}%` : t.profile.unknown}</dd>
-          <dt>{t.seller.cancellations}</dt>
-        </Stat>
-      </Stats>
+      {showMarketStats && (
+        <FeatureGate placement="profile.market.stats" title={t.profile.title}>
+          <Stats $bleed={bleed}>
+            <Stat>
+              <dd>{hasTrust ? currentUser.rating.toFixed(1) : t.profile.unknown}</dd>
+              <dt>{t.seller.rating}</dt>
+            </Stat>
+            <Stat>
+              <dd>{hasTrust ? String(currentUser.completedOrders) : t.profile.unknown}</dd>
+              <dt>{t.seller.orders}</dt>
+            </Stat>
+            <Stat>
+              <dd>{hasTrust ? `${Math.round(currentUser.verificationRate * 100)}%` : t.profile.unknown}</dd>
+              <dt>{t.seller.verification}</dt>
+            </Stat>
+            <Stat>
+              <dd>{hasTrust ? `${cancelPct(currentUser)}%` : t.profile.unknown}</dd>
+              <dt>{t.seller.cancellations}</dt>
+            </Stat>
+          </Stats>
+        </FeatureGate>
+      )}
 
       <Columns $rails={view === 'page'}>
-        <Stack>
-          <Card>
-            <SectionHeading eyebrow={t.profile.aboutEyebrow} title={t.profile.growerTitle} />
-            <Body>{bio}</Body>
-            {specialties.length > 0 && (
-              <>
-                <Label>{t.profile.specialties}</Label>
-                <Chips>
-                  {specialties.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </Chips>
-              </>
-            )}
-            <Place>
-              {region} · {t.profile.addressNote}
-            </Place>
-          </Card>
-
-          <Card>
-            <SectionHeading eyebrow={t.profile.trustEyebrow} title={t.profile.sellerRecord} />
-            {hasTrust ? (
-              <>
-                <Quote>
-                  <Stars>{'★'.repeat(Math.max(1, Math.round(currentUser.rating)))}</Stars> “{t.profile.reviewQuote}”
-                </Quote>
-                <Bullets>
-                  <li>
-                    {t.profile.fulfillment} {fulfillment ?? 0}%
-                  </li>
-                  <li>{t.profile.responds}</li>
-                  {verified && <li>{t.profile.verifiedBy}</li>}
-                </Bullets>
-              </>
-            ) : (
-              <Empty>{t.profile.unknownHint}</Empty>
-            )}
-          </Card>
-        </Stack>
+        {showTrust && (
+          <Stack>
+            <FeatureGate placement="profile.market.trust" title={t.profile.sellerRecord}>
+              <Card>
+                <SectionHeading eyebrow={t.profile.trustEyebrow} title={t.profile.sellerRecord} />
+                {hasTrust ? (
+                  <>
+                    <Quote>
+                      <Stars>{'★'.repeat(Math.max(1, Math.round(currentUser.rating)))}</Stars> “{t.profile.reviewQuote}”
+                    </Quote>
+                    <Bullets>
+                      <li>
+                        {t.profile.fulfillment} {fulfillment ?? 0}%
+                      </li>
+                      <li>{t.profile.responds}</li>
+                      {verified && <li>{t.profile.verifiedBy}</li>}
+                    </Bullets>
+                  </>
+                ) : (
+                  <Empty>{t.profile.unknownHint}</Empty>
+                )}
+              </Card>
+            </FeatureGate>
+          </Stack>
+        )}
 
         <Card>
           <SectionHeading eyebrow={t.profile.activityEyebrow} title={t.profile.recentOrders} />

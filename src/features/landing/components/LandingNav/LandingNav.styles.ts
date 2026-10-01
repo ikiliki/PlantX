@@ -38,10 +38,6 @@ export const Brand = styled(Link)`
   font-family: ${theme.fonts.display};
   font-size: 24px;
   color: inherit;
-
-  @media (min-width: ${theme.breakpoints.md}) {
-    font-size: 28px;
-  }
 `
 
 export const BrandMark = styled.img<{ $solid: boolean }>`

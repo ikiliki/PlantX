@@ -4,10 +4,11 @@ import { theme } from '../../../../theme/tokens'
 export const Hero = styled.section`
   width: min(1240px, 100%);
   margin: 0 auto;
-  padding: 48px ${theme.space.md} 28px;
+  padding: 36px ${theme.space.md} 24px;
   display: grid;
-  gap: 36px;
+  gap: 28px;
   align-items: center;
+  min-width: 0;
 
   @media (min-width: ${theme.breakpoints.md}) {
     grid-template-columns: 1.02fr 0.98fr;
@@ -34,10 +35,11 @@ export const Title = styled.h1`
   margin: 18px 0 0;
   font-family: ${theme.fonts.display};
   font-weight: 400;
-  font-size: clamp(42px, 6vw, 68px);
+  font-size: clamp(34px, 9vw, 68px);
   line-height: 0.97;
   letter-spacing: -0.03em;
   color: ${theme.colors.forest};
+  overflow-wrap: anywhere;
 `
 
 export const Sub = styled.p`
@@ -52,6 +54,12 @@ export const Actions = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+
+  > a {
+    flex: 1 1 auto;
+    text-align: center;
+    min-width: min(160px, 100%);
+  }
 `
 
 export const Primary = styled.a`
@@ -87,7 +95,7 @@ export const Trust = styled.div`
 
 export const Visual = styled.div`
   position: relative;
-  min-height: 460px;
+  min-height: min(420px, 68vw);
 
   @media (min-width: ${theme.breakpoints.md}) {
     min-height: 520px;

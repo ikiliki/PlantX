@@ -6,6 +6,7 @@ import { LiveBanner } from '../../components/LiveBanner/LiveBanner'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
+import { isOperator } from '../../theme/operator'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { theme } from '../../theme/tokens'
 import { TopBar } from '../TopBar/TopBar'
@@ -20,7 +21,7 @@ function isMarketClassPath(path: string) {
 
 export function AppShell() {
   const { t } = useI18n()
-  const { db } = useStore()
+  const { db, currentUser } = useStore()
   const loc = useLocation()
   const navType = useNavigationType()
   const mainRef = useRef<HTMLElement>(null)
@@ -46,7 +47,7 @@ export function AppShell() {
     )
   }, [loc.pathname, navType])
 
-  const bottom = (
+  const bottom: { to: string; label: string; icon: IconName; pageId?: PageId }[] = (
     [
       { to: '/home', label: t.nav.home, icon: 'home' as const, pageId: 'home' as const },
       { to: '/market', label: t.nav.market, icon: 'market' as const, pageId: 'market' as const },
@@ -66,6 +67,10 @@ export function AppShell() {
     return !id || isPlacementEnabled(db.system, id)
   })
 
+  if (isOperator(currentUser)) {
+    bottom.push({ to: '/admin/server', label: t.admin.title, icon: 'admin' })
+  }
+
   return (
     <Shell>
       <TopBar />
@@ -76,9 +81,11 @@ export function AppShell() {
         </LoaderShell>
       </Main>
       <ScrollTopButton label={t.common.backToTop} />
-      <BottomNav>
+      <BottomNav $cols={bottom.length}>
         {bottom.map((l) => {
-          const active = loc.pathname === l.to || (l.to !== '/' && loc.pathname.startsWith(l.to))
+          const active = l.to.startsWith('/admin')
+            ? loc.pathname.startsWith('/admin')
+            : loc.pathname === l.to || (l.to !== '/' && loc.pathname.startsWith(l.to))
           return (
             <BottomLink key={l.to} to={l.to} $active={active} aria-current={active ? 'page' : undefined}>
               <BottomIcon $active={active}>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 import { media, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
@@ -100,7 +101,7 @@ const sideScroll = css`
 
 const tileWidth = '156px'
 
-export const ListingGrid = styled.div`
+export const PlantGrid = styled.div`
   ${sideScroll}
   gap: ${theme.space.sm};
   & > * {
@@ -109,37 +110,64 @@ export const ListingGrid = styled.div`
   }
 `
 
-export const PlantGrid = styled(ListingGrid)``
-
-export const MoreTile = styled.button`
-  position: sticky;
-  inset-inline-end: 0;
-  z-index: 1;
-  display: grid;
+export const SeeGreenhouse = styled(Link)`
   align-self: flex-start;
-  margin: 0;
-  padding: 0;
-  border: 0;
+  display: block;
+  min-width: 0;
   background: ${theme.colors.creamCard};
-  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
   &:focus-visible {
     outline: 2px solid ${theme.colors.moss};
     outline-offset: 3px;
+    border-radius: ${theme.radii.md};
   }
 `
 
-export const MoreThumb = styled.span`
+export const SeeFace = styled.span`
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  aspect-ratio: 1;
+  padding: 12px;
+  border: 1px dashed ${theme.colors.border};
+  border-radius: ${theme.radii.md};
+  background: transparent;
+  color: ${theme.colors.forest};
+  transition:
+    background ${theme.motion.fast} ${theme.motion.ease},
+    border-color ${theme.motion.fast} ${theme.motion.ease};
+
+  ${SeeGreenhouse}:hover & {
+    background: ${theme.colors.creamCard};
+    border-color: ${theme.colors.moss};
+  }
+`
+
+export const SeeMark = styled.span`
   display: grid;
   place-items: center;
-  aspect-ratio: 1;
-  border-radius: ${theme.radii.md};
-  background: ${theme.colors.chipNeutral};
+  width: 44px;
+  height: 44px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.growth};
   color: ${theme.colors.forest};
-  box-shadow: inset 0 0 0 1px ${theme.colors.border};
-  svg {
-    width: 28px;
-    height: 28px;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1;
+
+  html[dir='rtl'] & {
+    transform: scaleX(-1);
   }
+`
+
+export const SeeLabel = styled.span`
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
 `
 
 const tileFace = css`
@@ -151,21 +179,6 @@ const tileFace = css`
 
 export const PlantTile = styled.div`
   ${tileFace}
-`
-
-export const ListingTile = styled.button`
-  ${tileFace}
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  text-align: start;
-  cursor: pointer;
-  font: inherit;
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.moss};
-    outline-offset: 3px;
-  }
 `
 
 export const PlantThumb = styled.span`
@@ -194,11 +207,6 @@ export const TileMeta = styled.span`
   color: ${theme.colors.forest};
   text-overflow: ellipsis;
   white-space: nowrap;
-`
-
-export const Change = styled.span<{ $up: boolean }>`
-  margin-inline-start: 4px;
-  color: ${({ $up }) => ($up ? theme.colors.greenDark : theme.colors.danger)};
 `
 
 export const Empty = styled.p`

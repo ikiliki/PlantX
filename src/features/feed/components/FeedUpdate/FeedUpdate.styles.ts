@@ -1,5 +1,5 @@
-import styled from 'styled-components'
 import { Link } from 'react-router-dom'
+import styled from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
 const face = `
@@ -24,10 +24,45 @@ const face = `
 
 export const Card = styled.article`
   ${face}
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: 10px;
 `
 
-export const CardLink = styled(Link)`
-  ${face}
+export const ProfileButton = styled.button`
+  grid-row: 1;
+  margin: 2px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: ${theme.radii.pill};
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.moss};
+    outline-offset: 3px;
+  }
+`
+
+const copyColumn = `
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  grid-column: 2;
+
+  article:not(:has(button)) & {
+    grid-column: 1 / -1;
+  }
+`
+
+export const Body = styled.div`
+  ${copyColumn}
+`
+
+export const BodyLink = styled(Link)`
+  ${copyColumn}
+  color: inherit;
+  text-decoration: none;
 `
 
 export const Meta = styled.div`
@@ -54,9 +89,10 @@ export const Grower = styled.span`
 export const Line = styled.p`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-size: 20px;
+  font-size: clamp(17px, 4.6vw, 20px);
   line-height: 1.25;
   color: ${theme.colors.forest};
+  overflow-wrap: anywhere;
 `
 
 export const When = styled.time`

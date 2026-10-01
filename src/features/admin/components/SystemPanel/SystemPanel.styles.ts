@@ -9,11 +9,16 @@ export const Shell = styled.div`
 export const Section = styled.section`
   display: grid;
   gap: 20px;
-  padding: 28px;
+  padding: 20px;
   border-radius: ${theme.radii.lg};
   border: 1px solid ${theme.colors.border};
   background: ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
+  min-width: 0;
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    padding: 28px;
+  }
 `
 
 export const Block = styled.div`

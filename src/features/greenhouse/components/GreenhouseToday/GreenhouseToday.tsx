@@ -1,8 +1,7 @@
-import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { Plant } from '../../../../mock/types'
 import { greenhouseNeeds } from '../../greenhouseNeeds'
-import { Action, Name, Photo, Root, Row, Rows, Title } from './GreenhouseToday.styles'
+import { Action, Name, Root, Row, Rows, Title } from './GreenhouseToday.styles'
 
 export function GreenhouseToday({
   plants,
@@ -26,13 +25,10 @@ export function GreenhouseToday({
       <Rows>
         {needs.slice(0, 4).map((need) => {
           const name = tr(need.plant.title, need.plant.titleHe)
-          const actionLabel = need.kind === 'water' ? t.greenhouse.waterAction : t.greenhouse.refreshAction
+          const actionLabel = need.kind === 'water' ? t.greenhouse.todayWater : t.greenhouse.todayPhoto
           return (
             <Row key={`${need.kind}-${need.plant.id}`}>
-              <Photo>
-                <PlantImage src={need.plant.photos[0]} alt="" />
-              </Photo>
-              <Name>{name}</Name>
+              <Name title={name}>{name}</Name>
               <Action
                 type="button"
                 onClick={() => (need.kind === 'water' ? onWater(need.plant.id) : onRefresh(need.plant.id))}

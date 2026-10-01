@@ -32,7 +32,7 @@ function staticLocation(pathname: string): Location {
   return { pathname, search: '', hash: '', state: null, key: pathname }
 }
 
-type SellerState = { sellerFull?: boolean } | null
+type SellerState = { sellerFull?: boolean; profilePreview?: string } | null
 
 /** Offline and unlaunched apps paint a full page. Sign-in stays up either way, with no product header. */
 function ProductShell() {
@@ -52,7 +52,9 @@ export function AppRoutes() {
   const backRef = useRef<Location | null>(null)
   const plantId = matchPath('/plants/:id', location.pathname)?.params.id
   const sellerId = matchPath('/sellers/:id', location.pathname)?.params.id
-  const sellerFull = Boolean((location.state as SellerState)?.sellerFull)
+  const previewState = location.state as SellerState
+  const sellerFull = Boolean(previewState?.sellerFull)
+  const profilePreview = previewState?.profilePreview
   const overlay = Boolean(plantId || (sellerId && !sellerFull))
 
   if (!overlay) backRef.current = location
@@ -97,6 +99,7 @@ export function AppRoutes() {
           <Route path="wiki/:speciesId" element={<WikiPage />} />
           <Route path="sellers/:id" element={<SellerProfilePage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="profile/:id" element={<SellerProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route element={<AdminGate />}>
@@ -111,6 +114,17 @@ export function AppRoutes() {
       </Routes>
       {plantId && fromGreenhouse && <PassportDialog plantId={plantId} onClose={closeOverlay} />}
       {sellerId && !sellerFull && <SellerDialog userId={sellerId} onClose={closeOverlay} />}
+      {profilePreview && !sellerId && (
+        <SellerDialog
+          userId={profilePreview}
+          onClose={() =>
+            navigate(
+              { pathname: location.pathname, search: location.search, hash: location.hash },
+              { replace: true, state: null },
+            )
+          }
+        />
+      )}
     </>
   )
 }
