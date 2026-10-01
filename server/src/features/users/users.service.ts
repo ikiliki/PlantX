@@ -15,10 +15,10 @@ function avatarColor(seed: string) {
 }
 
 export const usersService = {
-  async listPending(status: PendingUser['status'] = 'pending') {
+  async listPending(status: PendingUser['status'] | 'all' = 'pending') {
     const rows = await getStore().pendingUsers.list()
     return rows
-      .filter((row) => row.status === status)
+      .filter((row) => status === 'all' || row.status === status)
       .slice()
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .map((row) => ({

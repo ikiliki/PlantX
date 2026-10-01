@@ -50,7 +50,7 @@ export interface PlantxStore {
   }
   /** Identify hits that matched no category. Hidden from the grower. */
   catalogSuggestions: {
-    listOpen(): Promise<CatalogSuggestion[]>
+    list(status?: CatalogSuggestion['status'] | 'all'): Promise<CatalogSuggestion[]>
     suggest(input: {
       name: string
       scientificName: string
@@ -60,6 +60,8 @@ export interface PlantxStore {
       draft: CatalogSuggestionDraft
     }): Promise<void>
     dismiss(id: string): Promise<void>
+    /** The suggestion was saved into the catalog. */
+    accept(id: string): Promise<void>
   }
   system: {
     get(): Promise<Partial<SystemConfig> | null>

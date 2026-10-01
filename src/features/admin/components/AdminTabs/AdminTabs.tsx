@@ -3,6 +3,7 @@ import { Row, Tab } from './AdminTabs.styles'
 
 export const adminNav = [
   { id: 'server', to: '/admin/server' },
+  { id: 'requests', to: '/admin/requests' },
   { id: 'system', to: '/admin/system' },
   { id: 'apis', to: '/admin/apis' },
 ] as const

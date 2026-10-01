@@ -451,6 +451,8 @@ export type CatalogSuggestion = {
   commonNames: string[]
   provider: string
   hits: number
+  /** `open` is waiting. `added` joined the catalog. `dismissed` was declined. */
+  status: 'open' | 'dismissed' | 'added'
   draft: CatalogSuggestionDraft
 }
 

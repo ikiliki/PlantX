@@ -21,6 +21,8 @@ import {
 import {
   catalogChoicePhoto,
   emptyClassDraft,
+  OTHER_CATEGORY_ID,
+  otherClass,
   narrowDraft,
   sizeChoices,
   stageChoices,
@@ -98,10 +100,16 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const usable = scans.filter((scan) => isUsableDiagnosis(scan.diagnosis))
   const lead = usable.find((scan) => draftMatchesDiagnosis(draft, scan.diagnosis)) ?? usable[0]
   const ai = lead?.diagnosis ?? null
+  const recognized = scans.find((scan) => scan.diagnosis?.isPlant)?.diagnosis ?? null
+  const missingCatalog = Boolean(recognized && !recognized.draft.categoryId)
   const aiDraft = ai?.draft
   const scanning = scans.some((scan) => scan.phase === 'identifying')
   const photos = scans.map((scan) => scan.photo)
-  const matched = synthesizeClass(catalog, draft)
+  const otherName = recognized?.label || recognized?.scientificName || t.addPlant.otherCategory
+  const matched =
+    draft.categoryId === OTHER_CATEGORY_ID
+      ? otherClass(draft, { name: otherName, nameHe: otherName })
+      : synthesizeClass(catalog, draft)
   const identification = identificationFor(
     savedClassFromDraft(draft, catalog),
     scans.map((scan) => ({ scanned: wasScanned(scan), diagnosis: scan.diagnosis, requestId: scan.requestId })),
@@ -151,14 +159,27 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     )
   }
 
-  // The first usable answer fills the class. Removing that photo hands over to the next one.
-  const firstUsable = usable[0]
+  // The first plant answer fills the class. No catalog category selects Other.
+  const plantScan = scans.find((scan) => scan.diagnosis?.isPlant)
   useEffect(() => {
-    if (!firstUsable?.diagnosis || appliedLead.current === firstUsable.id) return
-    appliedLead.current = firstUsable.id
-    applyAi(firstUsable.diagnosis)
+    if (!plantScan?.diagnosis || appliedLead.current === plantScan.id) return
+    appliedLead.current = plantScan.id
+    const diagnosis = plantScan.diagnosis
+    if (!diagnosis.draft.categoryId) {
+      setDraft(
+        narrowDraft(catalog, {
+          ...emptyClassDraft,
+          ...diagnosis.draft,
+          categoryId: OTHER_CATEGORY_ID,
+          subcategoryId: '',
+          traits: { ...diagnosis.draft.traits },
+        }),
+      )
+      return
+    }
+    applyAi(diagnosis)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstUsable?.id])
+  }, [plantScan?.id])
 
   const go = (next: number) => {
     setDirection(next > step ? 1 : -1)
@@ -166,7 +187,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     topRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   }
 
-  const identityReady = Boolean(draft.categoryId) && (varieties.length === 0 || Boolean(draft.subcategoryId))
+  const isOther = draft.categoryId === OTHER_CATEGORY_ID
+  const identityReady = isOther || (Boolean(draft.categoryId) && (varieties.length === 0 || Boolean(draft.subcategoryId)))
   const specsReady =
     Boolean(draft.size && draft.stage) && requiredExtra.every((item) => draft.traits[item.id])
   const detailsReady = Boolean(description.trim() && areaId && matched)
@@ -174,6 +196,35 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const save = () => {
     const area = areaById(areaId)
     if (!matched || !area || !description.trim()) return
+    if (isOther) {
+      if (!matched || !area || !description.trim() || !draft.size || !draft.stage) return
+      const id = addGreenhousePlant({
+        title: matched.name,
+        titleHe: matched.nameHe,
+        description: descriptionTouched ? description : matched.observed,
+        descriptionHe: descriptionTouched ? description : matched.observedHe,
+        photos,
+        speciesId: OTHER_CATEGORY_ID,
+        variety: matched.variety,
+        varietyHe: matched.varietyHe,
+        quality: draft.quality,
+        sizeBand: draft.size,
+        stage: draft.stage,
+        code: matched.code,
+        traits: draft.traits,
+        location: {
+          region: area.region,
+          regionHe: area.regionHe,
+          lat: area.lat,
+          lng: area.lng,
+        },
+        identification,
+        identifyRequestIds: scans.map((scan) => scan.requestId),
+      })
+      if (id) setSavedId(id)
+      else setSaveFailed(true)
+      return
+    }
     const category = catalog.categories.find((item) => item.id === draft.categoryId)
     const species = db.species.find((item) => item.id === category?.speciesId)
     const sub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
@@ -304,7 +355,13 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <StepTitle>{t.addPlant.identityTitle}</StepTitle>
               <StepLead>{ai ? t.addPlant.identityLeadAi : t.addPlant.identityLeadManual}</StepLead>
             </StepHead>
-            {banner}
+            {isOther ? (
+              <Banner $tone="warn">
+                <span>{missingCatalog ? t.addPlant.identityOther : t.addPlant.otherNoSubcategory}</span>
+              </Banner>
+            ) : (
+              banner
+            )}
             <Section>
               {catalog.categories.length >= CATEGORY_SEARCH_MIN ? (
                 <Input
@@ -320,13 +377,19 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 layout="tiles"
                 required
                 value={draft.categoryId}
-                suggestedId={aiDraft?.categoryId}
+                suggestedId={aiDraft?.categoryId || (missingCatalog ? OTHER_CATEGORY_ID : undefined)}
                 suggestedLabel={AI_MARK}
-                options={categories.map((item) => ({
-                  id: item.id,
-                  label: catalogName(item, locale),
-                  photo: item.photo,
-                }))}
+                options={[
+                  ...categories.map((item) => ({
+                    id: item.id,
+                    label: catalogName(item, locale),
+                    photo: item.photo,
+                  })),
+                  ...(categoryQuery.trim() &&
+                  !t.addPlant.otherCategory.toLowerCase().includes(categoryQuery.trim().toLowerCase())
+                    ? []
+                    : [{ id: OTHER_CATEGORY_ID, label: t.addPlant.otherCategory }]),
+                ]}
                 onChange={(value) =>
                   setClass({
                     categoryId: value,
@@ -339,7 +402,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 }
               />
             </Section>
-            {draft.categoryId && varieties.length > 0 ? (
+            {draft.categoryId && !isOther && varieties.length > 0 ? (
               <Section key={draft.categoryId}>
                 <ChoiceChips
                   label={t.admin.subcategory}
@@ -487,7 +550,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         const rows: { label: string; value: string; step: StepId }[] = [
           {
             label: t.admin.category,
-            value: category ? catalogName(category, locale) : '—',
+            value: isOther ? t.addPlant.otherCategory : category ? catalogName(category, locale) : '—',
             step: 'identity',
           },
           ...(sub
@@ -549,7 +612,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const next = (() => {
     switch (stepId) {
       case 'photo':
-        if (ai) return { label: t.addPlant.continue, disabled: false, hint: '' }
+        if (ai || missingCatalog) return { label: t.addPlant.continue, disabled: false, hint: '' }
         if (scanning) return { label: t.addPlant.aiWorking, disabled: true, hint: '' }
         return {
           label: t.addPlant.fillManually,
@@ -621,7 +684,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         ) : null}
         <Button
           type="button"
-          variant={stepId === 'review' ? 'growth' : stepId === 'photo' && !ai ? 'secondary' : 'primary'}
+          variant={stepId === 'review' ? 'growth' : stepId === 'photo' && !ai && !missingCatalog ? 'secondary' : 'primary'}
           disabled={next.disabled}
           onClick={() => (stepId === 'review' ? save() : go(step + 1))}
         >

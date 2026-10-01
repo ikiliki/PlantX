@@ -13,6 +13,7 @@ const sample: CatalogSuggestion = {
   commonNames: ['Fiddle-leaf fig'],
   provider: 'gemini',
   hits: 2,
+  status: 'open',
   draft: {
     category: { name: 'Ficus', nameHe: 'פיקוס', ticker: 'FICU', photo: defaultPlantPhoto },
     subcategory: { name: 'Fiddle-leaf', nameHe: 'כינור', code: 'LYRA', photo: defaultPlantPhoto },

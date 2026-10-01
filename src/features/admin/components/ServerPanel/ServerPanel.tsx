@@ -8,7 +8,7 @@ import { Segmented } from '../../../../components/Segmented/Segmented'
 import { Button } from '../../../../components/Button/Button'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import type { FeedUpdate, FeedUpdateKind, ModerationItem, PendingUser, Plant, User } from '../../../../mock/types'
+import type { FeedUpdate, FeedUpdateKind, ModerationItem, Plant, User } from '../../../../mock/types'
 import { formatApiFailure } from '../../../../lib/apiFailure'
 import type { ServerSlice } from '../../../../mock/liveApi'
 import { useStore, type LiveStatus } from '../../../../mock/store'
@@ -169,66 +169,6 @@ function PreviewShell({
         {actions && <DialogActions>{actions}</DialogActions>}
       </Dialog>
     </Backdrop>
-  )
-}
-
-function PendingPreview({
-  row,
-  busy,
-  onClose,
-  onActivate,
-  onReject,
-}: {
-  row: PendingUser
-  busy: boolean
-  onClose: () => void
-  onActivate: () => void
-  onReject: () => void
-}) {
-  const { t } = useI18n()
-  return (
-    <PreviewShell
-      titleId="server-pending-preview"
-      title={t.admin.previewMember}
-      onClose={onClose}
-      actions={
-        <>
-          <Button size="sm" variant="ghost" disabled={busy} onClick={onReject}>
-            {t.admin.reject}
-          </Button>
-          <Button size="sm" variant="growth" disabled={busy} onClick={onActivate}>
-            {t.admin.activate}
-          </Button>
-        </>
-      }
-    >
-      <PreviewCard>
-        <PreviewIdentity>
-          <Avatar name={row.name} color={avatarTone(row.email)} size={64} />
-          <PreviewName>
-            <strong>{row.name}</strong>
-            <span>
-              {row.email} · {t.roles.grower}
-            </span>
-          </PreviewName>
-        </PreviewIdentity>
-        {row.note && <PreviewNote>{row.note}</PreviewNote>}
-        <PreviewStats>
-          <div>
-            <dt>{t.seller.rating}</dt>
-            <dd>★ 0</dd>
-          </div>
-          <div>
-            <dt>{t.seller.orders}</dt>
-            <dd>0</dd>
-          </div>
-          <div>
-            <dt>{t.admin.accountStatus}</dt>
-            <dd>{t.admin.statusPending}</dd>
-          </div>
-        </PreviewStats>
-      </PreviewCard>
-    </PreviewShell>
   )
 }
 
@@ -629,15 +569,12 @@ export function ServerPanel() {
     disableUser,
     enableUser,
     setPreapproved,
-    approvePendingUser,
-    rejectPendingUser,
     liveMeta,
     resolveModeration,
   } = useStore()
   const { t, tr, locale, formatMoney } = useI18n()
 
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
-  const [selectedPending, setSelectedPending] = useState<string[]>([])
   const [selectedPlants, setSelectedPlants] = useState<string[]>([])
   const [selectedActivities, setSelectedActivities] = useState<string[]>([])
   const [selectedTx, setSelectedTx] = useState<string[]>([])
@@ -645,7 +582,6 @@ export function ServerPanel() {
   const [expandedPlants, setExpandedPlants] = useState<string[]>([])
   const [expandedActivities, setExpandedActivities] = useState<string[]>([])
   const [expandedUsers, setExpandedUsers] = useState<string[]>([])
-  const [pendingPreviewId, setPendingPreviewId] = useState<string | null>(null)
   const [userPreviewId, setUserPreviewId] = useState<string | null>(null)
   const [plantPreviewId, setPlantPreviewId] = useState<string | null>(null)
   const [activityPreviewId, setActivityPreviewId] = useState<string | null>(null)
@@ -660,13 +596,11 @@ export function ServerPanel() {
   const plantsOpen = Boolean(openSections.plants)
   const activitiesOpen = Boolean(openSections.activities)
   const catalogOpen = Boolean(openSections.catalog)
-  const pendingOpen = Boolean(openSections.pending)
   const transactionsOpen = Boolean(openSections.transactions)
   const usersFetching = useSectionFetch(usersOpen, ['users'])
   const plantsFetching = useSectionFetch(plantsOpen, ['plants'])
   const activitiesFetching = useSectionFetch(activitiesOpen, ['plants', 'updates'])
   const catalogFetching = useSectionFetch(catalogOpen, ['catalog'])
-  const pendingFetching = useSectionFetch(pendingOpen, ['pending'])
   const transactionsFetching = useSectionFetch(transactionsOpen, ['transactions'])
 
   const toggleSection = (id: string, fetching = false) => {
@@ -695,10 +629,6 @@ export function ServerPanel() {
       (activityUserId === 'all' || row.userId === activityUserId),
   )
   const reports = db.moderation.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  const pending = db.pendingUsers
-    .filter((row) => row.status === 'pending')
-    .slice()
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   const transactions = db.pendingTransactions
     .filter((row) => row.status === 'pending')
     .slice()
@@ -722,7 +652,6 @@ export function ServerPanel() {
     return node
   }
 
-  const pendingPreview = pending.find((row) => row.id === pendingPreviewId) ?? null
   const userPreview = users.find((row) => row.id === userPreviewId) ?? null
   const plantPreview = plants.find((row) => row.id === plantPreviewId) ?? null
   const activityPreview = activities.find((row) => row.id === activityPreviewId) ?? null
@@ -788,12 +717,6 @@ export function ServerPanel() {
       else await enableUser(id)
     }
     setSelectedUsers([])
-  }
-
-  const bulkRejectPending = async (ids: string[]) => {
-    for (const id of ids) await rejectPendingUser(id)
-    setSelectedPending([])
-    if (pendingPreviewId && ids.includes(pendingPreviewId)) setPendingPreviewId(null)
   }
 
   const bulkResolveReports = (ids: string[], status: 'resolved' | 'dismissed') => {
@@ -909,67 +832,6 @@ export function ServerPanel() {
         )}
       </Section>
       )}
-
-      <Section $demo={mock}>
-        <SectionHead
-          type="button"
-          $open={pendingOpen}
-          disabled={pendingFetching}
-          aria-expanded={pendingOpen}
-          aria-busy={pendingFetching}
-          onClick={() => toggleSection('pending', pendingFetching)}
-        >
-          <h2>{t.admin.pendingMembers}</h2>
-          <HeadMeta>
-            <span>{sliceCount('pending', pendingOpen, liveMeta?.pending ?? 0, pending.length)}</span>
-            {mock && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
-          </HeadMeta>
-        </SectionHead>
-        {pendingOpen && sliceBody('pending', pendingFetching, (
-        <AdminTable
-          rows={pending}
-          rowId={(row) => row.id}
-          empty={t.admin.pendingEmpty}
-          onRowClick={(row) => setPendingPreviewId(row.id)}
-          selectable
-          selected={selectedPending}
-          onSelectedChange={setSelectedPending}
-          columns={[
-            { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
-            { id: 'email', header: t.admin.serverColEmail, cell: (row) => row.email, muted: true },
-            {
-              id: 'note',
-              header: t.landing.registerNote,
-              cell: (row) => row.note ?? '—',
-              muted: true,
-            },
-            {
-              id: 'when',
-              header: t.admin.serverColWhen,
-              cell: (row) => row.createdAt.slice(0, 10),
-              muted: true,
-            },
-          ]}
-          actions={(row) => [
-            {
-              id: 'reject',
-              label: t.admin.reject,
-              variant: 'ghost',
-              disabled: busyId === row.id,
-              onClick: () => void run(row.id, () => rejectPendingUser(row.id)),
-            },
-          ]}
-          bulkActions={[
-            {
-              id: 'reject',
-              label: t.admin.bulkReject,
-              variant: 'danger',
-              onClick: (ids) => void bulkRejectPending(ids),
-            },
-          ]}
-        />
-        ))}
-      </Section>
 
       <Section id="server-users" $demo={mock}>
         <SectionHead
@@ -1350,34 +1212,6 @@ export function ServerPanel() {
 
       {categoryPopupId && (
         <CatalogTreeDialog categoryId={categoryPopupId} onClose={() => setCategoryPopupId(null)} />
-      )}
-
-      {pendingPreview && (
-        <PendingPreview
-          row={pendingPreview}
-          busy={busyId === pendingPreview.id}
-          onClose={() => setPendingPreviewId(null)}
-          onActivate={() =>
-            void run(pendingPreview.id, async () => {
-              const ok = await approvePendingUser(pendingPreview.id)
-              if (ok) {
-                setPendingPreviewId(null)
-                setSelectedPending((ids) => ids.filter((id) => id !== pendingPreview.id))
-              }
-              return ok
-            })
-          }
-          onReject={() =>
-            void run(pendingPreview.id, async () => {
-              const ok = await rejectPendingUser(pendingPreview.id)
-              if (ok) {
-                setPendingPreviewId(null)
-                setSelectedPending((ids) => ids.filter((id) => id !== pendingPreview.id))
-              }
-              return ok
-            })
-          }
-        />
       )}
 
       {userPreview && (

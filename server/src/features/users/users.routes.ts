@@ -17,7 +17,9 @@ usersRoutes.post('/pending', async (c) => {
 
 usersRoutes.get('/pending', async (c) => {
   await requireAdmin(c)
-  const status = (c.req.query('status') as 'pending' | 'approved' | 'rejected' | undefined) ?? 'pending'
+  const raw = c.req.query('status')
+  const status =
+    raw === 'all' || raw === 'approved' || raw === 'rejected' || raw === 'pending' ? raw : 'pending'
   return c.json({ pending: await usersService.listPending(status) })
 })
 

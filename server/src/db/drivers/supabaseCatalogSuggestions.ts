@@ -59,6 +59,7 @@ function rowOf(row: Record<string, unknown>): CatalogSuggestion {
     commonNames: Array.isArray(names) ? names.map(String) : [],
     provider: String(row.provider ?? ''),
     hits: Number(row.hits ?? 1),
+    status: row.status === 'dismissed' || row.status === 'added' ? row.status : 'open',
     draft: draftOf(row),
   }
 }
@@ -76,11 +77,15 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
   }
 
   return {
-    async listOpen() {
+    async list(status = 'open') {
       await ensure()
-      const result = await pool.query(
-        `select * from catalog_suggestions where status = 'open' order by hits desc, created_at desc`,
-      )
+      const result =
+        status === 'all'
+          ? await pool.query(`select * from catalog_suggestions order by created_at desc`)
+          : await pool.query(
+              `select * from catalog_suggestions where status = $1 order by created_at desc`,
+              [status],
+            )
       return (result.rows as Record<string, unknown>[]).map(rowOf)
     },
 
@@ -117,7 +122,18 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
 
     async dismiss(id) {
       await ensure()
-      await pool.query(`update catalog_suggestions set status = 'dismissed' where id = $1`, [id])
+      await pool.query(
+        `update catalog_suggestions set status = 'dismissed' where id = $1 and status = 'open'`,
+        [id],
+      )
+    },
+
+    async accept(id) {
+      await ensure()
+      await pool.query(
+        `update catalog_suggestions set status = 'added' where id = $1 and status = 'open'`,
+        [id],
+      )
     },
   }
 }

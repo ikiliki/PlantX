@@ -10,11 +10,14 @@ import { Actions, Box, Head, Hits, Name, Row, Thumb } from './CatalogSuggestions
 export function CatalogSuggestions({
   items,
   refreshKey = 0,
+  showEmpty = false,
   onAdd,
   onDismiss,
 }: {
   items?: CatalogSuggestion[]
   refreshKey?: number
+  /** Keep the heading when nothing is open. */
+  showEmpty?: boolean
   onAdd: (item: CatalogSuggestion) => void
   onDismiss?: (id: string) => void
 }) {
@@ -35,7 +38,7 @@ export function CatalogSuggestions({
     }
   }, [items, refreshKey])
 
-  if (rows.length === 0) return null
+  if (rows.length === 0 && !showEmpty) return null
 
   const dismiss = (id: string) => {
     if (items) {

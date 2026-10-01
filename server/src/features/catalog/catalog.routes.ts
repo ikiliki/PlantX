@@ -10,13 +10,22 @@ catalogRoutes.get('/', async (c) => c.json({ catalog: await catalogService.get()
 
 catalogRoutes.get('/suggestions', async (c) => {
   await requireAdmin(c)
-  const suggestions = await getStore().catalogSuggestions.listOpen()
+  const raw = c.req.query('status')
+  const status =
+    raw === 'all' || raw === 'open' || raw === 'dismissed' || raw === 'added' ? raw : 'open'
+  const suggestions = await getStore().catalogSuggestions.list(status)
   return c.json({ suggestions })
 })
 
 catalogRoutes.post('/suggestions/:id/dismiss', async (c) => {
   await requireAdmin(c)
   await getStore().catalogSuggestions.dismiss(c.req.param('id'))
+  return c.json({ ok: true })
+})
+
+catalogRoutes.post('/suggestions/:id/accept', async (c) => {
+  await requireAdmin(c)
+  await getStore().catalogSuggestions.accept(c.req.param('id'))
   return c.json({ ok: true })
 })
 

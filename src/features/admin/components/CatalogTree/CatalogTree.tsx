@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { dismissCatalogSuggestion } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
-import type { CatalogCategory, CatalogProperty, CatalogSubcategory, CatalogSuggestion } from '../../../../mock/types'
+import type { CatalogCategory, CatalogProperty, CatalogSubcategory } from '../../../../mock/types'
 import {
-  applyCatalogSuggestion,
   deleteProperty,
   propertiesForCategory,
   propertiesForSubcategory,
@@ -17,8 +15,6 @@ import {
   SYSTEM_PROPERTY_IDS,
 } from '../../catalogMutations'
 import { AdminTable } from '../AdminTable/AdminTable'
-import { CatalogSuggestions } from '../CatalogSuggestions/CatalogSuggestions'
-import { SuggestionEditorDialog } from '../CatalogSuggestions/SuggestionEditorDialog'
 import { CategoryEditorDialog } from '../CatalogEditor/CategoryEditorDialog'
 import { PropertyEditorDialog } from '../CatalogEditor/PropertyEditorDialog'
 import { SubcategoryEditorDialog } from '../CatalogEditor/SubcategoryEditorDialog'
@@ -31,7 +27,6 @@ type PropertyScope =
 type DialogState =
   | { kind: 'none' }
   | { kind: 'category'; item?: CatalogCategory }
-  | { kind: 'suggestion'; item: CatalogSuggestion }
   | { kind: 'subcategory'; categoryId: string; item?: CatalogSubcategory }
   | { kind: 'properties'; scope: PropertyScope }
   | { kind: 'property'; scope: PropertyScope; item?: CatalogProperty }
@@ -54,7 +49,6 @@ export function CatalogTree({
     onlyCategoryId && startExpanded ? [onlyCategoryId] : [],
   )
   const [dialog, setDialog] = useState<DialogState>({ kind: 'none' })
-  const [suggestionTick, setSuggestionTick] = useState(0)
 
   const scopeLabel = (scope: PropertyScope) => {
     if (scope.level === 'category') {
@@ -74,12 +68,6 @@ export function CatalogTree({
 
   return (
     <>
-      {onlyCategoryId ? null : (
-        <CatalogSuggestions
-          refreshKey={suggestionTick}
-          onAdd={(suggestion) => setDialog({ kind: 'suggestion', item: suggestion })}
-        />
-      )}
       <AdminTable
         rows={categories}
         rowId={(row) => row.id}
@@ -152,27 +140,6 @@ export function CatalogTree({
           },
         ]}
       />
-
-      {dialog.kind === 'suggestion' && (
-        <SuggestionEditorDialog
-          suggestion={dialog.item}
-          onClose={close}
-          onConfirm={(draft) => {
-            let saved = false
-            commitCatalog(({ catalog: cat, species }) => {
-              const next = applyCatalogSuggestion(cat, species, draft)
-              if (!next) return { catalog: cat, species }
-              saved = true
-              return next
-            })
-            if (!saved) return false
-            const id = dialog.item.id
-            void dismissCatalogSuggestion(id).then(() => setSuggestionTick((n) => n + 1))
-            close()
-            return true
-          }}
-        />
-      )}
 
       {dialog.kind === 'category' && (
         <CategoryEditorDialog

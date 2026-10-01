@@ -176,13 +176,13 @@ export function postRegister(body: { name: string; email: string; note?: string 
   })
 }
 
-export function fetchPendingUsers(status: 'pending' | 'approved' | 'rejected' = 'pending') {
+export function fetchPendingUsers(status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending') {
   return request<{ pending: import('./types').PendingUser[] }>(
     `/api/users/pending?status=${encodeURIComponent(status)}`,
   )
 }
 
-export function fetchPendingUsersOutcome(status: 'pending' | 'approved' | 'rejected' = 'pending') {
+export function fetchPendingUsersOutcome(status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending') {
   return requestOutcome<{ pending: import('./types').PendingUser[] }>(
     `/api/users/pending?status=${encodeURIComponent(status)}`,
   )
@@ -252,14 +252,21 @@ export function fetchCatalogOutcome() {
   return requestOutcome<{ catalog: import('./types').Catalog }>('/api/catalog')
 }
 
-export function fetchCatalogSuggestions() {
-  return request<{ suggestions: import('./types').CatalogSuggestion[] }>('/api/catalog/suggestions').then(
+export function fetchCatalogSuggestions(status: 'open' | 'dismissed' | 'added' | 'all' = 'open') {
+  const query = status === 'open' ? '' : `?status=${encodeURIComponent(status)}`
+  return request<{ suggestions: import('./types').CatalogSuggestion[] }>(`/api/catalog/suggestions${query}`).then(
     (body) => body?.suggestions ?? null,
   )
 }
 
 export function dismissCatalogSuggestion(id: string) {
   return request<{ ok: boolean }>(`/api/catalog/suggestions/${encodeURIComponent(id)}/dismiss`, {
+    method: 'POST',
+  })
+}
+
+export function acceptCatalogSuggestion(id: string) {
+  return request<{ ok: boolean }>(`/api/catalog/suggestions/${encodeURIComponent(id)}/accept`, {
     method: 'POST',
   })
 }

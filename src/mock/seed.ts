@@ -738,6 +738,23 @@ export function createSeed(): MockDb {
         createdAt: '2026-09-29T14:30:00.000Z',
         status: 'pending',
       },
+      {
+        id: 'pu-seed-noa',
+        name: 'Noa Levi',
+        email: 'noa@example.com',
+        note: 'Approved last week.',
+        createdAt: '2026-09-20T08:00:00.000Z',
+        status: 'approved',
+        approvedAt: '2026-09-21T10:00:00.000Z',
+      },
+      {
+        id: 'pu-seed-rami',
+        name: 'Rami Azulay',
+        email: 'rami@example.com',
+        createdAt: '2026-09-18T12:00:00.000Z',
+        status: 'rejected',
+        rejectedAt: '2026-09-19T09:00:00.000Z',
+      },
     ],
     pendingTransactions: [
       {

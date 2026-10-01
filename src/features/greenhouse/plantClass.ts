@@ -21,6 +21,9 @@ import {
 
 export type { PlantClassDraft }
 
+/** Identity choice when the plant is not a catalog category. It has no subcategory. */
+export const OTHER_CATEGORY_ID = 'other'
+
 export const emptyClassDraft: PlantClassDraft = {
   categoryId: '',
   subcategoryId: '',
@@ -193,12 +196,64 @@ export function synthesizeClass(
   }
 }
 
+/** A plant the catalog does not know yet. Size and stage still apply; there is no subcategory. */
+export function otherClass(
+  draft: PlantClassDraft,
+  names: { name: string; nameHe: string },
+): DictClass | undefined {
+  if (draft.categoryId !== OTHER_CATEGORY_ID || !draft.size || !draft.stage) return undefined
+  const name = names.name.trim() || 'Other'
+  const nameHe = names.nameHe.trim() || name
+  return {
+    code: buildMarketCode({
+      ticker: 'OTH',
+      varietyCode: 'OTH',
+      quality: draft.quality,
+      size: draft.size,
+      stage: draft.stage,
+    }),
+    name: buildMarketDisplay({
+      species: name,
+      variety: name,
+      quality: draft.quality,
+      size: draft.size,
+      stage: draft.stage,
+      locale: 'en',
+    }),
+    nameHe: buildMarketDisplay({
+      species: nameHe,
+      variety: nameHe,
+      quality: draft.quality,
+      size: draft.size,
+      stage: draft.stage,
+      locale: 'he',
+    }),
+    photo: '',
+    variety: name,
+    varietyHe: nameHe,
+    varietyCode: 'OTH',
+    quality: draft.quality,
+    size: draft.size,
+    stage: draft.stage,
+    author: 'PlantX catalog',
+    license: 'Catalog',
+    licenseUrl: '',
+    source: '',
+    observed: name,
+    observedHe: nameHe,
+  }
+}
+
 /** Keep only choices that still exist after an earlier field changes. */
 export function narrowDraft(catalog: Catalog, draft: PlantClassDraft): PlantClassDraft {
   const next = { ...draft, traits: { ...draft.traits } }
-  const subs = subcategoryChoices(catalog, next)
-  if (!subs.some((item) => item.id === next.subcategoryId)) {
-    next.subcategoryId = subs.length === 1 ? subs[0].id : ''
+  if (next.categoryId === OTHER_CATEGORY_ID) {
+    next.subcategoryId = ''
+  } else {
+    const subs = subcategoryChoices(catalog, next)
+    if (!subs.some((item) => item.id === next.subcategoryId)) {
+      next.subcategoryId = subs.length === 1 ? subs[0].id : ''
+    }
   }
   const sizes = sizeChoices(catalog, next)
   if (!next.size || !sizes.includes(next.size)) {
