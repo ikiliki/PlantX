@@ -9,7 +9,7 @@ import { RankRail } from '../../features/feed/components/RankRail/RankRail'
 import { TopGreenhouses } from '../../features/feed/components/TopGreenhouses/TopGreenhouses'
 import { WikiRail } from '../../features/feed/components/WikiRail/WikiRail'
 import { useHomeFeed } from '../../features/feed/useHomeFeed'
-import { Pager, usePaged } from '../../components/Pager/Pager'
+import { InfiniteSentinel, useInfiniteList } from '../../components/InfiniteScroll/InfiniteScroll'
 import { Reveal } from '../../components/Reveal/Reveal'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useServerSlices } from '../../mock/useServerSlices'
@@ -22,7 +22,10 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   const { t } = useI18n()
   const { items, friendsOnly } = useHomeFeed()
   const empty = friendsOnly ? t.feed.friendsEmpty : t.feed.empty
-  const feed = usePaged(items, { enabled: paged && view === 'page', signature: items.map((item) => item.id).join('|') })
+  const feed = useInfiniteList(items, {
+    enabled: paged && view === 'page',
+    signature: items.map((item) => item.id).join('|'),
+  })
   const shown = view === 'widget' ? items.slice(0, WIDGET_ITEMS) : feed.shown
 
   if (view === 'widget') {
@@ -60,14 +63,7 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
                 <FeedUpdate update={item.update} />
               </Reveal>
             ))}
-            <Pager
-              page={feed.page}
-              pageCount={feed.pageCount}
-              from={feed.from}
-              to={feed.to}
-              total={feed.total}
-              onPage={feed.setPage}
-            />
+            <InfiniteSentinel hasMore={feed.hasMore} onLoadMore={feed.loadMore} tick={feed.shown.length} />
           </FeatureGate>
         </Feed>
         <Rail>

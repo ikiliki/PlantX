@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Pager, usePaged } from '../../../../components/Pager/Pager'
+import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { Empty, Event, Message, Meta, Photo, Root, Scroll, Tag, When } from './ActivityThread.styles'
@@ -50,36 +50,52 @@ function ActivityMessage({ entry }: { entry: ActivityEntry }) {
 export function ActivityThread({ activity }: { activity: ActivityEntry[] }) {
   const { t } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
-  const paged = usePaged(activity, {
-    anchor: 'end',
-    signature: activity.map((entry) => `${entry.at}|${entry.plant}|${entry.label}`).join('|'),
-  })
+  const stick = useRef(true)
+  const before = useRef({ height: 0, top: 0 })
+  const signature = activity.map((entry) => `${entry.at}|${entry.plant}|${entry.label}`).join('|')
+  const list = useInfiniteList(activity, { anchor: 'end', signature })
+  const seen = useRef(signature)
+  if (seen.current !== signature) {
+    seen.current = signature
+    stick.current = true
+  }
 
-  useEffect(() => {
+  const loadOlder = () => {
+    const node = scrollRef.current
+    if (node) before.current = { height: node.scrollHeight, top: node.scrollTop }
+    stick.current = false
+    list.loadMore()
+  }
+
+  useLayoutEffect(() => {
     const node = scrollRef.current
     if (!node) return
-    node.scrollTop = node.scrollHeight
-  }, [paged.page, paged.shown.length])
+    if (stick.current) {
+      node.scrollTop = node.scrollHeight
+      return
+    }
+    node.scrollTop = before.current.top + node.scrollHeight - before.current.height
+  }, [list.shown.length, signature])
 
   return (
     <Root aria-label={t.greenhouse.activityTitle}>
       <Scroll ref={scrollRef}>
-        {paged.total === 0 ? (
+        {list.total === 0 ? (
           <Empty>{t.greenhouse.noActivity}</Empty>
         ) : (
-          paged.shown.map((entry, index) => (
-            <ActivityMessage key={`${entry.at}-${entry.plantId ?? entry.plant}-${index}`} entry={entry} />
-          ))
+          <>
+            <InfiniteSentinel
+              hasMore={list.hasMore}
+              onLoadMore={loadOlder}
+              root={scrollRef}
+              tick={list.shown.length}
+            />
+            {list.shown.map((entry, index) => (
+              <ActivityMessage key={`${entry.at}-${entry.plantId ?? entry.plant}-${index}`} entry={entry} />
+            ))}
+          </>
         )}
       </Scroll>
-      <Pager
-        page={paged.page}
-        pageCount={paged.pageCount}
-        from={paged.from}
-        to={paged.to}
-        total={paged.total}
-        onPage={paged.setPage}
-      />
     </Root>
   )
 }

@@ -9,12 +9,16 @@ import { Button } from '../../../../components/Button/Button'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { FeedUpdate, FeedUpdateKind, ModerationItem, PendingUser, Plant, User } from '../../../../mock/types'
+import { formatApiFailure } from '../../../../lib/apiFailure'
+import type { ServerSlice } from '../../../../mock/liveApi'
 import { useStore, type LiveStatus } from '../../../../mock/store'
-import { useServerSlices } from '../../../../mock/useServerSlices'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
 import { IdentifyBadge } from '../../../greenhouse/components/IdentifyBadge/IdentifyBadge'
 import { PhotoChecks } from '../../../greenhouse/components/PhotoChecks/PhotoChecks'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
+import { ApiDown } from '../ApiDown/ApiDown'
+import { EnvMissing } from '../EnvMissing/EnvMissing'
 import { CatalogTree, CatalogTreeDialog } from '../CatalogTree/CatalogTree'
 import {
   Backdrop,
@@ -38,6 +42,7 @@ import {
   HeadMeta,
   DemoRibbon,
   FilterBar,
+  Reason,
   RelationLink,
   UserHover,
   StatusActions,
@@ -616,7 +621,8 @@ export function ServerPanel() {
     db,
     fullDb,
     liveStatus,
-    liveWritable,
+    liveFailure,
+    sliceFailures,
     plantxEnv,
     plantxEnvLabel,
     retryLive,
@@ -650,16 +656,21 @@ export function ServerPanel() {
   const [activityKind, setActivityKind] = useState<ActivityTypeFilter>('all')
   const [activityUserId, setActivityUserId] = useState('all')
 
-  const loadingSlices = useServerSlices([
-    ...(openSections.users ? (['users'] as const) : []),
-    ...(openSections.plants || openSections.activities ? (['plants'] as const) : []),
-    ...(openSections.activities ? (['updates'] as const) : []),
-    ...(openSections.catalog ? (['catalog'] as const) : []),
-    ...(openSections.pending ? (['pending'] as const) : []),
-    ...(openSections.transactions ? (['transactions'] as const) : []),
-  ])
+  const usersOpen = Boolean(openSections.users)
+  const plantsOpen = Boolean(openSections.plants)
+  const activitiesOpen = Boolean(openSections.activities)
+  const catalogOpen = Boolean(openSections.catalog)
+  const pendingOpen = Boolean(openSections.pending)
+  const transactionsOpen = Boolean(openSections.transactions)
+  const usersFetching = useSectionFetch(usersOpen, ['users'])
+  const plantsFetching = useSectionFetch(plantsOpen, ['plants'])
+  const activitiesFetching = useSectionFetch(activitiesOpen, ['plants', 'updates'])
+  const catalogFetching = useSectionFetch(catalogOpen, ['catalog'])
+  const pendingFetching = useSectionFetch(pendingOpen, ['pending'])
+  const transactionsFetching = useSectionFetch(transactionsOpen, ['transactions'])
 
-  const toggleSection = (id: string) => {
+  const toggleSection = (id: string, fetching = false) => {
+    if (fetching) return
     setOpenSections((current) => ({ ...current, [id]: !current[id] }))
   }
 
@@ -695,7 +706,21 @@ export function ServerPanel() {
   const categories = db.catalog.categories
   const subcategories = db.catalog.subcategories
   const properties = db.catalog.properties
-  const fromServer = liveWritable
+  const mock = plantxEnv === 'mock'
+  const reasonFor = (slice: ServerSlice) =>
+    formatApiFailure(sliceFailures[slice] ?? (liveStatus === 'down' ? liveFailure : null), t.admin)
+  const sliceCount = (slice: ServerSlice, open: boolean, liveCount: number, localCount: number) => {
+    if (!mock && (liveStatus !== 'up' || sliceFailures[slice])) return t.admin.serverUnavailable
+    return String(open || liveMeta == null ? localCount : liveCount)
+  }
+  const sliceBody = (slice: ServerSlice, fetching: boolean, node: ReactNode) => {
+    if (!mock && liveStatus === 'loading') return <LoaderShell busy />
+    if (!mock && (liveStatus === 'down' || sliceFailures[slice])) {
+      return <ApiDown detail={reasonFor(slice)} />
+    }
+    if (fetching) return <LoaderShell busy />
+    return node
+  }
 
   const pendingPreview = pending.find((row) => row.id === pendingPreviewId) ?? null
   const userPreview = users.find((row) => row.id === userPreviewId) ?? null
@@ -789,12 +814,15 @@ export function ServerPanel() {
             <strong>{plantxEnvLabel}</strong>
             {plantxEnv === 'mock'
               ? ` · ${t.admin.serverLocalBody}`
-              : liveWritable
+              : liveStatus === 'up'
                 ? ` · ${t.admin.serverUpBody}`
-                : liveStatus === 'down'
-                  ? ` · ${t.admin.serverDownBody}`
-                  : ` · ${t.admin.serverLoadingBody}`}
+                : liveStatus === 'loading'
+                  ? ` · ${t.admin.serverLoadingBody}`
+                  : null}
           </p>
+          {plantxEnv !== 'mock' && liveStatus === 'down' && (
+            <Reason>{formatApiFailure(liveFailure, t.admin)}</Reason>
+          )}
         </StatusCopy>
         <StatusActions>
           <Button
@@ -812,10 +840,16 @@ export function ServerPanel() {
           )}
         </StatusActions>
       </StatusCard>
+      <EnvMissing />
 
-      {reports.length > 0 && (
+      {mock && reports.length > 0 && (
       <Section $demo>
-        <SectionHead type="button" $open={Boolean(openSections.reports)} onClick={() => toggleSection('reports')}>
+        <SectionHead
+          type="button"
+          $open={Boolean(openSections.reports)}
+          aria-expanded={Boolean(openSections.reports)}
+          onClick={() => toggleSection('reports')}
+        >
           <h2>{t.admin.reports}</h2>
           <HeadMeta>
             <span>
@@ -876,18 +910,22 @@ export function ServerPanel() {
       </Section>
       )}
 
-      <Section $demo={!fromServer}>
-        <SectionHead type="button" $open={Boolean(openSections.pending)} onClick={() => toggleSection('pending')}>
+      <Section $demo={mock}>
+        <SectionHead
+          type="button"
+          $open={pendingOpen}
+          disabled={pendingFetching}
+          aria-expanded={pendingOpen}
+          aria-busy={pendingFetching}
+          onClick={() => toggleSection('pending', pendingFetching)}
+        >
           <h2>{t.admin.pendingMembers}</h2>
           <HeadMeta>
-            <span>{openSections.pending || liveMeta == null ? pending.length : liveMeta.pending}</span>
-            {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
+            <span>{sliceCount('pending', pendingOpen, liveMeta?.pending ?? 0, pending.length)}</span>
+            {mock && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.pending &&
-          (loadingSlices.has('pending') ? (
-            <LoaderShell />
-          ) : (
+        {pendingOpen && sliceBody('pending', pendingFetching, (
         <AdminTable
           rows={pending}
           rowId={(row) => row.id}
@@ -930,21 +968,25 @@ export function ServerPanel() {
             },
           ]}
         />
-          ))}
+        ))}
       </Section>
 
-      <Section id="server-users" $demo={!fromServer}>
-        <SectionHead type="button" $open={Boolean(openSections.users)} onClick={() => toggleSection('users')}>
+      <Section id="server-users" $demo={mock}>
+        <SectionHead
+          type="button"
+          $open={usersOpen}
+          disabled={usersFetching}
+          aria-expanded={usersOpen}
+          aria-busy={usersFetching}
+          onClick={() => toggleSection('users', usersFetching)}
+        >
           <h2>{t.admin.serverUsers}</h2>
           <HeadMeta>
-            <span>{openSections.users || liveMeta == null ? users.length : liveMeta.users}</span>
-            {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
+            <span>{sliceCount('users', usersOpen, liveMeta?.users ?? 0, users.length)}</span>
+            {mock && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.users &&
-          (loadingSlices.has('users') ? (
-            <LoaderShell />
-          ) : (
+        {usersOpen && sliceBody('users', usersFetching, (
         <AdminTable
           rows={users}
           rowId={(row) => row.id}
@@ -1018,21 +1060,25 @@ export function ServerPanel() {
             },
           ]}
         />
-          ))}
+        ))}
       </Section>
 
-      <Section $demo={!fromServer}>
-        <SectionHead type="button" $open={Boolean(openSections.plants)} onClick={() => toggleSection('plants')}>
+      <Section $demo={mock}>
+        <SectionHead
+          type="button"
+          $open={plantsOpen}
+          disabled={plantsFetching}
+          aria-expanded={plantsOpen}
+          aria-busy={plantsFetching}
+          onClick={() => toggleSection('plants', plantsFetching)}
+        >
           <h2>{t.admin.serverPlants}</h2>
           <HeadMeta>
-            <span>{openSections.plants || liveMeta == null ? plants.length : liveMeta.plants}</span>
-            {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
+            <span>{sliceCount('plants', plantsOpen, liveMeta?.plants ?? 0, plants.length)}</span>
+            {mock && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.plants &&
-          (loadingSlices.has('plants') ? (
-            <LoaderShell />
-          ) : (
+        {plantsOpen && sliceBody('plants', plantsFetching, (
         <AdminTable
           rows={plants}
           rowId={(row) => row.id}
@@ -1098,23 +1144,27 @@ export function ServerPanel() {
           )}
           bulkActions={[]}
         />
-          ))}
+        ))}
       </Section>
 
-      <Section $demo={!fromServer}>
-        <SectionHead type="button" $open={Boolean(openSections.activities)} onClick={() => toggleSection('activities')}>
+      <Section $demo={mock}>
+        <SectionHead
+          type="button"
+          $open={activitiesOpen}
+          disabled={activitiesFetching}
+          aria-expanded={activitiesOpen}
+          aria-busy={activitiesFetching}
+          onClick={() => toggleSection('activities', activitiesFetching)}
+        >
           <h2>{t.admin.serverActivities}</h2>
           <HeadMeta>
             <span>
-              {openSections.activities || liveMeta == null ? shownActivities.length : liveMeta.updates}
+              {sliceCount('updates', activitiesOpen, liveMeta?.updates ?? 0, shownActivities.length)}
             </span>
-            {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
+            {mock && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.activities &&
-          (loadingSlices.has('updates') ? (
-            <LoaderShell />
-          ) : (
+        {activitiesOpen && sliceBody('updates', activitiesFetching, (
         <>
         <FilterBar>
           <Segmented
@@ -1204,21 +1254,32 @@ export function ServerPanel() {
           bulkActions={[]}
         />
         </>
-          ))}
+        ))}
       </Section>
 
-      <Section $demo={!fromServer}>
-        <SectionHead type="button" $open={Boolean(openSections.transactions)} onClick={() => toggleSection('transactions')}>
+      <Section $demo={mock}>
+        <SectionHead
+          type="button"
+          $open={transactionsOpen}
+          disabled={transactionsFetching}
+          aria-expanded={transactionsOpen}
+          aria-busy={transactionsFetching}
+          onClick={() => toggleSection('transactions', transactionsFetching)}
+        >
           <h2>{t.admin.transactions}</h2>
           <HeadMeta>
-            <span>{openSections.transactions || liveMeta == null ? transactions.length : liveMeta.transactions}</span>
-            {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
+            <span>
+              {sliceCount(
+                'transactions',
+                transactionsOpen,
+                liveMeta?.transactions ?? 0,
+                transactions.length,
+              )}
+            </span>
+            {mock && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.transactions &&
-          (loadingSlices.has('transactions') ? (
-            <LoaderShell />
-          ) : (
+        {transactionsOpen && sliceBody('transactions', transactionsFetching, (
         <AdminTable
           rows={transactions}
           rowId={(row) => row.id}
@@ -1257,23 +1318,34 @@ export function ServerPanel() {
             },
           ]}
         />
-          ))}
+        ))}
       </Section>
 
-      <Section $demo={!fromServer}>
-        <SectionHead type="button" $open={Boolean(openSections.catalog)} onClick={() => toggleSection('catalog')}>
+      <Section $demo={mock}>
+        <SectionHead
+          type="button"
+          $open={catalogOpen}
+          disabled={catalogFetching}
+          aria-expanded={catalogOpen}
+          aria-busy={catalogFetching}
+          onClick={() => toggleSection('catalog', catalogFetching)}
+        >
           <h2>{t.admin.serverCatalog}</h2>
           <HeadMeta>
             <span>
-              {openSections.catalog || liveMeta == null
-                ? categories.length + subcategories.length + properties.length
-                : liveMeta.catalog.categories + liveMeta.catalog.subcategories + liveMeta.catalog.properties}
+              {sliceCount(
+                'catalog',
+                catalogOpen,
+                liveMeta
+                  ? liveMeta.catalog.categories + liveMeta.catalog.subcategories + liveMeta.catalog.properties
+                  : 0,
+                categories.length + subcategories.length + properties.length,
+              )}
             </span>
-            {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
+            {mock && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.catalog &&
-          (loadingSlices.has('catalog') ? <LoaderShell /> : <CatalogTree />)}
+        {catalogOpen && sliceBody('catalog', catalogFetching, <CatalogTree />)}
       </Section>
 
       {categoryPopupId && (

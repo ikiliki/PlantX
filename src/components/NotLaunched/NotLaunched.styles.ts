@@ -38,6 +38,20 @@ const lineIn = keyframes`
   to { opacity: 1; transform: none; }
 `
 
+export const SignIn = styled.a`
+  color: ${theme.colors.forest};
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: ${theme.shadow.focus};
+    border-radius: ${theme.radii.sm};
+  }
+`
+
 export const Line = styled.p`
   margin: 0;
   min-height: 1.5em;

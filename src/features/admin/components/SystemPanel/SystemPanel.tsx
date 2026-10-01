@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { Switch } from '../../../../components/Switch/Switch'
+import type { ServerSlice } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import {
   PAGE_FEATURE,
   PAGE_IDS,
@@ -51,6 +54,35 @@ import {
 const PAGE_STATUSES: PageStatus[] = ['live', 'maintenance']
 const RELEASE_MODES: ReleaseMode[] = ['ready', 'comingSoon', 'maintenance']
 const FEATURE_ORDER: FeatureId[] = ['news', 'market', 'greenhouse', 'rank', 'wiki']
+
+const PAGE_SLICES = {
+  home: ['users', 'plants', 'updates', 'catalog'],
+  market: ['users', 'plants', 'catalog'],
+  greenhouse: ['users', 'plants', 'updates', 'catalog'],
+  rank: ['users', 'plants'],
+  wiki: ['plants', 'catalog'],
+} as const satisfies Record<PageId, readonly ServerSlice[]>
+
+const FEATURE_SLICES = {
+  news: PAGE_SLICES.home,
+  market: PAGE_SLICES.market,
+  greenhouse: PAGE_SLICES.greenhouse,
+  rank: PAGE_SLICES.rank,
+  wiki: PAGE_SLICES.wiki,
+} as const satisfies Record<FeatureId, readonly ServerSlice[]>
+
+function FetchHold({
+  active,
+  slices,
+  children,
+}: {
+  active: boolean
+  slices: readonly ServerSlice[]
+  children: (fetching: boolean) => ReactNode
+}) {
+  const fetching = useSectionFetch(active, slices)
+  return children(fetching)
+}
 
 function pageLabel(id: PageId, t: ReturnType<typeof useI18n>['t']) {
   if (id === 'home') return t.nav.home
@@ -174,13 +206,19 @@ export function SystemPanel() {
                 const open = openPages.has(pageId)
                 const label = pageLabel(pageId, t)
                 return (
-                  <Group key={pageId}>
+                  <FetchHold key={pageId} active={open} slices={PAGE_SLICES[pageId]}>
+                  {(fetching) => (
+                  <Group>
                     <PageHead>
                       <PageToggle
                         type="button"
                         $open={open}
+                        disabled={fetching}
                         aria-expanded={open}
-                        onClick={() => toggleSet(pageId, setOpenPages)}
+                        aria-busy={fetching}
+                        onClick={() => {
+                          if (!fetching) toggleSet(pageId, setOpenPages)
+                        }}
                       >
                         <NameCell>
                           <strong>{label}</strong>
@@ -202,13 +240,18 @@ export function SystemPanel() {
                         ))}
                       </Select>
                     </PageHead>
-                    {open && (
-                      <PreviewWell>
-                        <PreviewLabel>{t.admin.systemPreview}</PreviewLabel>
-                        <PagePreview pageId={pageId} />
-                      </PreviewWell>
-                    )}
+                    {open &&
+                      (fetching ? (
+                        <LoaderShell busy />
+                      ) : (
+                        <PreviewWell>
+                          <PreviewLabel>{t.admin.systemPreview}</PreviewLabel>
+                          <PagePreview pageId={pageId} />
+                        </PreviewWell>
+                      ))}
                   </Group>
+                  )}
+                  </FetchHold>
                 )
               })}
             </Groups>
@@ -244,13 +287,19 @@ export function SystemPanel() {
                 const open = openGroups.has(featureId)
                 const label = featureLabel(featureId, t)
                 return (
-                  <Group key={featureId}>
+                  <FetchHold key={featureId} active={open} slices={FEATURE_SLICES[featureId]}>
+                  {(fetching) => (
+                  <Group>
                     <PageHead>
                       <FeatureToggle
                         type="button"
                         $open={open}
+                        disabled={fetching}
                         aria-expanded={open}
-                        onClick={() => toggleSet(featureId, setOpenGroups)}
+                        aria-busy={fetching}
+                        onClick={() => {
+                          if (!fetching) toggleSet(featureId, setOpenGroups)
+                        }}
                       >
                         {label}
                         <Count>{editable.length}</Count>
@@ -283,7 +332,9 @@ export function SystemPanel() {
                         )}
                       </Controls>
                     </PageHead>
-                    {open && (
+                    {open && (fetching ? (
+                      <LoaderShell busy />
+                    ) : (
                       <FeatureBody>
                         {categories.map((category) => {
                           const openable = category.placed.filter((item) => !item.required)
@@ -402,8 +453,10 @@ export function SystemPanel() {
                           )
                         })}
                       </FeatureBody>
-                    )}
+                    ))}
                   </Group>
+                  )}
+                  </FetchHold>
                 )
               })}
             </Groups>

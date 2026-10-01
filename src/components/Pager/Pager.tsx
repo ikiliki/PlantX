@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useI18n } from '../../i18n/I18nProvider'
 import { Bar, Range, Step } from './Pager.styles'
 
-/** Shared list size. Admin tables, home, market, and greenhouse activity all use it. */
+/** Shared page size. Admin tables and the market step through it. News and greenhouse activity reveal the same size by scrolling. */
 export const PAGE_SIZE = 10
 
 export function pageWindow<T>(items: T[], page: number, pageSize = PAGE_SIZE) {

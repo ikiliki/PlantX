@@ -35,10 +35,10 @@ export type LivePayload = {
 
 export const liveService = {
   async payload(currentUserId: string | null): Promise<LivePayload> {
-    const [system, users, plants, activities, pending, transactions, catalog] = await Promise.all([
+    const [system, users, plantCount, activities, pending, transactions, catalog] = await Promise.all([
       systemService.get(),
       getStore().users.list(),
-      greenhouseService.list(),
+      greenhouseService.count(),
       activityService.list(),
       usersService.countPending(),
       usersService.countPendingTransactions(),
@@ -51,7 +51,7 @@ export const liveService = {
       currentUserId,
       meta: {
         users: members.length,
-        plants: plants.length,
+        plants: plantCount,
         updates: activities.length,
         pending,
         transactions,

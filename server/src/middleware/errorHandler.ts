@@ -16,7 +16,7 @@ function toAppError(err: unknown): AppError {
 export const onError: ErrorHandler = (err, c) => {
   const appError = toAppError(err)
   logger.error(appError.message, { ...requestMeta(c), status: appError.status, error: appError.error }, err)
-  return c.json({ error: appError.error }, appError.status)
+  return c.json({ error: appError.error, message: appError.message.slice(0, 300) }, appError.status)
 }
 
 export const onNotFound: NotFoundHandler = (c) => {

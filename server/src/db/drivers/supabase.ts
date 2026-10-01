@@ -33,15 +33,33 @@ function isLocal(url: string) {
 }
 
 /**
+ * Session mode on `pooler.supabase.com:5432` allows about 15 clients (EMAXCONNSESSION).
+ * Serverless needs transaction mode on port 6543, which shares server connections.
+ */
+function hostedPoolerUrl(url: string) {
+  if (!/pooler\.supabase\.(?:com|co)/.test(url)) return url
+  if (/pooler\.supabase\.(?:com|co):6543\b/.test(url)) return url
+  if (/pooler\.supabase\.(?:com|co):5432\b/.test(url)) {
+    return url.replace(/(pooler\.supabase\.(?:com|co)):5432\b/, '$1:6543')
+  }
+  return url.replace(/(pooler\.supabase\.(?:com|co))(?!:\d)/, '$1:6543')
+}
+
+/**
  * Supabase Postgres driver. Swap this file for another PlantxStore to leave Supabase.
  * Local QA uses the Docker stack from `npm run qa:up` (postgres/postgres on port 54322).
+ * A hosted process keeps one idle-closing client so warm instances do not fill the pool.
  */
 export function createSupabaseStore(): PlantxStore {
-  const url = connectionString()
+  const raw = connectionString()
+  const local = isLocal(raw)
+  const url = local ? raw : hostedPoolerUrl(raw)
   const pool = new Pool({
     connectionString: url,
-    max: 10,
-    ssl: isLocal(url) || url.includes('sslmode=') ? undefined : { rejectUnauthorized: false },
+    max: local ? 10 : 1,
+    idleTimeoutMillis: local ? undefined : 1000,
+    allowExitOnIdle: !local,
+    ssl: local || url.includes('sslmode=') ? undefined : { rejectUnauthorized: false },
   })
 
   async function rows(client: PoolClient, sql: string, params: unknown[] = []) {
@@ -97,6 +115,11 @@ export function createSupabaseStore(): PlantxStore {
     },
     plants: {
       list: () => withTx(listPlants),
+      count: () =>
+        withTx(async (client) => {
+          const found = await rows(client, 'select count(*)::int as n from plants')
+          return Number(found[0]?.n ?? 0)
+        }),
       saveAll: (plants) => withTx((client) => savePlants(client, plants)),
     },
     activities: {

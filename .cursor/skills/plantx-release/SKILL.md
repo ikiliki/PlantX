@@ -16,7 +16,7 @@ A page is a container of features. Pages never show an empty screen. Gate featur
 
 Types and defaults live in `src/theme/release.ts`. Values persist on `MockDb.system`.
 
-`/admin` never shows the maintenance hold. It stays the operator sign-in or the admin shell.
+`/admin` never shows the maintenance hold. It stays the operator sign-in or the admin shell. `/login` uses that same hold — back to landing, no product header — and stays open when the API is down. The request-access form is a separate card and is not part of that hold. When the API is down, failed lists say unavailable and the status line shows why (HTTP status and the server message). Demo rows are not substituted. Empty environment names are listed on the signed-in admin server status only; the values are never shown, and the sign-in card does not list them.
 
 `launched: false` shows the not-launched hold. The operator and members with `preapproved` still enter. Approving an application marks that account pre-approved. Admin can clear the mark on the member.
 
@@ -45,7 +45,7 @@ News hosts market, rank, and wiki rails. Each rail has its own placement. Greenh
 
 ## Admin
 
-`SystemPanel` on `/admin/system` edits pages, then features. There is no separate feature list. Headers follow the catalog section style. **App** starts open. **Pages**, **Features**, and the redirect preview start collapsed; individual page/feature rows and the kept/plain folders inside stay collapsed. An open page renders that page inside a max-height window that scrolls on its own. A feature header carries that feature’s enable switch and status, and its number is how many components can be hidden. Page rows, feature rows, and component rows use different indent and weight. Hideable components sit open under their page. Always shown and non controllable pieces each sit in a folder that starts collapsed. Under each component is the page and placement path it is mounted on. Optional rows are a show switch while the feature is on. Every component shows a disabled label with no edit when its feature is off.
+`SystemPanel` on `/admin/system` edits pages, then features. There is no separate feature list. Headers follow the catalog section style. **App** starts open. **Pages**, **Features**, and the redirect preview start collapsed; individual page/feature rows and the kept/plain folders inside stay collapsed. Opening a page or feature row shows the loader and that row stays open until its data arrives. Home previews start on the first page of the feed. An open page renders that page inside a max-height window that scrolls on its own. A feature header carries that feature’s enable switch and status, and its number is how many components can be hidden. Page rows, feature rows, and component rows use different indent and weight. Hideable components sit open under their page. Always shown and non controllable pieces each sit in a folder that starts collapsed. Under each component is the page and placement path it is mounted on. Optional rows are a show switch while the feature is on. Every component shows a disabled label with no edit when its feature is off.
 
 ## Landing
 

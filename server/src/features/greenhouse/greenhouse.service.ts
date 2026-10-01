@@ -80,6 +80,10 @@ export const greenhouseService = {
     return getStore().plants.list()
   },
 
+  async count() {
+    return getStore().plants.count()
+  },
+
   async get(plantId: string) {
     const plant = (await getStore().plants.list()).find((item) => item.id === plantId)
     if (!plant) throw Errors.missing(`Plant ${plantId} not found`)

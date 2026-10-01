@@ -28,7 +28,10 @@ export const openApiDocument = {
     schemas: {
       Error: {
         type: 'object',
-        properties: { error: { type: 'string' } },
+        properties: {
+          error: { type: 'string' },
+          message: { type: 'string', description: 'Why the request failed' },
+        },
         required: ['error'],
       },
       Activity: {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AdminPage } from '../../features/admin/components/AdminPage/AdminPage'
+import { ApiDown } from '../../features/admin/components/ApiDown/ApiDown'
 import { ApisPanel } from '../../features/admin/components/ApisPanel/ApisPanel'
 import {
   IdentifyHistory,
@@ -7,9 +8,10 @@ import {
 } from '../../features/admin/components/IdentifyHistory/IdentifyHistory'
 import { IdentifyPlayground } from '../../features/admin/components/IdentifyPlayground/IdentifyPlayground'
 import { useI18n } from '../../i18n/I18nProvider'
+import { formatApiFailure, type ApiFailure } from '../../lib/apiFailure'
 import {
-  fetchIdentifyHistory,
-  fetchIdentifyProviders,
+  fetchIdentifyHistoryOutcome,
+  fetchIdentifyProvidersOutcome,
   postIdentifyTest,
   setIdentifyProviderEnabled,
 } from '../../mock/liveApi'
@@ -29,10 +31,12 @@ export function ApisPage() {
   const { t } = useI18n()
   const { currentUser } = useStore()
   const [providers, setProviders] = useState<IdentifyProviderStatus[]>([])
+  const [providersError, setProvidersError] = useState<ApiFailure | null>(null)
   const [saving, setSaving] = useState<ReadonlySet<IdentifyProviderId>>(new Set())
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<IdentifyHistoryFilter>('all')
   const [history, setHistory] = useState<IdentifyRequestRecord[]>([])
+  const [historyError, setHistoryError] = useState<ApiFailure | null>(null)
   const [historyLoading, setHistoryLoading] = useState(true)
   const historyRequest = useRef(0)
   const [mode, setMode] = useState<IdentifyMode>('mock')
@@ -42,8 +46,14 @@ export function ApisPage() {
 
   const loadProviders = useCallback(async () => {
     setLoading(true)
-    const res = await fetchIdentifyProviders()
-    setProviders(res?.providers ?? [])
+    const res = await fetchIdentifyProvidersOutcome()
+    if (res.ok) {
+      setProvidersError(null)
+      setProviders(res.data.providers)
+    } else {
+      setProvidersError(res.failure)
+      setProviders([])
+    }
     setLoading(false)
   }, [])
 
@@ -66,12 +76,18 @@ export function ApisPage() {
   const loadHistory = useCallback(async () => {
     const id = ++historyRequest.current
     setHistoryLoading(true)
-    const res = await fetchIdentifyHistory({
+    const res = await fetchIdentifyHistoryOutcome({
       mode: filter === 'all' ? undefined : filter,
       limit: HISTORY_LIMIT,
     })
     if (id !== historyRequest.current) return
-    setHistory(res?.requests ?? [])
+    if (res.ok) {
+      setHistoryError(null)
+      setHistory(res.data.requests)
+    } else {
+      setHistoryError(res.failure)
+      setHistory([])
+    }
     setHistoryLoading(false)
   }, [filter])
 
@@ -115,13 +131,17 @@ export function ApisPage() {
   return (
     <AdminPage tab="apis" title={t.admin.apis} lead={t.admin.apisLead}>
       <Stack>
-        <ApisPanel
-          providers={providers}
-          onRefresh={() => void loadProviders()}
-          onEnabledChange={(id, enabled) => void setEnabled(id, enabled)}
-          saving={saving}
-          loading={loading}
-        />
+        {providersError ? (
+          <ApiDown detail={formatApiFailure(providersError, t.admin)} />
+        ) : (
+          <ApisPanel
+            providers={providers}
+            onRefresh={() => void loadProviders()}
+            onEnabledChange={(id, enabled) => void setEnabled(id, enabled)}
+            saving={saving}
+            loading={loading}
+          />
+        )}
         <IdentifyPlayground
           mode={mode}
           onModeChange={setMode}
@@ -130,13 +150,17 @@ export function ApisPage() {
           error={error}
           onRun={(request) => void run(request)}
         />
-        <IdentifyHistory
-          records={history}
-          filter={filter}
-          onFilterChange={setFilter}
-          onRefresh={() => void loadHistory()}
-          loading={historyLoading}
-        />
+        {historyError ? (
+          <ApiDown detail={formatApiFailure(historyError, t.admin)} />
+        ) : (
+          <IdentifyHistory
+            records={history}
+            filter={filter}
+            onFilterChange={setFilter}
+            onRefresh={() => void loadHistory()}
+            loading={historyLoading}
+          />
+        )}
       </Stack>
     </AdminPage>
   )

@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { createCatalog } from './catalog'
-import { fetchCatalogFile, saveCatalogFile } from './catalogFile'
+import { saveCatalogFile } from './catalogFile'
 import { fieldsFromPlace, resolveArea } from './locations'
 import { createSeed } from './seed'
 import type {
@@ -32,14 +32,18 @@ import { PLACEMENTS, type FeatureId, type PageId, type PageStatus, type Placemen
 import { publishBlocker } from '../features/greenhouse/communityGrade'
 import { supportedLocales } from '../i18n/locales'
 import { defaultPlantPhoto } from './images'
+import type { ApiFailure } from '../lib/apiFailure'
 import {
-  fetchActivities,
-  fetchLive,
+  fetchActivitiesOutcome,
+  fetchCatalogOutcome,
+  fetchLiveOutcome,
   fetchGoogleAuth,
-  fetchMembers,
+  fetchMembersOutcome,
   fetchPendingTransactions,
+  fetchPendingTransactionsOutcome,
   fetchPendingUsers,
-  fetchPlants,
+  fetchPendingUsersOutcome,
+  fetchPlantsOutcome,
   postApprovePending,
   postDisableUser,
   postEnableUser,
@@ -61,7 +65,6 @@ import { personaFlags } from './personas'
 import { normalizeSystem } from '../theme/release'
 import { projectDb } from './projectDb'
 import { ensureSession, normalizeScenarios } from './session'
-import { applyShellToDb, shellLivePayload } from './shell'
 import { clientEnv, clientEnvLabel, type ClientEnv } from '../theme/plantxEnv'
 import { OPERATOR_EMAIL } from '../theme/operator'
 
@@ -136,6 +139,10 @@ interface StoreApi {
   signedIn: boolean
   /** Live API reachability. Components read this; they do not fetch. */
   liveStatus: LiveStatus
+  /** Why the last live check failed. Null while the API is up. */
+  liveFailure: ApiFailure | null
+  /** Slices whose last fetch failed. Absent means that list is fine or not loaded yet. */
+  sliceFailures: Partial<Record<ServerSlice, ApiFailure>>
   /** True only when the server is up — live writes go through. */
   liveWritable: boolean
   /** mock = browser UI, no server. qa = QA JSON files. prod = production files. */
@@ -270,8 +277,14 @@ export function StoreProvider({
   }, [])
 
   const [liveMeta, setLiveMeta] = useState<LiveMeta | null>(null)
+  const [liveFailure, setLiveFailure] = useState<ApiFailure | null>(null)
+  const [sliceFailures, setSliceFailures] = useState<Partial<Record<ServerSlice, ApiFailure>>>({})
   /** In-flight or finished slice fetches. A failed fetch is removed so the next open can retry. */
   const sliceJobs = useRef(new Map<ServerSlice, Promise<boolean>>())
+  /** Slices whose rows came from the API. A later live payload must not clear them. */
+  const sliceReady = useRef<Partial<Record<ServerSlice, boolean>>>({})
+  /** Drops a stale `/api/live` when React runs the boot effect twice. */
+  const liveGen = useRef(0)
 
   const applyLive = useCallback((live: LivePayload) => {
     if (live.meta) setLiveMeta(live.meta)
@@ -304,9 +317,9 @@ export function StoreProvider({
         ...d,
         system: normalizeSystem(live.system),
         users: listedUsers,
-        plants: live.plants ? plants : [],
-        catalog: live.catalog ?? emptyCatalog,
-        updates: live.updates ? updates : [],
+        plants: live.plants ? plants : sliceReady.current.plants ? d.plants : [],
+        catalog: live.catalog ?? (sliceReady.current.catalog ? d.catalog : emptyCatalog),
+        updates: live.updates ? updates : sliceReady.current.updates ? d.updates : [],
         currentUserId: live.currentUserId,
         flags: personaFlags(live.currentUserId),
         moderation: [],
@@ -323,26 +336,23 @@ export function StoreProvider({
     if (live.seed) setRuntimeSeed(live.seed)
   }, [update])
 
-  const applyShell = useCallback(() => {
-    const shell = shellLivePayload()
-    update((d) => applyShellToDb(d, shell))
-    if (shell.env) setRuntimeEnv(shell.env)
-    if (shell.envLabel) setRuntimeEnvLabel(shell.envLabel)
-    if (shell.seed) setRuntimeSeed(shell.seed)
-  }, [update])
-
-  const retryLive = useCallback(async (opts?: { useShellOnFail?: boolean }) => {
+  const retryLive = useCallback(async () => {
+    const gen = ++liveGen.current
     sliceJobs.current.clear()
+    sliceReady.current = {}
+    setSliceFailures({})
     setLiveStatus('loading')
-    const live = await fetchLive()
-    if (live) {
-      applyLive(live)
+    const outcome = await fetchLiveOutcome()
+    if (gen !== liveGen.current) return
+    if (outcome.ok) {
+      applyLive(outcome.data)
+      setLiveFailure(null)
       setLiveStatus('up')
       return
     }
-    if (opts?.useShellOnFail) applyShell()
+    setLiveFailure(outcome.failure)
     setLiveStatus('down')
-  }, [applyLive, applyShell, update])
+  }, [applyLive])
 
   const [systemPending, setSystemPending] = useState<string | null>(null)
   const systemSave = useRef(false)
@@ -363,60 +373,99 @@ export function StoreProvider({
     }
   }, [uiMocks, update])
 
+  const noteSlice = useCallback((part: ServerSlice, failure: ApiFailure | null) => {
+    setSliceFailures((current) => {
+      if (!failure) {
+        if (!current[part]) return current
+        const next = { ...current }
+        delete next[part]
+        return next
+      }
+      return { ...current, [part]: failure }
+    })
+  }, [])
+
   const loadSlice = useCallback((part: ServerSlice) => {
     if (uiMocks) return Promise.resolve(false)
     const existing = sliceJobs.current.get(part)
     if (existing) return existing
     const job = (async (): Promise<boolean> => {
       if (part === 'users') {
-        const res = await fetchMembers()
-        if (!res) return false
+        const res = await fetchMembersOutcome()
+        if (!res.ok) {
+          noteSlice(part, res.failure)
+          return false
+        }
+        noteSlice(part, null)
         update((d) => {
-          d.users = res.users
+          d.users = res.data.users
           return d
         })
         return true
       }
       if (part === 'plants') {
-        const res = await fetchPlants()
-        if (!res) return false
+        const res = await fetchPlantsOutcome()
+        if (!res.ok) {
+          noteSlice(part, res.failure)
+          return false
+        }
+        noteSlice(part, null)
+        sliceReady.current.plants = true
         update((d) => {
-          d.plants = res.plants
+          d.plants = res.data.plants
           return d
         })
         return true
       }
       if (part === 'updates') {
-        const res = await fetchActivities()
-        if (!res) return false
+        const res = await fetchActivitiesOutcome()
+        if (!res.ok) {
+          noteSlice(part, res.failure)
+          return false
+        }
+        noteSlice(part, null)
+        sliceReady.current.updates = true
         update((d) => {
-          d.updates = res.activities
+          d.updates = res.data.activities
           return d
         })
         return true
       }
       if (part === 'catalog') {
-        const file = await fetchCatalogFile()
-        if (!file) return false
+        const res = await fetchCatalogOutcome()
+        if (!res.ok) {
+          noteSlice(part, res.failure)
+          return false
+        }
+        noteSlice(part, null)
+        sliceReady.current.catalog = true
         update((d) => {
-          d.catalog = file
+          d.catalog = res.data.catalog
           return d
         })
         return true
       }
       if (part === 'pending') {
-        const pending = await fetchPendingUsers('pending')
-        if (!pending) return false
+        const res = await fetchPendingUsersOutcome('pending')
+        if (!res.ok) {
+          noteSlice(part, res.failure)
+          return false
+        }
+        noteSlice(part, null)
         update((d) => {
-          d.pendingUsers = pending.pending
+          d.pendingUsers = res.data.pending
           return d
         })
         return true
       }
-      const transactions = await fetchPendingTransactions()
-      if (!transactions) return false
+      const res = await fetchPendingTransactionsOutcome()
+      if (!res.ok) {
+        noteSlice(part, res.failure)
+        return false
+      }
+      noteSlice(part, null)
       update((d) => {
-        d.pendingTransactions = transactions.transactions
+        d.pendingTransactions = res.data.transactions
         return d
       })
       return true
@@ -426,11 +475,11 @@ export function StoreProvider({
       if (!ok) sliceJobs.current.delete(part)
     })
     return job
-  }, [uiMocks, update])
+  }, [uiMocks, update, noteSlice])
 
   useEffect(() => {
     if (uiMocks) return
-    void retryLive({ useShellOnFail: false })
+    void retryLive()
     // Initial hydrate only — retryLive is exposed for the offline banner.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uiMocks])
@@ -449,6 +498,8 @@ export function StoreProvider({
     currentUser,
     signedIn,
     liveStatus,
+    liveFailure,
+    sliceFailures,
     liveWritable,
     plantxEnv: runtimeEnv,
     plantxEnvLabel: runtimeEnvLabel,

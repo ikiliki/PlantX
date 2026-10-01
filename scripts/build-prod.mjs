@@ -47,6 +47,7 @@ await writeFile(
     handler: 'index.js',
     launcherType: 'Nodejs',
     shouldAddHelpers: true,
+    regions: ['syd1'],
   }),
 )
 await writeFile(

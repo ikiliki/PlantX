@@ -34,6 +34,8 @@ export interface PlantxStore {
   }
   plants: {
     list(): Promise<Plant[]>
+    /** Row count only. Live status must not load photo blobs just to count them. */
+    count(): Promise<number>
     saveAll(plants: Plant[]): Promise<void>
   }
   activities: {

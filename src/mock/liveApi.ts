@@ -1,3 +1,4 @@
+import { failureFromResponse, failureFromThrow, type ApiOutcome } from '../lib/apiFailure'
 import { plantFetch } from '../lib/httpNotice'
 import type {
   Diagnosis,
@@ -46,11 +47,16 @@ export type LivePayload = {
   envLabel?: string
 }
 
-const REQUEST_TIMEOUT_MS = 4000
+/** Cold production calls the hosted database across regions, so 4s was aborting a live answer. */
+const REQUEST_TIMEOUT_MS = 20000
 
-async function request<T>(path: string, init?: RequestInit): Promise<T | null> {
+async function requestOutcome<T>(
+  path: string,
+  init?: RequestInit,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+): Promise<ApiOutcome<T>> {
   const controller = new AbortController()
-  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs)
   try {
     const res = await plantFetch(path, {
       credentials: 'include',
@@ -58,22 +64,38 @@ async function request<T>(path: string, init?: RequestInit): Promise<T | null> {
       ...init,
       signal: controller.signal,
     })
-    if (!res.ok) return null
-    if (res.status === 204) return {} as T
-    return (await res.json()) as T
-  } catch {
-    return null
+    if (!res.ok) return { ok: false, failure: await failureFromResponse(res) }
+    if (res.status === 204) return { ok: true, data: {} as T }
+    return { ok: true, data: (await res.json()) as T }
+  } catch (err) {
+    return { ok: false, failure: failureFromThrow(err) }
   } finally {
     window.clearTimeout(timer)
   }
 }
 
+async function request<T>(path: string, init?: RequestInit): Promise<T | null> {
+  const outcome = await requestOutcome<T>(path, init)
+  return outcome.ok ? outcome.data : null
+}
+
+export type EnvGap = { name: string; need: 'app' | 'identify' }
+
 export function fetchEnv() {
-  return request<{ env: 'mock' | 'qa' | 'prod'; seed: 'empty' | 'demo'; label: string }>('/api/env')
+  return request<{
+    env: 'mock' | 'qa' | 'prod'
+    seed: 'empty' | 'demo'
+    label: string
+    missing: EnvGap[]
+  }>('/api/env')
 }
 
 export function fetchLive() {
   return request<LivePayload>('/api/live')
+}
+
+export function fetchLiveOutcome() {
+  return requestOutcome<LivePayload>('/api/live')
 }
 
 export function fetchActivities(query?: { plantId?: string; userId?: string; limit?: number }) {
@@ -85,8 +107,19 @@ export function fetchActivities(query?: { plantId?: string; userId?: string; lim
   return request<{ activities: FeedUpdate[] }>(`/api/activities${qs ? `?${qs}` : ''}`)
 }
 
+export function fetchActivitiesOutcome() {
+  return requestOutcome<{ activities: FeedUpdate[] }>('/api/activities')
+}
+
 export function fetchPlants() {
   return request<{ plants: Plant[] }>('/api/plants')
+}
+
+/** Plant rows include photo data, so this read waits longer than the usual 4s call. */
+const PLANTS_TIMEOUT_MS = 20_000
+
+export function fetchPlantsOutcome() {
+  return requestOutcome<{ plants: Plant[] }>('/api/plants', undefined, PLANTS_TIMEOUT_MS)
 }
 
 export function fetchPlant(plantId: string) {
@@ -149,6 +182,12 @@ export function fetchPendingUsers(status: 'pending' | 'approved' | 'rejected' = 
   )
 }
 
+export function fetchPendingUsersOutcome(status: 'pending' | 'approved' | 'rejected' = 'pending') {
+  return requestOutcome<{ pending: import('./types').PendingUser[] }>(
+    `/api/users/pending?status=${encodeURIComponent(status)}`,
+  )
+}
+
 export function fetchPendingUser(id: string) {
   return request<{ pending: import('./types').PendingUser }>(
     `/api/users/pending/${encodeURIComponent(id)}`,
@@ -171,6 +210,10 @@ export function postRejectPending(id: string) {
 
 export function fetchMembers() {
   return request<{ users: import('./types').User[] }>('/api/users')
+}
+
+export function fetchMembersOutcome() {
+  return requestOutcome<{ users: import('./types').User[] }>('/api/users')
 }
 
 export function postDisableUser(id: string) {
@@ -197,6 +240,16 @@ export function fetchPendingTransactions() {
   return request<{ transactions: import('./types').PendingTransaction[] }>(
     '/api/users/transactions/pending',
   )
+}
+
+export function fetchPendingTransactionsOutcome() {
+  return requestOutcome<{ transactions: import('./types').PendingTransaction[] }>(
+    '/api/users/transactions/pending',
+  )
+}
+
+export function fetchCatalogOutcome() {
+  return requestOutcome<{ catalog: import('./types').Catalog }>('/api/catalog')
 }
 
 export function putCatalog(catalog: import('./types').Catalog) {
@@ -289,6 +342,10 @@ export function fetchIdentifyProviders() {
   return request<{ providers: IdentifyProviderStatus[] }>('/api/identify/providers')
 }
 
+export function fetchIdentifyProvidersOutcome() {
+  return requestOutcome<{ providers: IdentifyProviderStatus[] }>('/api/identify/providers')
+}
+
 /** Admin switch for Add Plant. Resolves to the updated status, or null on failure. */
 export async function setIdentifyProviderEnabled(id: IdentifyProviderId, enabled: boolean) {
   const res = await request<{ provider: IdentifyProviderStatus }>(
@@ -304,4 +361,12 @@ export function fetchIdentifyHistory(query?: { mode?: IdentifyMode; limit?: numb
   if (query?.limit != null) params.set('limit', String(query.limit))
   const qs = params.toString()
   return request<{ requests: IdentifyRequestRecord[] }>(`/api/identify/history${qs ? `?${qs}` : ''}`)
+}
+
+export function fetchIdentifyHistoryOutcome(query?: { mode?: IdentifyMode; limit?: number }) {
+  const params = new URLSearchParams()
+  if (query?.mode) params.set('mode', query.mode)
+  if (query?.limit != null) params.set('limit', String(query.limit))
+  const qs = params.toString()
+  return requestOutcome<{ requests: IdentifyRequestRecord[] }>(`/api/identify/history${qs ? `?${qs}` : ''}`)
 }

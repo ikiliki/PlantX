@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { matchPath, Navigate, Route, Routes, useLocation, useNavigate, type Location } from 'react-router-dom'
+import { matchPath, Navigate, Outlet, Route, Routes, useLocation, useNavigate, type Location } from 'react-router-dom'
 import { HoldNotice } from '../../components/HoldNotice/HoldNotice'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { NotLaunched } from '../../components/NotLaunched/NotLaunched'
@@ -33,14 +33,15 @@ function staticLocation(pathname: string): Location {
 
 type SellerState = { sellerFull?: boolean } | null
 
-/** Offline and unlaunched apps paint a full page. The operator sees the real app when the API is up. */
+/** Offline and unlaunched apps paint a full page. Sign-in stays up either way, with no product header. */
 function ProductShell() {
   const { currentUser, db, liveStatus } = useStore()
   const { pathname } = useLocation()
+  if (pathname === '/login') return <Outlet />
   if (liveStatus === 'loading') return <LoaderShell fill />
   if (liveStatus === 'down') return <HoldNotice mode="maintenance" />
   const open = db.system.launched || admitsWhenClosed(currentUser)
-  if (!open && pathname !== '/login') return <NotLaunched />
+  if (!open) return <NotLaunched />
   return <AppShell />
 }
 

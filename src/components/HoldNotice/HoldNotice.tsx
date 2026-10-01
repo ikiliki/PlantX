@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { HoldStage } from '../HoldStage/HoldStage'
-import { Line, Room, Rooms } from '../NotLaunched/NotLaunched.styles'
+import { Line, Room, Rooms, SignIn } from '../NotLaunched/NotLaunched.styles'
 import { useI18n } from '../../i18n/I18nProvider'
 
 const ROOMS = ['news', 'greenhouse', 'market'] as const
@@ -48,6 +49,13 @@ export function HoldNotice({
         ))}
       </Rooms>
       <Line key={room}>{lines[room]}</Line>
+      {preview ? (
+        <SignIn as="span">{t.auth.login}</SignIn>
+      ) : (
+        <SignIn as={Link} to="/login">
+          {t.auth.login}
+        </SignIn>
+      )}
     </HoldStage>
   )
 }

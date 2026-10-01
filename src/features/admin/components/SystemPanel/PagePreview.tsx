@@ -7,7 +7,7 @@ import type { PageId } from '../../../../theme/release'
 import { Page, Stage } from './PagePreview.styles'
 
 function pageBody(pageId: PageId) {
-  if (pageId === 'home') return <DiscoverPage paged={false} />
+  if (pageId === 'home') return <DiscoverPage />
   if (pageId === 'market') return <MarketPage />
   if (pageId === 'greenhouse') return <GreenhousePage />
   if (pageId === 'rank') return <RankPage />

@@ -104,7 +104,7 @@ function SpeciesPreview() {
 function previewFor(id: PlacementId): ReactNode {
   switch (id) {
     case 'home.feed':
-      return <DiscoverPage paged={false} />
+      return <DiscoverPage />
     case 'home.market':
       return <MarketRail />
     case 'home.rank':

@@ -3,7 +3,7 @@ import { theme } from '../../../../theme/tokens'
 
 export const Root = styled.aside`
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   min-width: 0;
   width: min(300px, 100%);
   border-radius: ${theme.radii.lg};
@@ -35,7 +35,6 @@ export const Scroll = styled.div`
   height: 100%;
   overflow-y: auto;
   padding: 14px 12px;
-  scroll-behavior: smooth;
 `
 
 export const Message = styled.div<{ $scan?: boolean }>`

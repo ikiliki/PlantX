@@ -45,8 +45,12 @@ export const HeadToggle = styled.button`
   text-align: start;
   cursor: pointer;
 
-  &:hover {
+  &:hover:not(:disabled) {
     color: ${theme.colors.forestSoft};
+  }
+
+  &:disabled {
+    cursor: progress;
   }
 
   &:focus-visible {
@@ -104,8 +108,12 @@ export const GroupToggle = styled.button<{ $open?: boolean }>`
   text-align: start;
   cursor: pointer;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${theme.colors.chipGreen};
+  }
+
+  &:disabled {
+    cursor: progress;
   }
 
   &:focus-visible {
@@ -175,7 +183,7 @@ export const PageToggle = styled(GroupToggle)`
   border-color: ${({ $open }) => ($open ? theme.colors.moss : theme.colors.border)};
   font-weight: 600;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${theme.colors.cream};
   }
 

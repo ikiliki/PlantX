@@ -16,7 +16,7 @@ export function explainDbError(err: unknown): Error {
     return new Error(
       local
         ? 'QA database is not running. Start Docker, then run: npm run qa:up'
-        : 'Hosted database is not reachable. Set DATABASE_URL or PROD_DATABASE_URL to the Supabase session URI.',
+        : 'Hosted database is not reachable. Check DATABASE_URL or PROD_DATABASE_URL.',
     )
   }
   if (/does not exist|42P01/.test(message)) {

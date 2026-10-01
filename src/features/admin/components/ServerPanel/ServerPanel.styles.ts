@@ -39,6 +39,13 @@ export const StatusCopy = styled.div`
   }
 `
 
+export const Reason = styled.div`
+  font-size: 13px;
+  line-height: 1.45;
+  color: ${theme.colors.warn};
+  overflow-wrap: anywhere;
+`
+
 export const StatusActions = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -110,6 +117,10 @@ export const SectionHead = styled.button<{ $open?: boolean }>`
   font: inherit;
   text-align: start;
   cursor: pointer;
+
+  &:disabled {
+    cursor: progress;
+  }
 
   h2 {
     margin: 0;
