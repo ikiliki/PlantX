@@ -23,8 +23,11 @@ export type RawSuggestion = {
   traits?: Record<string, string>
 }
 
-/** What a provider reports about itself. The admin `enabled` flag is added by the service. */
-export type ProviderHealth = Omit<IdentifyProviderStatus, 'enabled'>
+/** What a provider reports about itself. Admin settings are added by the service. */
+export type ProviderHealth = Omit<
+  IdentifyProviderStatus,
+  'enabled' | 'response' | 'scenario' | 'match' | 'suggestionId'
+>
 
 export type IdentifyProvider = {
   id: IdentifyProviderId

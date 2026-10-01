@@ -477,6 +477,27 @@ export type IdentifyTarget = 'chain' | IdentifyProviderId
 /** Mock-only answer shape, so every Add Plant state can be exercised. */
 export type IdentifyMockScenario = 'match' | 'notInCatalog' | 'notPlant' | 'error'
 
+/** Per provider on Add Plant. The playground chooses its own mode per run. */
+export type IdentifyResponseMode = 'ready' | 'mock'
+
+/** What a mock catalog match fills in. Empty property values stay unset. */
+export type IdentifyMockMatch = {
+  categoryId: string
+  /** When true, the match includes `subcategoryId`. */
+  subcategory: boolean
+  subcategoryId: string
+  /** Property id → option id, including grade, size, stage, and other traits. */
+  properties: Record<string, string>
+}
+
+export type IdentifyProviderSettings = {
+  enabled: boolean
+  response: IdentifyResponseMode
+  scenario: IdentifyMockScenario
+  match: IdentifyMockMatch
+  suggestionId: string
+}
+
 export type IdentifySource = 'addPlant' | 'playground'
 
 export type IdentifyRequestStatus = 'ok' | 'unavailable'
@@ -528,6 +549,13 @@ export type IdentifyProviderStatus = {
   keySet: boolean
   /** Admin switch. Add Plant skips a disabled provider; the playground ignores it. */
   enabled: boolean
+  /** `ready` calls the real API. `mock` answers with `scenario` and spends nothing. */
+  response: IdentifyResponseMode
+  scenario: IdentifyMockScenario
+  /** Used when `scenario` is `match`. */
+  match: IdentifyMockMatch
+  /** Used when `scenario` is `notInCatalog`. Empty means the built-in example plant. */
+  suggestionId: string
   status: IdentifyProviderStatusKind
   credits?: IdentifyCredits
   model?: string

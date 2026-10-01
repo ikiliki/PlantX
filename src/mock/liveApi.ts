@@ -5,6 +5,7 @@ import type {
   FeedUpdate,
   IdentifyMode,
   IdentifyProviderId,
+  IdentifyProviderSettings,
   IdentifyProviderStatus,
   IdentifyRequestRecord,
   IdentifyTestRequest,
@@ -347,7 +348,7 @@ async function identifyRequest(path: string, body: unknown): Promise<IdentifyRes
   }
 }
 
-/** Add Plant. Always live on the server; providers the admin switched off are skipped. */
+/** Add Plant. Each provider follows its admin switch: ready calls the API, mock uses the saved answer. */
 export function postIdentify(image: string, thumb?: string) {
   return identifyRequest('/api/identify', { image, thumb })
 }
@@ -366,10 +367,13 @@ export function fetchIdentifyProvidersOutcome() {
 }
 
 /** Admin switch for Add Plant. Resolves to the updated status, or null on failure. */
-export async function setIdentifyProviderEnabled(id: IdentifyProviderId, enabled: boolean) {
+export async function setIdentifyProviderSettings(
+  id: IdentifyProviderId,
+  patch: Partial<IdentifyProviderSettings>,
+) {
   const res = await request<{ provider: IdentifyProviderStatus }>(
     `/api/identify/providers/${encodeURIComponent(id)}`,
-    { method: 'PUT', body: JSON.stringify({ enabled }) },
+    { method: 'PUT', body: JSON.stringify(patch) },
   )
   return res?.provider ?? null
 }

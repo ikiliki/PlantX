@@ -37,7 +37,7 @@ A pattern appears twice or more (same Field + Select + "Choose", same admin head
 - `PhotoChecks` — a plant's photos with numbered thumbs and stickers (review, passport activity, admin preview)
 - `AddPlantWizard` — stepped flow built on `Stepper` + `ChoiceChips` (`src/components`); AI picks use `suggestedId`
 - `IdentifyBadge` — AI verified / edited / manual mark for a plant (card, passport, review)
-- `ApisPanel` — presentational; page loads data
+- `ApisPanel` — presentational; page loads providers and suggestions. One tab per provider: Loading until that status arrives, then Loaded. Enabled switch, then Ready or Mock response. Mock match sets category, a subcategory switch, properties, and more properties. Mock not-in-catalog picks a suggestion.
 - `AdminSection` — admin card with heading, lead, side note
 - `Pager` (`src/components`) — previous / next with `PAGE_SIZE` (10). `AdminTable` and the market use `usePaged`. A single page hides the control. `anchor: 'end'` opens a timeline on the latest page.
 - `InfiniteScroll` (`src/components`) — same page size, loaded when the edge scrolls into view. News grows downward. Greenhouse activity opens on the latest rows and loads older rows when its thread scrolls up.

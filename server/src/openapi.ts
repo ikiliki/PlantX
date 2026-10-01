@@ -163,13 +163,28 @@ export const openApiDocument = {
             type: 'boolean',
             description: 'Admin switch. POST /api/identify skips a disabled provider; the playground ignores it.',
           },
+          response: {
+            type: 'string',
+            enum: ['ready', 'mock'],
+            description: 'Add Plant only. ready calls the real API. mock uses scenario and spends nothing.',
+          },
+          scenario: { type: 'string', enum: ['match', 'notInCatalog', 'notPlant', 'error'] },
+          match: {
+            type: 'object',
+            description: 'Catalog fill used when response is mock and scenario is match.',
+            additionalProperties: true,
+          },
+          suggestionId: {
+            type: 'string',
+            description: 'Catalog suggestion used when response is mock and scenario is notInCatalog.',
+          },
           status: { type: 'string', enum: ['ready', 'missingKey', 'exhausted', 'unreachable'] },
           credits: { type: 'object', additionalProperties: true },
           model: { type: 'string' },
           lastError: { type: 'string' },
           lastUsedAt: { type: 'string', format: 'date-time' },
         },
-        required: ['id', 'order', 'name', 'returns', 'docsUrl', 'keySet', 'enabled', 'status'],
+        required: ['id', 'order', 'name', 'returns', 'docsUrl', 'keySet', 'enabled', 'response', 'scenario', 'match', 'suggestionId', 'status'],
       },
       Diagnosis: {
         type: 'object',
@@ -474,9 +489,9 @@ export const openApiDocument = {
     '/api/identify/providers/{id}': {
       put: {
         tags: ['identify'],
-        summary: 'Enable or disable a provider for Add Plant',
+        summary: 'Save a provider switch for Add Plant',
         description:
-          'Admin only. Saved in identify_provider_settings. A disabled provider is skipped by POST /api/identify; the playground still runs it.',
+          'Admin only. Saved in identify_provider_settings. A disabled provider is skipped by POST /api/identify. response ready calls the real API; mock uses the scenario. The playground ignores both.',
         security: [{ cookieAuth: [] }],
         parameters: [
           { name: 'id', in: 'path', required: true, schema: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] } },
@@ -487,8 +502,13 @@ export const openApiDocument = {
             'application/json': {
               schema: {
                 type: 'object',
-                properties: { enabled: { type: 'boolean' } },
-                required: ['enabled'],
+                properties: {
+                  enabled: { type: 'boolean' },
+                  response: { type: 'string', enum: ['ready', 'mock'] },
+                  scenario: { type: 'string', enum: ['match', 'notInCatalog', 'notPlant', 'error'] },
+                  match: { type: 'object', additionalProperties: true },
+                  suggestionId: { type: 'string' },
+                },
               },
             },
           },
@@ -507,7 +527,7 @@ export const openApiDocument = {
             },
           },
           '400': {
-            description: 'Unknown id or enabled not boolean',
+            description: 'Unknown id or no settings field',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
           },
           '401': {

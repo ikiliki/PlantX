@@ -1,4 +1,4 @@
-import type { Catalog, PlantClassDraft, SizeBand, StageBand } from '../../../../src/mock/types.ts'
+import type { Catalog, PlantClassDraft, QualityGrade, SizeBand, StageBand } from '../../../../src/mock/types.ts'
 import type { RawSuggestion } from './types.ts'
 
 function norm(value: string) {
@@ -75,6 +75,9 @@ export function mapDiagnosis(raw: RawSuggestion, catalog: Catalog): Partial<Plan
     if (subcategoryId) draft.subcategoryId = subcategoryId
   }
 
+  if (raw.quality && hasOption(catalog, 'grade', raw.quality)) {
+    draft.quality = raw.quality as QualityGrade
+  }
   if (raw.size && hasOption(catalog, 'size', raw.size)) {
     draft.size = raw.size as SizeBand
   }

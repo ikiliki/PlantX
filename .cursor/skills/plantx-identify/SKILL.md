@@ -24,11 +24,11 @@ Only `identify.service.ts` knows the order: Plant.id → Pl@ntNet → Gemini.
 
 ## Mode
 
-- Add Plant (`POST /api/identify`) is always `live`. No mock in the real path.
-- Each provider has an admin `enabled` flag in `identify_provider_settings` (no row = enabled), set by `PUT /api/identify/providers/:id`. Add Plant skips a disabled provider with reason `disabled`; all off → 503.
-- Admin playground (`POST /api/identify/test`) picks mode, target (chain or one provider), and mock scenario per run, and ignores `enabled`. `mock` builds a body in the provider's real response shape and runs the same parser and mapper (no network, no credits). `live` calls the real API with the real key.
-- UI-mock mode has no server: `src/mock/identifyMock.ts` answers on the client.
-- Never run `live` (or `POST /api/identify`) in automated checks.
+- Add Plant (`POST /api/identify`) walks the chain. Each provider is `ready` (live) or `mock` from admin config. `ready` calls the real API. `mock` uses the saved scenario and spends nothing.
+- Settings live in `identify_provider_settings` (`enabled`, `config` jsonb). No row means enabled and ready. `PUT /api/identify/providers/:id` saves a partial patch. Add Plant skips a disabled provider with reason `disabled`; all off → 503.
+- Mock `match` fills the category, the subcategory when that switch is on, and any properties set (grade, size, stage, traits, more properties). Unset properties stay empty. Mock `notInCatalog` uses the chosen suggestion's names and maps to no category. `notPlant` and `error` stay the canned answers.
+- Admin playground (`POST /api/identify/test`) picks mode, target, and scenario per run, and ignores `enabled` and `response`. `mock` builds a body in the provider's real response shape and runs the same parser and mapper (no network, no credits). `live` calls the real API with the real key.
+- UI-mock mode has no server: `src/mock/identifyMock.ts` answers on the client. Never run `live` or `POST /api/identify` in automated checks.
 
 ## History
 
@@ -46,7 +46,7 @@ UI: `IdentifyBadge` (plant), `PhotoCheckSticker` (one photo), `PhotoChecks` (pho
 
 ## Mapper
 
-Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategory: name / nameHe / code. Size, stage, and traits: only existing option ids. Grade is left empty; growers grade later. When the winner left size empty, mock uses the first size option and live calls `guessPlantSize` (Gemini, size only, errors swallowed). A live answer (Add Plant or the admin playground) that is a plant with no category asks Gemini (`draftCatalogEntry`) for a catalog draft: category name/nameHe/ticker, one subcategory name/nameHe/code, and properties with options. The scan photo is stored on both. A missing key or a Gemini error still files a draft from the provider names and the photo, with no properties. The row is `catalog_suggestions.draft`. The same scientific name increments hits and keeps the first draft. Mock runs do not file a row. The diagnosis JSON does not mention it. Admin → Requests lists open rows via `GET /api/catalog/suggestions?status=all`, with pending member applications. Add to catalog opens `SuggestionEditorDialog` and marks the row `added`. Dismiss marks it `dismissed`. Both stay in that tab's history. A missing table or `draft` column is created at runtime, and a failed write is a warning. On Add Plant, a plant answer with no category tells the grower and selects Other, which has no subcategory.
+Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategory: name / nameHe / code. Size, stage, grade, and traits: only existing option ids. Live answers leave grade empty; an admin mock match can set it. When the winner left size empty, mock uses the first size option and live calls `guessPlantSize` (Gemini, size only, errors swallowed). A live answer (Add Plant or the admin playground) that is a plant with no category asks Gemini (`draftCatalogEntry`) for a catalog draft: category name/nameHe/ticker, one subcategory name/nameHe/code, and properties with options. The scan photo is stored on both. A missing key or a Gemini error still files a draft from the provider names and the photo, with no properties. The row is `catalog_suggestions.draft`. The same scientific name increments hits and keeps the first draft. Mock runs do not file a row. The diagnosis JSON does not mention it. Admin → Requests lists open rows via `GET /api/catalog/suggestions?status=all`, with pending member applications. Add to catalog opens `SuggestionEditorDialog` and marks the row `added`. Dismiss marks it `dismissed`. Both stay in that tab's history. A missing table or `draft` column is created at runtime, and a failed write is a warning. On Add Plant, a plant answer with no category tells the grower and selects Other, which has no subcategory.
 
 ## Keys
 

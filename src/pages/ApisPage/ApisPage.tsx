@@ -10,15 +10,19 @@ import { IdentifyPlayground } from '../../features/admin/components/IdentifyPlay
 import { useI18n } from '../../i18n/I18nProvider'
 import { formatApiFailure, type ApiFailure } from '../../lib/apiFailure'
 import {
+  fetchCatalogSuggestions,
   fetchIdentifyHistoryOutcome,
   fetchIdentifyProvidersOutcome,
   postIdentifyTest,
-  setIdentifyProviderEnabled,
+  setIdentifyProviderSettings,
 } from '../../mock/liveApi'
 import { useStore } from '../../mock/store'
+import { useSectionFetch } from '../../mock/useServerSlices'
 import type {
   IdentifyMode,
+  CatalogSuggestion,
   IdentifyProviderId,
+  IdentifyProviderSettings,
   IdentifyProviderStatus,
   IdentifyRequestRecord,
   IdentifyTestRequest,
@@ -30,6 +34,8 @@ const HISTORY_LIMIT = 50
 export function ApisPage() {
   const { t } = useI18n()
   const { currentUser } = useStore()
+  const catalogLoading = useSectionFetch(true, ['catalog'])
+  const [suggestions, setSuggestions] = useState<CatalogSuggestion[]>([])
   const [providers, setProviders] = useState<IdentifyProviderStatus[]>([])
   const [providersError, setProvidersError] = useState<ApiFailure | null>(null)
   const [saving, setSaving] = useState<ReadonlySet<IdentifyProviderId>>(new Set())
@@ -60,12 +66,20 @@ export function ApisPage() {
   const patchProvider = (id: IdentifyProviderId, patch: Partial<IdentifyProviderStatus>) =>
     setProviders((rows) => rows.map((row) => (row.id === id ? { ...row, ...patch } : row)))
 
-  const setEnabled = async (id: IdentifyProviderId, enabled: boolean) => {
+  const saveSettings = async (id: IdentifyProviderId, patch: Partial<IdentifyProviderSettings>) => {
     if (saving.has(id)) return
+    const previous = providers.find((row) => row.id === id)
     setSaving((ids) => new Set(ids).add(id))
-    patchProvider(id, { enabled })
-    const updated = await setIdentifyProviderEnabled(id, enabled)
-    patchProvider(id, updated ?? { enabled: !enabled })
+    setProviders((rows) =>
+      rows.map((row) =>
+        row.id === id
+          ? { ...row, ...patch, match: patch.match ? { ...row.match, ...patch.match } : row.match }
+          : row,
+      ),
+    )
+    const updated = await setIdentifyProviderSettings(id, patch)
+    if (updated) patchProvider(id, updated)
+    else if (previous) patchProvider(id, previous)
     setSaving((ids) => {
       const next = new Set(ids)
       next.delete(id)
@@ -94,6 +108,12 @@ export function ApisPage() {
   useEffect(() => {
     void loadProviders()
   }, [loadProviders])
+
+  useEffect(() => {
+    void fetchCatalogSuggestions('all').then((rows) => {
+      if (rows) setSuggestions(rows)
+    })
+  }, [])
 
   useEffect(() => {
     void loadHistory()
@@ -136,10 +156,12 @@ export function ApisPage() {
         ) : (
           <ApisPanel
             providers={providers}
+            suggestions={suggestions}
             onRefresh={() => void loadProviders()}
-            onEnabledChange={(id, enabled) => void setEnabled(id, enabled)}
+            onChange={(id, patch) => void saveSettings(id, patch)}
             saving={saving}
             loading={loading}
+            catalogLoading={catalogLoading}
           />
         )}
         <IdentifyPlayground

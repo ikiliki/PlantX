@@ -3,6 +3,7 @@ import { parseGeminiBody } from '../providers/gemini.ts'
 import { parsePlantidBody } from '../providers/plantid.ts'
 import { parsePlantnetBody } from '../providers/plantnet.ts'
 import type { RawSuggestion } from '../types.ts'
+import { applyMockPlan, type MockPlan } from './applyPlan.ts'
 import { geminiMockBody } from './gemini.fixture.ts'
 import { plantidMockBody } from './plantid.fixture.ts'
 import { plantnetMockBody } from './plantnet.fixture.ts'
@@ -22,7 +23,8 @@ export async function mockIdentify(
   provider: IdentifyProviderId,
   catalog: Catalog,
   scenario: IdentifyMockScenario,
+  plan?: MockPlan,
 ): Promise<RawSuggestion> {
   await delay()
-  return MOCKS[provider](catalog, scenario)
+  return applyMockPlan(MOCKS[provider](catalog, scenario), catalog, scenario, plan)
 }

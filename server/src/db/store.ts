@@ -5,6 +5,7 @@ import type {
   IdentifyFieldChecks,
   IdentifyMode,
   IdentifyProviderId,
+  IdentifyProviderSettings,
   IdentifyRequestRecord,
   Plant,
   User,
@@ -76,8 +77,8 @@ export interface PlantxStore {
     link(id: string, link: { plantId: string; photoIndex: number; fields?: IdentifyFieldChecks }): Promise<void>
   }
   identifySettings: {
-    /** Saved admin switches. A provider without a row is enabled. */
-    get(): Promise<Partial<Record<IdentifyProviderId, boolean>>>
-    save(id: IdentifyProviderId, enabled: boolean): Promise<void>
+    /** Saved admin switches. A provider without a row is enabled and ready. */
+    get(): Promise<Partial<Record<IdentifyProviderId, IdentifyProviderSettings>>>
+    save(id: IdentifyProviderId, patch: Partial<IdentifyProviderSettings>): Promise<void>
   }
 }

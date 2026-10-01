@@ -1,4 +1,5 @@
 import { Hono, type Context } from 'hono'
+import { identifySettingsPatch } from '../../../../src/mock/identifySettings.ts'
 import type {
   IdentifyMockScenario,
   IdentifyMode,
@@ -106,8 +107,9 @@ identifyRoutes.put('/providers/:id', async (c) => {
   const id = c.req.param('id')
   if (!oneOf(id, PROVIDERS)) throw Errors.invalid(`id must be one of ${PROVIDERS.join(', ')}`)
   const body = await readBody(c)
-  if (typeof body.enabled !== 'boolean') throw Errors.invalid('Body must include enabled: boolean')
-  const provider = await identifyService.setEnabled(id, body.enabled)
+  const patch = identifySettingsPatch(body)
+  if (!patch) throw Errors.invalid('Body must include enabled, response, scenario, match, or suggestionId')
+  const provider = await identifyService.saveSettings(id, patch)
   return c.json({ provider })
 })
 

@@ -1,9 +1,12 @@
+import { defaultIdentifySettings } from '../../../../src/mock/identifySettings.ts'
 import type {
   Catalog,
+  CatalogSuggestion,
   Diagnosis,
   IdentifyMockScenario,
   IdentifyMode,
   IdentifyProviderId,
+  IdentifyProviderSettings,
   IdentifyProviderStatus,
   IdentifyRequestRecord,
   IdentifySource,
@@ -17,6 +20,7 @@ import { logger } from '../../lib/logger.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
 import { IdentifyTimeoutError } from './http.ts'
 import { mapDiagnosis } from './mapDiagnosis.ts'
+import type { MockPlan } from './mock/applyPlan.ts'
 import { mockIdentify } from './mock/index.ts'
 import type { CatalogDraftHint } from '../catalog/catalogDraft.ts'
 import { draftCatalogEntry, geminiProvider, guessPlantSize } from './providers/gemini.ts'
@@ -77,10 +81,11 @@ async function liveSkip(provider: IdentifyProvider): Promise<IdentifyTried | und
   return undefined
 }
 
-function call(provider: IdentifyProvider, image: string, catalog: Catalog, run: IdentifyRun) {
-  return run.mode === 'mock'
-    ? mockIdentify(provider.id, catalog, run.scenario ?? 'match')
-    : provider.identify(image, catalog)
+function settingsFor(
+  flags: Partial<Record<IdentifyProviderId, IdentifyProviderSettings>>,
+  id: IdentifyProviderId,
+) {
+  return flags[id] ?? defaultIdentifySettings(true)
 }
 
 function toDiagnosis(raw: RawSuggestion, catalog: Catalog, mode: IdentifyMode, tried: IdentifyTried[]): Diagnosis {
@@ -120,9 +125,9 @@ function enabledFlags() {
 
 async function statusOf(
   provider: IdentifyProvider,
-  flags: Partial<Record<IdentifyProviderId, boolean>>,
+  flags: Partial<Record<IdentifyProviderId, IdentifyProviderSettings>>,
 ): Promise<IdentifyProviderStatus> {
-  return { ...(await provider.status()), enabled: flags[provider.id] ?? true }
+  return { ...(await provider.status()), ...settingsFor(flags, provider.id) }
 }
 
 /** Add Plant and the admin playground share this on a live answer. Mock runs do not file a row. */
@@ -159,24 +164,38 @@ export const identifyService = {
     return Promise.all(CHAIN.map((provider) => statusOf(provider, flags)))
   },
 
-  async setEnabled(id: IdentifyProviderId, enabled: boolean): Promise<IdentifyProviderStatus> {
+  async saveSettings(id: IdentifyProviderId, patch: Partial<IdentifyProviderSettings>): Promise<IdentifyProviderStatus> {
     const provider = CHAIN.find((item) => item.id === id)
     if (!provider) throw Errors.missing(`Unknown provider ${id}`)
-    await getStore().identifySettings.save(id, enabled)
+    await getStore().identifySettings.save(id, patch)
     return statusOf(provider, await enabledFlags())
   },
 
-  async diagnose(image: string, run: IdentifyRun): Promise<Diagnosis> {
+  async diagnose(image: string, run: IdentifyRun): Promise<{ diagnosis: Diagnosis; scenario?: IdentifyMockScenario }> {
     const catalog = await catalogService.get()
     const tried: IdentifyTried[] = []
     const flags = run.honorEnabled ? await enabledFlags() : {}
+    let suggestions: Promise<CatalogSuggestion[]> | undefined
+    const suggestionById = async (id: string) => {
+      if (!id) return null
+      suggestions ??= getStore().catalogSuggestions.list('all').catch(() => [])
+      const rows = await suggestions
+      return rows.find((row) => row.id === id) ?? null
+    }
 
     for (const provider of providersFor(run.target)) {
-      if (flags[provider.id] === false) {
+      const settings = settingsFor(flags, provider.id)
+      if (run.honorEnabled && !settings.enabled) {
         tried.push(toTried(provider, 'disabled'))
         continue
       }
-      if (run.mode === 'live') {
+      const useMock = run.honorEnabled ? settings.response === 'mock' : run.mode === 'mock'
+      const scenario: IdentifyMockScenario = useMock
+        ? run.honorEnabled
+          ? settings.scenario
+          : (run.scenario ?? 'match')
+        : 'match'
+      if (!useMock) {
         const skip = await liveSkip(provider)
         if (skip) {
           tried.push(skip)
@@ -185,21 +204,37 @@ export const identifyService = {
       }
 
       try {
-        const raw = await call(provider, image, catalog, run)
-        const diagnosis = toDiagnosis(raw, catalog, run.mode, tried)
-        if (raw.isPlant && !diagnosis.draft.size) {
-          const guessed =
-            run.mode === 'mock'
-              ? catalog.properties.find((item) => item.id === 'size')?.options[0]?.id
-              : await guessPlantSize(image, catalog).catch(() => undefined)
+        const plan: MockPlan | undefined =
+          useMock && run.honorEnabled
+            ? {
+                match: scenario === 'match' ? settings.match : undefined,
+                suggestion:
+                  scenario === 'notInCatalog' ? await suggestionById(settings.suggestionId) : undefined,
+              }
+            : undefined
+        const raw = useMock
+          ? await mockIdentify(provider.id, catalog, scenario, plan)
+          : await provider.identify(image, catalog)
+        const mode: IdentifyMode = useMock ? 'mock' : 'live'
+        const diagnosis = toDiagnosis(raw, catalog, mode, tried)
+        const adminMock = Boolean(run.honorEnabled && useMock && (scenario === 'match' || scenario === 'notInCatalog'))
+        if (useMock && scenario === 'notInCatalog') {
+          diagnosis.draft = {}
+        } else if (useMock && run.honorEnabled && scenario === 'match' && !settings.match.subcategory) {
+          delete diagnosis.draft.subcategoryId
+        }
+        if (!adminMock && raw.isPlant && !diagnosis.draft.size) {
+          const guessed = useMock
+            ? catalog.properties.find((item) => item.id === 'size')?.options[0]?.id
+            : await guessPlantSize(image, catalog).catch(() => undefined)
           if (guessed && catalog.properties.some((item) => item.id === 'size' && item.options.some((opt) => opt.id === guessed))) {
             diagnosis.draft.size = guessed as SizeBand
           }
         }
-        if (run.mode === 'live' && raw.isPlant && !diagnosis.draft.categoryId) {
+        if (!useMock && raw.isPlant && !diagnosis.draft.categoryId) {
           noteMissingCategory(raw, image, catalog)
         }
-        return diagnosis
+        return { diagnosis, scenario: useMock ? scenario : undefined }
       } catch (err) {
         if (err instanceof IdentifyTimeoutError) {
           tried.push(toTried(provider, 'timeout', err.message))
@@ -217,9 +252,12 @@ export const identifyService = {
   async identify(image: string, run: IdentifyRun, requester: IdentifyRequester): Promise<IdentifyOutcome> {
     const started = Date.now()
     let diagnosis: Diagnosis | undefined
+    let answeredScenario: IdentifyMockScenario | undefined
     let tried: IdentifyTried[]
     try {
-      diagnosis = await identifyService.diagnose(image, run)
+      const answered = await identifyService.diagnose(image, run)
+      diagnosis = answered.diagnosis
+      answeredScenario = answered.scenario
       tried = diagnosis.tried
     } catch (err) {
       if (!(err instanceof IdentifyUnavailableError)) throw err
@@ -231,13 +269,14 @@ export const identifyService = {
       createdAt: new Date().toISOString(),
       userId: requester.userId,
       source: requester.source,
-      mode: run.mode,
+      mode: diagnosis?.mode ?? run.mode,
       target: run.target,
       status: diagnosis ? 'ok' : 'unavailable',
       durationMs: Date.now() - started,
       tried,
     }
     if (run.mode === 'mock') record.scenario = run.scenario ?? 'match'
+    else if (answeredScenario) record.scenario = answeredScenario
     const thumb = keptThumb(requester.thumb)
     if (thumb) record.thumb = thumb
     if (diagnosis) record.diagnosis = diagnosis
