@@ -3,20 +3,22 @@ import { theme } from '../../theme/tokens'
 
 export const Page = styled.div`
   display: grid;
-  gap: ${theme.space.xl};
+  gap: ${theme.space.lg};
   container-type: inline-size;
   min-width: 0;
   width: 100%;
+  margin-top: -20px;
 `
 
 export const Heading = styled.header`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  column-gap: ${theme.space.lg};
+  align-items: center;
+  column-gap: ${theme.space.xl};
 
   @container (max-width: 720px) {
     grid-template-columns: 1fr;
+    align-items: stretch;
     row-gap: ${theme.space.md};
   }
 `
@@ -28,8 +30,9 @@ export const HeadingCopy = styled.div`
   min-width: 0;
   max-width: 460px;
   h1 {
-    font-size: clamp(30px, 4vw, 44px);
+    font-size: clamp(28px, 7vw, 44px);
     color: ${theme.colors.ink};
+    overflow-wrap: anywhere;
   }
 `
 
@@ -45,12 +48,14 @@ export const Description = styled.p`
   font-size: 14px;
   line-height: 1.5;
   color: ${theme.colors.muted};
+  overflow-wrap: anywhere;
 `
 
 export const GuestAuth = styled.div`
   display: grid;
   place-items: center;
   width: 100%;
+  min-width: 0;
   min-height: min(70svh, 640px);
   padding: ${theme.space.md} 0;
 

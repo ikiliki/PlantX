@@ -14,6 +14,10 @@ export const Board = styled.div<{ $split?: boolean }>`
     @container (min-width: 961px) {
       grid-template-columns: minmax(0, 1fr) min(300px, 32%);
     }
+
+    @container (max-width: 960px) {
+      grid-template-columns: 1fr;
+    }
   `}
 `
 
@@ -23,36 +27,37 @@ export const Shelf = styled.div`
   min-width: 0;
 `
 
+export const Rail = styled.aside`
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-content: start;
+
+  @container (min-width: 961px) {
+    position: sticky;
+    top: calc(${theme.layout.topBar} + ${theme.space.md});
+    width: min(300px, 100%);
+  }
+`
+
 export const Growing = styled.section`
   display: grid;
   gap: 16px;
   min-width: 0;
 `
 
-export const GrowingHead = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 12px 16px;
-`
-
-export const GrowingTitle = styled.h2`
-  margin: 0;
-  font-family: ${theme.fonts.display};
-  font-weight: 400;
-  font-size: clamp(26px, 3vw, 34px);
-  color: ${theme.colors.forest};
-`
-
-export const HeadActions = styled.div`
+export const Toolbar = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex: 1 1 260px;
+  justify-content: space-between;
+  gap: 10px 16px;
   min-width: 0;
+
+  @container (max-width: 720px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `
 
 export const SearchBox = styled.label`
@@ -62,6 +67,11 @@ export const SearchBox = styled.label`
   flex: 1 1 200px;
   max-width: 280px;
   height: 40px;
+
+  @container (max-width: 720px) {
+    flex: 1 1 100%;
+    max-width: none;
+  }
   padding: 0 14px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.creamCard};
@@ -100,8 +110,11 @@ export const SearchBox = styled.label`
 
 export const FilterBar = styled.div`
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+  min-width: 0;
 `
 
 export const Filter = styled.button<{ $on?: boolean }>`

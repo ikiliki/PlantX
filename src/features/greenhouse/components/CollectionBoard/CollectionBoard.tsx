@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Button } from '../../../../components/Button/Button'
+import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { ActivityThread, type ActivityEntry } from '../ActivityThread/ActivityThread'
 import { AddPlantCard } from '../AddPlantCard/AddPlantCard'
 import { CollectionGrid, GreenhousePlantCard } from '../GreenhousePlantCard/GreenhousePlantCard'
 import { GreenhouseToday } from '../GreenhouseToday/GreenhouseToday'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import { isPlacementReady } from '../../../../theme/release'
 import { isPhotoStale, isWaterDue } from '../../plantCare'
 import type { Plant } from '../../../../mock/types'
 import {
@@ -15,10 +16,9 @@ import {
   Filter,
   FilterBar,
   Growing,
-  GrowingHead,
-  GrowingTitle,
-  HeadActions,
+  Rail,
   SearchBox,
+  Toolbar,
   Shelf,
 } from './CollectionBoard.styles'
 
@@ -73,7 +73,10 @@ export function CollectionBoard({
   const { t, locale } = useI18n()
   const [internalFilter, setInternalFilter] = useState<GreenhouseFilter>('all')
   const [query, setQuery] = useState('')
-  const filter = filterProp ?? internalFilter
+  const marketReady = isPlacementReady(db.system, 'market.board')
+  const requested = filterProp ?? internalFilter
+  const filter =
+    !marketReady && (requested === 'listed' || requested === 'sold') ? 'all' : requested
   const setFilter = onFilter ?? setInternalFilter
   const needle = query.trim().toLowerCase()
 
@@ -100,67 +103,64 @@ export function CollectionBoard({
     return matchesSearch(plant, needle, speciesLabel)
   })
 
+  const list = useInfiniteList(visible, {
+    enabled: !compact,
+    signature: `${filter}|${needle}|${visible.map((plant) => plant.id).join('|')}`,
+  })
+
   const filters: { id: GreenhouseFilter; label: string; count: number }[] = [
     { id: 'all', label: t.greenhouse.filterAll, count: living.length },
     { id: 'needs', label: t.greenhouse.filterNeeds, count: needing.length },
     { id: 'ai', label: `✦ ${t.addPlant.stampVerified}`, count: aiVerified.length },
-    { id: 'listed', label: t.greenhouse.filterListed, count: listed.length },
-    { id: 'sold', label: t.greenhouse.tabSold, count: sold.length },
+    ...(marketReady
+      ? [
+          { id: 'listed' as const, label: t.greenhouse.filterListed, count: listed.length },
+          { id: 'sold' as const, label: t.greenhouse.tabSold, count: sold.length },
+        ]
+      : []),
   ]
 
   const shelf = (
     <Growing>
-      {!compact && (
-        <GreenhouseToday plants={living} onWater={onWater} onRefresh={onRefresh} />
-      )}
-
-      <GrowingHead>
-        <GrowingTitle>{t.greenhouse.growingNow}</GrowingTitle>
-        {!compact && (
-          <HeadActions>
-            {living.length > 0 ? (
-              <SearchBox>
-                <img src="/icons/search.svg" alt="" />
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder={t.greenhouse.searchPlaceholder}
-                  aria-label={t.greenhouse.searchPlaceholder}
-                />
-              </SearchBox>
-            ) : null}
-            <Button type="button" variant="growth" onClick={onAdd}>
-              + {t.greenhouse.addButton}
-            </Button>
-          </HeadActions>
-        )}
-      </GrowingHead>
-
       {!compact && !empty && (
-        <FilterBar role="tablist" aria-label={t.greenhouse.growingNow}>
-          {filters.map((item) => (
-            <Filter
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={filter === item.id}
-              $on={filter === item.id}
-              onClick={() => setFilter(item.id)}
-            >
-              {item.label} <Count>({item.count})</Count>
-            </Filter>
-          ))}
-        </FilterBar>
+        <Toolbar>
+          <FilterBar role="tablist" aria-label={t.greenhouse.title}>
+            {filters.map((item) => (
+              <Filter
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={filter === item.id}
+                $on={filter === item.id}
+                onClick={() => setFilter(item.id)}
+              >
+                {item.label} <Count>({item.count})</Count>
+              </Filter>
+            ))}
+          </FilterBar>
+          {living.length > 0 ? (
+            <SearchBox>
+              <img src="/icons/search.svg" alt="" />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t.greenhouse.searchPlaceholder}
+                aria-label={t.greenhouse.searchPlaceholder}
+              />
+            </SearchBox>
+          ) : null}
+        </Toolbar>
       )}
 
       {visible.length === 0 && !empty ? <Empty>{t.greenhouse.filterEmpty}</Empty> : null}
       <CollectionGrid>
-        {visible.map((plant) => (
+        {filter === 'all' && <AddPlantCard onClick={onAdd} hero={empty} />}
+        {list.shown.map((plant) => (
           <GreenhousePlantCard key={plant.id} plant={plant} fresh={plant.id === freshId} />
         ))}
-        {filter === 'all' && <AddPlantCard onClick={onAdd} hero={empty} />}
       </CollectionGrid>
+      <InfiniteSentinel hasMore={list.hasMore} onLoadMore={list.loadMore} tick={list.shown.length} />
     </Growing>
   )
 
@@ -171,7 +171,10 @@ export function CollectionBoard({
   return (
     <Board $split>
       <Shelf>{shelf}</Shelf>
-      <ActivityThread activity={activity} />
+      <Rail>
+        <GreenhouseToday plants={living} onWater={onWater} onRefresh={onRefresh} />
+        <ActivityThread activity={activity} />
+      </Rail>
     </Board>
   )
 }
