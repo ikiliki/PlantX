@@ -35,7 +35,7 @@ A pattern appears twice or more (same Field + Select + "Choose", same admin head
 - `PhotoIdentify` — `max` photos (default `MAX_PLANT_PHOTOS`, 3), each scanned separately; Add Plant passes `ADD_PLANT_UPLOAD_LIMIT` (1). Renders `AiScan` for the selected photo. A single photo has the remove control on that scan and no thumbnail or hint under it. More than one photo keeps the strip of slots with stickers. Stories keep the multi-photo frames.
 - `PhotoCheckSticker` — tilted "test passed" stamp with one photo's AI result (`sm` on thumbs, `md` on big photos)
 - `PhotoChecks` — a plant's photos with numbered thumbs and stickers (review, passport activity, admin preview)
-- `AddPlantWizard` — stepped flow built on `Stepper` + `ChoiceChips` (`src/components`); AI picks use `suggestedId`
+- `AddPlantWizard` — stepped flow on `Stepper` + `ChoiceChips`. The first step is AI analyze. A finished scan fills the other steps and slides to review. One subcategory is selected for you. Other, or a category with none, shows a no-subcategory tile. Tiles use the subcategory photo, or the category photo when that row has none. On review the plant photo stays large and that catalog photo is a small mark.
 - `IdentifyBadge` — AI verified / edited / manual mark for a plant (card, passport, review)
 - `ApisPanel` — presentational; page loads providers and suggestions. One tab per provider: Loading until that status arrives, then Loaded. Enabled switch, then Ready or Mock response. Mock match sets category, a subcategory switch, properties, and more properties. Mock not-in-catalog picks a suggestion.
 - `AdminSection` — admin card with heading, lead, side note

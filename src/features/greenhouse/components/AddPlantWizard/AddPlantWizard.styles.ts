@@ -164,6 +164,56 @@ export const ClassCode = styled.p`
   font-variant-numeric: tabular-nums;
 `
 
+export const IdentityCard = styled.article`
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 10px;
+  border-radius: ${theme.radii.lg};
+  background: ${theme.colors.creamCard};
+  border: 1px solid ${theme.colors.border};
+  box-shadow: ${theme.shadow.card};
+  animation: ${popIn} ${theme.motion.slow} ${theme.motion.ease} both;
+`
+
+export const IdentityPhoto = styled.div`
+  aspect-ratio: 1;
+  border-radius: ${theme.radii.md};
+  overflow: hidden;
+  background: ${theme.colors.chipGreen};
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`
+
+export const IdentityCopy = styled.div`
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+
+  strong,
+  span {
+    overflow-wrap: anywhere;
+  }
+
+  strong {
+    font-size: 16px;
+    line-height: 1.25;
+    color: ${theme.colors.ink};
+  }
+
+  span {
+    font-size: 13px;
+    line-height: 1.4;
+    color: ${theme.colors.muted};
+  }
+`
+
 export const Review = styled.article`
   display: grid;
   gap: ${theme.space.md};
@@ -185,6 +235,28 @@ export const ReviewPhoto = styled.div`
   aspect-ratio: 1;
   border-radius: ${theme.radii.md};
   overflow: hidden;
+  background: ${theme.colors.chipGreen};
+
+  > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`
+
+export const CategoryMark = styled.span`
+  position: absolute;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  inset-inline-end: 8px;
+  bottom: 8px;
+  border-radius: ${theme.radii.sm};
+  overflow: hidden;
+  border: 2px solid ${theme.colors.creamCard};
+  box-shadow: ${theme.shadow.card};
   background: ${theme.colors.chipGreen};
 
   img {
