@@ -73,16 +73,27 @@ export function gradeChoices(catalog: Catalog, draft: PlantClassDraft) {
   return propertyById(catalog, 'grade')?.options.map((item) => item.id).filter(isGrade) ?? []
 }
 
-export function sizeChoices(catalog: Catalog, draft: PlantClassDraft) {
-  const fromClasses = uniqueBy(classesFor(draft, 'size'), (item) => item.size).map((item) => item.size)
-  if (fromClasses.length > 0) return fromClasses
-  return propertyById(catalog, 'size')?.options.map((item) => item.id).filter(isSize) ?? []
+const FALLBACK_SIZES: SizeBand[] = ['S', 'M', 'L', 'XL']
+const FALLBACK_STAGES: StageBand[] = ['CUT', 'ROOTED', 'EST', 'MATURE']
+
+function optionIds<T extends string>(catalog: Catalog, propertyId: string, keep: (id: string) => id is T) {
+  return propertyById(catalog, propertyId)?.options.map((item) => item.id).filter(keep) ?? []
 }
 
-export function stageChoices(catalog: Catalog, draft: PlantClassDraft) {
+export function sizeChoices(catalog: Catalog, draft: PlantClassDraft): SizeBand[] {
+  const fromClasses = uniqueBy(classesFor(draft, 'size'), (item) => item.size).map((item) => item.size)
+  if (fromClasses.length > 0) return fromClasses
+  const fromCatalog = optionIds(catalog, 'size', isSize)
+  if (fromCatalog.length > 0) return fromCatalog
+  return FALLBACK_SIZES
+}
+
+export function stageChoices(catalog: Catalog, draft: PlantClassDraft): StageBand[] {
   const fromClasses = uniqueBy(classesFor(draft, 'stage'), (item) => item.stage).map((item) => item.stage)
   if (fromClasses.length > 0) return fromClasses
-  return propertyById(catalog, 'stage')?.options.map((item) => item.id).filter(isStage) ?? []
+  const fromCatalog = optionIds(catalog, 'stage', isStage)
+  if (fromCatalog.length > 0) return fromCatalog
+  return FALLBACK_STAGES
 }
 
 export function matchClass(draft: PlantClassDraft): DictClass | undefined {
