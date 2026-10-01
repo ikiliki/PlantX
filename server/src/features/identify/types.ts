@@ -23,10 +23,13 @@ export type RawSuggestion = {
   traits?: Record<string, string>
 }
 
+/** What a provider reports about itself. The admin `enabled` flag is added by the service. */
+export type ProviderHealth = Omit<IdentifyProviderStatus, 'enabled'>
+
 export type IdentifyProvider = {
   id: IdentifyProviderId
   order: number
-  status: () => Promise<IdentifyProviderStatus>
+  status: () => Promise<ProviderHealth>
   identify: (image: string, catalog: Catalog) => Promise<RawSuggestion>
 }
 

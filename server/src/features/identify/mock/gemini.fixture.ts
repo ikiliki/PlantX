@@ -8,7 +8,7 @@ function envelope(json: GeminiJson): GeminiBody {
   return {
     candidates: [{ content: { role: 'model', parts: [{ text }] }, finishReason: 'STOP', index: 0 }],
     usageMetadata: { promptTokenCount: 1290, candidatesTokenCount: outputTokens, totalTokenCount: 1290 + outputTokens },
-    modelVersion: 'gemini-2.0-flash',
+    modelVersion: 'gemini-3.8-flash',
   }
 }
 

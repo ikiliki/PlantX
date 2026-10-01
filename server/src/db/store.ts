@@ -1,6 +1,7 @@
 import type {
   Catalog,
   IdentifyMode,
+  IdentifyProviderId,
   IdentifyRequestRecord,
   Plant,
   User,
@@ -50,5 +51,10 @@ export interface PlantxStore {
     /** Newest first. `userName` is filled from users. */
     list(query: { mode?: IdentifyMode; limit: number }): Promise<IdentifyRequestRecord[]>
     add(record: IdentifyRequestRecord): Promise<void>
+  }
+  identifySettings: {
+    /** Saved admin switches. A provider without a row is enabled. */
+    get(): Promise<Partial<Record<IdentifyProviderId, boolean>>>
+    save(id: IdentifyProviderId, enabled: boolean): Promise<void>
   }
 }

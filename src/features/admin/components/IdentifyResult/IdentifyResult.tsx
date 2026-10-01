@@ -133,7 +133,7 @@ export function IdentifyResult({
             {tried.map((item) => (
               <li key={item.provider}>
                 <strong>{t.admin[providerNameKey[item.provider]]}</strong>
-                <Badge $tone={item.reason === 'missingKey' ? 'muted' : 'warn'}>
+                <Badge $tone={item.reason === 'missingKey' || item.reason === 'disabled' ? 'muted' : 'warn'}>
                   {t.admin[skipLabelKey[item.reason]]}
                 </Badge>
                 {item.detail && <small>{item.detail}</small>}

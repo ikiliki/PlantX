@@ -7,10 +7,16 @@ import {
 } from '../../features/admin/components/IdentifyHistory/IdentifyHistory'
 import { IdentifyPlayground } from '../../features/admin/components/IdentifyPlayground/IdentifyPlayground'
 import { useI18n } from '../../i18n/I18nProvider'
-import { fetchIdentifyHistory, fetchIdentifyProviders, postIdentifyTest } from '../../mock/liveApi'
+import {
+  fetchIdentifyHistory,
+  fetchIdentifyProviders,
+  postIdentifyTest,
+  setIdentifyProviderEnabled,
+} from '../../mock/liveApi'
 import { useStore } from '../../mock/store'
 import type {
   IdentifyMode,
+  IdentifyProviderId,
   IdentifyProviderStatus,
   IdentifyRequestRecord,
   IdentifyTestRequest,
@@ -23,7 +29,7 @@ export function ApisPage() {
   const { t } = useI18n()
   const { currentUser } = useStore()
   const [providers, setProviders] = useState<IdentifyProviderStatus[]>([])
-  const [defaultMode, setDefaultMode] = useState<IdentifyMode>()
+  const [saving, setSaving] = useState<ReadonlySet<IdentifyProviderId>>(new Set())
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<IdentifyHistoryFilter>('all')
   const [history, setHistory] = useState<IdentifyRequestRecord[]>([])
@@ -38,9 +44,24 @@ export function ApisPage() {
     setLoading(true)
     const res = await fetchIdentifyProviders()
     setProviders(res?.providers ?? [])
-    setDefaultMode(res?.defaultMode)
     setLoading(false)
   }, [])
+
+  const patchProvider = (id: IdentifyProviderId, patch: Partial<IdentifyProviderStatus>) =>
+    setProviders((rows) => rows.map((row) => (row.id === id ? { ...row, ...patch } : row)))
+
+  const setEnabled = async (id: IdentifyProviderId, enabled: boolean) => {
+    if (saving.has(id)) return
+    setSaving((ids) => new Set(ids).add(id))
+    patchProvider(id, { enabled })
+    const updated = await setIdentifyProviderEnabled(id, enabled)
+    patchProvider(id, updated ?? { enabled: !enabled })
+    setSaving((ids) => {
+      const next = new Set(ids)
+      next.delete(id)
+      return next
+    })
+  }
 
   const loadHistory = useCallback(async () => {
     const id = ++historyRequest.current
@@ -96,8 +117,9 @@ export function ApisPage() {
       <Stack>
         <ApisPanel
           providers={providers}
-          defaultMode={defaultMode}
           onRefresh={() => void loadProviders()}
+          onEnabledChange={(id, enabled) => void setEnabled(id, enabled)}
+          saving={saving}
           loading={loading}
         />
         <IdentifyPlayground

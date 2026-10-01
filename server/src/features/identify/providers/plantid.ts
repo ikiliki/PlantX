@@ -1,6 +1,6 @@
 import type { Catalog, IdentifyCredits, IdentifyProviderStatus } from '../../../../../src/mock/types.ts'
 import { fetchWithTimeout, genusFromScientific, parseCultivar, stripDataUrl } from '../http.ts'
-import type { IdentifyProvider, RawSuggestion } from '../types.ts'
+import type { IdentifyProvider, ProviderHealth, RawSuggestion } from '../types.ts'
 
 const DOCS_URL = 'https://docs.kindwise.com'
 const IDENTIFY_URL = 'https://api.plant.id/v3/identification?details=common_names,taxonomy'
@@ -134,7 +134,7 @@ export const plantidProvider: IdentifyProvider = {
   id: 'plantid',
   order: 1,
 
-  async status(): Promise<IdentifyProviderStatus> {
+  async status(): Promise<ProviderHealth> {
     const key = apiKey()
     const base = {
       id: 'plantid' as const,

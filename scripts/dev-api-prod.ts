@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { withExtraCa } from './lib/extraCa.ts'
+
+await withExtraCa()
 
 function readEnvFile() {
   const file = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.env')

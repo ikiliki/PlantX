@@ -45,7 +45,7 @@ export const liveFallbackRecord: IdentifyRequestRecord = {
   status: 'ok',
   thumb: '/class-photos/mon-std-a-l-mat.jpg',
   durationMs: 2380,
-  tried: [{ provider: 'plantid', reason: 'exhausted', detail: '429 credits exhausted' }],
+  tried: [{ provider: 'plantid', reason: 'disabled' }],
   diagnosis: {
     provider: 'plantnet',
     mode: 'live',
@@ -55,7 +55,7 @@ export const liveFallbackRecord: IdentifyRequestRecord = {
     probability: 0.78,
     isPlant: true,
     draft: { categoryId: 'monstera', subcategoryId: 'monstera-std' },
-    tried: [{ provider: 'plantid', reason: 'exhausted', detail: '429 credits exhausted' }],
+    tried: [{ provider: 'plantid', reason: 'disabled' }],
   },
 }
 

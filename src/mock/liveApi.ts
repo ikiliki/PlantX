@@ -3,6 +3,7 @@ import type {
   Diagnosis,
   FeedUpdate,
   IdentifyMode,
+  IdentifyProviderId,
   IdentifyProviderStatus,
   IdentifyRequestRecord,
   IdentifyTestRequest,
@@ -255,7 +256,7 @@ async function identifyRequest(path: string, body: unknown): Promise<IdentifyRes
   }
 }
 
-/** Add Plant. The server picks mock or live from `IDENTIFY_MODE`. */
+/** Add Plant. Always live on the server; providers the admin switched off are skipped. */
 export function postIdentify(image: string, thumb?: string) {
   return identifyRequest('/api/identify', { image, thumb })
 }
@@ -266,9 +267,16 @@ export function postIdentifyTest(body: IdentifyTestRequest) {
 }
 
 export function fetchIdentifyProviders() {
-  return request<{ providers: IdentifyProviderStatus[]; defaultMode: IdentifyMode }>(
-    '/api/identify/providers',
+  return request<{ providers: IdentifyProviderStatus[] }>('/api/identify/providers')
+}
+
+/** Admin switch for Add Plant. Resolves to the updated status, or null on failure. */
+export async function setIdentifyProviderEnabled(id: IdentifyProviderId, enabled: boolean) {
+  const res = await request<{ provider: IdentifyProviderStatus }>(
+    `/api/identify/providers/${encodeURIComponent(id)}`,
+    { method: 'PUT', body: JSON.stringify({ enabled }) },
   )
+  return res?.provider ?? null
 }
 
 export function fetchIdentifyHistory(query?: { mode?: IdentifyMode; limit?: number }) {

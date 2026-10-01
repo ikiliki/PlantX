@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { Switch } from '../../../../components/Switch/Switch'
 import { useStore } from '../../../../mock/store'
 import {
   PAGE_FEATURE,
@@ -45,9 +46,6 @@ import {
   Section,
   Select,
   Shell,
-  Spinner,
-  Switch,
-  Track,
 } from './SystemPanel.styles'
 
 const PAGE_STATUSES: PageStatus[] = ['live', 'maintenance']
@@ -98,8 +96,8 @@ export function SystemPanel() {
   const locked = systemPending !== null
   const [appOpen, setAppOpen] = useState(true)
   const [previewOpen, setPreviewOpen] = useState(false)
-  const [pagesOpen, setPagesOpen] = useState(true)
-  const [featuresOpen, setFeaturesOpen] = useState(true)
+  const [pagesOpen, setPagesOpen] = useState(false)
+  const [featuresOpen, setFeaturesOpen] = useState(false)
   const [openPages, setOpenPages] = useState<ReadonlySet<PageId>>(() => new Set())
   const [openGroups, setOpenGroups] = useState<ReadonlySet<FeatureId>>(() => new Set())
   const [openCategories, setOpenCategories] = useState<ReadonlySet<string>>(() => new Set())
@@ -126,18 +124,14 @@ export function SystemPanel() {
           <Block>
             <Lead>{t.admin.systemAppLead}</Lead>
             <Switch
-              type="button"
-              role="switch"
               disabled={locked}
-              aria-busy={systemPending === 'app'}
-              $on={db.system.launched}
-              aria-checked={db.system.launched}
-              aria-label={t.admin.systemApp}
-              onClick={() => setAppLaunched(!db.system.launched)}
-            >
-              {systemPending === 'app' ? <Spinner /> : <Track aria-hidden $on={db.system.launched} />}
-              {systemPending === 'app' ? t.common.loading : db.system.launched ? t.admin.systemAppOn : t.admin.systemAppOff}
-            </Switch>
+              busy={systemPending === 'app'}
+              busyLabel={t.common.loading}
+              checked={db.system.launched}
+              ariaLabel={t.admin.systemApp}
+              onChange={setAppLaunched}
+              label={db.system.launched ? t.admin.systemAppOn : t.admin.systemAppOff}
+            />
           </Block>
         )}
       </Section>
@@ -264,26 +258,14 @@ export function SystemPanel() {
                       </FeatureToggle>
                       <Controls>
                         <Switch
-                          type="button"
-                          role="switch"
                           disabled={locked}
-                          aria-busy={systemPending === `feature:${featureId}`}
-                          $on={feature.enabled}
-                          aria-checked={feature.enabled}
-                          aria-label={`${label} ${feature.enabled ? t.admin.systemEnabled : t.admin.systemDisabled}`}
-                          onClick={() => setFeatureEnabled(featureId, !feature.enabled)}
-                        >
-                          {systemPending === `feature:${featureId}` ? (
-                            <Spinner />
-                          ) : (
-                            <Track aria-hidden $on={feature.enabled} />
-                          )}
-                          {systemPending === `feature:${featureId}`
-                            ? t.common.loading
-                            : feature.enabled
-                              ? t.admin.systemEnabled
-                              : t.admin.systemDisabled}
-                        </Switch>
+                          busy={systemPending === `feature:${featureId}`}
+                          busyLabel={t.common.loading}
+                          checked={feature.enabled}
+                          ariaLabel={`${label} ${feature.enabled ? t.admin.systemEnabled : t.admin.systemDisabled}`}
+                          onChange={(next) => setFeatureEnabled(featureId, next)}
+                          label={feature.enabled ? t.admin.systemEnabled : t.admin.systemDisabled}
+                        />
                         {feature.enabled && (
                           <Select
                             aria-label={`${label} ${t.admin.systemStatus}`}
@@ -330,26 +312,14 @@ export function SystemPanel() {
                                               <Ok>{t.admin.systemDisabled}</Ok>
                                             ) : (
                                               <Switch
-                                                type="button"
-                                                role="switch"
                                                 disabled={locked}
-                                                aria-busy={systemPending === `placement:${item.id}`}
-                                                $on={shown}
-                                                aria-checked={shown}
-                                                aria-label={`${name} ${shown ? t.admin.systemShown : t.admin.systemHidden}`}
-                                                onClick={() => setPlacementEnabled(item.id as PlacementId, !shown)}
-                                              >
-                                                {systemPending === `placement:${item.id}` ? (
-                                                  <Spinner />
-                                                ) : (
-                                                  <Track aria-hidden $on={shown} />
-                                                )}
-                                                {systemPending === `placement:${item.id}`
-                                                  ? t.common.loading
-                                                  : shown
-                                                    ? t.admin.systemShown
-                                                    : t.admin.systemHidden}
-                                              </Switch>
+                                                busy={systemPending === `placement:${item.id}`}
+                                                busyLabel={t.common.loading}
+                                                checked={shown}
+                                                ariaLabel={`${name} ${shown ? t.admin.systemShown : t.admin.systemHidden}`}
+                                                onChange={(next) => setPlacementEnabled(item.id as PlacementId, next)}
+                                                label={shown ? t.admin.systemShown : t.admin.systemHidden}
+                                              />
                                             )}
                                           </Controls>
                                         </ItemHead>

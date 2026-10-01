@@ -1,24 +1,41 @@
-import type { Catalog, IdentifyProviderStatus } from '../../../../../src/mock/types.ts'
+import type { Catalog } from '../../../../../src/mock/types.ts'
 import { fetchWithTimeout, stripDataUrl } from '../http.ts'
-import type { IdentifyProvider, RawSuggestion } from '../types.ts'
+import type { IdentifyProvider, ProviderHealth, RawSuggestion } from '../types.ts'
 
 const DOCS_URL = 'https://ai.google.dev/gemini-api/docs'
-const DEFAULT_MODEL = 'gemini-2.0-flash'
+/**
+ * Newest first. Google retires flash models and overloads the latest one (404 / 503),
+ * so a failed model is skipped for the next. GEMINI_MODEL is tried before this list.
+ */
+const MODEL_FALLBACKS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite']
+/** Overloaded, retired, or out of quota: try the next model. Anything else is a real failure. */
+const RETRYABLE_STATUS = new Set([404, 429, 503])
 
 let lastError: string | undefined
 let lastUsedAt: string | undefined
+let activeModel: string | undefined
+
+function modelsToTry() {
+  const chosen = (process.env.GEMINI_MODEL || '').trim()
+  return [...new Set(chosen ? [chosen, ...MODEL_FALLBACKS] : MODEL_FALLBACKS)]
+}
 
 function apiKey() {
   return (process.env.GEMINI_API_KEY || '').trim()
 }
 
-function modelName() {
-  return (process.env.GEMINI_MODEL || '').trim() || DEFAULT_MODEL
-}
-
 function optionIds(catalog: Catalog, propertyId: string): string[] {
   const prop = catalog.properties.find((item) => item.id === propertyId)
   return prop?.options.map((opt) => opt.id) ?? []
+}
+
+/** Gemini rejects an enum value of `""`. Unknown is `nullable`, not an empty choice. */
+function nullableEnum(ids: string[], description?: string) {
+  const values = [...new Set(ids.map((id) => id.trim()).filter(Boolean))]
+  const field: Record<string, unknown> = { type: 'STRING', nullable: true }
+  if (description) field.description = description
+  if (values.length) field.enum = values
+  return field
 }
 
 function traitPropertyIds(catalog: Catalog): string[] {
@@ -39,12 +56,7 @@ function buildSchema(catalog: Catalog) {
   for (const id of traitIds) {
     const options = optionIds(catalog, id)
     if (options.length === 0) continue
-    traitsProperties[id] = {
-      type: 'STRING',
-      nullable: true,
-      enum: [...options, ''],
-      description: `Option id for catalog property ${id}`,
-    }
+    traitsProperties[id] = nullableEnum(options, `Option id for catalog property ${id}`)
   }
 
   return {
@@ -56,33 +68,11 @@ function buildSchema(catalog: Catalog) {
       genus: { type: 'STRING', nullable: true },
       cultivar: { type: 'STRING', nullable: true },
       probability: { type: 'NUMBER', description: 'Confidence 0–1' },
-      categoryId: {
-        type: 'STRING',
-        nullable: true,
-        enum: categoryIds.length ? [...categoryIds, ''] : [''],
-        description: 'Best matching catalog category id, or empty',
-      },
-      subcategoryId: {
-        type: 'STRING',
-        nullable: true,
-        enum: subcategoryIds.length ? [...subcategoryIds, ''] : [''],
-        description: 'Best matching catalog subcategory id, or empty',
-      },
-      quality: {
-        type: 'STRING',
-        nullable: true,
-        enum: grades.length ? [...grades, ''] : [''],
-      },
-      size: {
-        type: 'STRING',
-        nullable: true,
-        enum: sizes.length ? [...sizes, ''] : [''],
-      },
-      stage: {
-        type: 'STRING',
-        nullable: true,
-        enum: stages.length ? [...stages, ''] : [''],
-      },
+      categoryId: nullableEnum(categoryIds, 'Best matching catalog category id'),
+      subcategoryId: nullableEnum(subcategoryIds, 'Best matching catalog subcategory id'),
+      quality: nullableEnum(grades),
+      size: nullableEnum(sizes),
+      stage: nullableEnum(stages),
       traits: {
         type: 'OBJECT',
         nullable: true,
@@ -184,7 +174,7 @@ export const geminiProvider: IdentifyProvider = {
   id: 'gemini',
   order: 3,
 
-  async status(): Promise<IdentifyProviderStatus> {
+  async status(): Promise<ProviderHealth> {
     const key = apiKey()
     return {
       id: 'gemini',
@@ -194,7 +184,7 @@ export const geminiProvider: IdentifyProvider = {
       docsUrl: DOCS_URL,
       keySet: Boolean(key),
       status: key ? 'ready' : 'missingKey',
-      model: modelName(),
+      model: activeModel || modelsToTry()[0],
       lastError,
       lastUsedAt,
     }
@@ -204,8 +194,6 @@ export const geminiProvider: IdentifyProvider = {
     const key = apiKey()
     if (!key) throw new Error('GEMINI_API_KEY missing')
     const { mime, base64 } = stripDataUrl(image)
-    const model = modelName()
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
     lastUsedAt = new Date().toISOString()
 
     const prompt = [
@@ -218,41 +206,46 @@ export const geminiProvider: IdentifyProvider = {
       catalogBrief(catalog),
     ].join('\n')
 
-    try {
-      const res = await fetchWithTimeout(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { text: prompt },
-                { inlineData: { mimeType: mime, data: base64 } },
-              ],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: buildSchema(catalog),
-          },
-        }),
-      })
-      if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        const detail = `Gemini HTTP ${res.status}${text ? `: ${text.slice(0, 180)}` : ''}`
-        lastError = detail
-        throw new Error(detail)
+    const requestBody = JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: base64 } }],
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: buildSchema(catalog),
+      },
+    })
+
+    let lastFailure = 'Gemini failed'
+    for (const model of modelsToTry()) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
+      try {
+        const res = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody,
+        })
+        if (!res.ok) {
+          const text = await res.text().catch(() => '')
+          lastFailure = `Gemini HTTP ${res.status}${text ? `: ${text.slice(0, 180)}` : ''}`
+          if (RETRYABLE_STATUS.has(res.status)) continue
+          break
+        }
+        const body = (await res.json()) as GeminiBody
+        const suggestion = parseGeminiBody(body, catalog)
+        activeModel = model
+        lastError = undefined
+        return suggestion
+      } catch (err) {
+        if (err instanceof Error && err.name === 'IdentifyTimeoutError') throw err
+        lastFailure = err instanceof Error ? err.message : 'Gemini failed'
+        break
       }
-      const body = (await res.json()) as GeminiBody
-      const suggestion = parseGeminiBody(body, catalog)
-      lastError = undefined
-      return suggestion
-    } catch (err) {
-      if (!(err instanceof Error && err.name === 'IdentifyTimeoutError')) {
-        lastError = err instanceof Error ? err.message : 'Gemini failed'
-      }
-      throw err
     }
+    lastError = lastFailure
+    throw new Error(lastFailure)
   },
 }

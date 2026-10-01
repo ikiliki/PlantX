@@ -1,4 +1,7 @@
 import net from 'node:net'
+import { withExtraCa } from './lib/extraCa.ts'
+
+await withExtraCa()
 
 process.env.PLANTX_ENV = 'qa'
 process.env.PLANTX_SEED = 'empty'

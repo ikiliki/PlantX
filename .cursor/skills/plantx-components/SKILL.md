@@ -36,3 +36,4 @@ A pattern appears twice or more (same Field + Select + "Choose", same admin head
 - `ApisPanel` — presentational; page loads data
 - `AdminSection` — admin card with heading, lead, side note
 - `Segmented` (`src/components`) — button switch for modes and filters; tabs reuse its styles
+- `Switch` (`src/components`) — on/off `role="switch"` with busy spinner; System and APIs admin toggles

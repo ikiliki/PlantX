@@ -18,18 +18,17 @@ Each provider: `status()`, an HTTP call, and a pure `parse…Body(body, catalog)
 
 Only `identify.service.ts` knows the order: Plant.id → Pl@ntNet → Gemini.
 
-- **Skip** when key missing, credits/quota gone, or call fails/times out.
+- **Skip** when disabled by admin (Add Plant only), key missing, credits/quota gone, or call fails/times out.
 - **Stop** when a provider answers, even if nothing matches the catalog.
 - Plant.id `is_plant: false` is an answer.
 
 ## Mode
 
-- `mock` builds a body in the provider's real response shape and runs the same parser and mapper. No network, no credits, ignores keys.
-- `live` calls the APIs.
-- Add Plant (`POST /api/identify`) uses `IDENTIFY_MODE`; default is live in prod, mock otherwise.
-- Admin playground (`POST /api/identify/test`) picks mode, target (chain or one provider), and mock scenario per run.
+- Add Plant (`POST /api/identify`) is always `live`. No mock in the real path.
+- Each provider has an admin `enabled` flag in `identify_provider_settings` (no row = enabled), set by `PUT /api/identify/providers/:id`. Add Plant skips a disabled provider with reason `disabled`; all off → 503.
+- Admin playground (`POST /api/identify/test`) picks mode, target (chain or one provider), and mock scenario per run, and ignores `enabled`. `mock` builds a body in the provider's real response shape and runs the same parser and mapper (no network, no credits). `live` calls the real API with the real key.
 - UI-mock mode has no server: `src/mock/identifyMock.ts` answers on the client.
-- Never run `live` in automated checks.
+- Never run `live` (or `POST /api/identify`) in automated checks.
 
 ## History
 
@@ -41,7 +40,7 @@ Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategor
 
 ## Keys
 
-`KINDWISE_API_KEY`, `PLANTNET_API_KEY`, `GEMINI_API_KEY`, optional `GEMINI_MODEL`, `IDENTIFY_MODE`. Never send keys to the browser. Admin status reports key set or not, never the secret.
+`KINDWISE_API_KEY`, `PLANTNET_API_KEY`, `GEMINI_API_KEY`, optional `GEMINI_MODEL`. Gemini tries its model, then `MODEL_FALLBACKS` in `providers/gemini.ts`, when Google returns 404, 429, or 503. Never send keys to the browser. Admin status reports key set or not, never the secret.
 
 ## New provider
 
@@ -49,4 +48,4 @@ Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategor
 2. Add a mock fixture covering every `IdentifyMockScenario`.
 3. Register it in the chain.
 4. Add an Admin APIs row (docs, credits/status).
-5. Extend `IdentifyProviderId` in `src/mock/types.ts` and the `identify_requests.target` check.
+5. Extend `IdentifyProviderId` in `src/mock/types.ts`, the `identify_requests.target` check, and the `identify_provider_settings.provider_id` check.

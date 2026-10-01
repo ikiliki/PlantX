@@ -358,7 +358,7 @@ export type PlantClassDraft = {
 
 export type IdentifyProviderId = 'plantid' | 'plantnet' | 'gemini'
 
-export type IdentifySkipReason = 'missingKey' | 'exhausted' | 'error' | 'timeout'
+export type IdentifySkipReason = 'disabled' | 'missingKey' | 'exhausted' | 'error' | 'timeout'
 
 export type IdentifyTried = {
   provider: IdentifyProviderId
@@ -432,6 +432,8 @@ export type IdentifyProviderStatus = {
   returns: string
   docsUrl: string
   keySet: boolean
+  /** Admin switch. Add Plant skips a disabled provider; the playground ignores it. */
+  enabled: boolean
   status: IdentifyProviderStatusKind
   credits?: IdentifyCredits
   model?: string

@@ -3,13 +3,15 @@ import type {
   Diagnosis,
   IdentifyMockScenario,
   IdentifyMode,
+  IdentifyProviderId,
+  IdentifyProviderStatus,
   IdentifyRequestRecord,
   IdentifySource,
   IdentifyTarget,
   IdentifyTried,
 } from '../../../../src/mock/types.ts'
 import { getStore } from '../../db/index.ts'
-import { AppError } from '../../lib/errors.ts'
+import { AppError, Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
 import { IdentifyTimeoutError } from './http.ts'
@@ -29,6 +31,8 @@ export type IdentifyRun = {
   mode: IdentifyMode
   target: IdentifyTarget
   scenario?: IdentifyMockScenario
+  /** Add Plant skips providers the admin switched off. The playground leaves this unset. */
+  honorEnabled?: boolean
 }
 
 export type IdentifyRequester = {
@@ -108,16 +112,40 @@ async function saveRecord(record: IdentifyRequestRecord) {
   }
 }
 
+function enabledFlags() {
+  return getStore().identifySettings.get()
+}
+
+async function statusOf(
+  provider: IdentifyProvider,
+  flags: Partial<Record<IdentifyProviderId, boolean>>,
+): Promise<IdentifyProviderStatus> {
+  return { ...(await provider.status()), enabled: flags[provider.id] ?? true }
+}
+
 export const identifyService = {
-  async providersStatus() {
-    return Promise.all(CHAIN.map((provider) => provider.status()))
+  async providersStatus(): Promise<IdentifyProviderStatus[]> {
+    const flags = await enabledFlags()
+    return Promise.all(CHAIN.map((provider) => statusOf(provider, flags)))
+  },
+
+  async setEnabled(id: IdentifyProviderId, enabled: boolean): Promise<IdentifyProviderStatus> {
+    const provider = CHAIN.find((item) => item.id === id)
+    if (!provider) throw Errors.missing(`Unknown provider ${id}`)
+    await getStore().identifySettings.save(id, enabled)
+    return statusOf(provider, await enabledFlags())
   },
 
   async diagnose(image: string, run: IdentifyRun): Promise<Diagnosis> {
     const catalog = await catalogService.get()
     const tried: IdentifyTried[] = []
+    const flags = run.honorEnabled ? await enabledFlags() : {}
 
     for (const provider of providersFor(run.target)) {
+      if (flags[provider.id] === false) {
+        tried.push(toTried(provider, 'disabled'))
+        continue
+      }
       if (run.mode === 'live') {
         const skip = await liveSkip(provider)
         if (skip) {

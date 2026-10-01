@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react'
 import { Badge } from '../../../../components/Badge/Badge'
 import { Button } from '../../../../components/Button/Button'
+import { Switch } from '../../../../components/Switch/Switch'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type {
   IdentifyCredits,
-  IdentifyMode,
   IdentifyProviderId,
   IdentifyProviderStatus,
   IdentifyProviderStatusKind,
 } from '../../../../mock/types'
-import { formatWhen, modeLabelKey, modeTone, providerNameKey } from '../../identifyLabels'
+import { formatWhen, providerNameKey } from '../../identifyLabels'
 import { AdminSection } from '../AdminSection/AdminSection'
 import { AdminDetailGrid } from '../AdminTable/AdminTable'
-import { DocsLink, Empty, ModeHint, ModeStrip, Panel, Toolbar } from './ApisPanel.styles'
+import { ChainLead, DocsLink, Empty, Panel, Toolbar } from './ApisPanel.styles'
 
 const statusLabelKey = {
   ready: 'apisStatusReady',
@@ -57,14 +57,17 @@ function formatCredits(
 
 export function ApisPanel({
   providers,
-  defaultMode,
   onRefresh,
+  onEnabledChange,
+  saving,
   loading,
 }: {
   providers: IdentifyProviderStatus[]
-  /** Mode Add Plant runs in. Unknown until the server answers. */
-  defaultMode?: IdentifyMode
   onRefresh?: () => void
+  /** Without it the switch is read-only. */
+  onEnabledChange?: (id: IdentifyProviderId, enabled: boolean) => void
+  /** Providers whose switch is being saved. */
+  saving?: ReadonlySet<IdentifyProviderId>
   loading?: boolean
 }) {
   const { t, locale } = useI18n()
@@ -72,24 +75,14 @@ export function ApisPanel({
 
   return (
     <Panel>
-      {(defaultMode || onRefresh) && (
-        <Toolbar>
-          {defaultMode && (
-            <ModeStrip>
-              <span>
-                {t.admin.apisDefaultMode}{' '}
-                <Badge $tone={modeTone(defaultMode)}>{t.admin[modeLabelKey[defaultMode]]}</Badge>
-              </span>
-              <ModeHint>{t.admin.apisDefaultModeHint}</ModeHint>
-            </ModeStrip>
-          )}
-          {onRefresh && (
-            <Button size="sm" variant="secondary" disabled={loading} onClick={onRefresh}>
-              {t.admin.apisRefresh}
-            </Button>
-          )}
-        </Toolbar>
-      )}
+      <Toolbar>
+        <ChainLead>{t.admin.apisChainLead}</ChainLead>
+        {onRefresh && (
+          <Button size="sm" variant="secondary" disabled={loading} onClick={onRefresh}>
+            {t.admin.apisRefresh}
+          </Button>
+        )}
+      </Toolbar>
       {sorted.length === 0 ? (
         <Empty>{t.admin.apisEmpty}</Empty>
       ) : (
@@ -145,11 +138,22 @@ export function ApisPanel({
             items.push({ label: t.admin.apisLastUsed, value: lastUsed })
           }
 
+          const name = t.admin[nameKey]
           return (
             <AdminSection
               key={provider.id}
-              title={t.admin[nameKey]}
-              aside={`${t.admin.apisOrder} ${provider.order}`}
+              title={name}
+              aside={
+                <Switch
+                  checked={provider.enabled}
+                  disabled={!onEnabledChange}
+                  busy={saving?.has(provider.id)}
+                  busyLabel={t.admin.apisSaving}
+                  ariaLabel={`${name}: ${t.admin.apisEnabledOn}`}
+                  onChange={(next) => onEnabledChange?.(provider.id, next)}
+                  label={provider.enabled ? t.admin.apisEnabledOn : t.admin.apisEnabledOff}
+                />
+              }
             >
               <AdminDetailGrid items={items} />
             </AdminSection>

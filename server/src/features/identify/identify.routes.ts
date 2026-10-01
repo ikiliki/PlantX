@@ -2,15 +2,16 @@ import { Hono, type Context } from 'hono'
 import type {
   IdentifyMockScenario,
   IdentifyMode,
+  IdentifyProviderId,
   IdentifyTarget,
 } from '../../../../src/mock/types.ts'
-import { identifyMode } from '../../lib/env.ts'
 import { Errors } from '../../lib/errors.ts'
 import { requireAdmin, requireUser } from '../../lib/session.ts'
 import { identifyService, type IdentifyOutcome } from './identify.service.ts'
 
 const MODES: IdentifyMode[] = ['mock', 'live']
-const TARGETS: IdentifyTarget[] = ['chain', 'plantid', 'plantnet', 'gemini']
+const PROVIDERS: IdentifyProviderId[] = ['plantid', 'plantnet', 'gemini']
+const TARGETS: IdentifyTarget[] = ['chain', ...PROVIDERS]
 const SCENARIOS: IdentifyMockScenario[] = ['match', 'notInCatalog', 'notPlant', 'error']
 const HISTORY_DEFAULT_LIMIT = 50
 const HISTORY_MAX_LIMIT = 200
@@ -51,7 +52,7 @@ identifyRoutes.post('/', async (c) => {
   const image = readImage(body)
   const outcome = await identifyService.identify(
     image,
-    { mode: identifyMode(), target: 'chain' },
+    { mode: 'live', target: 'chain', honorEnabled: true },
     { userId: user.id, source: 'addPlant', thumb: readThumb(body) },
   )
   return respond(c, outcome)
@@ -78,7 +79,17 @@ identifyRoutes.post('/test', async (c) => {
 identifyRoutes.get('/providers', async (c) => {
   await requireAdmin(c)
   const providers = await identifyService.providersStatus()
-  return c.json({ providers, defaultMode: identifyMode() })
+  return c.json({ providers })
+})
+
+identifyRoutes.put('/providers/:id', async (c) => {
+  await requireAdmin(c)
+  const id = c.req.param('id')
+  if (!oneOf(id, PROVIDERS)) throw Errors.invalid(`id must be one of ${PROVIDERS.join(', ')}`)
+  const body = await readBody(c)
+  if (typeof body.enabled !== 'boolean') throw Errors.invalid('Body must include enabled: boolean')
+  const provider = await identifyService.setEnabled(id, body.enabled)
+  return c.json({ provider })
 })
 
 identifyRoutes.get('/history', async (c) => {

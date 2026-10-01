@@ -20,19 +20,12 @@ export const Toolbar = styled.div`
   }
 `
 
-export const ModeStrip = styled.div`
-  display: grid;
-  gap: 4px;
+export const ChainLead = styled.p`
+  flex: 1 1 280px;
   min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: ${theme.colors.forest};
-`
-
-export const ModeHint = styled.p`
   margin: 0;
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.45;
   color: ${theme.colors.muted};
 `
 

@@ -109,10 +109,31 @@ export const openApiDocument = {
         type: 'object',
         properties: {
           provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
-          reason: { type: 'string', enum: ['missingKey', 'exhausted', 'error', 'timeout'] },
+          reason: { type: 'string', enum: ['disabled', 'missingKey', 'exhausted', 'error', 'timeout'] },
           detail: { type: 'string' },
         },
         required: ['provider', 'reason'],
+      },
+      IdentifyProviderStatus: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          order: { type: 'integer' },
+          name: { type: 'string' },
+          returns: { type: 'string' },
+          docsUrl: { type: 'string' },
+          keySet: { type: 'boolean' },
+          enabled: {
+            type: 'boolean',
+            description: 'Admin switch. POST /api/identify skips a disabled provider; the playground ignores it.',
+          },
+          status: { type: 'string', enum: ['ready', 'missingKey', 'exhausted', 'unreachable'] },
+          credits: { type: 'object', additionalProperties: true },
+          model: { type: 'string' },
+          lastError: { type: 'string' },
+          lastUsedAt: { type: 'string', format: 'date-time' },
+        },
+        required: ['id', 'order', 'name', 'returns', 'docsUrl', 'keySet', 'enabled', 'status'],
       },
       Diagnosis: {
         type: 'object',
@@ -245,7 +266,7 @@ export const openApiDocument = {
         tags: ['identify'],
         summary: 'Diagnose a plant photo',
         description:
-          'Signed-in only. Tries Plant.id, then Pl@ntNet, then Gemini. Stops on the first answer (including is_plant false). Mode comes from IDENTIFY_MODE (default live in prod, mock elsewhere); mock parses canned provider bodies and spends no credits. Every request is saved to history.',
+          'Signed-in only. Tries Plant.id, then Pl@ntNet, then Gemini. Stops on the first answer (including is_plant false). Always live (real APIs, spends credits); providers the admin switched off are skipped with reason disabled. Every request is saved to history.',
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -290,7 +311,7 @@ export const openApiDocument = {
         tags: ['identify'],
         summary: 'Admin identify playground',
         description:
-          'Admin only. Runs the chain or one provider in the chosen mode. Live spends real credits; mock uses the scenario (default match).',
+          'Admin only. Runs the chain or one provider in the chosen mode, ignoring the enabled switch. Live spends real credits; mock uses the scenario (default match).',
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -377,7 +398,7 @@ export const openApiDocument = {
     '/api/identify/providers': {
       get: {
         tags: ['identify'],
-        summary: 'Provider status and credits',
+        summary: 'Provider status, credits, and enabled switch',
         description: 'Admin only. Reports key set or not, never the secret. Credits fetched in parallel.',
         security: [{ cookieAuth: [] }],
         responses: {
@@ -388,14 +409,9 @@ export const openApiDocument = {
                 schema: {
                   type: 'object',
                   properties: {
-                    providers: { type: 'array', items: { type: 'object', additionalProperties: true } },
-                    defaultMode: {
-                      type: 'string',
-                      enum: ['mock', 'live'],
-                      description: 'Mode POST /api/identify uses',
-                    },
+                    providers: { type: 'array', items: { $ref: '#/components/schemas/IdentifyProviderStatus' } },
                   },
-                  required: ['providers', 'defaultMode'],
+                  required: ['providers'],
                 },
               },
             },
@@ -406,6 +422,60 @@ export const openApiDocument = {
           },
           '403': {
             description: 'Not admin',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+        },
+      },
+    },
+    '/api/identify/providers/{id}': {
+      put: {
+        tags: ['identify'],
+        summary: 'Enable or disable a provider for Add Plant',
+        description:
+          'Admin only. Saved in identify_provider_settings. A disabled provider is skipped by POST /api/identify; the playground still runs it.',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: { enabled: { type: 'boolean' } },
+                required: ['enabled'],
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Updated provider status',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { provider: { $ref: '#/components/schemas/IdentifyProviderStatus' } },
+                  required: ['provider'],
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Unknown id or enabled not boolean',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '401': {
+            description: 'Not signed in',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '403': {
+            description: 'Not admin',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          '503': {
+            description: 'identify_provider_settings table not migrated',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
           },
         },

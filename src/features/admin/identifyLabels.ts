@@ -38,6 +38,7 @@ export const scenarioLabelKey = {
 } as const satisfies Record<IdentifyMockScenario, string>
 
 export const skipLabelKey = {
+  disabled: 'apisSkipDisabled',
   missingKey: 'apisSkipMissingKey',
   exhausted: 'apisSkipExhausted',
   error: 'apisSkipError',
