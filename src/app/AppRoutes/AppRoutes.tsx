@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { matchPath, Navigate, Route, Routes, useLocation, useNavigate, type Location } from 'react-router-dom'
+import { HoldNotice } from '../../components/HoldNotice/HoldNotice'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { NotLaunched } from '../../components/NotLaunched/NotLaunched'
 import { AdminGate } from '../../features/admin/components/AdminGate/AdminGate'
@@ -31,11 +32,12 @@ function staticLocation(pathname: string): Location {
 
 type SellerState = { sellerFull?: boolean } | null
 
-/** Closed app paints a full page. The operator sees the real app anyway. */
+/** Offline and unlaunched apps paint a full page. The operator sees the real app when the API is up. */
 function ProductShell() {
   const { currentUser, db, liveStatus } = useStore()
-  if (isOperator(currentUser)) return <AppShell />
   if (liveStatus === 'loading') return <LoaderShell fill />
+  if (liveStatus === 'down') return <HoldNotice mode="maintenance" />
+  if (isOperator(currentUser)) return <AppShell />
   if (!db.system.launched) return <NotLaunched />
   return <AppShell />
 }
