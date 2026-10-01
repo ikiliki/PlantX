@@ -1,5 +1,6 @@
 import type {
   Catalog,
+  IdentifyFieldChecks,
   IdentifyMode,
   IdentifyProviderId,
   IdentifyRequestRecord,
@@ -50,7 +51,10 @@ export interface PlantxStore {
   identifyRequests: {
     /** Newest first. `userName` is filled from users. */
     list(query: { mode?: IdentifyMode; limit: number }): Promise<IdentifyRequestRecord[]>
+    get(id: string): Promise<IdentifyRequestRecord | null>
     add(record: IdentifyRequestRecord): Promise<void>
+    /** Marks a request as added with this plant and photo. */
+    link(id: string, link: { plantId: string; photoIndex: number; fields?: IdentifyFieldChecks }): Promise<void>
   }
   identifySettings: {
     /** Saved admin switches. A provider without a row is enabled. */

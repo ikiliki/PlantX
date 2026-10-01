@@ -21,10 +21,14 @@ import { isPlacementEnabled } from '../../../../theme/release'
 import type { StageBand } from '../../../../mock/types'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
+import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
+import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
+import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
 import {
   ActionRow,
+  ActivityBody,
   Aside,
   AsideLabel,
   AsideStat,
@@ -45,6 +49,7 @@ import {
   Panel,
   PhotoIcon,
   PhotoIconButton,
+  PhotoMore,
   PriceTip,
   Qty,
   Rating,
@@ -240,6 +245,11 @@ export function PlantPassport({
             <PhotoIcon>
               <PlantImage src={photos[0]} alt="" />
             </PhotoIcon>
+            {photos.length > 1 ? (
+              <PhotoMore title={t.addPlant.photosCount.replace('{n}', String(photos.length))}>
+                +{photos.length - 1}
+              </PhotoMore>
+            ) : null}
           </PhotoIconButton>
           <NameBlock>
             {(categoryLabel || subLabel) && (
@@ -261,6 +271,7 @@ export function PlantPassport({
             <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
               {title}
             </Title>
+            <IdentifyBadge identification={plant.identification} />
           </NameBlock>
         </IdentityHead>
 
@@ -345,6 +356,7 @@ export function PlantPassport({
       <Main $embedded={embedded} $dialog={dialog}>
         <PlantPhotoGallery
           photos={photos}
+          checks={plant.identification?.photos}
           alt={title}
           embedded={embedded}
           dialog={dialog}
@@ -405,10 +417,22 @@ export function PlantPassport({
                         const key = item.id
                         const marked = key === activityKey
                         const at = item.createdAt.slice(0, 10)
+                        const checks = plant.identification?.photos
+                        const scanCheck =
+                          item.kind === 'scan' ? checks?.find((check) => check.requestId === item.identifyRequestId) : undefined
                         return (
                           <TimelineRow key={key} id={`passport-activity-${key}`} $mark={marked}>
                             <time>{at}</time>
-                            <span>{tr(item.body, item.bodyHe)}</span>
+                            <ActivityBody>
+                              <span>{tr(item.body, item.bodyHe)}</span>
+                              {scanCheck ? <PhotoCheckSticker check={scanCheck} /> : null}
+                              {item.kind === 'added' ? (
+                                <>
+                                  <IdentifyBadge identification={plant.identification} compact />
+                                  {checks?.length ? <PhotoChecks photos={photos} checks={checks} size="sm" /> : null}
+                                </>
+                              ) : null}
+                            </ActivityBody>
                           </TimelineRow>
                         )
                       })}

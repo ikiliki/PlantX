@@ -34,6 +34,16 @@ Only `identify.service.ts` knows the order: Plant.id → Pl@ntNet → Gemini.
 
 Every request is saved to `identify_requests` (thumb, mode, source, diagnosis, tried). History must never fail an identify call; a missing table is a warning. Admin reads `GET /api/identify/history?mode=`.
 
+## Plant verification
+
+A plant has up to `MAX_PLANT_PHOTOS` (3) photos; each photo is scanned separately (one identify call, one request, credits each). The client sends `identifyRequestIds[i]` for `photos[i]` (null for unscanned) with `POST /api/plants`; the server ignores client `identification`. A request is trusted only if it is `addPlant`, same owner, has no `plantId` yet, and is not repeated. `identificationFor` in `src/features/greenhouse/identification.ts` is shared by client and server: the first photo whose answer still matches the saved category/subcategory makes it `ai`, else the first plant answer makes it `edited`, else `manual`. Per-photo results (`match` | `mismatch` | `notPlant` | `failed` | `unscanned`) live in `identification.photos` / `plant_photo_checks`.
+
+After saving, the server links each used request (`identify_requests.plant_id`, `photo_index`, `fields` = kept/changed/manual per class field) and records an `added` activity; earlier `scan` activities with those request ids get the `plantId`. Unused requests stay without a plant ("Not added" in history). `POST /api/identify` records a `scan` activity for the user. Linking never fails the add. `scan`/`added` are reserved: `POST /api/activities` rejects them; scans are hidden from the home feed.
+
+Both tables are guarded at runtime (`to_regclass`, 42P01/42703 ignored), so a DB without `20261001170000` / `20261001180000` keeps working without verification data.
+
+UI: `IdentifyBadge` (plant), `PhotoCheckSticker` (one photo), `PhotoChecks` (photo grid with stickers).
+
 ## Mapper
 
 Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategory: name / nameHe / code. Grade, size, stage, traits: only existing option ids (Gemini only).
@@ -48,4 +58,4 @@ Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategor
 2. Add a mock fixture covering every `IdentifyMockScenario`.
 3. Register it in the chain.
 4. Add an Admin APIs row (docs, credits/status).
-5. Extend `IdentifyProviderId` in `src/mock/types.ts`, the `identify_requests.target` check, and the `identify_provider_settings.provider_id` check.
+5. Extend `IdentifyProviderId` in `src/mock/types.ts`, the `identify_requests.target` check, the `identify_provider_settings.provider_id` check, the `plant_identifications.provider` check, and `PROVIDER_LABEL` / `PROVIDER_CHAIN` in `src/features/greenhouse/identification.ts`.

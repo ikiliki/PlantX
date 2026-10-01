@@ -158,10 +158,56 @@ export interface Plant {
   rarity?: PlantRarity
   growthTime?: GrowthTime
   conditions?: GrowingConditions
+  /** How the class was identified when the plant was added. Set by the server from a saved identify request. */
+  identification?: PlantIdentification
   createdAt: string
   history: { at: string; label: string; labelHe: string }[]
   comps?: { price: number; date: string; note: string; noteHe: string }[]
 }
+
+/**
+ * `ai`: a provider answered and the saved class matches its answer.
+ * `edited`: a provider answered, then the owner picked a different class.
+ * `manual`: no provider answer; the owner filled the class in.
+ */
+export type PlantIdentificationSource = 'ai' | 'edited' | 'manual'
+
+export type PlantIdentification = {
+  source: PlantIdentificationSource
+  provider?: IdentifyProviderId
+  mode?: IdentifyMode
+  label?: string
+  scientificName?: string
+  probability?: number
+  requestId?: string
+  at: string
+  /** One check per saved photo, in photo order. */
+  photos?: PhotoCheck[]
+}
+
+/**
+ * `match`: the provider saw the saved class. `mismatch`: it saw another plant or one outside the catalog.
+ * `notPlant` / `failed`: no usable answer. `unscanned`: no identify request for this photo.
+ */
+export type PhotoCheckResult = 'match' | 'mismatch' | 'notPlant' | 'failed' | 'unscanned'
+
+export type PhotoCheck = {
+  position: number
+  result: PhotoCheckResult
+  requestId?: string
+  provider?: IdentifyProviderId
+  mode?: IdentifyMode
+  label?: string
+  probability?: number
+}
+
+/** Class fields an identify answer can fill. */
+export type IdentifyFieldId = 'category' | 'subcategory' | 'quality' | 'size' | 'stage'
+
+/** `kept`: the AI value was saved. `changed`: the owner picked another. `manual`: the AI gave none. */
+export type IdentifyFieldCheck = 'kept' | 'changed' | 'manual'
+
+export type IdentifyFieldChecks = Partial<Record<IdentifyFieldId, IdentifyFieldCheck>>
 
 export interface MarketClass {
   id: string
@@ -281,13 +327,15 @@ export interface ClaimDraft {
   claimedBy?: string
 }
 
-export type FeedUpdateKind = 'photo' | 'water' | 'propagate' | 'grade' | 'passport' | 'listing'
+/** `scan`: an Add Plant identify call (linked to the plant once it is saved). `added`: a plant joined the greenhouse. */
+export type FeedUpdateKind = 'photo' | 'water' | 'propagate' | 'grade' | 'passport' | 'listing' | 'scan' | 'added'
 
 export interface FeedUpdate {
   id: string
   kind: FeedUpdateKind
   userId: string
   plantId?: string
+  identifyRequestId?: string
   body: string
   bodyHe: string
   createdAt: string
@@ -406,6 +454,10 @@ export type IdentifyRequestRecord = {
   durationMs: number
   diagnosis?: Diagnosis
   tried: IdentifyTried[]
+  /** Set when an Add Plant request was saved with a plant. Absent means it was never added. */
+  plantId?: string
+  photoIndex?: number
+  fields?: IdentifyFieldChecks
 }
 
 export type IdentifyTestRequest = {

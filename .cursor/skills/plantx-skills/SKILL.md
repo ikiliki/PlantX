@@ -27,5 +27,5 @@ Pass the skill **paths** in the brief. Do not paste skill text into the prompt.
 | plantx-audience | `.cursor/skills/plantx-audience/SKILL.md` | Pages, routes, guest view, personas, empty states, greenhouse/market mocks |
 | plantx-release | `.cursor/skills/plantx-release/SKILL.md` | Features, nav, landing widgets, admin system gates |
 | plantx-components | `.cursor/skills/plantx-components/SKILL.md` | New or refactored components, pages, styles, stories |
-| plantx-identify | `.cursor/skills/plantx-identify/SKILL.md` | Photo diagnosis, identify providers, catalog mapping, Admin APIs credits |
+| plantx-identify | `.cursor/skills/plantx-identify/SKILL.md` | Photo diagnosis, identify providers, catalog mapping, Admin APIs credits, plant AI-verified status |
 | plantx-skill-keeper | `.cursor/skills/plantx-skill-keeper/SKILL.md` | After a pattern change: create, update, merge, or delete skills |

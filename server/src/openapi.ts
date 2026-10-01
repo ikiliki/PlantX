@@ -37,10 +37,12 @@ export const openApiDocument = {
           id: { type: 'string' },
           kind: {
             type: 'string',
-            enum: ['photo', 'water', 'propagate', 'grade', 'passport', 'listing'],
+            enum: ['photo', 'water', 'propagate', 'grade', 'passport', 'listing', 'scan', 'added'],
+            description: '`scan` and `added` are written by identify and Add Plant only; POST /api/activities rejects them.',
           },
           userId: { type: 'string' },
-          plantId: { type: 'string' },
+          plantId: { type: 'string', description: 'On a `scan`, set once the scanned plant is added.' },
+          identifyRequestId: { type: 'string' },
           body: { type: 'string' },
           bodyHe: { type: 'string' },
           createdAt: { type: 'string', format: 'date-time' },
@@ -87,8 +89,39 @@ export const openApiDocument = {
           ownerId: { type: 'string' },
           wateredAt: { type: 'string' },
           photoAt: { type: 'string' },
+          identification: { $ref: '#/components/schemas/PlantIdentification' },
         },
         required: ['id', 'title'],
+      },
+      PlantIdentification: {
+        type: 'object',
+        description: 'Set by the server from a saved Add Plant identify request. Client values are ignored.',
+        properties: {
+          source: { type: 'string', enum: ['ai', 'edited', 'manual'] },
+          provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          mode: { type: 'string', enum: ['mock', 'live'] },
+          label: { type: 'string' },
+          scientificName: { type: 'string' },
+          probability: { type: 'number' },
+          requestId: { type: 'string' },
+          at: { type: 'string', format: 'date-time' },
+          photos: { type: 'array', items: { $ref: '#/components/schemas/PhotoCheck' } },
+        },
+        required: ['source', 'at'],
+      },
+      PhotoCheck: {
+        type: 'object',
+        description: 'AI check of one saved photo, in photo order.',
+        properties: {
+          position: { type: 'integer' },
+          result: { type: 'string', enum: ['match', 'mismatch', 'notPlant', 'failed', 'unscanned'] },
+          requestId: { type: 'string' },
+          provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          mode: { type: 'string', enum: ['mock', 'live'] },
+          label: { type: 'string' },
+          probability: { type: 'number' },
+        },
+        required: ['position', 'result'],
       },
       SessionBody: {
         type: 'object',
@@ -166,6 +199,13 @@ export const openApiDocument = {
           durationMs: { type: 'integer' },
           diagnosis: { $ref: '#/components/schemas/Diagnosis' },
           tried: { type: 'array', items: { $ref: '#/components/schemas/IdentifyTried' } },
+          plantId: { type: 'string', description: 'Plant this Add Plant request was saved with. Absent: never added.' },
+          photoIndex: { type: 'integer' },
+          fields: {
+            type: 'object',
+            description: 'Per class field (category, subcategory, quality, size, stage): kept, changed, or manual.',
+            additionalProperties: { type: 'string', enum: ['kept', 'changed', 'manual'] },
+          },
         },
         required: ['id', 'createdAt', 'userId', 'source', 'mode', 'target', 'status', 'durationMs', 'tried'],
       },
@@ -174,6 +214,7 @@ export const openApiDocument = {
         properties: {
           diagnosis: { $ref: '#/components/schemas/Diagnosis' },
           record: { $ref: '#/components/schemas/IdentifyRequestRecord' },
+          activity: { $ref: '#/components/schemas/Activity', description: 'Add Plant only: the `scan` activity' },
         },
         required: ['diagnosis', 'record'],
       },
@@ -617,10 +658,27 @@ export const openApiDocument = {
       post: {
         tags: ['plants'],
         summary: 'Add a greenhouse plant',
+        description:
+          'Up to 3 photos. Send `identifyRequestIds[i]` (the `record.id` from `POST /api/identify`) for `photos[i]`. Each trusted request is linked to the plant and gets a photo check; the first matching photo credits its provider. Without any the plant is saved as manual.',
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/Plant' } } },
+          content: {
+            'application/json': {
+              schema: {
+                allOf: [
+                  { $ref: '#/components/schemas/Plant' },
+                  {
+                    type: 'object',
+                    properties: {
+                      identifyRequestIds: { type: 'array', items: { type: 'string', nullable: true }, maxItems: 3 },
+                      identifyRequestId: { type: 'string', deprecated: true, description: 'Same as identifyRequestIds[0]' },
+                    },
+                  },
+                ],
+              },
+            },
+          },
         },
         responses: {
           '200': {

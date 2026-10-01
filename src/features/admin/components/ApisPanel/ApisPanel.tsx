@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Badge } from '../../../../components/Badge/Badge'
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { Button } from '../../../../components/Button/Button'
 import { Switch } from '../../../../components/Switch/Switch'
 import { useI18n } from '../../../../i18n/I18nProvider'
@@ -83,7 +84,9 @@ export function ApisPanel({
           </Button>
         )}
       </Toolbar>
-      {sorted.length === 0 ? (
+      {loading && sorted.length === 0 ? (
+        <LoaderShell />
+      ) : sorted.length === 0 ? (
         <Empty>{t.admin.apisEmpty}</Empty>
       ) : (
         sorted.map((provider) => {

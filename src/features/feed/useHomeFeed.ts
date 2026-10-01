@@ -9,7 +9,7 @@ function friendCircle(userId: string | undefined, friendIds: string[] | undefine
   return new Set([userId, ...(friendIds ?? [])].filter(Boolean) as string[])
 }
 
-/** Newest-first greenhouse activities. Global, or friends when filtered. */
+/** Newest-first greenhouse activities. Global, or friends when filtered. AI scans stay in the owner's greenhouse. */
 export function useHomeFeed(options?: { paged?: boolean }) {
   const { db, currentUser, signedIn } = useStore()
   const friendsOnly = Boolean(db.feedFriendsOnly && signedIn)
@@ -17,7 +17,7 @@ export function useHomeFeed(options?: { paged?: boolean }) {
   const items = useMemo(() => {
     const allowed = friendCircle(currentUser?.id, currentUser?.friendIds)
     return (db.updates ?? [])
-      .filter((update) => !friendsOnly || allowed.has(update.userId))
+      .filter((update) => update.kind !== 'scan' && (!friendsOnly || allowed.has(update.userId)))
       .map((update) => ({
         type: 'update' as const,
         id: update.id,

@@ -3,11 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
+import type { ActivityEntry } from '../../features/greenhouse/components/ActivityThread/ActivityThread'
 import { CollectionBoard, greenhouseFilter } from '../../features/greenhouse/components/CollectionBoard/CollectionBoard'
 import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
 import { GreenhouseWallet } from '../../features/greenhouse/components/GreenhouseWallet/GreenhouseWallet'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
-import { useSell } from '../../features/sell/SellProvider'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
 import { useServerSlices } from '../../mock/useServerSlices'
@@ -37,10 +37,10 @@ export function GreenhousePage({
 
 function GreenhouseOwner({ view }: { view: ComponentView }) {
   const { db, currentUser, signedIn, refreshPhoto, confirmWater } = useStore()
-  const { openSell } = useSell()
   const { t, tr, formatMoney } = useI18n()
   const navigate = useNavigate()
   const [adding, setAdding] = useState(false)
+  const [freshId, setFreshId] = useState<string>()
   const [params, setParams] = useSearchParams()
   const filter = greenhouseFilter(params.get('tab'))
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
@@ -54,24 +54,36 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     return sum + (mc ? mc.lastPrice * p.quantity : 0)
   }, 0)
 
-  const activity = mine
-    .flatMap((p) =>
-      p.history.map((h) => ({
-        ...h,
-        plant: tr(p.title, p.titleHe),
-        plantId: p.id,
-        photo: p.photos[0],
-      })),
-    )
-    .sort((a, b) => (a.at > b.at ? 1 : a.at < b.at ? -1 : 0))
+  const history: (ActivityEntry & { sortKey: string })[] = mine.flatMap((p) =>
+    p.history.map((h) => ({
+      sortKey: h.at,
+      at: h.at,
+      plant: tr(p.title, p.titleHe),
+      plantId: p.id,
+      photo: p.photos[0],
+      label: tr(h.label, h.labelHe),
+    })),
+  )
+  // Scans show before the plant exists; once it is added they link to it.
+  const scans: (ActivityEntry & { sortKey: string })[] = (db.updates ?? [])
+    .filter((item) => item.kind === 'scan' && item.userId === ownerId)
+    .map((item) => {
+      const plant = item.plantId ? mine.find((p) => p.id === item.plantId) : undefined
+      return {
+        sortKey: item.createdAt,
+        at: item.createdAt.slice(0, 16).replace('T', ' '),
+        plant: plant ? tr(plant.title, plant.titleHe) : t.addPlant.scanEntry,
+        plantId: plant?.id,
+        photo: plant?.photos[0],
+        label: tr(item.body, item.bodyHe),
+        kind: 'scan' as const,
+        tag: plant ? t.addPlant.scanAdded : t.addPlant.scanNotAdded,
+      }
+    })
+  const activity: ActivityEntry[] = [...history, ...scans]
+    .sort((a, b) => (a.sortKey > b.sortKey ? 1 : a.sortKey < b.sortKey ? -1 : 0))
     .slice(-40)
-    .map((entry) => ({
-      at: entry.at,
-      plant: entry.plant,
-      plantId: entry.plantId,
-      photo: entry.photo,
-      label: tr(entry.label, entry.labelHe),
-    }))
+    .map(({ sortKey: _sortKey, ...entry }) => entry)
 
   const setFilter = (next: typeof filter) => {
     const nextParams = new URLSearchParams(params)
@@ -106,13 +118,21 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
         filter={filter}
         onFilter={setFilter}
         onAdd={() => setAdding(true)}
-        onList={openSell}
         onRefresh={refreshPhoto}
         onWater={confirmWater}
         compact={view === 'widget'}
+        freshId={freshId}
       />
 
-      {adding && <AddPlantDialog onClose={() => setAdding(false)} />}
+      {adding && (
+        <AddPlantDialog
+          onClose={() => setAdding(false)}
+          onSaved={(plantId) => {
+            setFreshId(plantId)
+            setFilter('all')
+          }}
+        />
+      )}
     </Page>
   )
 

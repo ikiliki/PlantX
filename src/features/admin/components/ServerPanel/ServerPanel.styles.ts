@@ -351,3 +351,21 @@ export const DialogActions = styled.div`
   justify-content: flex-end;
   gap: 8px;
 `
+
+/** Activity preview: who verified the plant and the AI check on each photo. */
+export const PreviewVerify = styled.section`
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding-top: 12px;
+  border-top: 1px dashed ${theme.colors.border};
+
+  h3 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: ${theme.colors.muted};
+  }
+`

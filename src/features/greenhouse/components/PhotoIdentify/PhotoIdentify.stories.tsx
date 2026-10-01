@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { StoreProvider } from '../../../../mock/store'
-import type { Diagnosis } from '../../../../mock/types'
-import { PhotoIdentify } from './PhotoIdentify'
+import type { Diagnosis, IdentifyTried, PhotoCheck } from '../../../../mock/types'
+import { PhotoIdentify, type PhotoIdentifyPhase, type PhotoScan } from './PhotoIdentify'
 
 const SAMPLE_PHOTO =
   'data:image/svg+xml;utf8,' +
@@ -57,7 +57,7 @@ export const notPlantDiagnosis: Diagnosis = {
 const withApp = (Story: () => ReactNode) => (
   <StoreProvider source="example">
     <I18nProvider>
-      <div style={{ padding: 24, maxWidth: 480 }}>
+      <div style={{ padding: 24, maxWidth: 680 }}>
         <Story />
       </div>
     </I18nProvider>
@@ -70,30 +70,48 @@ export default {
   decorators: [withApp],
 }
 
-function Frame({
-  phase,
-  diagnosis,
-  photo = SAMPLE_PHOTO,
-}: {
-  phase: 'idle' | 'identifying' | 'matched' | 'notInCatalog' | 'failed' | 'notPlant'
-  diagnosis?: Diagnosis
-  photo?: string
-}) {
-  const [src, setSrc] = useState(photo)
-  return (
-    <PhotoIdentify
-      photo={src}
-      onPhoto={setSrc}
-      onDiagnosis={() => undefined}
-      phase={phase}
-      diagnosis={diagnosis}
-    />
-  )
+function scan(id: string, phase: PhotoIdentifyPhase, diagnosis?: Diagnosis, tried?: IdentifyTried[]): PhotoScan {
+  return { id, photo: SAMPLE_PHOTO, phase, diagnosis, tried: tried ?? diagnosis?.tried }
 }
 
-export const Idle = () => <Frame phase="idle" photo="" />
-export const Identifying = () => <Frame phase="identifying" />
-export const Matched = () => <Frame phase="matched" diagnosis={matchedDiagnosis} />
-export const NotInCatalog = () => <Frame phase="notInCatalog" diagnosis={notInCatalogDiagnosis} />
-export const Failed = () => <Frame phase="failed" />
-export const NotPlant = () => <Frame phase="notPlant" diagnosis={notPlantDiagnosis} />
+function Frame({ initial, checks }: { initial: PhotoScan[]; checks?: PhotoCheck[] }) {
+  const [scans, setScans] = useState(initial)
+  return <PhotoIdentify scans={scans} onScansChange={setScans} checks={checks} />
+}
+
+export const Idle = () => <Frame initial={[]} />
+export const Identifying = () => <Frame initial={[scan('a', 'identifying')]} />
+export const Matched = () => (
+  <Frame
+    initial={[scan('a', 'matched', matchedDiagnosis)]}
+    checks={[{ position: 0, result: 'match', provider: 'plantid', mode: 'mock', probability: 0.91 }]}
+  />
+)
+export const ThreePhotos = () => (
+  <Frame
+    initial={[
+      scan('a', 'matched', matchedDiagnosis),
+      scan('b', 'notPlant', notPlantDiagnosis),
+      scan('c', 'identifying'),
+    ]}
+    checks={[
+      { position: 0, result: 'match', provider: 'plantid', mode: 'mock', probability: 0.91 },
+      { position: 1, result: 'notPlant', provider: 'plantid', mode: 'mock' },
+    ]}
+  />
+)
+export const NotInCatalog = () => <Frame initial={[scan('a', 'notInCatalog', notInCatalogDiagnosis)]} />
+export const Failed = () => (
+  <Frame
+    initial={[
+      scan('a', 'failed', undefined, [
+        { provider: 'plantid', reason: 'exhausted' },
+        { provider: 'plantnet', reason: 'timeout' },
+        { provider: 'gemini', reason: 'error' },
+      ]),
+    ]}
+    checks={[{ position: 0, result: 'failed' }]}
+  />
+)
+export const NotPlant = () => <Frame initial={[scan('a', 'notPlant', notPlantDiagnosis)]} />
+export const NoAccess = () => <Frame initial={[scan('a', 'noAccess')]} />

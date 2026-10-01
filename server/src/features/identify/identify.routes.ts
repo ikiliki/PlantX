@@ -5,8 +5,12 @@ import type {
   IdentifyProviderId,
   IdentifyTarget,
 } from '../../../../src/mock/types.ts'
+import { scanActivityText } from '../../../../src/features/greenhouse/identification.ts'
 import { Errors } from '../../lib/errors.ts'
+import { logger } from '../../lib/logger.ts'
 import { requireAdmin, requireUser } from '../../lib/session.ts'
+import { activityService } from '../activity/activity.service.ts'
+import type { Activity } from '../activity/activity.types.ts'
 import { identifyService, type IdentifyOutcome } from './identify.service.ts'
 
 const MODES: IdentifyMode[] = ['mock', 'live']
@@ -39,9 +43,24 @@ function readThumb(body: Body) {
   return typeof body.thumb === 'string' ? body.thumb : undefined
 }
 
-function respond(c: Context, outcome: IdentifyOutcome) {
-  if (outcome.ok) return c.json({ diagnosis: outcome.diagnosis, record: outcome.record })
-  return c.json({ error: 'unavailable', tried: outcome.tried, record: outcome.record }, 503)
+function respond(c: Context, outcome: IdentifyOutcome, activity?: Activity) {
+  if (outcome.ok) return c.json({ diagnosis: outcome.diagnosis, record: outcome.record, activity })
+  return c.json({ error: 'unavailable', tried: outcome.tried, record: outcome.record, activity }, 503)
+}
+
+/** The owner's greenhouse shows the scan before the plant exists. Never fails the identify call. */
+async function recordScan(userId: string, outcome: IdentifyOutcome) {
+  try {
+    return await activityService.record({
+      kind: 'scan',
+      userId,
+      identifyRequestId: outcome.record.id,
+      ...scanActivityText(outcome.ok ? outcome.diagnosis : undefined),
+    })
+  } catch (err) {
+    logger.error('scan activity failed', { id: outcome.record.id }, err)
+    return undefined
+  }
 }
 
 export const identifyRoutes = new Hono()
@@ -55,7 +74,7 @@ identifyRoutes.post('/', async (c) => {
     { mode: 'live', target: 'chain', honorEnabled: true },
     { userId: user.id, source: 'addPlant', thumb: readThumb(body) },
   )
-  return respond(c, outcome)
+  return respond(c, outcome, await recordScan(user.id, outcome))
 })
 
 identifyRoutes.post('/test', async (c) => {

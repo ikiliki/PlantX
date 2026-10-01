@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { Errors } from '../../lib/errors.ts'
 import { activityService } from './activity.service.ts'
 import type { ActivityInput } from './activity.types.ts'
 
@@ -24,6 +25,9 @@ activityRoutes.get('/', async (c) => {
 /** Generic write — what the future event bus will hit. Prefer plant care routes for water/photo. */
 activityRoutes.post('/', async (c) => {
   const body = (await c.req.json()) as ActivityInput
+  if (body?.kind === 'scan' || body?.kind === 'added' || body?.identifyRequestId) {
+    throw Errors.invalid('scan and added activities are recorded by identify and Add Plant only')
+  }
   const activity = await activityService.record(body)
   return c.json({ activity, activities: await activityService.list() })
 })

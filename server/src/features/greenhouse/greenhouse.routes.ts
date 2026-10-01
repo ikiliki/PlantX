@@ -24,8 +24,16 @@ greenhouseRoutes.get('/:id/activities', async (c) => {
 
 greenhouseRoutes.post('/', async (c) => {
   const user = await requireUser(c)
-  const plant = (await c.req.json()) as Plant
-  const created = await greenhouseService.add(plant, user.id)
+  const { identifyRequestIds, identifyRequestId, ...plant } = (await c.req.json()) as Plant & {
+    identifyRequestIds?: unknown
+    identifyRequestId?: unknown
+  }
+  const ids = Array.isArray(identifyRequestIds) ? identifyRequestIds : [identifyRequestId]
+  const created = await greenhouseService.add(
+    plant,
+    user.id,
+    ids.map((id) => (typeof id === 'string' && id ? id : undefined)),
+  )
   const activities = await activityService.list()
   return c.json({
     plant: created,

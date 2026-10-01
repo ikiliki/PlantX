@@ -15,7 +15,9 @@ import { createSeed } from './seed'
 import type {
   Catalog,
   CommunityGradeLetter,
+  FeedUpdate,
   Locale,
+  PlantIdentification,
   DemoScenarios,
   MockDb,
   ModerationStatus,
@@ -120,9 +122,9 @@ function uniqueId(base: string, taken: string[]) {
 }
 
 /** Only owner uploads. The catalog photo is derived from the category, never stored here. */
-function plantPhotos(own?: string) {
-  const photo = own?.trim()
-  return photo ? [photo] : [defaultPlantPhoto]
+function plantPhotos(own: string[] = []) {
+  const photos = own.map((photo) => photo.trim()).filter(Boolean)
+  return photos.length > 0 ? photos : [defaultPlantPhoto]
 }
 
 interface StoreApi {
@@ -164,7 +166,7 @@ interface StoreApi {
   disableUser: (id: string) => Promise<boolean>
   enableUser: (id: string) => Promise<boolean>
   liveMeta: LiveMeta | null
-  loadSlice: (part: ServerSlice) => Promise<void>
+  loadSlice: (part: ServerSlice) => Promise<boolean>
   refreshAccessQueue: (part: 'pending' | 'transactions') => Promise<void>
   resetDemo: () => void
   createListing: (input: {
@@ -184,7 +186,8 @@ interface StoreApi {
     titleHe: string
     description: string
     descriptionHe: string
-    photo?: string
+    /** Up to three. Empty uses the default plant photo. */
+    photos?: string[]
     speciesId: string
     variety: string
     varietyHe: string
@@ -196,7 +199,13 @@ interface StoreApi {
     subcategoryId?: string
     traits?: Record<string, string>
     location: { region: string; regionHe: string; lat: number; lng: number }
+    /** Shown until the server answers with its own record. */
+    identification?: PlantIdentification
+    /** Per photo, the identify request that scanned it. */
+    identifyRequestIds?: (string | undefined)[]
   }) => string
+  /** Merge one activity the server already saved (an Add Plant scan), or a local one in UI-mock mode. */
+  noteActivity: (update: FeedUpdate) => void
   commitCatalog: (
     fn: (ctx: { catalog: Catalog; species: Species[] }) => {
       catalog: Catalog
@@ -257,7 +266,8 @@ export function StoreProvider({
   }, [])
 
   const [liveMeta, setLiveMeta] = useState<LiveMeta | null>(null)
-  const loadedSlices = useRef(new Set<ServerSlice>())
+  /** In-flight or finished slice fetches. A failed fetch is removed so the next open can retry. */
+  const sliceJobs = useRef(new Map<ServerSlice, Promise<boolean>>())
 
   const applyLive = useCallback((live: LivePayload) => {
     if (live.meta) setLiveMeta(live.meta)
@@ -318,7 +328,7 @@ export function StoreProvider({
   }, [update])
 
   const retryLive = useCallback(async (opts?: { useShellOnFail?: boolean }) => {
-    loadedSlices.current.clear()
+    sliceJobs.current.clear()
     setLiveStatus('loading')
     const live = await fetchLive()
     if (live) {
@@ -349,63 +359,69 @@ export function StoreProvider({
     }
   }, [uiMocks, update])
 
-  const loadSlice = useCallback(async (part: ServerSlice) => {
-    if (uiMocks || loadedSlices.current.has(part)) return
-    loadedSlices.current.add(part)
-    const miss = () => {
-      loadedSlices.current.delete(part)
-    }
-    if (part === 'users') {
-      const res = await fetchMembers()
-      if (!res) return miss()
+  const loadSlice = useCallback((part: ServerSlice) => {
+    if (uiMocks) return Promise.resolve(false)
+    const existing = sliceJobs.current.get(part)
+    if (existing) return existing
+    const job = (async (): Promise<boolean> => {
+      if (part === 'users') {
+        const res = await fetchMembers()
+        if (!res) return false
+        update((d) => {
+          d.users = res.users
+          return d
+        })
+        return true
+      }
+      if (part === 'plants') {
+        const res = await fetchPlants()
+        if (!res) return false
+        update((d) => {
+          d.plants = res.plants
+          return d
+        })
+        return true
+      }
+      if (part === 'updates') {
+        const res = await fetchActivities()
+        if (!res) return false
+        update((d) => {
+          d.updates = res.activities
+          return d
+        })
+        return true
+      }
+      if (part === 'catalog') {
+        const file = await fetchCatalogFile()
+        if (!file) return false
+        update((d) => {
+          d.catalog = file
+          return d
+        })
+        return true
+      }
+      if (part === 'pending') {
+        const pending = await fetchPendingUsers('pending')
+        if (!pending) return false
+        update((d) => {
+          d.pendingUsers = pending.pending
+          return d
+        })
+        return true
+      }
+      const transactions = await fetchPendingTransactions()
+      if (!transactions) return false
       update((d) => {
-        d.users = res.users
+        d.pendingTransactions = transactions.transactions
         return d
       })
-      return
-    }
-    if (part === 'plants') {
-      const res = await fetchPlants()
-      if (!res) return miss()
-      update((d) => {
-        d.plants = res.plants
-        return d
-      })
-      return
-    }
-    if (part === 'updates') {
-      const res = await fetchActivities()
-      if (!res) return miss()
-      update((d) => {
-        d.updates = res.activities
-        return d
-      })
-      return
-    }
-    if (part === 'catalog') {
-      const file = await fetchCatalogFile()
-      if (!file) return miss()
-      update((d) => {
-        d.catalog = file
-        return d
-      })
-      return
-    }
-    if (part === 'pending') {
-      const pending = await fetchPendingUsers('pending')
-      if (!pending) return miss()
-      update((d) => {
-        d.pendingUsers = pending.pending
-        return d
-      })
-      return
-    }
-    const transactions = await fetchPendingTransactions()
-    if (!transactions) return miss()
-    update((d) => {
-      d.pendingTransactions = transactions.transactions
-      return d
+      return true
+    })()
+    sliceJobs.current.set(part, job)
+    void job.then((ok) => {
+      if (!ok) sliceJobs.current.delete(part)
     })
+    return job
   }, [uiMocks, update])
 
   useEffect(() => {
@@ -830,7 +846,7 @@ export function StoreProvider({
           titleHe: input.titleHe.trim(),
           description: input.description.trim(),
           descriptionHe: input.descriptionHe.trim(),
-          photos: plantPhotos(input.photo),
+          photos: plantPhotos(input.photos),
           quantity: 1,
           sizeGrade: input.sizeBand,
           sizeBand: input.sizeBand,
@@ -839,6 +855,7 @@ export function StoreProvider({
           rooting: input.stage === 'CUT' ? 'unrooted' : input.stage === 'ROOTED' ? 'rooted' : 'established',
           ...fieldsFromPlace(place),
           status: 'owned',
+          identification: input.identification,
           createdAt: new Date().toISOString().slice(0, 10),
           history: [
             {
@@ -852,7 +869,7 @@ export function StoreProvider({
         return d
       })
       if (created) {
-        void postPlant(created).then((res) => {
+        void postPlant(created, input.identifyRequestIds).then((res) => {
           if (!res) return
           update((d) => {
             const index = d.plants.findIndex((item) => item.id === res.plant.id)
@@ -865,6 +882,11 @@ export function StoreProvider({
       }
       return id
     },
+    noteActivity: (next) =>
+      update((d) => {
+        d.updates = [next, ...(d.updates ?? []).filter((item) => item.id !== next.id)]
+        return d
+      }),
     commitCatalog: (fn) => {
       update((d) => {
         d.catalog ??= createCatalog()

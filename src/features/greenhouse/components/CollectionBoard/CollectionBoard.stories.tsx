@@ -30,7 +30,6 @@ function BoardStory({ compact = false }: { compact?: boolean }) {
       sold={sold}
       activity={activity}
       onAdd={() => undefined}
-      onList={() => undefined}
       onRefresh={refreshPhoto}
       onWater={confirmWater}
       compact={compact}
@@ -59,3 +58,14 @@ export default {
 export const Default = () => <BoardStory />
 
 export const Widget = () => <BoardStory compact />
+
+export const EmptyGreenhouse = () => (
+  <CollectionBoard
+    plants={[]}
+    sold={[]}
+    activity={[]}
+    onAdd={() => undefined}
+    onRefresh={() => undefined}
+    onWater={() => undefined}
+  />
+)

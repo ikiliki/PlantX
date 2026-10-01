@@ -202,10 +202,12 @@ export function putSystem(system: SystemConfig) {
   return request<{ system: SystemConfig }>('/api/system', { method: 'PUT', body: JSON.stringify(system) })
 }
 
-export function postPlant(plant: Plant) {
+/** `identifyRequestId` lets the server credit the provider. The server sets `identification` itself. */
+/** `identifyRequestIds[i]` belongs to `plant.photos[i]`. */
+export function postPlant(plant: Plant, identifyRequestIds: (string | undefined)[] = []) {
   return request<{ plant: Plant; updates: FeedUpdate[] }>('/api/plants', {
     method: 'POST',
-    body: JSON.stringify(plant),
+    body: JSON.stringify({ ...plant, identifyRequestIds: identifyRequestIds.map((id) => id ?? null) }),
   })
 }
 
@@ -226,8 +228,8 @@ export function postPlantPhoto(plantId: string) {
 const IDENTIFY_TIMEOUT_MS = 30_000
 
 type IdentifyResult =
-  | { ok: true; diagnosis: Diagnosis; record?: IdentifyRequestRecord }
-  | { ok: false; error: string; tried: IdentifyTried[]; record?: IdentifyRequestRecord }
+  | { ok: true; diagnosis: Diagnosis; record?: IdentifyRequestRecord; activity?: FeedUpdate }
+  | { ok: false; error: string; tried: IdentifyTried[]; record?: IdentifyRequestRecord; activity?: FeedUpdate }
 
 /** Identify calls can walk three providers, so they get a longer timeout than `request`. */
 async function identifyRequest(path: string, body: unknown): Promise<IdentifyResult> {
@@ -244,11 +246,20 @@ async function identifyRequest(path: string, body: unknown): Promise<IdentifyRes
     const json = (await res.json().catch(() => null)) as {
       diagnosis?: Diagnosis
       record?: IdentifyRequestRecord
+      activity?: FeedUpdate
       error?: string
       tried?: IdentifyTried[]
     } | null
-    if (res.ok && json?.diagnosis) return { ok: true, diagnosis: json.diagnosis, record: json.record }
-    return { ok: false, error: json?.error ?? 'unavailable', tried: json?.tried ?? [], record: json?.record }
+    if (res.ok && json?.diagnosis) {
+      return { ok: true, diagnosis: json.diagnosis, record: json.record, activity: json.activity }
+    }
+    return {
+      ok: false,
+      error: json?.error ?? 'unavailable',
+      tried: json?.tried ?? [],
+      record: json?.record,
+      activity: json?.activity,
+    }
   } catch {
     return { ok: false, error: 'offline', tried: [] }
   } finally {

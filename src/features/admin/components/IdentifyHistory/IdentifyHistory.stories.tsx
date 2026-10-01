@@ -42,6 +42,19 @@ export const Phone = () => (
   </div>
 )
 
+/** Add Plant calls only: one linked to the saved plant (with field chips), one never added. */
+export const AddPlantCalls = () => (
+  <IdentifyHistory
+    records={identifyHistoryFixture.filter((row) => row.source === 'addPlant')}
+    filter="all"
+    onFilterChange={() => undefined}
+  />
+)
+
 export const Empty = () => (
-  <IdentifyHistory records={[]} filter="all" onFilterChange={() => undefined} loading />
+  <IdentifyHistory records={[]} filter="all" onFilterChange={() => undefined} onRefresh={() => undefined} />
+)
+
+export const Loading = () => (
+  <IdentifyHistory records={[]} filter="all" onFilterChange={() => undefined} onRefresh={() => undefined} loading />
 )

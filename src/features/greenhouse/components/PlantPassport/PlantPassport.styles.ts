@@ -99,6 +99,7 @@ export const IdentityHead = styled.div`
 `
 
 export const PhotoIconButton = styled.button`
+  position: relative;
   flex: 0 0 auto;
   margin: 0;
   padding: 0;
@@ -700,6 +701,37 @@ export const ParentLink = styled(Link)`
   color: ${theme.colors.forest};
 `
 
+/** "+2" on the small photo: the plant has more photos in the gallery. */
+export const PhotoMore = styled.span`
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-end: -4px;
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border: 2px solid ${theme.colors.creamCard};
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.forest};
+  color: ${theme.colors.growth};
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: ${theme.shadow.soft};
+`
+
+export const ActivityBody = styled.div`
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  min-width: 0;
+
+  > span:first-child {
+    font-size: 15px;
+    color: ${theme.colors.ink};
+  }
+`
+
 export const Timeline = styled.ol`
   display: grid;
   margin: 0;
@@ -733,7 +765,7 @@ export const TimelineRow = styled.li<{ $mark?: boolean }>`
     font-size: 13px;
     color: ${theme.colors.muted};
   }
-  span {
+  > span {
     font-size: 15px;
     color: ${theme.colors.ink};
   }

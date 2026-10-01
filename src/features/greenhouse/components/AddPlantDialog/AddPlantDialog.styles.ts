@@ -16,8 +16,8 @@ export const Backdrop = styled.div`
 
 export const Dialog = styled.div`
   position: relative;
-  width: min(640px, 100%);
-  max-height: min(92vh, 860px);
+  width: min(760px, 100%);
+  max-height: min(92vh, 900px);
   overflow: auto;
   padding: 28px ${theme.space.lg} ${theme.space.lg};
   border-radius: ${theme.radii.lg};
@@ -37,12 +37,14 @@ export const Title = styled.h2`
   margin: 0;
   margin-bottom: 6px;
   margin-inline-end: 36px;
-  font-size: 22px;
+  font-family: ${theme.fonts.display};
+  font-weight: 400;
+  font-size: 28px;
   color: ${theme.colors.forest};
 `
 
 export const Note = styled.p`
-  margin: 0 0 14px;
+  margin: 0 0 20px;
   font-size: 14px;
   line-height: 1.45;
   color: ${theme.colors.muted};

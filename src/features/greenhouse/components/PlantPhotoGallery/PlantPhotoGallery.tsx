@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import type { PhotoCheck } from '../../../../mock/types'
+import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import {
   Gallery,
   PhotoFrame,
+  PhotoSticker,
   Thumb,
   Thumbs,
   ViewerBackdrop,
@@ -17,6 +20,8 @@ import {
 
 type PlantPhotoGalleryProps = {
   photos: string[]
+  /** Per-photo AI checks; the shown photo carries its sticker. */
+  checks?: PhotoCheck[]
   alt: string
   embedded?: boolean
   dialog?: boolean
@@ -26,14 +31,20 @@ type PlantPhotoGalleryProps = {
   onViewerOpenChange: (open: boolean) => void
 }
 
+function checkAt(checks: PhotoCheck[] | undefined, position: number) {
+  return checks?.find((check) => check.position === position)
+}
+
 function PlantPhotoViewer({
   photos,
+  checks,
   alt,
   index,
   onIndexChange,
   onClose,
 }: {
   photos: string[]
+  checks?: PhotoCheck[]
   alt: string
   index: number
   onIndexChange: (index: number) => void
@@ -70,6 +81,11 @@ function PlantPhotoViewer({
         </ViewerClose>
         <ViewerStage key={photos[safe]}>
           <PlantImage src={photos[safe]} alt={alt} />
+          {checkAt(checks, safe) ? (
+            <PhotoSticker>
+              <PhotoCheckSticker check={checkAt(checks, safe)} size="md" />
+            </PhotoSticker>
+          ) : null}
         </ViewerStage>
         {photos.length > 1 && (
           <ViewerStrip role="group" aria-label={t.passport.photos}>
@@ -95,6 +111,7 @@ function PlantPhotoViewer({
 
 export function PlantPhotoGallery({
   photos,
+  checks,
   alt,
   embedded = false,
   dialog = false,
@@ -124,6 +141,11 @@ export function PlantPhotoGallery({
           onClick={() => openViewer(safeIndex)}
         >
           <PlantImage src={photos[safeIndex]} alt={alt} />
+          {checkAt(checks, safeIndex) ? (
+            <PhotoSticker key={safeIndex}>
+              <PhotoCheckSticker check={checkAt(checks, safeIndex)} size="md" />
+            </PhotoSticker>
+          ) : null}
         </PhotoFrame>
         {photos.length > 1 && (
           <Thumbs role="group" aria-label={t.passport.photos}>
@@ -146,6 +168,7 @@ export function PlantPhotoGallery({
       {viewerOpen && (
         <PlantPhotoViewer
           photos={photos}
+          checks={checks}
           alt={alt}
           index={safeIndex}
           onIndexChange={onIndexChange}

@@ -47,4 +47,34 @@ export const Default = () => (
   />
 )
 
+export const WithScans = () => (
+  <ActivityThread
+    activity={[
+      {
+        at: '2026-10-01 09:12',
+        plant: 'AI scan',
+        label: 'AI scan: Golden pothos · Plant.id 93%.',
+        kind: 'scan',
+        tag: 'Added',
+        plantId: 'pl-1',
+        photo: '/class-photos/pot-gold-a-l-mat.jpg',
+      },
+      {
+        at: '2026-10-01',
+        plant: 'Mother Pothos',
+        plantId: 'pl-1',
+        photo: '/class-photos/pot-gold-a-l-mat.jpg',
+        label: 'Added to greenhouse',
+      },
+      {
+        at: '2026-10-01 10:40',
+        plant: 'AI scan',
+        label: 'AI scan: Monstera deliciosa · Pl@ntNet 71%.',
+        kind: 'scan',
+        tag: 'Not added yet',
+      },
+    ]}
+  />
+)
+
 export const Empty = () => <ActivityThread activity={[]} />

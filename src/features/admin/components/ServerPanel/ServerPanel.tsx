@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Badge } from '../../../../components/Badge/Badge'
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { Button } from '../../../../components/Button/Button'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
@@ -10,6 +11,9 @@ import type { FeedUpdate, ModerationItem, PendingUser, Plant, User } from '../..
 import { useStore, type LiveStatus } from '../../../../mock/store'
 import { useServerSlices } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
+import { IdentifyBadge } from '../../../greenhouse/components/IdentifyBadge/IdentifyBadge'
+import { PhotoChecks } from '../../../greenhouse/components/PhotoChecks/PhotoChecks'
+import { PhotoCheckSticker } from '../../../greenhouse/components/PhotoCheckSticker/PhotoCheckSticker'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { CatalogTree, CatalogTreeDialog } from '../CatalogTree/CatalogTree'
 import {
@@ -28,6 +32,7 @@ import {
   PreviewNote,
   PreviewPhoto,
   PreviewStats,
+  PreviewVerify,
   Section,
   SectionHead,
   HeadMeta,
@@ -370,8 +375,29 @@ function PlantPreview({
   )
 }
 
+/** `added` shows every photo with its sticker; a linked `scan` shows the photo it checked. */
+function ActivityVerification({ row, plant }: { row: FeedUpdate; plant?: Plant }) {
+  const { t } = useI18n()
+  if (!plant || (row.kind !== 'added' && row.kind !== 'scan')) return null
+  const checks = plant.identification?.photos ?? []
+  const photos = plant.photos.filter(Boolean)
+  const scanned = row.kind === 'scan' ? checks.find((check) => check.requestId === row.identifyRequestId) : undefined
+  if (row.kind === 'scan' && !scanned) return null
+  return (
+    <PreviewVerify aria-label={t.admin.previewVerification}>
+      <h3>{t.admin.previewVerification}</h3>
+      <IdentifyBadge identification={plant.identification} />
+      <PhotoChecks
+        photos={scanned ? [photos[scanned.position] ?? ''] : photos}
+        checks={scanned ? [{ ...scanned, position: 0 }] : checks}
+      />
+    </PreviewVerify>
+  )
+}
+
 function ActivityPreview({
   row,
+  plant,
   userLabel,
   userEmail,
   plantLabel,
@@ -381,6 +407,7 @@ function ActivityPreview({
   onClose,
 }: {
   row: FeedUpdate
+  plant?: Plant
   userLabel: string
   userEmail: string
   plantLabel: string
@@ -427,6 +454,7 @@ function ActivityPreview({
             <dd>{row.createdAt.slice(0, 10)}</dd>
           </div>
         </PreviewStats>
+        <ActivityVerification row={row} plant={plant} />
       </PreviewCard>
       <PreviewDetails>
         <AdminDetailGrid
@@ -438,6 +466,7 @@ function ActivityPreview({
             { label: t.admin.serverColCode, value: plantCode },
             { label: t.admin.serverColOwner, value: plantOwner },
             { label: t.admin.serverColStatus, value: plantStatus },
+            ...(row.identifyRequestId ? [{ label: t.admin.serverColRequest, value: row.identifyRequestId }] : []),
             {
               label: t.admin.serverColWhen,
               value: row.createdAt.replace('T', ' ').slice(0, 19),
@@ -568,9 +597,9 @@ export function ServerPanel() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ users: true })
   const [categoryPopupId, setCategoryPopupId] = useState<string | null>(null)
 
-  useServerSlices([
+  const loadingSlices = useServerSlices([
     ...(openSections.users ? (['users'] as const) : []),
-    ...(openSections.plants ? (['plants'] as const) : []),
+    ...(openSections.plants || openSections.activities ? (['plants'] as const) : []),
     ...(openSections.activities ? (['updates'] as const) : []),
     ...(openSections.catalog ? (['catalog'] as const) : []),
     ...(openSections.pending ? (['pending'] as const) : []),
@@ -785,7 +814,10 @@ export function ServerPanel() {
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.pending && (
+        {openSections.pending &&
+          (loadingSlices.has('pending') ? (
+            <LoaderShell />
+          ) : (
         <AdminTable
           rows={pending}
           rowId={(row) => row.id}
@@ -828,7 +860,7 @@ export function ServerPanel() {
             },
           ]}
         />
-        )}
+          ))}
       </Section>
 
       <Section id="server-users" $demo={!fromServer}>
@@ -839,7 +871,10 @@ export function ServerPanel() {
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.users && (
+        {openSections.users &&
+          (loadingSlices.has('users') ? (
+            <LoaderShell />
+          ) : (
         <AdminTable
           rows={users}
           rowId={(row) => row.id}
@@ -910,7 +945,7 @@ export function ServerPanel() {
             },
           ]}
         />
-        )}
+          ))}
       </Section>
 
       <Section $demo={!fromServer}>
@@ -921,7 +956,10 @@ export function ServerPanel() {
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.plants && (
+        {openSections.plants &&
+          (loadingSlices.has('plants') ? (
+            <LoaderShell />
+          ) : (
         <AdminTable
           rows={plants}
           rowId={(row) => row.id}
@@ -987,7 +1025,7 @@ export function ServerPanel() {
           )}
           bulkActions={[]}
         />
-        )}
+          ))}
       </Section>
 
       <Section $demo={!fromServer}>
@@ -998,7 +1036,10 @@ export function ServerPanel() {
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.activities && (
+        {openSections.activities &&
+          (loadingSlices.has('updates') ? (
+            <LoaderShell />
+          ) : (
         <AdminTable
           rows={activities}
           rowId={(row) => row.id}
@@ -1017,6 +1058,25 @@ export function ServerPanel() {
               id: 'body',
               header: t.admin.serverColBody,
               cell: (row) => tr(row.body, row.bodyHe),
+            },
+            {
+              id: 'verified',
+              header: t.admin.previewVerification,
+              cell: (row) => {
+                if (row.kind !== 'added' && row.kind !== 'scan') return '—'
+                if (!row.plantId) return <Badge $tone="warn">{t.admin.apisNotAdded}</Badge>
+                const plant = plants.find((item) => item.id === row.plantId)
+                if (!plant) return '—'
+                const scanned =
+                  row.kind === 'scan'
+                    ? plant.identification?.photos?.find((check) => check.requestId === row.identifyRequestId)
+                    : undefined
+                return scanned ? (
+                  <PhotoCheckSticker check={scanned} />
+                ) : (
+                  <IdentifyBadge identification={plant.identification} compact />
+                )
+              },
             },
             {
               id: 'plant',
@@ -1042,7 +1102,7 @@ export function ServerPanel() {
           )}
           bulkActions={[]}
         />
-        )}
+          ))}
       </Section>
 
       <Section $demo={!fromServer}>
@@ -1053,7 +1113,10 @@ export function ServerPanel() {
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.transactions && (
+        {openSections.transactions &&
+          (loadingSlices.has('transactions') ? (
+            <LoaderShell />
+          ) : (
         <AdminTable
           rows={transactions}
           rowId={(row) => row.id}
@@ -1092,7 +1155,7 @@ export function ServerPanel() {
             },
           ]}
         />
-        )}
+          ))}
       </Section>
 
       <Section $demo={!fromServer}>
@@ -1107,7 +1170,8 @@ export function ServerPanel() {
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
-        {openSections.catalog && <CatalogTree />}
+        {openSections.catalog &&
+          (loadingSlices.has('catalog') ? <LoaderShell /> : <CatalogTree />)}
       </Section>
 
       {categoryPopupId && (
@@ -1182,6 +1246,7 @@ export function ServerPanel() {
         return (
           <ActivityPreview
             row={activityPreview}
+            plant={plant}
             userLabel={user ? tr(user.name, user.nameHe) : activityPreview.userId}
             userEmail={user?.email ?? '—'}
             plantLabel={

@@ -1,5 +1,12 @@
 import pg from 'pg'
-import type { Catalog, CatalogProperty, Plant, User } from '../../../../src/mock/types.ts'
+import type {
+  Catalog,
+  CatalogProperty,
+  PhotoCheck,
+  Plant,
+  PlantIdentification,
+  User,
+} from '../../../../src/mock/types.ts'
 import type { FeatureId, PageId, PlacementId, SystemConfig } from '../../../../src/theme/release.ts'
 import type { Activity } from '../../features/activity/activity.types.ts'
 import type { PendingTransaction, PendingUser } from '../../features/users/users.types.ts'
@@ -365,7 +372,34 @@ export function createSupabaseStore(): PlantxStore {
     const history = await rows(client, 'select * from plant_history order by plant_id, position')
     const comps = await rows(client, 'select * from plant_comps order by plant_id, position')
     const grades = await rows(client, 'select * from plant_grades order by plant_id, position')
-    return plants.map((row) => plantFrom(row, photos, traits, history, comps, grades))
+    const identifications = (await hasIdentifications(client))
+      ? await rows(client, 'select * from plant_identifications')
+      : []
+    const checks = (await hasIdentifyLinks(client))
+      ? await rows(client, 'select * from plant_photo_checks order by plant_id, position')
+      : []
+    return plants.map((row) => {
+      const plant = plantFrom(row, photos, traits, history, comps, grades)
+      const found = identifications.find((item) => text(item, 'plant_id') === plant.id)
+      if (found) {
+        plant.identification = identificationFrom(found)
+        const mine = checks.filter((item) => text(item, 'plant_id') === plant.id)
+        if (mine.length > 0) plant.identification.photos = mine.map(photoCheckFrom)
+      }
+      return plant
+    })
+  }
+
+  /** Prod may not have the migration yet. A failed query would abort the transaction, so check first. */
+  async function hasIdentifications(client: PoolClient) {
+    const found = await rows(client, `select to_regclass('public.plant_identifications') as name`)
+    return Boolean(found[0]?.name)
+  }
+
+  /** `plant_photo_checks` ships with the request links and the `scan` / `added` activity kinds. */
+  async function hasIdentifyLinks(client: PoolClient) {
+    const found = await rows(client, `select to_regclass('public.plant_photo_checks') as name`)
+    return Boolean(found[0]?.name)
   }
 
   async function savePlants(client: PoolClient, plants: Plant[]) {
@@ -491,6 +525,65 @@ export function createSupabaseStore(): PlantxStore {
         )
       }
     }
+    if (await hasIdentifications(client)) {
+      await client.query('delete from plant_identifications where plant_id = any($1::text[])', [kept])
+      const wanted = keptPlants.flatMap((plant) => (plant.identification?.requestId ? [plant.identification.requestId] : []))
+      const requestIds = new Set(
+        (await rows(client, 'select id from identify_requests where id = any($1::text[])', [wanted])).map((row) =>
+          String(row.id),
+        ),
+      )
+      for (const plant of keptPlants) {
+        const found = plant.identification
+        if (!found) continue
+        await client.query(
+          `insert into plant_identifications (
+            plant_id, source, provider, mode, label, scientific_name, probability, request_id, identified_at
+          ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+          [
+            plant.id,
+            found.source,
+            found.provider ?? null,
+            found.mode ?? null,
+            found.label ?? null,
+            found.scientificName ?? null,
+            found.probability ?? null,
+            found.requestId && requestIds.has(found.requestId) ? found.requestId : null,
+            found.at,
+          ],
+        )
+      }
+      if (await hasIdentifyLinks(client)) {
+        await client.query('delete from plant_photo_checks where plant_id = any($1::text[])', [kept])
+        const checkIds = keptPlants.flatMap((plant) =>
+          (plant.identification?.photos ?? []).flatMap((check) => (check.requestId ? [check.requestId] : [])),
+        )
+        const knownChecks = new Set(
+          (await rows(client, 'select id from identify_requests where id = any($1::text[])', [checkIds])).map((row) =>
+            String(row.id),
+          ),
+        )
+        for (const plant of keptPlants) {
+          for (const check of plant.identification?.photos ?? []) {
+            await client.query(
+              `insert into plant_photo_checks (
+                plant_id, position, result, request_id, provider, mode, label, probability
+              ) values ($1,$2,$3,$4,$5,$6,$7,$8)`,
+              [
+                plant.id,
+                check.position,
+                check.result,
+                check.requestId && knownChecks.has(check.requestId) ? check.requestId : null,
+                check.provider ?? null,
+                check.mode ?? null,
+                check.label ?? null,
+                check.probability ?? null,
+              ],
+            )
+          }
+        }
+      }
+    }
     await client.query('delete from plants where not (id = any($1::text[]))', [kept])
   }
 
@@ -507,6 +600,8 @@ export function createSupabaseStore(): PlantxStore {
       }
       const plantId = optional(row, 'plant_id')
       if (plantId) activity.plantId = plantId
+      const requestId = optional(row, 'identify_request_id')
+      if (requestId) activity.identifyRequestId = requestId
       return activity
     })
   }
@@ -514,12 +609,54 @@ export function createSupabaseStore(): PlantxStore {
   async function saveActivities(client: PoolClient, items: Activity[]) {
     const userIds = await ids(client, 'select id from users')
     const plantIds = await ids(client, 'select id from plants')
-    const kept = items.filter((item) => userIds.has(item.userId))
+    const linked = await hasIdentifyLinks(client)
+    // Without the migration the kind check rejects scan / added, so they are not stored.
+    const kept = items.filter(
+      (item) => userIds.has(item.userId) && (linked || (item.kind !== 'scan' && item.kind !== 'added')),
+    )
     if (kept.length === 0) {
       await client.query('delete from activities')
       return
     }
+    const wanted = kept.flatMap((item) => (item.identifyRequestId ? [item.identifyRequestId] : []))
+    const requestIds = linked
+      ? new Set(
+          (await rows(client, 'select id from identify_requests where id = any($1::text[])', [wanted])).map((row) =>
+            String(row.id),
+          ),
+        )
+      : new Set<string>()
     for (const [position, item] of kept.entries()) {
+      const params = [
+        item.id,
+        position,
+        item.kind,
+        item.userId,
+        item.plantId && plantIds.has(item.plantId) ? item.plantId : null,
+        item.body,
+        item.bodyHe,
+        item.createdAt,
+      ]
+      if (linked) {
+        await client.query(
+          `insert into activities (id, position, kind, user_id, plant_id, body, body_he, created_at, identify_request_id)
+           values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+           on conflict (id) do update set
+             position = excluded.position,
+             kind = excluded.kind,
+             user_id = excluded.user_id,
+             plant_id = excluded.plant_id,
+             body = excluded.body,
+             body_he = excluded.body_he,
+             created_at = excluded.created_at,
+             identify_request_id = excluded.identify_request_id`,
+          [
+            ...params,
+            item.identifyRequestId && requestIds.has(item.identifyRequestId) ? item.identifyRequestId : null,
+          ],
+        )
+        continue
+      }
       await client.query(
         `insert into activities (id, position, kind, user_id, plant_id, body, body_he, created_at)
          values ($1,$2,$3,$4,$5,$6,$7,$8)
@@ -531,16 +668,7 @@ export function createSupabaseStore(): PlantxStore {
            body = excluded.body,
            body_he = excluded.body_he,
            created_at = excluded.created_at`,
-        [
-          item.id,
-          position,
-          item.kind,
-          item.userId,
-          item.plantId && plantIds.has(item.plantId) ? item.plantId : null,
-          item.body,
-          item.bodyHe,
-          item.createdAt,
-        ],
+        params,
       )
     }
     await client.query('delete from activities where not (id = any($1::text[]))', [kept.map((item) => item.id)])
@@ -757,6 +885,33 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.conditions?.noteHe ?? null,
     plant.createdAt,
   ]
+}
+
+function identificationFrom(row: SqlRow): PlantIdentification {
+  const found: PlantIdentification = {
+    source: text(row, 'source') as PlantIdentification['source'],
+    at: text(row, 'identified_at'),
+  }
+  assign(found, 'provider', optional(row, 'provider') as PlantIdentification['provider'])
+  assign(found, 'mode', optional(row, 'mode') as PlantIdentification['mode'])
+  assign(found, 'label', optional(row, 'label'))
+  assign(found, 'scientificName', optional(row, 'scientific_name'))
+  assign(found, 'probability', optionalNum(row, 'probability'))
+  assign(found, 'requestId', optional(row, 'request_id'))
+  return found
+}
+
+function photoCheckFrom(row: SqlRow): PhotoCheck {
+  const check: PhotoCheck = {
+    position: num(row, 'position'),
+    result: text(row, 'result') as PhotoCheck['result'],
+  }
+  assign(check, 'requestId', optional(row, 'request_id'))
+  assign(check, 'provider', optional(row, 'provider') as PhotoCheck['provider'])
+  assign(check, 'mode', optional(row, 'mode') as PhotoCheck['mode'])
+  assign(check, 'label', optional(row, 'label'))
+  assign(check, 'probability', optionalNum(row, 'probability'))
+  return check
 }
 
 function plantFrom(

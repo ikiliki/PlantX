@@ -218,7 +218,7 @@ function alignLiveCatalog(db: MockDb) {
   }
   db.topGreenhouses = seedTopGreenhouses()
   const staleCopy = /maple|philodendron|kentia|fiddle|olive|אדר|פילודנדרון|קנטיה|כינור|זית/i
-  const liveUpdateKinds = new Set(['photo', 'water', 'propagate', 'grade', 'passport', 'listing'])
+  const liveUpdateKinds = new Set(['photo', 'water', 'propagate', 'grade', 'passport', 'listing', 'scan', 'added'])
   const staleUpdatePeople = /Milo|Gal |Noa |Luna|Ruby|מילו|גל |נועה|לונה|רובי/
   if (
     (db.updates ?? []).some(

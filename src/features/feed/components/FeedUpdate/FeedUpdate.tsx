@@ -11,6 +11,8 @@ function kindLabel(kind: FeedUpdateKind, t: ReturnType<typeof useI18n>['t']) {
   if (kind === 'propagate') return t.feed.updatePropagate
   if (kind === 'grade') return t.feed.updateGrade
   if (kind === 'listing') return t.feed.updateListing
+  if (kind === 'added') return t.feed.updateAdded
+  if (kind === 'scan') return t.feed.updateScan
   return t.feed.updatePassport
 }
 

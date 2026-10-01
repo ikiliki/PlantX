@@ -113,4 +113,6 @@ export const OneExhausted = () => (
 
 export const KeysMissing = () => <ApisPanel providers={keysMissing} onRefresh={() => undefined} />
 
-export const Empty = () => <ApisPanel providers={[]} loading />
+export const Empty = () => <ApisPanel providers={[]} onRefresh={() => undefined} />
+
+export const Loading = () => <ApisPanel providers={[]} loading onRefresh={() => undefined} />

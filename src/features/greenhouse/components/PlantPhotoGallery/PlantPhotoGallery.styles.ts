@@ -234,3 +234,14 @@ export const ViewerThumb = styled.button<{ $on?: boolean }>`
     display: block;
   }
 `
+
+/** AI check of the shown photo, stamped on its corner. */
+export const PhotoSticker = styled.span`
+  position: absolute;
+  z-index: 1;
+  inset-block-end: 14px;
+  inset-inline-start: 14px;
+  max-width: calc(100% - 28px);
+  display: flex;
+  pointer-events: none;
+`

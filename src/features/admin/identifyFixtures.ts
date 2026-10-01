@@ -45,6 +45,9 @@ export const liveFallbackRecord: IdentifyRequestRecord = {
   status: 'ok',
   thumb: '/class-photos/mon-std-a-l-mat.jpg',
   durationMs: 2380,
+  plantId: 'pl-draft-target',
+  photoIndex: 0,
+  fields: { category: 'kept', subcategory: 'changed', quality: 'manual', size: 'manual', stage: 'manual' },
   tried: [{ provider: 'plantid', reason: 'disabled' }],
   diagnosis: {
     provider: 'plantnet',

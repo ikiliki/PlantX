@@ -1,9 +1,15 @@
 import { useState } from 'react'
 import { Badge } from '../../../../components/Badge/Badge'
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { Button } from '../../../../components/Button/Button'
 import { Segmented } from '../../../../components/Segmented/Segmented'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import type { IdentifyMode, IdentifyRequestRecord } from '../../../../mock/types'
+import type {
+  IdentifyFieldCheck,
+  IdentifyFieldId,
+  IdentifyMode,
+  IdentifyRequestRecord,
+} from '../../../../mock/types'
 import {
   formatWhen,
   modeLabelKey,
@@ -17,11 +23,27 @@ import {
 import { AdminSection } from '../AdminSection/AdminSection'
 import { AdminTable, type AdminTableColumn } from '../AdminTable/AdminTable'
 import { IdentifyResult } from '../IdentifyResult/IdentifyResult'
-import { Answer, Duration, Thumb, Toolbar } from './IdentifyHistory.styles'
+import { Answer, Duration, FieldChip, FieldChips, Thumb, Toolbar } from './IdentifyHistory.styles'
 
 export type IdentifyHistoryFilter = 'all' | IdentifyMode
 
 const filters: IdentifyHistoryFilter[] = ['all', 'mock', 'live']
+
+const fieldOrder: IdentifyFieldId[] = ['category', 'subcategory', 'quality', 'size', 'stage']
+
+const fieldLabelKey = {
+  category: 'category',
+  subcategory: 'subcategory',
+  quality: 'grade',
+  size: 'size',
+  stage: 'stage',
+} as const satisfies Record<IdentifyFieldId, string>
+
+const fieldStateKey = {
+  kept: 'apisFieldKept',
+  changed: 'apisFieldChanged',
+  manual: 'apisFieldManual',
+} as const satisfies Record<IdentifyFieldCheck, string>
 
 export function IdentifyHistory({
   records,
@@ -73,6 +95,44 @@ export function IdentifyHistory({
         ),
     },
     {
+      id: 'plant',
+      header: t.admin.apisPlant,
+      cell: (row) => {
+        if (row.source !== 'addPlant') return '—'
+        if (!row.plantId) return <Badge $tone="warn">{t.admin.apisNotAdded}</Badge>
+        return (
+          <Answer>
+            <span>{row.plantId}</span>
+            {row.photoIndex != null && (
+              <small>{t.admin.apisPhotoN.replace('{n}', String(row.photoIndex + 1))}</small>
+            )}
+          </Answer>
+        )
+      },
+    },
+    {
+      id: 'fields',
+      header: t.admin.apisFields,
+      cell: (row) => {
+        if (!row.fields) return '—'
+        const entries = fieldOrder.filter((field) => row.fields?.[field])
+        if (entries.length === 0) return '—'
+        return (
+          <FieldChips>
+            {entries.map((field) => {
+              const state = row.fields![field]!
+              return (
+                <FieldChip key={field} $state={state}>
+                  {t.admin[fieldLabelKey[field]]}
+                  <small>{t.admin[fieldStateKey[state]]}</small>
+                </FieldChip>
+              )
+            })}
+          </FieldChips>
+        )
+      },
+    },
+    {
       id: 'status',
       header: t.admin.apisStatus,
       cell: (row) => (
@@ -105,17 +165,21 @@ export function IdentifyHistory({
           </Button>
         )}
       </Toolbar>
-      <AdminTable
-        rows={records}
-        rowId={(row) => row.id}
-        columns={columns}
-        empty={t.admin.apisHistoryEmpty}
-        expandable
-        expandedIds={expanded}
-        onExpandedChange={setExpanded}
-        renderExpand={(row) => <IdentifyResult record={row} />}
-        embedded
-      />
+      {loading && records.length === 0 ? (
+        <LoaderShell />
+      ) : (
+        <AdminTable
+          rows={records}
+          rowId={(row) => row.id}
+          columns={columns}
+          empty={t.admin.apisHistoryEmpty}
+          expandable
+          expandedIds={expanded}
+          onExpandedChange={setExpanded}
+          renderExpand={(row) => <IdentifyResult record={row} />}
+          embedded
+        />
+      )}
     </AdminSection>
   )
 }

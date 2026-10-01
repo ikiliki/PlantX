@@ -45,6 +45,16 @@ export const GrowingTitle = styled.h2`
   color: ${theme.colors.forest};
 `
 
+export const HeadActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 1 1 260px;
+  min-width: 0;
+`
+
 export const SearchBox = styled.label`
   display: flex;
   align-items: center;

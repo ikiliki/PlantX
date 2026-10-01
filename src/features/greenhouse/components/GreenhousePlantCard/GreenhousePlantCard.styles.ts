@@ -1,18 +1,29 @@
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 import { Link } from 'react-router-dom'
-import { menuIn, pressable, riseIn } from '../../../../theme/motion'
+import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-export const Root = styled.article`
+const freshGlow = keyframes`
+  0% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.95); transform: scale(0.94); }
+  35% { box-shadow: 0 0 0 10px rgba(207, 234, 120, 0.55); transform: scale(1.02); }
+  100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0); transform: none; }
+`
+
+export const Root = styled.article<{ $fresh?: boolean }>`
   display: grid;
   grid-template-rows: auto 1fr;
   border-radius: ${theme.radii.lg};
   overflow: hidden;
   background: ${theme.colors.creamCard};
-  border: 1px solid ${theme.colors.border};
+  border: 1px solid ${({ $fresh }) => ($fresh ? theme.colors.moss : theme.colors.border)};
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease};
+  ${({ $fresh }) =>
+    $fresh &&
+    css`
+      animation: ${freshGlow} 1.4s ${theme.motion.ease} 2 both !important;
+    `}
 
   img {
     transition:
@@ -120,115 +131,29 @@ export const PassportMark = styled.span`
   font-weight: 700;
 `
 
-export const Actions = styled.div`
+export const Tags = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 `
 
-export const PrimaryAction = styled.button`
-  ${pressable}
-  appearance: none;
-  min-height: 34px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.forest};
-  color: ${theme.colors.creamCard};
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-`
-
-export const MoreWrap = styled.div`
-  position: relative;
-`
-
-export const MenuButton = styled.button`
-  ${pressable}
-  appearance: none;
-  width: 34px;
-  height: 34px;
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.creamCard};
-  color: ${theme.colors.forest};
-  font: inherit;
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-`
-
-export const Menu = styled.div`
+export const PhotoCount = styled.span`
   position: absolute;
-  z-index: ${theme.z.menu};
-  inset-block-end: calc(100% + 6px);
-  inset-inline-end: 0;
-  min-width: 148px;
-  padding: 6px;
-  border-radius: ${theme.radii.md};
-  border: 1px solid ${theme.colors.border};
-  background: ${theme.colors.creamCard};
-  box-shadow: ${theme.shadow.card};
-  animation: ${menuIn} ${theme.motion.fast} ${theme.motion.ease} both;
-`
-
-export const MenuItem = styled.button`
-  appearance: none;
-  display: block;
-  width: 100%;
-  margin: 0;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: ${theme.radii.sm};
-  background: transparent;
-  color: ${theme.colors.ink};
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  text-align: start;
-  cursor: pointer;
-
-  &:hover {
-    background: ${theme.colors.chipGreen};
-  }
-`
-
-export const AddRoot = styled.button`
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 10px;
-  min-height: 280px;
-  border-radius: ${theme.radii.lg};
-  border: 1px dashed ${theme.colors.border};
-  background: transparent;
-  color: ${theme.colors.forest};
-  cursor: pointer;
-
-  span {
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  &:hover {
-    background: ${theme.colors.creamCard};
-  }
-`
-
-export const Plus = styled.span`
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
+  z-index: 1;
+  inset-block-end: 10px;
+  inset-inline-end: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
   border-radius: ${theme.radii.pill};
-  background: ${theme.colors.chipNeutral};
-  font-size: 32px;
-  font-weight: 400;
-  line-height: 1;
+  background: rgba(18, 60, 45, 0.78);
+  color: ${theme.colors.creamCard};
+  font-size: 11px;
+  font-weight: 800;
+  backdrop-filter: blur(6px);
 `
 
 export const CollectionGrid = styled.div`
