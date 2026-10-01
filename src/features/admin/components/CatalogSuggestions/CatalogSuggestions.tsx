@@ -1,14 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../../../../components/Button/Button'
+import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { dismissCatalogSuggestion, fetchCatalogSuggestions } from '../../../../mock/liveApi'
 import type { CatalogSuggestion } from '../../../../mock/types'
-import { Actions, Box, Head, Hits, Name, Row } from './CatalogSuggestions.styles'
-
-export function tickerFromPlant(genus: string, scientificName: string) {
-  const word = (genus || scientificName).replace(/[^A-Za-z]/g, '')
-  return word.slice(0, 4).toUpperCase()
-}
+import { Actions, Box, Head, Hits, Name, Row, Thumb } from './CatalogSuggestions.styles'
 
 /** Open identify hits that matched no category. Stories pass `items` and skip the server. */
 export function CatalogSuggestions({
@@ -58,6 +54,11 @@ export function CatalogSuggestions({
       </Head>
       {rows.map((row) => (
         <Row key={row.id}>
+          {row.draft?.category?.photo ? (
+            <Thumb>
+              <PlantImage src={row.draft.category.photo} alt="" />
+            </Thumb>
+          ) : null}
           <Name>
             <strong>{row.name}</strong>
             {row.scientificName && row.scientificName !== row.name ? <small>{row.scientificName}</small> : null}
@@ -65,7 +66,7 @@ export function CatalogSuggestions({
           <Hits>{t.admin.suggestedHits.replace('{count}', String(row.hits))}</Hits>
           <Actions>
             <Button type="button" variant="primary" onClick={() => onAdd(row)}>
-              {t.admin.addCategory}
+              {t.admin.suggestedReview}
             </Button>
             <Button type="button" variant="secondary" onClick={() => dismiss(row.id)}>
               {t.admin.dismiss}

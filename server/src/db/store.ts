@@ -1,6 +1,7 @@
 import type {
   Catalog,
   CatalogSuggestion,
+  CatalogSuggestionDraft,
   IdentifyFieldChecks,
   IdentifyMode,
   IdentifyProviderId,
@@ -56,6 +57,7 @@ export interface PlantxStore {
       genus: string
       commonNames: string[]
       provider: string
+      draft: CatalogSuggestionDraft
     }): Promise<void>
     dismiss(id: string): Promise<void>
   }

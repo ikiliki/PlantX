@@ -42,4 +42,5 @@ A pattern appears twice or more (same Field + Select + "Choose", same admin head
 - `Pager` (`src/components`) — previous / next with `PAGE_SIZE` (10). `AdminTable` and the market use `usePaged`. A single page hides the control. `anchor: 'end'` opens a timeline on the latest page.
 - `InfiniteScroll` (`src/components`) — same page size, loaded when the edge scrolls into view. News grows downward. Greenhouse activity opens on the latest rows and loads older rows when its thread scrolls up.
 - `Switch` (`src/components`) — on/off `role="switch"` with busy spinner; System and APIs admin toggles
+- `SuggestionEditorDialog` — catalog suggestion form for category, subcategory, properties, and both photos. The list story stays on `CatalogSuggestions`.
 - `LoaderShell` — table placeholder while a live slice or admin list is still loading. Pass `busy` while a slice is in flight after the API is already up. Server sections and System page/feature rows use `useSectionFetch`: opening one shows the loader and that header stays open until the response. A failed slice shows unavailable and can close. APIs uses the loader for providers and history. Mock mode skips it.

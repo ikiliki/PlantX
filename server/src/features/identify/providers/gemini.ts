@@ -1,4 +1,5 @@
-import type { Catalog } from '../../../../../src/mock/types.ts'
+import type { Catalog, CatalogSuggestionDraft } from '../../../../../src/mock/types.ts'
+import { fallbackDraft, normalizeDraft, type CatalogDraftHint } from '../../catalog/catalogDraft.ts'
 import { fetchWithTimeout, stripDataUrl } from '../http.ts'
 import type { IdentifyProvider, ProviderHealth, RawSuggestion } from '../types.ts'
 
@@ -296,4 +297,122 @@ export const geminiProvider: IdentifyProvider = {
     lastError = lastFailure
     throw new Error(lastFailure)
   },
+}
+
+const DRAFT_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    categoryName: { type: 'STRING' },
+    categoryNameHe: { type: 'STRING' },
+    ticker: { type: 'STRING' },
+    subcategoryName: { type: 'STRING' },
+    subcategoryNameHe: { type: 'STRING' },
+    code: { type: 'STRING' },
+    properties: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          name: { type: 'STRING' },
+          nameHe: { type: 'STRING' },
+          required: { type: 'BOOLEAN' },
+          inMarketName: { type: 'BOOLEAN' },
+          sign: { type: 'STRING' },
+          scope: { type: 'STRING', enum: ['category', 'subcategory'] },
+          options: {
+            type: 'ARRAY',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                label: { type: 'STRING' },
+                labelHe: { type: 'STRING' },
+                sign: { type: 'STRING' },
+              },
+              required: ['label', 'labelHe', 'sign'],
+            },
+          },
+        },
+        required: ['name', 'nameHe', 'required', 'inMarketName', 'sign', 'scope', 'options'],
+      },
+    },
+  },
+  required: [
+    'categoryName',
+    'categoryNameHe',
+    'ticker',
+    'subcategoryName',
+    'subcategoryNameHe',
+    'code',
+    'properties',
+  ],
+}
+
+/**
+ * Catalog entry for a plant that matched no category.
+ * The scan photo is attached by the caller. A missing key or a model error returns names only.
+ */
+export async function draftCatalogEntry(image: string, hint: CatalogDraftHint): Promise<CatalogSuggestionDraft> {
+  const key = apiKey()
+  if (!key || !usableImage(image)) return fallbackDraft(hint)
+  const { mime, base64 } = stripDataUrl(image)
+  const avoided = hint.takenSigns.filter(Boolean).join(', ') || 'none'
+  const prompt = [
+    'The plant in the photo is not in the marketplace catalog yet.',
+    'Propose one category (the trade group or genus), one subcategory (the cultivar or common form), and 1 to 3 properties that distinguish listings of this plant.',
+    'Write English and Hebrew names. Ticker and subcategory code are short capital letters.',
+    'Each property has 2 to 4 options. Option signs are 1–3 capital letters and unique within that property.',
+    `Property signs are 1–3 capital letters, unique, and must not be any of: ${avoided}.`,
+    'Do not propose grade, size, or stage. Those already exist.',
+    'scope is "category" when every subcategory shares the property, otherwise "subcategory".',
+    'Name the plant shown in the photo. The photo itself is stored separately.',
+    '',
+    `Known name: ${hint.name}`,
+    `Scientific name: ${hint.scientificName}`,
+    `Genus: ${hint.genus}`,
+    `Common names: ${hint.commonNames.join(', ')}`,
+    hint.cultivar ? `Cultivar: ${hint.cultivar}` : '',
+    `Identified by: ${hint.provider}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const requestBody = JSON.stringify({
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: base64 } }],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: DRAFT_SCHEMA,
+    },
+  })
+
+  for (const model of modelsToTry()) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
+    try {
+      const res = await fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody,
+      })
+      if (!res.ok) {
+        if (RETRYABLE_STATUS.has(res.status)) continue
+        return fallbackDraft(hint)
+      }
+      const body = (await res.json()) as GeminiBody
+      const text = body.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || ''
+      const parsed = text.trim() ? (JSON.parse(text) as unknown) : undefined
+      activeModel = model
+      return normalizeDraft(parsed, hint)
+    } catch {
+      return fallbackDraft(hint)
+    }
+  }
+  return fallbackDraft(hint)
+}
+
+function usableImage(image: string) {
+  return /^data:image\//i.test(image) && image.length <= 1_500_000
 }

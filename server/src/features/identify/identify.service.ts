@@ -18,7 +18,8 @@ import { catalogService } from '../catalog/catalog.service.ts'
 import { IdentifyTimeoutError } from './http.ts'
 import { mapDiagnosis } from './mapDiagnosis.ts'
 import { mockIdentify } from './mock/index.ts'
-import { geminiProvider, guessPlantSize } from './providers/gemini.ts'
+import type { CatalogDraftHint } from '../catalog/catalogDraft.ts'
+import { draftCatalogEntry, geminiProvider, guessPlantSize } from './providers/gemini.ts'
 import { plantidProvider } from './providers/plantid.ts'
 import { plantnetProvider } from './providers/plantnet.ts'
 import type { IdentifyProvider, RawSuggestion } from './types.ts'
@@ -125,17 +126,30 @@ async function statusOf(
 }
 
 /** Add Plant and the admin playground share this on a live answer. Mock runs do not file a row. */
-function noteMissingCategory(raw: RawSuggestion) {
+function noteMissingCategory(raw: RawSuggestion, image: string, catalog: Catalog) {
   const name = raw.commonNames.find(Boolean) || raw.scientificName || raw.genus || ''
   if (!name.trim()) return
-  void getStore()
-    .catalogSuggestions.suggest({
-      name: name.trim(),
-      scientificName: raw.scientificName.trim(),
-      genus: raw.genus?.trim() || '',
-      commonNames: raw.commonNames.filter(Boolean).slice(0, 6),
-      provider: raw.provider,
-    })
+  const hint: CatalogDraftHint = {
+    name: name.trim(),
+    scientificName: raw.scientificName.trim(),
+    genus: raw.genus?.trim() || '',
+    commonNames: raw.commonNames.filter(Boolean).slice(0, 6),
+    provider: raw.provider,
+    cultivar: raw.cultivar,
+    photo: image,
+    takenSigns: catalog.properties.map((item) => item.sign).filter(Boolean),
+  }
+  void draftCatalogEntry(image, hint)
+    .then((draft) =>
+      getStore().catalogSuggestions.suggest({
+        name: hint.name,
+        scientificName: hint.scientificName,
+        genus: hint.genus,
+        commonNames: hint.commonNames,
+        provider: hint.provider,
+        draft,
+      }),
+    )
     .catch((err) => logger.warn('catalog suggestion skipped', undefined, err))
 }
 
@@ -182,7 +196,9 @@ export const identifyService = {
             diagnosis.draft.size = guessed as SizeBand
           }
         }
-        if (run.mode === 'live' && raw.isPlant && !diagnosis.draft.categoryId) void noteMissingCategory(raw)
+        if (run.mode === 'live' && raw.isPlant && !diagnosis.draft.categoryId) {
+          noteMissingCategory(raw, image, catalog)
+        }
         return diagnosis
       } catch (err) {
         if (err instanceof IdentifyTimeoutError) {

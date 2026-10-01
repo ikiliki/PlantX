@@ -40,6 +40,15 @@ export const Row = styled.div`
   border-top: 1px solid ${theme.colors.border};
 `
 
+export const Thumb = styled.div`
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: ${theme.colors.chipGreen};
+`
+
 export const Name = styled.div`
   flex: 1 1 180px;
   min-width: 0;

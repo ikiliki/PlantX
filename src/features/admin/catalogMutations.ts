@@ -6,6 +6,7 @@ import type {
   CatalogProperty,
   CatalogPropertyOption,
   CatalogSubcategory,
+  CatalogSuggestionDraft,
   Species,
 } from '../../mock/types'
 
@@ -220,6 +221,83 @@ export function deleteProperty(catalog: Catalog, propertyId: string): Catalog {
     ...catalog,
     properties: catalog.properties.filter((item) => item.id !== propertyId),
   }
+}
+
+function optionId(label: string, sign: string, taken: string[]) {
+  const base = catalogSlug(label) || sign.toLowerCase() || 'opt'
+  return uniqueId(base, taken)
+}
+
+/** Create the category, its subcategory, and the proposed properties. Returns null when a ticker or sign is taken. */
+export function applyCatalogSuggestion(
+  catalog: Catalog,
+  species: Species[],
+  draft: CatalogSuggestionDraft,
+): { catalog: Catalog; species: Species[] } | null {
+  const ticker = draft.category.ticker.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+  const name = draft.category.name.trim()
+  const subName = draft.subcategory.name.trim()
+  const code = draft.subcategory.code
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 8)
+  if (!name || !ticker || !subName || !code) return null
+  if (catalog.categories.some((item) => item.ticker === ticker)) return null
+  const usedSigns = new Set<string>()
+  for (const prop of draft.properties) {
+    if (!prop.inMarketName) continue
+    const sign = normalizeSign(prop.sign)
+    if (!sign || usedSigns.has(sign) || signTaken(catalog, sign)) return null
+    usedSigns.add(sign)
+  }
+
+  const stepped = upsertCategory(catalog, species, {
+    name,
+    nameHe: draft.category.nameHe,
+    ticker,
+    photo: draft.category.photo,
+  })
+  const category = stepped.catalog.categories.find((item) => item.ticker === ticker)
+  if (!category) return null
+
+  let next = upsertSubcategory(stepped.catalog, {
+    categoryId: category.id,
+    name: subName,
+    nameHe: draft.subcategory.nameHe,
+    code,
+    photo: draft.subcategory.photo,
+  })
+  const sub = next.subcategories.find((item) => item.categoryId === category.id && item.code === code)
+
+  for (const prop of draft.properties) {
+    const taken: string[] = []
+    const options = prop.options
+      .map((option) => {
+        const label = option.label.trim()
+        const sign = normalizeSign(option.sign)
+        if (!label || !sign) return undefined
+        const id = optionId(label, sign, taken)
+        taken.push(id)
+        return { id, label, labelHe: option.labelHe.trim() || label, sign }
+      })
+      .filter((option): option is CatalogPropertyOption => Boolean(option))
+    if (!prop.name.trim() || options.length === 0) continue
+    const onSub = prop.scope === 'subcategory' && sub
+    next = upsertProperty(next, {
+      name: prop.name,
+      nameHe: prop.nameHe,
+      required: prop.required,
+      inMarketName: prop.inMarketName,
+      sign: prop.sign,
+      categoryIds: onSub ? [] : [category.id],
+      subcategoryIds: onSub ? [sub.id] : [],
+      options,
+    })
+  }
+
+  return { catalog: next, species: stepped.species }
 }
 
 export function propertiesForCategory(catalog: Catalog, categoryId: string) {

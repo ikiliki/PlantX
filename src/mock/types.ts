@@ -417,6 +417,30 @@ export type IdentifyTried = {
   detail?: string
 }
 
+export type SuggestedPropertyOption = {
+  label: string
+  labelHe: string
+  sign: string
+}
+
+/** One property Gemini proposes for a plant that is not in the catalog yet. */
+export type SuggestedProperty = {
+  name: string
+  nameHe: string
+  required: boolean
+  inMarketName: boolean
+  sign: string
+  scope: 'category' | 'subcategory'
+  options: SuggestedPropertyOption[]
+}
+
+/** Category, subcategory, and properties proposed for one unmatched plant. */
+export type CatalogSuggestionDraft = {
+  category: { name: string; nameHe: string; ticker: string; photo: string }
+  subcategory: { name: string; nameHe: string; code: string; photo: string }
+  properties: SuggestedProperty[]
+}
+
 /** A plant identify could not match. Only the admin catalog sees these. */
 export type CatalogSuggestion = {
   id: string
@@ -427,6 +451,7 @@ export type CatalogSuggestion = {
   commonNames: string[]
   provider: string
   hits: number
+  draft: CatalogSuggestionDraft
 }
 
 export type Diagnosis = {

@@ -1,5 +1,6 @@
 import type pg from 'pg'
-import type { CatalogSuggestion } from '../../../../src/mock/types.ts'
+import type { CatalogSuggestion, CatalogSuggestionDraft } from '../../../../src/mock/types.ts'
+import { fallbackDraft } from '../../features/catalog/catalogDraft.ts'
 import type { PlantxStore } from '../store.ts'
 
 const ENSURE_SQL = `
@@ -12,8 +13,40 @@ create table if not exists catalog_suggestions (
   genus text not null default '',
   common_names jsonb not null default '[]'::jsonb,
   provider text not null default '',
-  hits integer not null default 1
+  hits integer not null default 1,
+  draft jsonb not null default '{}'::jsonb
 )`
+
+const DRAFT_SQL = `
+alter table catalog_suggestions
+  add column if not exists draft jsonb not null default '{}'::jsonb`
+
+function draftOf(row: Record<string, unknown>): CatalogSuggestionDraft {
+  const stored = row.draft
+  const parsed = typeof stored === 'string' ? safeJson(stored) : stored
+  if (parsed && typeof parsed === 'object' && 'category' in parsed) {
+    const draft = parsed as CatalogSuggestionDraft
+    if (draft.category?.name && draft.subcategory?.name) return draft
+  }
+  const names = row.common_names
+  return fallbackDraft({
+    name: String(row.name ?? ''),
+    scientificName: String(row.scientific_name ?? ''),
+    genus: String(row.genus ?? ''),
+    commonNames: Array.isArray(names) ? names.map(String) : [],
+    provider: String(row.provider ?? ''),
+    photo: '',
+    takenSigns: [],
+  })
+}
+
+function safeJson(value: string) {
+  try {
+    return JSON.parse(value) as unknown
+  } catch {
+    return undefined
+  }
+}
 
 function rowOf(row: Record<string, unknown>): CatalogSuggestion {
   const names = row.common_names
@@ -26,6 +59,7 @@ function rowOf(row: Record<string, unknown>): CatalogSuggestion {
     commonNames: Array.isArray(names) ? names.map(String) : [],
     provider: String(row.provider ?? ''),
     hits: Number(row.hits ?? 1),
+    draft: draftOf(row),
   }
 }
 
@@ -34,7 +68,10 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
   let ready: Promise<void> | undefined
 
   function ensure() {
-    ready ??= pool.query(ENSURE_SQL).then(() => undefined)
+    ready ??= pool
+      .query(ENSURE_SQL)
+      .then(() => pool.query(DRAFT_SQL))
+      .then(() => undefined)
     return ready
   }
 
@@ -64,9 +101,17 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
       }
       const id = `sug-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
       await pool.query(
-        `insert into catalog_suggestions (id, name, scientific_name, genus, common_names, provider)
-         values ($1, $2, $3, $4, $5::jsonb, $6)`,
-        [id, input.name, input.scientificName, input.genus, JSON.stringify(input.commonNames), input.provider],
+        `insert into catalog_suggestions (id, name, scientific_name, genus, common_names, provider, draft)
+         values ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb)`,
+        [
+          id,
+          input.name,
+          input.scientificName,
+          input.genus,
+          JSON.stringify(input.commonNames),
+          input.provider,
+          JSON.stringify(input.draft),
+        ],
       )
     },
 
