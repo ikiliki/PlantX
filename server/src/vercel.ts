@@ -1,8 +1,6 @@
 import { getRequestListener } from '@hono/node-server'
-import { app, boot } from './app.ts'
+import { app } from './app.ts'
 
-await boot()
-
-// Built to api/index.js. vercel.json rewrites every /api/* path here.
-// Vercel keeps the browser path on req.url, so Hono still sees /api/session/google.
+// The first request seeds the database. Boot stays inside the app so a failed
+// connection returns JSON instead of crashing the function at import.
 export default getRequestListener(app.fetch)

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { AppShell } from '../../../../app/AppShell/AppShell'
+import { HoldNotice } from '../../../../components/HoldNotice/HoldNotice'
 import { HoldStage } from '../../../../components/HoldStage/HoldStage'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { AuthPanel } from '../../../auth/components/AuthPanel/AuthPanel'
@@ -17,7 +18,8 @@ export function AdminGate() {
     if (currentUser && !isOperator(currentUser)) loginAs(null)
   }, [currentUser, loginAs])
 
-  if (liveStatus === 'loading' && !allowed) return <LoaderShell fill />
+  if (liveStatus === 'loading') return <LoaderShell fill />
+  if (liveStatus === 'down') return <HoldNotice mode="maintenance" />
   if (allowed) return <AppShell />
 
   return (

@@ -1,11 +1,15 @@
 import { spawn } from 'node:child_process'
-import { mkdir, readdir, rm } from 'node:fs/promises'
+import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
 
 process.env.VITE_PLANTX_ENV = 'prod'
 process.env.PLANTX_ENV = 'prod'
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const output = path.join(root, '.vercel', 'output')
+const funcDir = path.join(output, 'functions', 'api.func')
 
 function run(command) {
   return new Promise((resolve, reject) => {
@@ -22,19 +26,37 @@ function run(command) {
 }
 
 await run('npx tsc && npx vite build')
-const apiDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../api')
-await mkdir(apiDir, { recursive: true })
+await rm(output, { recursive: true, force: true })
+await mkdir(funcDir, { recursive: true })
+await cp(path.join(root, 'dist'), path.join(output, 'static'), { recursive: true })
 await build({
   entryPoints: ['server/src/vercel.ts'],
   bundle: true,
   platform: 'node',
   format: 'esm',
-  outfile: path.join(apiDir, 'index.js'),
-  packages: 'external',
+  outfile: path.join(funcDir, 'index.js'),
+  packages: 'bundle',
+  external: ['pg-native'],
   logLevel: 'info',
 })
-// Vercel only matches one path segment in /api bracket files, so a catch-all
-// never receives /api/session/google. One index function plus a rewrite does.
-for (const name of await readdir(apiDir)) {
-  if (name !== 'index.js' && name.endsWith('.js')) await rm(path.join(apiDir, name))
-}
+await writeFile(path.join(funcDir, 'package.json'), JSON.stringify({ type: 'module' }))
+await writeFile(
+  path.join(funcDir, '.vc-config.json'),
+  JSON.stringify({
+    runtime: 'nodejs22.x',
+    handler: 'index.js',
+    launcherType: 'Nodejs',
+    shouldAddHelpers: false,
+  }),
+)
+await writeFile(
+  path.join(output, 'config.json'),
+  JSON.stringify({
+    version: 3,
+    routes: [
+      { handle: 'filesystem' },
+      { src: '/api(?:/(.*))?', dest: '/api' },
+      { src: '/(.*)', dest: '/index.html' },
+    ],
+  }),
+)
