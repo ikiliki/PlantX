@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Pager, usePaged } from '../../../../components/Pager/Pager'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { Empty, Event, Message, Meta, Photo, Root, Scroll, Tag, When } from './ActivityThread.styles'
@@ -49,24 +50,36 @@ function ActivityMessage({ entry }: { entry: ActivityEntry }) {
 export function ActivityThread({ activity }: { activity: ActivityEntry[] }) {
   const { t } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const paged = usePaged(activity, {
+    anchor: 'end',
+    signature: activity.map((entry) => `${entry.at}|${entry.plant}|${entry.label}`).join('|'),
+  })
 
   useEffect(() => {
     const node = scrollRef.current
     if (!node) return
     node.scrollTop = node.scrollHeight
-  }, [activity.length])
+  }, [paged.page, paged.shown.length])
 
   return (
     <Root aria-label={t.greenhouse.activityTitle}>
       <Scroll ref={scrollRef}>
-        {activity.length === 0 ? (
+        {paged.total === 0 ? (
           <Empty>{t.greenhouse.noActivity}</Empty>
         ) : (
-          activity.map((entry, index) => (
+          paged.shown.map((entry, index) => (
             <ActivityMessage key={`${entry.at}-${entry.plantId ?? entry.plant}-${index}`} entry={entry} />
           ))
         )}
       </Scroll>
+      <Pager
+        page={paged.page}
+        pageCount={paged.pageCount}
+        from={paged.from}
+        to={paged.to}
+        total={paged.total}
+        onPage={paged.setPage}
+      />
     </Root>
   )
 }

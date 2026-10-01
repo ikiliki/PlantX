@@ -9,6 +9,7 @@ import { RankRail } from '../../features/feed/components/RankRail/RankRail'
 import { TopGreenhouses } from '../../features/feed/components/TopGreenhouses/TopGreenhouses'
 import { WikiRail } from '../../features/feed/components/WikiRail/WikiRail'
 import { useHomeFeed } from '../../features/feed/useHomeFeed'
+import { Pager, usePaged } from '../../components/Pager/Pager'
 import { Reveal } from '../../components/Reveal/Reveal'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useServerSlices } from '../../mock/useServerSlices'
@@ -19,9 +20,10 @@ const WIDGET_ITEMS = 2
 
 function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) {
   const { t } = useI18n()
-  const { items, hasMore, sentinelRef, friendsOnly } = useHomeFeed({ paged })
+  const { items, friendsOnly } = useHomeFeed()
   const empty = friendsOnly ? t.feed.friendsEmpty : t.feed.empty
-  const shown = view === 'widget' ? items.slice(0, WIDGET_ITEMS) : items
+  const feed = usePaged(items, { enabled: paged && view === 'page', signature: items.map((item) => item.id).join('|') })
+  const shown = view === 'widget' ? items.slice(0, WIDGET_ITEMS) : feed.shown
 
   if (view === 'widget') {
     return (
@@ -52,13 +54,20 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
             <FeedFilterSlot>
               <FeedFilter />
             </FeedFilterSlot>
-            {items.length === 0 && <Empty>{empty}</Empty>}
-            {items.map((item, index) => (
+            {feed.total === 0 && <Empty>{empty}</Empty>}
+            {shown.map((item, index) => (
               <Reveal key={item.id} index={index}>
                 <FeedUpdate update={item.update} />
               </Reveal>
             ))}
-            {hasMore ? <div ref={sentinelRef} data-feed-more="" style={{ height: 1 }} /> : null}
+            <Pager
+              page={feed.page}
+              pageCount={feed.pageCount}
+              from={feed.from}
+              to={feed.to}
+              total={feed.total}
+              onPage={feed.setPage}
+            />
           </FeatureGate>
         </Feed>
         <Rail>

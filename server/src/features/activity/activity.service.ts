@@ -1,5 +1,7 @@
+import { addedActivityText, scanActivityText } from '../../../../src/features/greenhouse/identification.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
+import { logger } from '../../lib/logger.ts'
 import type { Activity, ActivityInput, ActivityQuery } from './activity.types.ts'
 
 function newestFirst(a: Activity, b: Activity) {
@@ -13,6 +15,7 @@ function newestFirst(a: Activity, b: Activity) {
 export const activityService = {
   async list(query: ActivityQuery = {}): Promise<Activity[]> {
     let rows = (await getStore().activities.list()).slice().sort(newestFirst)
+    if (query.kind) rows = rows.filter((row) => row.kind === query.kind)
     if (query.plantId) rows = rows.filter((row) => row.plantId === query.plantId)
     if (query.userId) rows = rows.filter((row) => row.userId === query.userId)
     if (query.limit != null && query.limit >= 0) rows = rows.slice(0, query.limit)
@@ -21,6 +24,11 @@ export const activityService = {
 
   async listForPlant(plantId: string): Promise<Activity[]> {
     return activityService.list({ plantId })
+  },
+
+  async get(id: string): Promise<Activity | undefined> {
+    const rows = await getStore().activities.list()
+    return rows.find((row) => row.id === id)
   },
 
   async record(input: ActivityInput): Promise<Activity> {
@@ -44,6 +52,50 @@ export const activityService = {
     rows.unshift(activity)
     await getStore().activities.saveAll(rows)
     return activity
+  },
+
+  /**
+   * Every identify request has a `scan` row, and every plant has an `added` row.
+   * Those writes used to be dropped when the activities kind check rejected them.
+   */
+  async ensureMains(): Promise<void> {
+    const store = getStore()
+    const [activities, plants, requests] = await Promise.all([
+      store.activities.list(),
+      store.plants.list(),
+      store.identifyRequests.list({ limit: 500 }),
+    ])
+    let changed = false
+    for (const request of requests) {
+      if (activities.some((row) => row.kind === 'scan' && row.identifyRequestId === request.id)) continue
+      activities.unshift({
+        id: `act-scan-${request.id}`,
+        kind: 'scan',
+        userId: request.userId,
+        plantId: request.plantId,
+        identifyRequestId: request.id,
+        createdAt: request.createdAt,
+        ...scanActivityText(request.diagnosis),
+      })
+      changed = true
+    }
+    for (const plant of plants) {
+      if (activities.some((row) => row.kind === 'added' && row.plantId === plant.id)) continue
+      const identification = plant.identification ?? { source: 'manual' as const, at: plant.createdAt }
+      activities.unshift({
+        id: `act-added-${plant.id}`,
+        kind: 'added',
+        userId: plant.ownerId,
+        plantId: plant.id,
+        identifyRequestId: identification.requestId,
+        createdAt: plant.createdAt,
+        ...addedActivityText(plant.title, plant.titleHe, identification),
+      })
+      changed = true
+    }
+    if (!changed) return
+    await store.activities.saveAll(activities)
+    logger.info(`Backfilled ${activities.length} activity rows from identify requests and plants`)
   },
 }
 

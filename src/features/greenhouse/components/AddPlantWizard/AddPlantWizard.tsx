@@ -12,6 +12,7 @@ import { useStore } from '../../../../mock/store'
 import type { Diagnosis, PlantClassDraft, QualityGrade, SizeBand, StageBand } from '../../../../mock/types'
 import { catalogName, optionLabel, propertiesForPlant } from '../../../catalog/catalog'
 import {
+  ADD_PLANT_UPLOAD_LIMIT,
   draftMatchesDiagnosis,
   identificationFor,
   isUsableDiagnosis,
@@ -292,7 +293,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
           <>
             <StepHead>
               <StepTitle>{t.addPlant.photoTitle}</StepTitle>
-              <StepLead>{t.addPlant.photoLead}</StepLead>
+              <StepLead>
+                {ADD_PLANT_UPLOAD_LIMIT > 1 ? t.addPlant.photoLead : t.addPlant.photoLeadOne}
+              </StepLead>
             </StepHead>
           </>
         )
@@ -619,7 +622,12 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       </StepBody>
       {/* Stays mounted so the scan result survives a trip to later steps and back. */}
       <div hidden={stepId !== 'photo'}>
-        <PhotoIdentify scans={scans} onScansChange={setScans} checks={identification.photos} />
+        <PhotoIdentify
+          scans={scans}
+          onScansChange={setScans}
+          checks={identification.photos}
+          max={ADD_PLANT_UPLOAD_LIMIT}
+        />
       </div>
       <Footer>
         {step > 0 ? (

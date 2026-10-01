@@ -21,5 +21,6 @@ export type ActivityInput = Omit<Activity, 'id' | 'createdAt'> & {
 export type ActivityQuery = {
   plantId?: string
   userId?: string
+  kind?: ActivityKind
   limit?: number
 }

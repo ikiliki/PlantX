@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { StoreProvider } from '../../../../mock/store'
 import type { Diagnosis, IdentifyTried, PhotoCheck } from '../../../../mock/types'
+import { MAX_PLANT_PHOTOS } from '../../identification'
 import { PhotoIdentify, type PhotoIdentifyPhase, type PhotoScan } from './PhotoIdentify'
 
 const SAMPLE_PHOTO =
@@ -74,12 +75,22 @@ function scan(id: string, phase: PhotoIdentifyPhase, diagnosis?: Diagnosis, trie
   return { id, photo: SAMPLE_PHOTO, phase, diagnosis, tried: tried ?? diagnosis?.tried }
 }
 
-function Frame({ initial, checks }: { initial: PhotoScan[]; checks?: PhotoCheck[] }) {
+function Frame({
+  initial,
+  checks,
+  max,
+}: {
+  initial: PhotoScan[]
+  checks?: PhotoCheck[]
+  max?: number
+}) {
   const [scans, setScans] = useState(initial)
-  return <PhotoIdentify scans={scans} onScansChange={setScans} checks={checks} />
+  return <PhotoIdentify scans={scans} onScansChange={setScans} checks={checks} max={max} />
 }
 
 export const Idle = () => <Frame initial={[]} />
+/** Product upload cap. Multi-photo stories still pass a higher `max`. */
+export const OnePhoto = () => <Frame initial={[]} max={1} />
 export const Identifying = () => <Frame initial={[scan('a', 'identifying')]} />
 export const Matched = () => (
   <Frame
@@ -89,6 +100,7 @@ export const Matched = () => (
 )
 export const ThreePhotos = () => (
   <Frame
+    max={MAX_PLANT_PHOTOS}
     initial={[
       scan('a', 'matched', matchedDiagnosis),
       scan('b', 'notPlant', notPlantDiagnosis),

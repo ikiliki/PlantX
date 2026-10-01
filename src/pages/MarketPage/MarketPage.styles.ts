@@ -73,30 +73,6 @@ export const ResultsHead = styled.div`
   color: ${theme.colors.ink};
 `
 
-export const Pager = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-`
-
-export const PagerButton = styled.button`
-  background: ${theme.colors.creamCard};
-  color: ${theme.colors.forest};
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.pill};
-  padding: 4px 10px;
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-`
-
 export const MapPane = styled.div<{ $open: boolean }>`
   order: -1;
   overflow: hidden;

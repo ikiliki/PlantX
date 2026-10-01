@@ -32,13 +32,13 @@ A pattern appears twice or more (same Field + Select + "Choose", same admin head
 
 - `AdminPage` — admin check, header, lead, tabs
 - `CatalogSelect` — labeled catalog select with choose option
-- `PhotoIdentify` — up to 3 photos, each scanned separately; renders `AiScan` (scan, typed answer, provider chain) for the selected photo and a strip of slots with stickers
+- `PhotoIdentify` — `max` photos (default `MAX_PLANT_PHOTOS`, 3), each scanned separately; Add Plant passes `ADD_PLANT_UPLOAD_LIMIT` (1). Renders `AiScan` for the selected photo and a strip of slots with stickers. Stories keep the multi-photo frames.
 - `PhotoCheckSticker` — tilted "test passed" stamp with one photo's AI result (`sm` on thumbs, `md` on big photos)
 - `PhotoChecks` — a plant's photos with numbered thumbs and stickers (review, passport activity, admin preview)
 - `AddPlantWizard` — stepped flow built on `Stepper` + `ChoiceChips` (`src/components`); AI picks use `suggestedId`
 - `IdentifyBadge` — AI verified / edited / manual mark for a plant (card, passport, review)
 - `ApisPanel` — presentational; page loads data
 - `AdminSection` — admin card with heading, lead, side note
-- `Segmented` (`src/components`) — button switch for modes and filters; tabs reuse its styles
+- `Pager` (`src/components`) — previous / next with `PAGE_SIZE` (10). `AdminTable`, home, market, and greenhouse activity use `usePaged`. A single page hides the control. `anchor: 'end'` opens a timeline on the latest page.
 - `Switch` (`src/components`) — on/off `role="switch"` with busy spinner; System and APIs admin toggles
 - `LoaderShell` — table placeholder while a live slice or admin list is still loading. Server tables use `useServerSlices`; APIs uses it for providers and history. Mock mode skips it.

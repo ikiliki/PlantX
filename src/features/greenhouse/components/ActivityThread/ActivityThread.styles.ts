@@ -3,6 +3,7 @@ import { theme } from '../../../../theme/tokens'
 
 export const Root = styled.aside`
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-width: 0;
   width: min(300px, 100%);
   border-radius: ${theme.radii.lg};

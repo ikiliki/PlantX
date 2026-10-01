@@ -5,6 +5,7 @@ import type { Catalog, CatalogCategory, CatalogSubcategory, Plant, User } from '
 import { DEFAULT_SYSTEM, normalizeSystem } from '../../../src/theme/release.ts'
 import { explainDbError, getStore } from '../db/index.ts'
 import type { PlantxStore } from '../db/store.ts'
+import { activityService } from '../features/activity/activity.service.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
 import { plantxDb, plantxEnv, plantxEnvLabel, plantxSeed } from './env.ts'
@@ -224,6 +225,11 @@ export async function ensureDataFiles() {
     await ensureExampleCatalog(store)
     await ensureBootstrapAdmin()
     await pruneBrokenRelations(store)
+    try {
+      await activityService.ensureMains()
+    } catch (err) {
+      logger.warn('activity backfill skipped', undefined, err)
+    }
   } catch (err) {
     throw explainDbError(err)
   }

@@ -10,7 +10,6 @@ import type {
   TopGreenhouse,
 } from './types'
 
-export const FEED_PAGE_SIZE = 4
 const SOME_LISTINGS = 4
 const SEVERAL_PLANTS = 4
 const HIDDEN_OWNER = 'demo-unassigned'

@@ -1,19 +1,19 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Badge } from '../../../../components/Badge/Badge'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
+import { Segmented } from '../../../../components/Segmented/Segmented'
 import { Button } from '../../../../components/Button/Button'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import type { FeedUpdate, ModerationItem, PendingUser, Plant, User } from '../../../../mock/types'
+import type { FeedUpdate, FeedUpdateKind, ModerationItem, PendingUser, Plant, User } from '../../../../mock/types'
 import { useStore, type LiveStatus } from '../../../../mock/store'
 import { useServerSlices } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
 import { IdentifyBadge } from '../../../greenhouse/components/IdentifyBadge/IdentifyBadge'
 import { PhotoChecks } from '../../../greenhouse/components/PhotoChecks/PhotoChecks'
-import { PhotoCheckSticker } from '../../../greenhouse/components/PhotoCheckSticker/PhotoCheckSticker'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { CatalogTree, CatalogTreeDialog } from '../CatalogTree/CatalogTree'
 import {
@@ -37,12 +37,43 @@ import {
   SectionHead,
   HeadMeta,
   DemoRibbon,
+  FilterBar,
   RelationLink,
   UserHover,
   StatusActions,
   StatusCard,
   StatusCopy,
+  UserFilter,
+  UserSelect,
 } from './ServerPanel.styles'
+
+const ACTIVITY_KINDS = [
+  'scan',
+  'added',
+  'water',
+  'photo',
+  'propagate',
+  'grade',
+  'passport',
+  'listing',
+] as const satisfies readonly FeedUpdateKind[]
+
+type ActivityTypeFilter = 'all' | FeedUpdateKind
+
+const ACTIVITY_KIND_KEY = {
+  photo: 'updatePhoto',
+  water: 'updateWater',
+  propagate: 'updatePropagate',
+  grade: 'updateGrade',
+  passport: 'updatePassport',
+  listing: 'updateListing',
+  scan: 'updateScan',
+  added: 'updateAdded',
+} as const satisfies Record<FeedUpdateKind, keyof ReturnType<typeof useI18n>['t']['feed']>
+
+function activityKindLabel(kind: FeedUpdateKind, feed: ReturnType<typeof useI18n>['t']['feed']) {
+  return feed[ACTIVITY_KIND_KEY[kind]]
+}
 
 function statusTone(status: LiveStatus): 'up' | 'down' | 'loading' {
   if (status === 'up') return 'up'
@@ -433,7 +464,7 @@ function ActivityPreview({
         <PreviewIdentity>
           <Avatar name={userLabel} color={avatarTone(row.userId)} size={64} />
           <PreviewName>
-            <strong>{row.kind}</strong>
+            <strong>{activityKindLabel(row.kind, t.feed)}</strong>
             <span>
               {userLabel} · {row.createdAt.slice(0, 16).replace('T', ' ')}
             </span>
@@ -443,7 +474,7 @@ function ActivityPreview({
         <PreviewStats>
           <div>
             <dt>{t.admin.serverColKind}</dt>
-            <dd>{row.kind}</dd>
+            <dd>{activityKindLabel(row.kind, t.feed)}</dd>
           </div>
           <div>
             <dt>{t.admin.serverColPlant}</dt>
@@ -565,6 +596,7 @@ function ReportPreview({
 export function ServerPanel() {
   const {
     db,
+    fullDb,
     liveStatus,
     liveWritable,
     plantxEnv,
@@ -596,6 +628,8 @@ export function ServerPanel() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ users: true })
   const [categoryPopupId, setCategoryPopupId] = useState<string | null>(null)
+  const [activityKind, setActivityKind] = useState<ActivityTypeFilter>('all')
+  const [activityUserId, setActivityUserId] = useState('all')
 
   const loadingSlices = useServerSlices([
     ...(openSections.users ? (['users'] as const) : []),
@@ -612,7 +646,24 @@ export function ServerPanel() {
 
   const users = db.users.filter((user) => user.role !== 'guest')
   const plants = db.plants
-  const activities = db.updates ?? []
+  const activities = useMemo(
+    () => (fullDb.updates ?? []).slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [fullDb.updates],
+  )
+  const activityUsers = useMemo(() => {
+    const ids = [...new Set(activities.map((row) => row.userId))]
+    return ids
+      .map((id) => {
+        const user = db.users.find((item) => item.id === id)
+        return { id, label: user ? tr(user.name, user.nameHe) : id }
+      })
+      .sort((a, b) => a.label.localeCompare(b.label, locale))
+  }, [activities, db.users, locale, tr])
+  const shownActivities = activities.filter(
+    (row) =>
+      (activityKind === 'all' || row.kind === activityKind) &&
+      (activityUserId === 'all' || row.userId === activityUserId),
+  )
   const reports = db.moderation.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   const pending = db.pendingUsers
     .filter((row) => row.status === 'pending')
@@ -1032,7 +1083,9 @@ export function ServerPanel() {
         <SectionHead type="button" $open={Boolean(openSections.activities)} onClick={() => toggleSection('activities')}>
           <h2>{t.admin.serverActivities}</h2>
           <HeadMeta>
-            <span>{openSections.activities || liveMeta == null ? activities.length : liveMeta.updates}</span>
+            <span>
+              {openSections.activities || liveMeta == null ? shownActivities.length : liveMeta.updates}
+            </span>
             {!fromServer && <DemoRibbon>{t.admin.serverDemoMark}</DemoRibbon>}
           </HeadMeta>
         </SectionHead>
@@ -1040,10 +1093,39 @@ export function ServerPanel() {
           (loadingSlices.has('updates') ? (
             <LoaderShell />
           ) : (
+        <>
+        <FilterBar>
+          <Segmented
+            ariaLabel={t.admin.serverActivityTypes}
+            value={activityKind}
+            onChange={setActivityKind}
+            options={[
+              { id: 'all', label: t.admin.serverActivityAll },
+              ...ACTIVITY_KINDS.map((kind) => ({ id: kind, label: activityKindLabel(kind, t.feed) })),
+            ]}
+          />
+          <UserFilter>
+            {t.admin.serverActivityUsers}
+            <UserSelect
+              aria-label={t.admin.serverActivityUsers}
+              value={activityUsers.some((user) => user.id === activityUserId) ? activityUserId : 'all'}
+              onChange={(event) => setActivityUserId(event.target.value)}
+            >
+              <option value="all">{t.admin.serverActivityAllUsers}</option>
+              {activityUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.label}
+                </option>
+              ))}
+            </UserSelect>
+          </UserFilter>
+        </FilterBar>
         <AdminTable
-          rows={activities}
+          rows={shownActivities}
           rowId={(row) => row.id}
-          empty={t.admin.serverEmpty}
+          empty={
+            activityKind === 'all' && activityUserId === 'all' ? t.admin.serverEmpty : t.admin.serverActivityEmpty
+          }
           onRowClick={(row) => setActivityPreviewId(row.id)}
           selectable
           selected={selectedActivities}
@@ -1053,30 +1135,20 @@ export function ServerPanel() {
           onExpandedChange={setExpandedActivities}
           columns={[
             { id: 'id', header: t.admin.serverColId, cell: (row) => row.id, muted: true },
-            { id: 'kind', header: t.admin.serverColKind, cell: (row) => row.kind },
+            {
+              id: 'kind',
+              header: t.admin.serverColKind,
+              cell: (row) => activityKindLabel(row.kind, t.feed),
+            },
+            {
+              id: 'user',
+              header: t.admin.serverColUser,
+              cell: (row) => userLink(row.userId),
+            },
             {
               id: 'body',
               header: t.admin.serverColBody,
               cell: (row) => tr(row.body, row.bodyHe),
-            },
-            {
-              id: 'verified',
-              header: t.admin.previewVerification,
-              cell: (row) => {
-                if (row.kind !== 'added' && row.kind !== 'scan') return '—'
-                if (!row.plantId) return <Badge $tone="warn">{t.admin.apisNotAdded}</Badge>
-                const plant = plants.find((item) => item.id === row.plantId)
-                if (!plant) return '—'
-                const scanned =
-                  row.kind === 'scan'
-                    ? plant.identification?.photos?.find((check) => check.requestId === row.identifyRequestId)
-                    : undefined
-                return scanned ? (
-                  <PhotoCheckSticker check={scanned} />
-                ) : (
-                  <IdentifyBadge identification={plant.identification} compact />
-                )
-              },
             },
             {
               id: 'plant',
@@ -1091,17 +1163,25 @@ export function ServerPanel() {
               muted: true,
             },
           ]}
-          renderExpand={(row: FeedUpdate) => (
-            <AdminDetailGrid
-              items={[
-                { label: t.admin.serverColUser, value: userLink(row.userId) },
-                { label: t.admin.serverColPlant, value: plantLink(row.plantId) },
-                { label: t.admin.serverColKind, value: row.kind },
-              ]}
-            />
-          )}
+          renderExpand={(row: FeedUpdate) => {
+            const plant = row.plantId ? plants.find((item) => item.id === row.plantId) : undefined
+            return (
+              <>
+                <AdminDetailGrid
+                  items={[
+                    { label: t.admin.serverColUser, value: userLink(row.userId) },
+                    { label: t.admin.serverColPlant, value: plantLink(row.plantId) },
+                    { label: t.admin.serverColKind, value: activityKindLabel(row.kind, t.feed) },
+                    { label: t.admin.serverColId, value: row.identifyRequestId ?? '—' },
+                  ]}
+                />
+                <ActivityVerification row={row} plant={plant} />
+              </>
+            )
+          }}
           bulkActions={[]}
         />
+        </>
           ))}
       </Section>
 

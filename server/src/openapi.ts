@@ -522,11 +522,116 @@ export const openApiDocument = {
         },
       },
     },
+    '/api/activities/{type}/{userId}': {
+      get: {
+        tags: ['activities'],
+        summary: 'List one kind for one user',
+        parameters: [
+          { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer' } },
+        ],
+        responses: {
+          '200': {
+            description: 'Basic activity rows',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    activities: { type: 'array', items: { $ref: '#/components/schemas/Activity' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/activities/{type}': {
+      get: {
+        tags: ['activities'],
+        summary: 'List one kind',
+        description: 'Basic rows only. `scan`, `added`, `water`, `photo`, `propagate`, `grade`, `passport`, `listing`.',
+        parameters: [
+          { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'userId', in: 'query', schema: { type: 'string' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer' } },
+        ],
+        responses: {
+          '200': {
+            description: 'Basic activity rows',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    activities: { type: 'array', items: { $ref: '#/components/schemas/Activity' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/activities/user/{userId}': {
+      get: {
+        tags: ['activities'],
+        summary: 'List every kind for one user',
+        parameters: [
+          { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer' } },
+        ],
+        responses: {
+          '200': {
+            description: 'Basic activity rows',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    activities: { type: 'array', items: { $ref: '#/components/schemas/Activity' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/activities/id/{id}': {
+      get: {
+        tags: ['activities'],
+        summary: 'One activity with its linked identify request',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'Activity and optional identify detail',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    activity: { $ref: '#/components/schemas/Activity' },
+                    detail: { type: 'object', nullable: true },
+                  },
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Missing',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+        },
+      },
+    },
     '/api/activities': {
       get: {
         tags: ['activities'],
         summary: 'List activities',
-        description: 'Home feed. Filter with plantId or userId.',
+        description: 'Basic rows for every kind. Filter with plantId or userId. Extended identify detail is on GET /api/activities/id/{id}.',
         parameters: [
           { name: 'plantId', in: 'query', schema: { type: 'string' } },
           { name: 'userId', in: 'query', schema: { type: 'string' } },

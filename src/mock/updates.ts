@@ -8,6 +8,34 @@ function ago(hours: number) {
 export function seedUpdates(): FeedUpdate[] {
   return [
     {
+      id: 'up-maya-scan',
+      kind: 'scan',
+      userId: 'u-maya',
+      plantId: 'pl-maya-njoy',
+      identifyRequestId: 'req-maya-njoy',
+      body: "AI scan: Epipremnum aureum · Plant.id 91%.",
+      bodyHe: "סריקת AI: Epipremnum aureum · Plant.id 91%.",
+      createdAt: ago(100),
+    },
+    {
+      id: 'up-maya-added',
+      kind: 'added',
+      userId: 'u-maya',
+      plantId: 'pl-maya-njoy',
+      identifyRequestId: 'req-maya-njoy',
+      body: "N'Joy pothos ×6 added to the greenhouse · AI verified by Plant.id.",
+      bodyHe: "פוטוס אן ג'וי ×6 נוסף לחממה · אומת ב־AI על ידי Plant.id.",
+      createdAt: ago(99),
+    },
+    {
+      id: 'up-noa-scan',
+      kind: 'scan',
+      userId: 'u-noa',
+      body: 'AI scan: the photo does not show a plant.',
+      bodyHe: 'סריקת AI: בתמונה לא נמצא צמח.',
+      createdAt: ago(30),
+    },
+    {
       id: 'up-maya-propagate',
       kind: 'propagate',
       userId: 'u-maya',

@@ -91,7 +91,7 @@ function newScanId() {
 }
 
 /**
- * Photo step of Add Plant: up to three photos, each sent to the identify chain as it is added.
+ * Photo step of Add Plant. `max` is how many photos can be added; each one is sent to the identify chain.
  * The parent owns the scans; `checks` (same order) stamps each thumbnail against the class being saved.
  */
 export function PhotoIdentify({
@@ -192,7 +192,7 @@ export function PhotoIdentify({
       ref={fileRef}
       type="file"
       accept="image/*"
-      multiple
+      multiple={max > 1}
       hidden
       onChange={(event) => {
         onFiles(event.target.files)
@@ -210,8 +210,12 @@ export function PhotoIdentify({
             <span>✦</span>
           </DropArt>
           <DropCopy>
-            <strong>{t.addPlant.dropTitle}</strong>
-            <small>{t.addPlant.dropHint.replace('{max}', String(max))}</small>
+            <strong>
+              {max > 1 ? t.addPlant.dropTitle.replace('{max}', String(max)) : t.addPlant.dropTitleOne}
+            </strong>
+            <small>
+              {max > 1 ? t.addPlant.dropHint.replace('{max}', String(max)) : t.addPlant.dropHintOne}
+            </small>
           </DropCopy>
         </Drop>
       </Root>
@@ -283,7 +287,13 @@ export function PhotoIdentify({
           </AddSlot>
         ) : null}
       </Strip>
-      <StripHint>{room > 0 ? t.addPlant.morePhotosHint : t.addPlant.maxPhotosHint.replace('{max}', String(max))}</StripHint>
+      <StripHint>
+        {room > 0
+          ? t.addPlant.morePhotosHint
+          : max > 1
+            ? t.addPlant.maxPhotosHint.replace('{max}', String(max))
+            : t.addPlant.maxPhotosHintOne}
+      </StripHint>
     </Root>
   )
 }

@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
+import { Pager, usePaged } from '../../../../components/Pager/Pager'
 import { Button } from '../../../../components/Button/Button'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import {
@@ -81,7 +82,9 @@ export function AdminTable<T>({
   embedded?: boolean
 }) {
   const { t } = useI18n()
-  const ids = rows.map(rowId)
+  const paged = usePaged(rows, { signature: rows.map(rowId).join('|') })
+  const pageRows = paged.shown
+  const ids = pageRows.map(rowId)
   const allSelected = ids.length > 0 && ids.every((id) => selected.includes(id))
   const someSelected = selected.length > 0
   const showAdd = Boolean(onAdd)
@@ -167,14 +170,14 @@ export function AdminTable<T>({
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
+            {pageRows.length === 0 ? (
               <tr>
                 <td colSpan={colSpan}>
                   <Empty>{empty}</Empty>
                 </td>
               </tr>
             ) : (
-              rows.map((row) => {
+              pageRows.map((row) => {
                 const id = rowId(row)
                 const open = expandedIds.includes(id)
                 const rowActions = actions?.(row) ?? []
@@ -252,6 +255,14 @@ export function AdminTable<T>({
           </tbody>
         </Table>
       </Scroll>
+      <Pager
+        page={paged.page}
+        pageCount={paged.pageCount}
+        from={paged.from}
+        to={paged.to}
+        total={paged.total}
+        onPage={paged.setPage}
+      />
     </>
   )
 }

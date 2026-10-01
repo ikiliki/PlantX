@@ -129,6 +129,8 @@ function plantPhotos(own: string[] = []) {
 
 interface StoreApi {
   db: MockDb
+  /** Rows before demo scenarios trim them. Admin reads the activity log from here. */
+  fullDb: MockDb
   currentUser: User | null
   signedIn: boolean
   /** Live API reachability. Components read this; they do not fetch. */
@@ -441,6 +443,7 @@ export function StoreProvider({
 
   const api: StoreApi = {
     db: visible,
+    fullDb: db,
     currentUser,
     signedIn,
     liveStatus,

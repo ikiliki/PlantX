@@ -19,7 +19,11 @@ export const PROVIDER_LABEL: Record<IdentifyProviderId, string> = {
 
 export const PROVIDER_CHAIN: IdentifyProviderId[] = ['plantid', 'plantnet', 'gemini']
 
+/** Storage cap. PhotoIdentify and stories can still fill every slot. */
 export const MAX_PLANT_PHOTOS = 3
+
+/** Add Plant upload cap. Raise this toward `MAX_PLANT_PHOTOS` when more angles ship. */
+export const ADD_PLANT_UPLOAD_LIMIT = 1
 
 /** The class a plant is saved with, as both a draft and a stored plant can describe it. */
 export type SavedClass = {

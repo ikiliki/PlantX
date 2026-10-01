@@ -21,9 +21,9 @@ import { PageGate } from '../../components/PageGate/PageGate'
 import type { ComponentView } from '../../theme/view'
 import { MarketPending } from '../../features/market/components/MarketPending/MarketPending'
 import { Icon } from '../../components/Icon/Icon'
-import { BlurTape, CategoriesLink, Board, MapPane, Pager, PagerButton, Results, ResultsHead, Stage } from './MarketPage.styles'
+import { Pager, usePaged } from '../../components/Pager/Pager'
+import { BlurTape, CategoriesLink, Board, MapPane, Results, ResultsHead, Stage } from './MarketPage.styles'
 
-const MARKET_PAGE_SIZE = 5
 const WIDGET_LISTINGS = 4
 
 function MarketReady({ view }: { view: ComponentView }) {
@@ -35,8 +35,6 @@ function MarketReady({ view }: { view: ComponentView }) {
   const [filters, setFilters] = useState<MarketFilterState>(() => emptyMarketFilters(params.get('species') ?? ''))
   const [showMap, setShowMap] = useState(true)
   const origin = userPlace(currentUser)
-  const paging = db.flags.market === 'pages'
-  const [page, setPage] = useState(0)
   useEffect(() => {
     const itemId = params.get('item')
     const classId = params.get('class')
@@ -69,17 +67,11 @@ function MarketReady({ view }: { view: ComponentView }) {
     [db.listings, db.plants, db.species, db.marketClasses, db.catalog, filters, origin, locale],
   )
 
-  const listingKey = listings.map((listing) => listing.id).join('|')
-  useEffect(() => {
-    setPage(0)
-  }, [paging, listingKey])
-
-  const pageCount = Math.max(1, Math.ceil(listings.length / MARKET_PAGE_SIZE))
-  const safePage = Math.min(page, pageCount - 1)
-  const shown = paging ? listings.slice(safePage * MARKET_PAGE_SIZE, safePage * MARKET_PAGE_SIZE + MARKET_PAGE_SIZE) : listings
-  const visible = view === 'widget' ? shown.slice(0, WIDGET_LISTINGS) : shown
-  const rangeFrom = listings.length === 0 ? 0 : safePage * MARKET_PAGE_SIZE + 1
-  const rangeTo = safePage * MARKET_PAGE_SIZE + shown.length
+  const paged = usePaged(listings, {
+    enabled: view === 'page',
+    signature: listings.map((listing) => listing.id).join('|'),
+  })
+  const visible = view === 'widget' ? listings.slice(0, WIDGET_LISTINGS) : paged.shown
 
   if (view === 'widget') {
     return (
@@ -124,31 +116,22 @@ function MarketReady({ view }: { view: ComponentView }) {
             <span>
               {listings.length} {t.market.listings}
             </span>
-            {paging && listings.length > 0 && (
-              <Pager>
-                <PagerButton type="button" disabled={safePage === 0} onClick={() => setPage((current) => current - 1)}>
-                  {t.demo.previous}
-                </PagerButton>
-                <span>
-                  {rangeFrom}–{rangeTo} {t.common.of} {listings.length}
-                </span>
-                <PagerButton
-                  type="button"
-                  disabled={safePage >= pageCount - 1}
-                  onClick={() => setPage((current) => current + 1)}
-                >
-                  {t.demo.next}
-                </PagerButton>
-              </Pager>
-            )}
+            <Pager
+              page={paged.page}
+              pageCount={paged.pageCount}
+              from={paged.from}
+              to={paged.to}
+              total={paged.total}
+              onPage={paged.setPage}
+            />
           </ResultsHead>
-          {shown.length === 0 ? (
+          {visible.length === 0 ? (
             <EmptyState title={t.market.empty} />
           ) : (
-            <ListingTable listings={shown} onOpen={openListing} />
+            <ListingTable listings={visible} onOpen={openListing} />
           )}
         </Results>
-        <MapPane $open={showMap}>{showMap ? <ListingMap listings={shown} tall /> : null}</MapPane>
+        <MapPane $open={showMap}>{showMap ? <ListingMap listings={visible} tall /> : null}</MapPane>
       </Stage>
     </Board>
   )

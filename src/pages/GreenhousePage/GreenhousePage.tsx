@@ -10,6 +10,7 @@ import { GreenhouseWallet } from '../../features/greenhouse/components/Greenhous
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
+import type { FeedUpdateKind } from '../../mock/types'
 import { useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
 import { isPlacementReady } from '../../theme/release'
@@ -35,8 +36,19 @@ export function GreenhousePage({
   return <GreenhouseOwner view={view} />
 }
 
+const ACTIVITY_KIND_KEY = {
+  photo: 'updatePhoto',
+  water: 'updateWater',
+  propagate: 'updatePropagate',
+  grade: 'updateGrade',
+  passport: 'updatePassport',
+  listing: 'updateListing',
+  scan: 'updateScan',
+  added: 'updateAdded',
+} as const satisfies Record<FeedUpdateKind, 'updatePhoto' | 'updateWater' | 'updatePropagate' | 'updateGrade' | 'updatePassport' | 'updateListing' | 'updateScan' | 'updateAdded'>
+
 function GreenhouseOwner({ view }: { view: ComponentView }) {
-  const { db, currentUser, signedIn, refreshPhoto, confirmWater } = useStore()
+  const { db, fullDb, currentUser, signedIn, refreshPhoto, confirmWater } = useStore()
   const { t, tr, formatMoney } = useI18n()
   const navigate = useNavigate()
   const [adding, setAdding] = useState(false)
@@ -54,36 +66,23 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     return sum + (mc ? mc.lastPrice * p.quantity : 0)
   }, 0)
 
-  const history: (ActivityEntry & { sortKey: string })[] = mine.flatMap((p) =>
-    p.history.map((h) => ({
-      sortKey: h.at,
-      at: h.at,
-      plant: tr(p.title, p.titleHe),
-      plantId: p.id,
-      photo: p.photos[0],
-      label: tr(h.label, h.labelHe),
-    })),
-  )
-  // Scans show before the plant exists; once it is added they link to it.
-  const scans: (ActivityEntry & { sortKey: string })[] = (db.updates ?? [])
-    .filter((item) => item.kind === 'scan' && item.userId === ownerId)
+  // This owner's log, every kind, oldest first so the latest sits at the bottom.
+  const activity: ActivityEntry[] = (fullDb.updates ?? [])
+    .filter((item) => item.userId === ownerId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     .map((item) => {
       const plant = item.plantId ? mine.find((p) => p.id === item.plantId) : undefined
+      const scan = item.kind === 'scan'
       return {
-        sortKey: item.createdAt,
         at: item.createdAt.slice(0, 16).replace('T', ' '),
-        plant: plant ? tr(plant.title, plant.titleHe) : t.addPlant.scanEntry,
+        plant: plant ? tr(plant.title, plant.titleHe) : t.feed[ACTIVITY_KIND_KEY[item.kind]],
         plantId: plant?.id,
         photo: plant?.photos[0],
         label: tr(item.body, item.bodyHe),
-        kind: 'scan' as const,
-        tag: plant ? t.addPlant.scanAdded : t.addPlant.scanNotAdded,
+        kind: scan ? ('scan' as const) : undefined,
+        tag: scan ? (plant ? t.addPlant.scanAdded : t.addPlant.scanNotAdded) : undefined,
       }
     })
-  const activity: ActivityEntry[] = [...history, ...scans]
-    .sort((a, b) => (a.sortKey > b.sortKey ? 1 : a.sortKey < b.sortKey ? -1 : 0))
-    .slice(-40)
-    .map(({ sortKey: _sortKey, ...entry }) => entry)
 
   const setFilter = (next: typeof filter) => {
     const nextParams = new URLSearchParams(params)

@@ -133,6 +133,53 @@ export const SectionHead = styled.button<{ $open?: boolean }>`
   }
 `
 
+export const FilterBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+`
+
+export const UserFilter = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+  color: ${theme.colors.muted};
+  font-size: 12px;
+  font-weight: 700;
+`
+
+export const UserSelect = styled.select`
+  appearance: none;
+  min-width: min(220px, 100%);
+  min-height: 36px;
+  padding-block: 6px;
+  padding-inline: 12px 28px;
+  border-radius: ${theme.radii.sm};
+  border: 1px solid ${theme.colors.border};
+  background:
+    linear-gradient(45deg, transparent 50%, ${theme.colors.moss} 50%) right 14px center / 5px 5px no-repeat,
+    linear-gradient(135deg, ${theme.colors.moss} 50%, transparent 50%) right 9px center / 5px 5px no-repeat,
+    ${theme.colors.cream};
+  color: ${theme.colors.ink};
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:dir(rtl) {
+    background:
+      linear-gradient(45deg, transparent 50%, ${theme.colors.moss} 50%) left 14px center / 5px 5px no-repeat,
+      linear-gradient(135deg, ${theme.colors.moss} 50%, transparent 50%) left 9px center / 5px 5px no-repeat,
+      ${theme.colors.cream};
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: ${theme.shadow.focus};
+  }
+`
+
 export const HeadMeta = styled.span`
   display: inline-flex;
   align-items: center;
