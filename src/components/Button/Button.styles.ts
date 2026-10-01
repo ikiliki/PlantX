@@ -42,6 +42,12 @@ const variants = {
     border: 1px solid ${theme.colors.danger};
     &:hover:not(:disabled) { filter: brightness(0.94); }
   `,
+  info: css`
+    background: ${theme.colors.info};
+    color: ${theme.colors.creamCard};
+    border: 1px solid ${theme.colors.info};
+    &:hover:not(:disabled) { filter: brightness(1.08); }
+  `,
 }
 
 export const Button = styled.button<{ $variant?: keyof typeof variants; $block?: boolean; $size?: 'sm' | 'md' }>`

@@ -1,4 +1,4 @@
-import { useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { mockIdentify } from '../../../../mock/identifyMock'
@@ -28,7 +28,14 @@ import {
 /** A fast answer still shows the scan long enough to read. */
 const MIN_SCAN_MS = 1400
 
-export type PhotoIdentifyPhase = 'identifying' | 'matched' | 'notInCatalog' | 'failed' | 'notPlant' | 'noAccess'
+export type PhotoIdentifyPhase =
+  | 'held'
+  | 'identifying'
+  | 'matched'
+  | 'notInCatalog'
+  | 'failed'
+  | 'notPlant'
+  | 'noAccess'
 
 /** One photo and its own identify answer. */
 export type PhotoScan = {
@@ -50,6 +57,7 @@ function phaseFromDiagnosis(diagnosis: Diagnosis): 'matched' | 'notInCatalog' | 
 }
 
 function scanState(phase: PhotoIdentifyPhase): AiScanState {
+  if (phase === 'held') return 'ready'
   if (phase === 'identifying') return 'scanning'
   if (phase === 'matched') return 'answered'
   return 'unverified'
@@ -57,7 +65,7 @@ function scanState(phase: PhotoIdentifyPhase): AiScanState {
 
 /** A photo that went to the providers (or was refused before it could). */
 export function wasScanned(scan: PhotoScan) {
-  return scan.phase !== 'noAccess'
+  return scan.phase !== 'noAccess' && scan.phase !== 'held'
 }
 
 function diagnosisFacts(
@@ -99,15 +107,19 @@ export function PhotoIdentify({
   onScansChange,
   checks = [],
   max = MAX_PLANT_PHOTOS,
+  analyze = true,
 }: {
   scans: PhotoScan[]
   onScansChange: ScansUpdate
   checks?: PhotoCheck[]
   max?: number
+  /** When false, a new photo is kept and not sent until this becomes true. */
+  analyze?: boolean
 }) {
   const { t, locale } = useI18n()
   const { db, currentUser, signedIn, liveWritable, plantxEnv, noteActivity } = useStore()
   const fileRef = useRef<HTMLInputElement>(null)
+  const started = useRef(new Set<string>())
   const [selectedId, setSelectedId] = useState<string>()
   const [dragging, setDragging] = useState(false)
 
@@ -153,16 +165,34 @@ export function PhotoIdentify({
     })
   }
 
+  const begin = (id: string, dataUrl: string) => {
+    if (started.current.has(id)) return
+    started.current.add(id)
+    patch(id, { phase: 'identifying' })
+    void runIdentify(id, dataUrl)
+  }
+
+  useEffect(() => {
+    if (!analyze) return
+    for (const scan of scans) {
+      if (scan.phase === 'held') begin(scan.id, scan.photo)
+    }
+    // begin closes over the latest identify call; scans and analyze are the triggers.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analyze, scans])
+
   const onFiles = (files: FileList | null | undefined) => {
     const picked = [...(files ?? [])].filter((file) => file.type.startsWith('image/')).slice(0, room)
     for (const file of picked) {
       const id = newScanId()
       void readPhoto(file).then((dataUrl) => {
         onScansChange((current) =>
-          current.length >= max ? current : [...current, { id, photo: dataUrl, phase: 'identifying' }],
+          current.length >= max
+            ? current
+            : [...current, { id, photo: dataUrl, phase: analyze ? 'identifying' : 'held' }],
         )
         setSelectedId(id)
-        void runIdentify(id, dataUrl)
+        if (analyze) begin(id, dataUrl)
       })
     }
   }

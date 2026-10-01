@@ -79,18 +79,21 @@ function Frame({
   initial,
   checks,
   max,
+  analyze,
 }: {
   initial: PhotoScan[]
   checks?: PhotoCheck[]
   max?: number
+  analyze?: boolean
 }) {
   const [scans, setScans] = useState(initial)
-  return <PhotoIdentify scans={scans} onScansChange={setScans} checks={checks} max={max} />
+  return <PhotoIdentify scans={scans} onScansChange={setScans} checks={checks} max={max} analyze={analyze} />
 }
 
 export const Idle = () => <Frame initial={[]} />
 /** Product upload cap. Multi-photo stories still pass a higher `max`. */
 export const OnePhoto = () => <Frame initial={[]} max={1} />
+export const Held = () => <Frame initial={[scan('a', 'held')]} analyze={false} />
 export const Identifying = () => <Frame initial={[scan('a', 'identifying')]} />
 export const Matched = () => (
   <Frame

@@ -32,6 +32,7 @@ const facts: AiScanFact[] = [
   { id: 'subcategory', label: 'Subcategory', value: 'Deliciosa' },
 ]
 
+export const Ready = () => <AiScan photo={PHOTO} state="ready" />
 export const Scanning = () => <AiScan photo={PHOTO} state="scanning" />
 
 export const Answered = () => (

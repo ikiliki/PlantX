@@ -36,7 +36,7 @@ import {
   Title,
 } from './AiScan.styles'
 
-export type AiScanState = 'scanning' | 'answered' | 'unverified'
+export type AiScanState = 'ready' | 'scanning' | 'answered' | 'unverified'
 
 export type AiScanFact = {
   id: string
@@ -191,6 +191,11 @@ export function AiScan({
                 ))}
               </Facts>
             </>
+          ) : state === 'ready' ? (
+            <Notice>
+              <Title>{t.addPlant.photoReady}</Title>
+              <Body>{t.addPlant.photoReadyBody}</Body>
+            </Notice>
           ) : state === 'answered' ? (
             <>
               <Head>
@@ -230,7 +235,7 @@ export function AiScan({
             </Notice>
           )}
 
-          {state !== 'scanning' ? (
+          {state === 'ready' ? null : state !== 'scanning' ? (
             <Attribution $in={state === 'unverified' || attributed}>
               {state === 'answered' && provider ? (
                 <strong>{t.addPlant.verifiedBy.replace('{provider}', PROVIDER_LABEL[provider])}</strong>

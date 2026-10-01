@@ -164,6 +164,16 @@ export const ClassCode = styled.p`
   font-variant-numeric: tabular-nums;
 `
 
+export const PhotoActions = styled.div`
+  display: flex;
+  flex-direction: row;
+  direction: ltr;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-inline-start: auto;
+`
+
 export const IdentityCard = styled.article`
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);

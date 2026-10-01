@@ -21,8 +21,11 @@ import {
 
 export type { PlantClassDraft }
 
-/** Identity choice when the plant is not a catalog category. It has no subcategory. */
+/** Identity choice when the plant is not a catalog category. */
 export const OTHER_CATEGORY_ID = 'other'
+
+/** Subcategory choice when the variety is not in the catalog. Not stored on the plant. */
+export const OTHER_SUBCATEGORY_ID = 'other-sub'
 
 export const emptyClassDraft: PlantClassDraft = {
   categoryId: '',
@@ -158,12 +161,13 @@ export function synthesizeClass(
   if (!draft.categoryId || !draft.size || !draft.stage) return undefined
   const category = categoryById(catalog, draft.categoryId)
   if (!category) return undefined
+  const otherSub = draft.subcategoryId === OTHER_SUBCATEGORY_ID
   const subs = subcategoriesFor(catalog, draft.categoryId)
-  if (subs.length > 0 && !draft.subcategoryId) return undefined
-  const sub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
-  const variety = sub?.name ?? category.name
-  const varietyHe = sub?.nameHe ?? category.nameHe
-  const varietyCode = sub?.code ?? 'STD'
+  if (!otherSub && subs.length > 0 && !draft.subcategoryId) return undefined
+  const sub = otherSub ? undefined : catalog.subcategories.find((item) => item.id === draft.subcategoryId)
+  const variety = otherSub ? 'Other' : (sub?.name ?? category.name)
+  const varietyHe = otherSub ? 'אחר' : (sub?.nameHe ?? category.nameHe)
+  const varietyCode = otherSub ? 'OTH' : (sub?.code ?? 'STD')
   const photo = catalogChoicePhoto(catalog, draft)
   const matched = matchClass(draft)
   if (matched) return { ...matched, photo }
@@ -259,11 +263,11 @@ export function otherClass(
 export function narrowDraft(catalog: Catalog, draft: PlantClassDraft): PlantClassDraft {
   const next = { ...draft, traits: { ...draft.traits } }
   if (next.categoryId === OTHER_CATEGORY_ID) {
-    next.subcategoryId = ''
-  } else {
+    next.subcategoryId = OTHER_SUBCATEGORY_ID
+  } else if (next.subcategoryId !== OTHER_SUBCATEGORY_ID) {
     const subs = subcategoryChoices(catalog, next)
     if (!subs.some((item) => item.id === next.subcategoryId)) {
-      next.subcategoryId = subs.length === 1 ? subs[0].id : ''
+      next.subcategoryId = subs.length === 1 ? subs[0].id : subs.length === 0 ? OTHER_SUBCATEGORY_ID : ''
     }
   }
   const sizes = sizeChoices(catalog, next)

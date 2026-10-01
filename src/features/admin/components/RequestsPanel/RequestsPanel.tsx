@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Badge } from '../../../../components/Badge/Badge'
+import { Button } from '../../../../components/Button/Button'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import {
@@ -11,10 +12,9 @@ import {
 import { useStore } from '../../../../mock/store'
 import type { CatalogSuggestion, CatalogSuggestionDraft, PendingUser } from '../../../../mock/types'
 import { applyCatalogSuggestion } from '../../catalogMutations'
-import { AdminTable } from '../AdminTable/AdminTable'
-import { CatalogSuggestions } from '../CatalogSuggestions/CatalogSuggestions'
+import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { SuggestionEditorDialog } from '../CatalogSuggestions/SuggestionEditorDialog'
-import { Block, HistoryTitle, Stack, Title } from './RequestsPanel.styles'
+import { ExpandActions, HeadMeta, Panel, Section, SectionHead } from './RequestsPanel.styles'
 
 function byNewest<T extends { createdAt: string }>(rows: T[]) {
   return rows.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -39,6 +39,12 @@ export function RequestsPanel({
   const [loading, setLoading] = useState(!scripted && plantxEnv !== 'mock')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [editing, setEditing] = useState<CatalogSuggestion | null>(null)
+  const [appsOpen, setAppsOpen] = useState(true)
+  const [ideasOpen, setIdeasOpen] = useState(true)
+  const [selectedApps, setSelectedApps] = useState<string[]>([])
+  const [selectedIdeas, setSelectedIdeas] = useState<string[]>([])
+  const [expandedApps, setExpandedApps] = useState<string[]>([])
+  const [expandedIdeas, setExpandedIdeas] = useState<string[]>([])
 
   const reload = () => {
     if (scripted || plantxEnv === 'mock') return Promise.resolve()
@@ -127,78 +133,186 @@ export function RequestsPanel({
 
   if (loading) return <LoaderShell busy />
 
-  return (
-    <Stack>
-      <Block>
-        <Title>{t.admin.pendingMembers}</Title>
-        <AdminTable
-          rows={openApps}
-          rowId={(row) => row.id}
-          empty={t.admin.pendingEmpty}
-          columns={[
-            { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
-            { id: 'email', header: t.admin.serverColEmail, cell: (row) => row.email, muted: true },
-            { id: 'note', header: t.landing.registerNote, cell: (row) => row.note ?? '—', muted: true },
-            { id: 'when', header: t.admin.serverColWhen, cell: (row) => row.createdAt.slice(0, 10), muted: true },
-          ]}
-          actions={(row) => [
-            {
-              id: 'reject',
-              label: t.admin.reject,
-              variant: 'ghost',
-              disabled: busyId === row.id,
-              onClick: () => void runApp(row.id, 'reject'),
-            },
-            {
-              id: 'activate',
-              label: t.admin.activate,
-              variant: 'growth',
-              disabled: busyId === row.id,
-              onClick: () => void runApp(row.id, 'approve'),
-            },
-          ]}
-        />
-        <HistoryTitle>{t.admin.requestHistory}</HistoryTitle>
-        <AdminTable
-          rows={historyApps}
-          rowId={(row) => row.id}
-          empty={t.admin.requestHistoryEmpty}
-          columns={[
-            { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
-            { id: 'email', header: t.admin.serverColEmail, cell: (row) => row.email, muted: true },
-            {
-              id: 'status',
-              header: t.admin.serverColStatus,
-              cell: (row) => (
-                <Badge $tone={row.status === 'approved' ? 'lime' : 'danger'}>{appStatus(row.status)}</Badge>
-              ),
-            },
-            { id: 'when', header: t.admin.serverColWhen, cell: (row) => row.createdAt.slice(0, 10), muted: true },
-          ]}
-        />
-      </Block>
+  const appRows = [...openApps, ...historyApps]
+  const ideaRows = [...openIdeas, ...historyIdeas]
+  const when = (value: string) => value.slice(0, 16).replace('T', ' ')
 
-      <Block>
-        <CatalogSuggestions items={openIdeas} showEmpty onAdd={setEditing} onDismiss={declineIdea} />
-        <HistoryTitle>{t.admin.requestHistory}</HistoryTitle>
-        <AdminTable
-          rows={historyIdeas}
-          rowId={(row) => row.id}
-          empty={t.admin.requestHistoryEmpty}
-          columns={[
-            { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
-            { id: 'scientific', header: t.addPlant.factScientific, cell: (row) => row.scientificName || '—', muted: true },
-            {
-              id: 'status',
-              header: t.admin.serverColStatus,
-              cell: (row) => (
-                <Badge $tone={row.status === 'added' ? 'lime' : 'muted'}>{ideaStatus(row.status)}</Badge>
-              ),
-            },
-            { id: 'when', header: t.admin.serverColWhen, cell: (row) => row.createdAt.slice(0, 10), muted: true },
-          ]}
-        />
-      </Block>
+  const bulkApps = async (ids: string[], mode: 'approve' | 'reject') => {
+    const pending = ids.filter((id) => appRows.find((row) => row.id === id)?.status === 'pending')
+    for (const id of pending) await runApp(id, mode)
+    setSelectedApps([])
+  }
+
+  const bulkDismiss = (ids: string[]) => {
+    ids
+      .filter((id) => ideaRows.find((row) => row.id === id)?.status === 'open')
+      .forEach((id) => declineIdea(id))
+    setSelectedIdeas([])
+  }
+
+  return (
+    <Panel>
+      <Section>
+        <SectionHead type="button" $open={appsOpen} aria-expanded={appsOpen} onClick={() => setAppsOpen((open) => !open)}>
+          <h2>{t.admin.pendingMembers}</h2>
+          <HeadMeta>
+            <span>{appRows.length}</span>
+          </HeadMeta>
+        </SectionHead>
+        {appsOpen ? (
+          <AdminTable
+            rows={appRows}
+            rowId={(row) => row.id}
+            empty={t.admin.pendingEmpty}
+            selectable
+            selected={selectedApps}
+            onSelectedChange={setSelectedApps}
+            expandable
+            expandedIds={expandedApps}
+            onExpandedChange={setExpandedApps}
+            columns={[
+              { id: 'id', header: t.admin.serverColId, cell: (row) => row.id, muted: true },
+              { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
+              { id: 'email', header: t.admin.serverColEmail, cell: (row) => row.email, muted: true },
+              {
+                id: 'status',
+                header: t.admin.serverColStatus,
+                cell: (row) => (
+                  <Badge $tone={row.status === 'approved' ? 'lime' : row.status === 'rejected' ? 'danger' : 'warn'}>
+                    {appStatus(row.status)}
+                  </Badge>
+                ),
+              },
+              { id: 'when', header: t.admin.serverColWhen, cell: (row) => when(row.createdAt), muted: true },
+            ]}
+            renderExpand={(row) => (
+              <>
+                <AdminDetailGrid
+                  items={[
+                    { label: t.admin.serverColEmail, value: row.email },
+                    { label: t.landing.registerNote, value: row.note || '—' },
+                    { label: t.admin.serverColStatus, value: appStatus(row.status) },
+                    { label: t.admin.serverColWhen, value: when(row.createdAt) },
+                  ]}
+                />
+                {row.status === 'pending' ? (
+                  <ExpandActions>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={busyId === row.id}
+                      onClick={() => void runApp(row.id, 'reject')}
+                    >
+                      {t.admin.reject}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="growth"
+                      disabled={busyId === row.id}
+                      onClick={() => void runApp(row.id, 'approve')}
+                    >
+                      {t.admin.activate}
+                    </Button>
+                  </ExpandActions>
+                ) : null}
+              </>
+            )}
+            bulkActions={[
+              {
+                id: 'reject',
+                label: t.admin.reject,
+                variant: 'ghost',
+                onClick: (ids) => void bulkApps(ids, 'reject'),
+              },
+              {
+                id: 'activate',
+                label: t.admin.activate,
+                variant: 'growth',
+                onClick: (ids) => void bulkApps(ids, 'approve'),
+              },
+            ]}
+          />
+        ) : null}
+      </Section>
+
+      <Section>
+        <SectionHead
+          type="button"
+          $open={ideasOpen}
+          aria-expanded={ideasOpen}
+          onClick={() => setIdeasOpen((open) => !open)}
+        >
+          <h2>{t.admin.suggestedCategories}</h2>
+          <HeadMeta>
+            <span>{ideaRows.length}</span>
+          </HeadMeta>
+        </SectionHead>
+        {ideasOpen ? (
+          <AdminTable
+            rows={ideaRows}
+            rowId={(row) => row.id}
+            empty={t.admin.requestHistoryEmpty}
+            selectable
+            selected={selectedIdeas}
+            onSelectedChange={setSelectedIdeas}
+            expandable
+            expandedIds={expandedIdeas}
+            onExpandedChange={setExpandedIdeas}
+            columns={[
+              { id: 'id', header: t.admin.serverColId, cell: (row) => row.id, muted: true },
+              { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
+              {
+                id: 'scientific',
+                header: t.addPlant.factScientific,
+                cell: (row) => row.scientificName || '—',
+                muted: true,
+              },
+              {
+                id: 'status',
+                header: t.admin.serverColStatus,
+                cell: (row) => (
+                  <Badge $tone={row.status === 'added' ? 'lime' : row.status === 'open' ? 'warn' : 'muted'}>
+                    {ideaStatus(row.status)}
+                  </Badge>
+                ),
+              },
+              { id: 'when', header: t.admin.serverColWhen, cell: (row) => when(row.createdAt), muted: true },
+            ]}
+            renderExpand={(row) => (
+              <>
+                <AdminDetailGrid
+                  items={[
+                    { label: t.addPlant.factScientific, value: row.scientificName || '—' },
+                    { label: t.admin.suggestedBy.replace('{provider}', row.provider), value: t.admin.suggestedHits.replace('{count}', String(row.hits)) },
+                    { label: t.admin.serverColStatus, value: ideaStatus(row.status) },
+                    { label: t.admin.serverColWhen, value: when(row.createdAt) },
+                  ]}
+                />
+                {row.status === 'open' ? (
+                  <ExpandActions>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => declineIdea(row.id)}>
+                      {t.admin.dismiss}
+                    </Button>
+                    <Button type="button" size="sm" variant="growth" onClick={() => setEditing(row)}>
+                      {t.admin.suggestedReview}
+                    </Button>
+                  </ExpandActions>
+                ) : null}
+              </>
+            )}
+            bulkActions={[
+              {
+                id: 'dismiss',
+                label: t.admin.dismiss,
+                variant: 'ghost',
+                onClick: bulkDismiss,
+              },
+            ]}
+          />
+        ) : null}
+      </Section>
 
       {editing ? (
         <SuggestionEditorDialog
@@ -207,6 +321,6 @@ export function RequestsPanel({
           onConfirm={(draft) => acceptIdea(editing.id, draft)}
         />
       ) : null}
-    </Stack>
+    </Panel>
   )
 }

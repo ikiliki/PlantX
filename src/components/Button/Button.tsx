@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Button as Styled } from './Button.styles'
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'growth' | 'danger'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'growth' | 'danger' | 'info'
   block?: boolean
   size?: 'sm' | 'md'
   children: ReactNode
