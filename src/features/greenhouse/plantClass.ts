@@ -91,6 +91,14 @@ export function matchClass(draft: PlantClassDraft): DictClass | undefined {
   )
 }
 
+/** Photo follows the category, then the subcategory when that row has one. Property combinations do not pick a photo yet. */
+export function catalogChoicePhoto(catalog: Catalog, draft: PlantClassDraft) {
+  const category = categoryById(catalog, draft.categoryId)
+  if (!category) return ''
+  const sub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
+  return sub?.photo || category.photo
+}
+
 export function synthesizeClass(
   catalog: Catalog,
   draft: PlantClassDraft,
@@ -104,8 +112,9 @@ export function synthesizeClass(
   const variety = sub?.name ?? category.name
   const varietyHe = sub?.nameHe ?? category.nameHe
   const varietyCode = sub?.code ?? 'STD'
+  const photo = catalogChoicePhoto(catalog, draft)
   const matched = matchClass(draft)
-  if (matched) return matched
+  if (matched) return { ...matched, photo }
   return {
     code: buildMarketCode({
       ticker: category.ticker,
@@ -130,7 +139,7 @@ export function synthesizeClass(
       stage: draft.stage,
       locale: 'he',
     }),
-    photo: category.photo,
+    photo,
     variety,
     varietyHe,
     varietyCode,

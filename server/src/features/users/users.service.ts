@@ -1,35 +1,11 @@
-import type { User } from '../../../../src/mock/types.ts'
+import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
-import { fileExists, readJson, writeJson } from '../../lib/jsonStore.ts'
-import { loadUsers } from '../../lib/session.ts'
 import {
   type AccountStatus,
   type ManagedUser,
-  type PendingTransaction,
   type PendingUser,
   withAccountStatus,
 } from './users.types.ts'
-
-const PENDING_USERS = 'pending-users.json'
-const PENDING_TX = 'pending-transactions.json'
-
-function loadPending(): PendingUser[] {
-  if (!fileExists(PENDING_USERS)) return []
-  return readJson<PendingUser[]>(PENDING_USERS, [])
-}
-
-function savePending(rows: PendingUser[]) {
-  writeJson(PENDING_USERS, rows)
-}
-
-function loadTransactions(): PendingTransaction[] {
-  if (!fileExists(PENDING_TX)) return []
-  return readJson<PendingTransaction[]>(PENDING_TX, [])
-}
-
-function saveUsers(users: User[]) {
-  writeJson('users.json', users)
-}
 
 function avatarColor(seed: string) {
   const palette = ['#1FA85A', '#5D7C4E', '#C4A35A', '#3C6B8F', '#B4553D']
@@ -39,8 +15,9 @@ function avatarColor(seed: string) {
 }
 
 export const usersService = {
-  listPending(status: PendingUser['status'] = 'pending') {
-    return loadPending()
+  async listPending(status: PendingUser['status'] = 'pending') {
+    const rows = await getStore().pendingUsers.list()
+    return rows
       .filter((row) => row.status === status)
       .slice()
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -54,22 +31,23 @@ export const usersService = {
       }))
   },
 
-  getPending(id: string) {
-    const row = loadPending().find((item) => item.id === id)
+  async getPending(id: string) {
+    const row = (await getStore().pendingUsers.list()).find((item) => item.id === id)
     if (!row) throw Errors.missing(`Pending user ${id} not found`)
     return row
   },
 
-  requestAccess(input: { name: string; email: string; note?: string }) {
+  async requestAccess(input: { name: string; email: string; note?: string }) {
     const name = input.name.trim()
     const email = input.email.trim().toLowerCase()
     if (!name || !email.includes('@')) throw Errors.invalid('Name and email are required')
 
-    const users = loadUsers()
+    const store = getStore()
+    const users = await store.users.list()
     if (users.some((item) => item.email?.toLowerCase() === email)) {
       throw Errors.exists('Email already registered')
     }
-    const pending = loadPending()
+    const pending = await store.pendingUsers.list()
     if (pending.some((item) => item.status === 'pending' && item.email === email)) {
       throw Errors.exists('Application already pending')
     }
@@ -83,17 +61,18 @@ export const usersService = {
       status: 'pending',
     }
     pending.unshift(row)
-    savePending(pending)
+    await store.pendingUsers.saveAll(pending)
     return row
   },
 
-  approve(id: string) {
-    const pending = loadPending()
+  async approve(id: string) {
+    const store = getStore()
+    const pending = await store.pendingUsers.list()
     const row = pending.find((item) => item.id === id)
     if (!row) throw Errors.missing(`Pending user ${id} not found`)
     if (row.status !== 'pending') throw Errors.invalid('Application is not pending')
 
-    const users = loadUsers()
+    const users = await store.users.list()
     if (users.some((item) => item.email?.toLowerCase() === row.email.toLowerCase())) {
       throw Errors.exists('Email already registered')
     }
@@ -119,58 +98,63 @@ export const usersService = {
       accountStatus: 'active',
     }
     users.push(user)
-    saveUsers(users)
+    await store.users.saveAll(users)
 
     row.status = 'approved'
     row.approvedAt = new Date().toISOString()
     row.userId = user.id
-    savePending(pending)
+    await store.pendingUsers.saveAll(pending)
     return { pending: row, user }
   },
 
-  reject(id: string) {
-    const pending = loadPending()
+  async reject(id: string) {
+    const store = getStore()
+    const pending = await store.pendingUsers.list()
     const row = pending.find((item) => item.id === id)
     if (!row) throw Errors.missing(`Pending user ${id} not found`)
     if (row.status !== 'pending') throw Errors.invalid('Application is not pending')
     row.status = 'rejected'
     row.rejectedAt = new Date().toISOString()
-    savePending(pending)
+    await store.pendingUsers.saveAll(pending)
     return row
   },
 
-  listMembers() {
-    return loadUsers()
-      .filter((item) => item.role !== 'guest')
-      .map(withAccountStatus)
+  async listMembers() {
+    const users = await getStore().users.list()
+    return users.filter((item) => item.role !== 'guest').map(withAccountStatus)
   },
 
-  countMembers() {
-    return loadUsers().filter((item) => item.role !== 'guest').length
+  async countMembers() {
+    const users = await getStore().users.list()
+    return users.filter((item) => item.role !== 'guest').length
   },
 
-  countPending(status: PendingUser['status'] = 'pending') {
-    return loadPending().filter((row) => row.status === status).length
+  async countPending(status: PendingUser['status'] = 'pending') {
+    const rows = await getStore().pendingUsers.list()
+    return rows.filter((row) => row.status === status).length
   },
 
-  countPendingTransactions() {
-    return loadTransactions().filter((row) => row.status === 'pending').length
+  async countPendingTransactions() {
+    const rows = await getStore().pendingTransactions.list()
+    return rows.filter((row) => row.status === 'pending').length
   },
 
-  setAccountStatus(userId: string, accountStatus: AccountStatus) {
-    const users = loadUsers()
+  async setAccountStatus(userId: string, accountStatus: AccountStatus) {
+    const store = getStore()
+    const users = await store.users.list()
     const user = users.find((item) => item.id === userId && item.role !== 'guest')
     if (!user) throw Errors.missing(`User ${userId} not found`)
     if (user.role === 'admin' && accountStatus === 'disabled') {
       throw Errors.forbidden('Admin accounts cannot be disabled')
     }
     ;(user as ManagedUser).accountStatus = accountStatus
-    saveUsers(users)
+    await store.users.saveAll(users)
     return withAccountStatus(user)
   },
 
-  listPendingTransactions() {
-    return loadTransactions()
+  async listPendingTransactions() {
+    const rows = await getStore().pendingTransactions.list()
+    return rows
       .filter((row) => row.status === 'pending')
       .slice()
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))

@@ -1,6 +1,23 @@
 import styled from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
+export const Photo = styled.span`
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  margin-inline-end: 8px;
+  border-radius: ${theme.radii.sm};
+  overflow: hidden;
+  vertical-align: middle;
+  background: ${theme.colors.chipNeutral};
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`
+
 export const Nested = styled.div`
   margin: 2px 0 6px;
   padding: 4px 8px 8px 28px;

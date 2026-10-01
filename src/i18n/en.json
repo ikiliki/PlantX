@@ -795,6 +795,7 @@
     "daysAgo": "d",
     "empty": "No greenhouse activity yet.",
     "friendsEmpty": "Nothing from friends yet.",
+    "everyone": "Everyone",
     "friendsOnly": "Friends only",
     "friendsGuest": "Sign in to view friends-only activity",
     "filterLabel": "Activity",

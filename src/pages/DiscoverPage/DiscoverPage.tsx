@@ -13,7 +13,7 @@ import { Reveal } from '../../components/Reveal/Reveal'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useServerSlices } from '../../mock/useServerSlices'
 import type { ComponentView } from '../../theme/view'
-import { Empty, Feed, Layout, Rail, Shell, Widget } from './DiscoverPage.styles'
+import { Empty, Feed, FeedFilterSlot, Layout, Rail, RailFilter, Shell, Widget } from './DiscoverPage.styles'
 
 const WIDGET_ITEMS = 2
 
@@ -43,10 +43,15 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
         <Rail>
           <GreenhouseLure />
           <ShortcutRail />
+          <RailFilter>
+            <FeedFilter />
+          </RailFilter>
         </Rail>
         <Feed>
           <FeatureGate placement="home.feed" title={t.nav.home}>
-            <FeedFilter />
+            <FeedFilterSlot>
+              <FeedFilter />
+            </FeedFilterSlot>
             {items.length === 0 && <Empty>{empty}</Empty>}
             {items.map((item, index) => (
               <Reveal key={item.id} index={index}>

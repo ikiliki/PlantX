@@ -6,7 +6,7 @@ import { systemService } from './system.service.ts'
 export const systemRoutes = new Hono()
 
 systemRoutes.put('/', async (c) => {
-  requireAdmin(c)
+  await requireAdmin(c)
   const body = (await c.req.json()) as Partial<SystemConfig>
   const system = await systemService.save(body)
   return c.json({ system })

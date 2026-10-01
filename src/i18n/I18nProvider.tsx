@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import en from './en.json'
 import he from './he.json'
+import { activeLocale } from './locales'
 import { useStore } from '../mock/store'
 import type { Locale } from '../mock/types'
 
@@ -18,7 +19,7 @@ const I18nContext = createContext<{
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { db } = useStore()
-  const locale = db.locale
+  const locale = activeLocale(db.locale)
   const value = useMemo(() => {
     const t = dictionaries[locale]
     return {

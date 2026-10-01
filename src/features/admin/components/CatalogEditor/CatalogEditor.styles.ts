@@ -70,6 +70,10 @@ export const Table = styled.table`
   tr:last-child td {
     border-bottom: 0;
   }
+
+  tbody tr[data-openable='true'] {
+    cursor: pointer;
+  }
 `
 
 export const NameCell = styled.div`

@@ -3,6 +3,7 @@ import { PageHeader } from '../../app/AppShell/AppShell.styles'
 import { Avatar } from '../../components/Avatar/Avatar'
 import { Button } from '../../components/Button/Button'
 import { Card } from '../../components/Card/Card'
+import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
 import { theme } from '../../theme/tokens'
@@ -38,6 +39,7 @@ export function SettingsPage() {
         )}
       </Card>
 
+      {canChooseLocale() && (
       <Card style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button
@@ -54,6 +56,7 @@ export function SettingsPage() {
           </Button>
         </div>
       </Card>
+      )}
 
       <Button
         variant="secondary"

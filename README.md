@@ -14,19 +14,20 @@ npm run dev             # local UI mocks, no server
 
 Local does not start a server. QA and production each talk only to their own API.
 
-| Command | Web | API | Storage |
+| Command | Web | API | Database |
 | --- | --- | --- | --- |
-| `npm run dev:qa` | http://127.0.0.1:5173 | 8787 | `server/data` — QA JSON files (its own db until a separate QA database) |
+| `npm run qa:up` then `npm run dev:qa` | http://127.0.0.1:5173 | 8787 | Local Docker Supabase |
 | `npm run dev` / `dev:local` / `dev:mock` | http://127.0.0.1:5174 | none | Browser UI mocks |
-| `npm run dev:prod` | http://127.0.0.1:5175 | 8789 | `server/data-prod` — production JSON files |
+| `npm run dev:prod` | http://127.0.0.1:5175 | 8789 | Hosted Supabase (`PROD_DATABASE_URL`) |
 
-Local is the mocked UI and does not start a server. QA is the server you run on this machine against `server/data`. Production on Vercel uses that server's own JSON files (`server/data-prod` when you run prod here).
+`qa:up` starts the Docker stack. Studio is at http://127.0.0.1:54323. Stop it with `npm run qa:down`. `npm run qa:reset` reapplies the schema from `supabase/migrations`.
 
-On the production host:
+`dev:qa` and `dev:prod` are the two local database modes. QA uses Docker. Production uses the hosted project. Both use the same Supabase driver.
+
+On Vercel the API uses the hosted Supabase database. Set `DATABASE_URL` there to the same Postgres URI as `PROD_DATABASE_URL`.
 
 ```bash
 npm run build:prod
-# API: PLANTX_ENV=prod PLANTX_DATA=data-prod PLANTX_SEED=empty
 npm run dev:api:prod
 ```
 
@@ -44,4 +45,4 @@ Dark **Demo** bar (mock development only, `npm run dev`):
 
 ## Stack
 
-Vite + React + TypeScript, React Router, styled-components, PWA. Hono API with JSON files for system, users, plants, activities, catalog, and access queues.
+Vite + React + TypeScript, React Router, styled-components, PWA. Hono API. QA uses the Docker Supabase database. Production uses the hosted Supabase database.

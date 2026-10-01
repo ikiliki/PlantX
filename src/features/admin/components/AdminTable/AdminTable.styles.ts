@@ -102,6 +102,10 @@ export const Table = styled.table`
     background: rgba(207, 234, 120, 0.22);
   }
 
+  tbody tr[data-openable='true'] {
+    cursor: pointer;
+  }
+
   tr.expand-row td {
     white-space: normal;
     background: ${theme.colors.cream};

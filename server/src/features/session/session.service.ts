@@ -1,17 +1,10 @@
 import type { User } from '../../../../src/mock/types.ts'
+import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { BOOTSTRAP_ADMIN } from '../../lib/ensureData.ts'
 import type { GoogleProfile } from '../../lib/googleAuth.ts'
-import { writeJson } from '../../lib/jsonStore.ts'
-import { loadUsers } from '../../lib/session.ts'
-import type { ManagedUser } from '../users/users.types.ts'
-
 function isActive(user: User) {
-  return ((user as ManagedUser).accountStatus ?? 'active') === 'active'
-}
-
-function saveUsers(users: User[]) {
-  writeJson('users.json', users)
+  return (user.accountStatus ?? 'active') === 'active'
 }
 
 function bootstrapEmail() {
@@ -27,7 +20,7 @@ function ensureSoleAdmin(users: User[], adminId: string) {
   for (const user of users) {
     if (user.id === adminId) {
       user.role = 'admin'
-      ;(user as ManagedUser).accountStatus = 'active'
+      user.accountStatus = 'active'
     } else if (user.role === 'admin') {
       user.role = 'grower'
     }
@@ -35,39 +28,41 @@ function ensureSoleAdmin(users: User[], adminId: string) {
 }
 
 export const sessionService = {
-  findById(userId: string) {
-    const user = loadUsers().find((item) => item.id === userId && item.role !== 'guest') ?? null
+  async findById(userId: string) {
+    const users = await getStore().users.list()
+    const user = users.find((item) => item.id === userId && item.role !== 'guest') ?? null
     if (!user || !isActive(user)) return null
     return user
   },
 
-  findByEmail(email: string) {
+  async findByEmail(email: string) {
     const needle = email.trim().toLowerCase()
-    const user =
-      loadUsers().find((item) => item.role !== 'guest' && item.email?.toLowerCase() === needle) ?? null
+    const users = await getStore().users.list()
+    const user = users.find((item) => item.role !== 'guest' && item.email?.toLowerCase() === needle) ?? null
     if (!user || !isActive(user)) return null
     return user
   },
 
-  requireById(userId: string) {
-    const user = sessionService.findById(userId)
+  async requireById(userId: string) {
+    const user = await sessionService.findById(userId)
     if (!user) throw Errors.unknown(`No user ${userId}`)
     return user
   },
 
-  requireByEmail(email: string) {
+  async requireByEmail(email: string) {
     if (isBootstrapAdminEmail(email)) {
       throw Errors.auth('Admin signs in with Google only')
     }
-    const user = sessionService.findByEmail(email)
+    const user = await sessionService.findByEmail(email)
     if (!user) throw Errors.unknown(`No user for ${email}`)
     return user
   },
 
   /** Sign in from a verified Google profile. Bootstrap Gmail is the sole admin. */
-  loginWithGoogle(profile: GoogleProfile) {
+  async loginWithGoogle(profile: GoogleProfile) {
     const email = profile.email.toLowerCase()
-    const users = loadUsers()
+    const store = getStore()
+    const users = await store.users.list()
     const adminMail = bootstrapEmail()
     let user = users.find((item) => item.role !== 'guest' && item.email?.toLowerCase() === email)
 
@@ -83,7 +78,7 @@ export const sessionService = {
         if (profile.name) user.name = profile.name
       }
       ensureSoleAdmin(users, user.id)
-      saveUsers(users)
+      await store.users.saveAll(users)
       return user
     }
 
@@ -92,7 +87,7 @@ export const sessionService = {
     }
     if (!isActive(user)) throw Errors.forbidden('Account disabled')
     if (profile.name && !user.name) user.name = profile.name
-    saveUsers(users)
+    await store.users.saveAll(users)
     return user
   },
 }

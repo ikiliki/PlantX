@@ -56,6 +56,7 @@ export function AdminTable<T>({
   bulkActions = [],
   addLabel,
   onAdd,
+  onRowClick,
   embedded = false,
 }: {
   rows: T[]
@@ -74,6 +75,8 @@ export function AdminTable<T>({
   /** + sits in the actions header when a row can be added. */
   addLabel?: string
   onAdd?: () => void
+  /** Clicking the row opens the preview. The expand chevron still toggles nested rows. */
+  onRowClick?: (row: T) => void
   /** Nested table: no height cap, no outer chrome. */
   embedded?: boolean
 }) {
@@ -178,9 +181,16 @@ export function AdminTable<T>({
                 return (
                   <Fragment key={id}>
                     <tr
+                      data-row-id={id}
                       data-selected={selected.includes(id) ? 'true' : undefined}
-                      onClick={expandable ? () => toggleExpand(id) : undefined}
-                      style={expandable ? { cursor: 'pointer' } : undefined}
+                      data-openable={onRowClick || expandable ? 'true' : undefined}
+                      onClick={
+                        onRowClick
+                          ? () => onRowClick(row)
+                          : expandable
+                            ? () => toggleExpand(id)
+                            : undefined
+                      }
                     >
                       {selectable && (
                         <td className="check" onClick={(event) => event.stopPropagation()}>

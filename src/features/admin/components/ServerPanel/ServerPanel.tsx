@@ -1,4 +1,5 @@
 import { type ReactNode, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Badge } from '../../../../components/Badge/Badge'
@@ -32,6 +33,7 @@ import {
   HeadMeta,
   DemoRibbon,
   RelationLink,
+  UserHover,
   StatusActions,
   StatusCard,
   StatusCopy,
@@ -47,6 +49,46 @@ function statusLabel(status: LiveStatus, t: ReturnType<typeof useI18n>['t']) {
   if (status === 'up') return t.admin.serverUp
   if (status === 'down') return t.admin.serverDown
   return t.admin.serverLoading
+}
+
+function UserNameLink({ user, onOpen }: { user: User; onOpen: (userId: string) => void }) {
+  const { t, tr } = useI18n()
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const name = tr(user.name, user.nameHe)
+
+  return (
+    <>
+      <RelationLink
+        type="button"
+        data-user-link={user.id}
+        onMouseEnter={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect()
+          setPos({ top: rect.bottom + 8, left: rect.left })
+        }}
+        onMouseLeave={() => setPos(null)}
+        onClick={(event) => {
+          event.stopPropagation()
+          setPos(null)
+          onOpen(user.id)
+        }}
+      >
+        {name}
+      </RelationLink>
+      {pos &&
+        createPortal(
+          <UserHover data-user-card style={{ top: pos.top, left: pos.left }}>
+            <Avatar name={user.name} color={user.avatarColor} size={40} />
+            <div>
+              <strong>{name}</strong>
+              <span>
+                {user.email ?? '—'} · {t.roles[user.role]}
+              </span>
+            </div>
+          </UserHover>,
+          document.body,
+        )}
+    </>
+  )
 }
 
 function avatarTone(seed: string) {
@@ -571,11 +613,14 @@ export function ServerPanel() {
     setOpenSections((current) => ({ ...current, [id]: true }))
   }
 
-  const focusUser = (userId: string) => {
+  const goToUser = (userId: string) => {
     if (!db.users.some((user) => user.id === userId)) return
     openSection('users')
-    setUserPreviewId(userId)
-    setExpandedUsers((ids) => (ids.includes(userId) ? ids : [...ids, userId]))
+    window.setTimeout(() => {
+      document
+        .querySelector(`#server-users [data-row-id="${CSS.escape(userId)}"]`)
+        ?.scrollIntoView({ block: 'nearest' })
+    }, 0)
   }
 
   const focusPlant = (plantId: string) => {
@@ -585,14 +630,11 @@ export function ServerPanel() {
     setExpandedPlants((ids) => (ids.includes(plantId) ? ids : [...ids, plantId]))
   }
 
-  const userLink = (userId: string) =>
-    db.users.some((user) => user.id === userId) ? (
-      <RelationLink type="button" onClick={() => focusUser(userId)}>
-        {userName(userId)}
-      </RelationLink>
-    ) : (
-      userName(userId)
-    )
+  const userLink = (userId: string) => {
+    const user = db.users.find((item) => item.id === userId)
+    if (!user) return userName(userId)
+    return <UserNameLink user={user} onOpen={goToUser} />
+  }
 
   const plantLink = (plantId?: string) => {
     if (!plantId) return '—'
@@ -691,6 +733,7 @@ export function ServerPanel() {
           rows={reports}
           rowId={(row) => row.id}
           empty={t.admin.reportsEmpty}
+          onRowClick={(row) => setReportPreviewId(row.id)}
           selectable
           selected={selectedReports}
           onSelectedChange={setSelectedReports}
@@ -713,14 +756,6 @@ export function ServerPanel() {
               header: t.admin.serverColWhen,
               cell: (row) => row.createdAt,
               muted: true,
-            },
-          ]}
-          actions={(row) => [
-            {
-              id: 'preview',
-              label: t.admin.preview,
-              variant: 'secondary',
-              onClick: () => setReportPreviewId(row.id),
             },
           ]}
           bulkActions={[
@@ -755,6 +790,7 @@ export function ServerPanel() {
           rows={pending}
           rowId={(row) => row.id}
           empty={t.admin.pendingEmpty}
+          onRowClick={(row) => setPendingPreviewId(row.id)}
           selectable
           selected={selectedPending}
           onSelectedChange={setSelectedPending}
@@ -776,12 +812,6 @@ export function ServerPanel() {
           ]}
           actions={(row) => [
             {
-              id: 'preview',
-              label: t.admin.preview,
-              variant: 'secondary',
-              onClick: () => setPendingPreviewId(row.id),
-            },
-            {
               id: 'reject',
               label: t.admin.reject,
               variant: 'ghost',
@@ -801,7 +831,7 @@ export function ServerPanel() {
         )}
       </Section>
 
-      <Section $demo={!fromServer}>
+      <Section id="server-users" $demo={!fromServer}>
         <SectionHead type="button" $open={Boolean(openSections.users)} onClick={() => toggleSection('users')}>
           <h2>{t.admin.serverUsers}</h2>
           <HeadMeta>
@@ -814,6 +844,7 @@ export function ServerPanel() {
           rows={users}
           rowId={(row) => row.id}
           empty={t.admin.serverEmpty}
+          onRowClick={(row) => setUserPreviewId(row.id)}
           selectable
           selected={selectedUsers}
           onSelectedChange={setSelectedUsers}
@@ -864,14 +895,6 @@ export function ServerPanel() {
               ]}
             />
           )}
-          actions={(row) => [
-            {
-              id: 'preview',
-              label: t.admin.preview,
-              variant: 'secondary',
-              onClick: () => setUserPreviewId(row.id),
-            },
-          ]}
           bulkActions={[
             {
               id: 'disable',
@@ -903,6 +926,7 @@ export function ServerPanel() {
           rows={plants}
           rowId={(row) => row.id}
           empty={t.admin.serverEmpty}
+          onRowClick={(row) => setPlantPreviewId(row.id)}
           selectable
           selected={selectedPlants}
           onSelectedChange={setSelectedPlants}
@@ -961,14 +985,6 @@ export function ServerPanel() {
               ]}
             />
           )}
-          actions={(row) => [
-            {
-              id: 'preview',
-              label: t.admin.preview,
-              variant: 'secondary',
-              onClick: () => setPlantPreviewId(row.id),
-            },
-          ]}
           bulkActions={[]}
         />
         )}
@@ -987,6 +1003,7 @@ export function ServerPanel() {
           rows={activities}
           rowId={(row) => row.id}
           empty={t.admin.serverEmpty}
+          onRowClick={(row) => setActivityPreviewId(row.id)}
           selectable
           selected={selectedActivities}
           onSelectedChange={setSelectedActivities}
@@ -1023,14 +1040,6 @@ export function ServerPanel() {
               ]}
             />
           )}
-          actions={(row) => [
-            {
-              id: 'preview',
-              label: t.admin.preview,
-              variant: 'secondary',
-              onClick: () => setActivityPreviewId(row.id),
-            },
-          ]}
           bulkActions={[]}
         />
         )}

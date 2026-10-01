@@ -12,6 +12,6 @@ export function clientEnv(): ClientEnv {
 
 export function clientEnvLabel(env: ClientEnv = clientEnv()) {
   if (env === 'mock') return 'local · ui mocks'
-  if (env === 'prod') return 'prod · json db'
-  return 'qa · json db'
+  if (env === 'prod') return 'prod · hosted supabase'
+  return 'qa · docker'
 }

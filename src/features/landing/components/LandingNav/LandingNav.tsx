@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { canChooseLocale } from '../../../../i18n/locales'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { Actions, Bar, Brand, BrandMark, Enter, Jump, Lang, LangBtn, Links } from './LandingNav.styles'
@@ -27,6 +28,7 @@ export function LandingNav() {
         <Jump href="#access">{t.landing.navWhy}</Jump>
       </Links>
       <Actions>
+        {canChooseLocale() && (
         <Lang>
           <LangBtn
             type="button"
@@ -47,6 +49,7 @@ export function LandingNav() {
             {t.landing.langEn}
           </LangBtn>
         </Lang>
+        )}
         <Enter href="#access">{t.landing.navRegister}</Enter>
       </Actions>
     </Bar>

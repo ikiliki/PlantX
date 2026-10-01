@@ -22,10 +22,12 @@ import {
   sizeChoices,
   stageChoices,
   subcategoryChoices,
+  catalogChoicePhoto,
   synthesizeClass,
   type PlantClassDraft,
 } from '../../plantClass'
 import {
+  CatalogMark,
   ClassCode,
   Form,
   PhotoButton,
@@ -78,6 +80,9 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
   const [saved, setSaved] = useState(false)
 
   const matched = synthesizeClass(catalog, draft)
+  const choicePhoto = catalogChoicePhoto(catalog, draft)
+  const selectedSub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
+  const catalogPhotoLabel = selectedSub?.photo ? t.admin.subcategoryPhoto : t.admin.categoryPhoto
   const varieties = subcategoryChoices(catalog, draft)
   const grades = gradeChoices(catalog, draft)
   const sizes = sizeChoices(catalog, draft)
@@ -109,7 +114,8 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
       titleHe: matched.nameHe,
       description: descriptionTouched ? description : matched.observed,
       descriptionHe: descriptionTouched ? description : matched.observedHe,
-      photo: photo || matched.photo,
+      photo: photo || undefined,
+      catalogPhoto: choicePhoto || undefined,
       speciesId: species.id,
       variety: sub?.name ?? category.name,
       varietyHe: sub?.nameHe ?? category.nameHe,
@@ -153,7 +159,7 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
       <FormSection title={t.greenhouse.formPhoto} hint={t.greenhouse.addPhotoHint}>
         <PhotoButton type="button" onClick={() => fileRef.current?.click()}>
           <Preview>
-            {(photo || matched?.photo) && <PlantImage src={photo || matched?.photo} alt="" />}
+            {photo ? <PlantImage src={photo} fallbackSrc={photo} alt="" /> : null}
           </Preview>
           <PhotoCopy>
             <strong>{t.greenhouse.addPhoto}</strong>
@@ -163,6 +169,16 @@ export function AddPlantForm({ onSaved }: { onSaved?: () => void }) {
       </FormSection>
 
       <FormSection title={t.greenhouse.formCatalog} hint={t.greenhouse.formCatalogHint}>
+        {choicePhoto ? (
+          <CatalogMark>
+            <Preview>
+              <PlantImage src={choicePhoto} fallbackSrc={choicePhoto} alt="" />
+            </Preview>
+            <PhotoCopy>
+              <strong>{catalogPhotoLabel}</strong>
+            </PhotoCopy>
+          </CatalogMark>
+        ) : null}
         <FormRow>
           <Field>
             {t.admin.category}

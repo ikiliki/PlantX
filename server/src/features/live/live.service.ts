@@ -1,7 +1,7 @@
 import type { User } from '../../../../src/mock/types.ts'
 import type { SystemConfig } from '../../../../src/theme/release.ts'
+import { getStore } from '../../db/index.ts'
 import { plantxEnv, plantxEnvLabel, plantxSeed, type PlantxEnv, type PlantxSeed } from '../../lib/env.ts'
-import { loadUsers } from '../../lib/session.ts'
 import { activityService } from '../activity/activity.service.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
 import { greenhouseService } from '../greenhouse/greenhouse.service.ts'
@@ -35,18 +35,27 @@ export type LivePayload = {
 
 export const liveService = {
   async payload(currentUserId: string | null): Promise<LivePayload> {
-    const users = loadUsers()
+    const [system, users, plants, activities, pending, transactions, catalog] = await Promise.all([
+      systemService.get(),
+      getStore().users.list(),
+      greenhouseService.list(),
+      activityService.list(),
+      usersService.countPending(),
+      usersService.countPendingTransactions(),
+      catalogService.counts(),
+    ])
+    const members = users.filter((user) => user.role !== 'guest')
     return {
-      system: await systemService.get(),
+      system,
       currentUser: users.find((user) => user.id === currentUserId) ?? null,
       currentUserId,
       meta: {
-        users: usersService.countMembers(),
-        plants: greenhouseService.list().length,
-        updates: activityService.list().length,
-        pending: usersService.countPending(),
-        transactions: usersService.countPendingTransactions(),
-        catalog: catalogService.counts(),
+        users: members.length,
+        plants: plants.length,
+        updates: activities.length,
+        pending,
+        transactions,
+        catalog,
       },
       env: plantxEnv(),
       seed: plantxSeed(),

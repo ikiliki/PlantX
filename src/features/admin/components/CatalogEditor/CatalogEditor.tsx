@@ -89,7 +89,7 @@ function ScopedProperties({
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id}>
+              <tr key={item.id} data-openable="true" onClick={() => onEdit(item)}>
                 <td>
                   <NameCell>
                     <strong>{propertyChipText(item, locale)}</strong>
@@ -99,7 +99,13 @@ function ScopedProperties({
                 <td>{item.sign || '—'}</td>
                 <td>{item.options.length}</td>
                 <td>
-                  <Action type="button" onClick={() => onEdit(item)}>
+                  <Action
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onEdit(item)
+                    }}
+                  >
                     {t.admin.editProperty}
                   </Action>
                 </td>
@@ -234,7 +240,7 @@ export function CatalogEditor() {
             <tbody>
               {catalog.categories.map((item) => (
                 <Fragment key={item.id}>
-                  <tr>
+                  <tr data-openable="true" onClick={() => setDialog({ kind: 'category', item })}>
                     <td>
                       <RowMain>
                         <Thumb>{item.photo ? <PlantImage src={item.photo} alt="" /> : null}</Thumb>
@@ -246,7 +252,7 @@ export function CatalogEditor() {
                     </td>
                     <td>{item.ticker}</td>
                     <td>
-                      <ActionRow>
+                      <ActionRow onClick={(event) => event.stopPropagation()}>
                         <Action
                           type="button"
                           $active={openCategoryId === item.id}
@@ -345,7 +351,10 @@ export function CatalogEditor() {
             <tbody>
               {subs.map((item) => (
                 <Fragment key={item.id}>
-                  <tr>
+                  <tr
+                    data-openable="true"
+                    onClick={() => setDialog({ kind: 'subcategory', item })}
+                  >
                     <td>
                       <RowMain>
                         <Thumb>{item.photo ? <PlantImage src={item.photo} alt="" /> : null}</Thumb>
@@ -357,7 +366,7 @@ export function CatalogEditor() {
                     </td>
                     <td>{item.code}</td>
                     <td>
-                      <ActionRow>
+                      <ActionRow onClick={(event) => event.stopPropagation()}>
                         <Action
                           type="button"
                           $active={openSubcategoryId === item.id}

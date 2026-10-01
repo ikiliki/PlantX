@@ -12,7 +12,7 @@ export interface PendingUser {
   status: PendingUserStatus
   approvedAt?: string
   rejectedAt?: string
-  /** Set when activated into `users.json`. */
+  /** Set when activated into the users table. */
   userId?: string
 }
 

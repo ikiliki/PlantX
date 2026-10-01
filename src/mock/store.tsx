@@ -28,6 +28,7 @@ import type {
 } from './types'
 import { PLACEMENTS, type FeatureId, type PageId, type PageStatus, type PlacementId, type ReleaseMode } from '../theme/release'
 import { publishBlocker } from '../features/greenhouse/communityGrade'
+import { supportedLocales } from '../i18n/locales'
 import { defaultPlantPhoto } from './images'
 import {
   fetchActivities,
@@ -118,6 +119,14 @@ function uniqueId(base: string, taken: string[]) {
   return `${base}-${n}`
 }
 
+/** Owner uploads stay first. The catalog photo stays on the plant even when they add their own. */
+function plantPhotos(own?: string, catalog?: string) {
+  const photos = [own?.trim(), catalog?.trim()].filter(
+    (src, index, all): src is string => Boolean(src) && all.indexOf(src) === index,
+  )
+  return photos.length ? photos : [defaultPlantPhoto]
+}
+
 interface StoreApi {
   db: MockDb
   currentUser: User | null
@@ -178,6 +187,7 @@ interface StoreApi {
     description: string
     descriptionHe: string
     photo?: string
+    catalogPhoto?: string
     speciesId: string
     variety: string
     varietyHe: string
@@ -428,7 +438,10 @@ export function StoreProvider({
     liveMeta,
     loadSlice,
     retryLive: () => retryLive(),
-    setLocale: (locale) => update((d) => ({ ...d, locale })),
+    setLocale: (locale) => {
+      if (!supportedLocales().includes(locale)) return
+      update((d) => ({ ...d, locale }))
+    },
     setDemoScenarios: (patch) =>
       update((d) => ({
         ...d,
@@ -820,7 +833,7 @@ export function StoreProvider({
           titleHe: input.titleHe.trim(),
           description: input.description.trim(),
           descriptionHe: input.descriptionHe.trim(),
-          photos: [input.photo || defaultPlantPhoto],
+          photos: plantPhotos(input.photo, input.catalogPhoto),
           quantity: 1,
           sizeGrade: input.sizeBand,
           sizeBand: input.sizeBand,

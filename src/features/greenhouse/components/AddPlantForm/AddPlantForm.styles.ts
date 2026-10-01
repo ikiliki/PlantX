@@ -29,6 +29,13 @@ export const Preview = styled.div`
   background: ${theme.colors.chipGreen};
 `
 
+export const CatalogMark = styled.div`
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+`
+
 export const PhotoCopy = styled.span`
   display: grid;
   gap: 4px;

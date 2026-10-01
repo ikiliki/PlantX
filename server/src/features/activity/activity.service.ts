@@ -1,23 +1,6 @@
+import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
-import { fileExists, readJson, writeJson } from '../../lib/jsonStore.ts'
 import type { Activity, ActivityInput, ActivityQuery } from './activity.types.ts'
-
-const FILE = 'activities.json'
-const LEGACY = 'updates.json'
-
-function loadAll(): Activity[] {
-  if (fileExists(FILE)) return readJson<Activity[]>(FILE, [])
-  if (fileExists(LEGACY)) {
-    const legacy = readJson<Activity[]>(LEGACY, [])
-    writeJson(FILE, legacy)
-    return legacy
-  }
-  return []
-}
-
-function saveAll(rows: Activity[]) {
-  writeJson(FILE, rows)
-}
 
 function newestFirst(a: Activity, b: Activity) {
   return b.createdAt.localeCompare(a.createdAt)
@@ -28,19 +11,19 @@ function newestFirst(a: Activity, b: Activity) {
  * Home feed and plant cards call `list` / `listForPlant`.
  */
 export const activityService = {
-  list(query: ActivityQuery = {}): Activity[] {
-    let rows = loadAll().slice().sort(newestFirst)
+  async list(query: ActivityQuery = {}): Promise<Activity[]> {
+    let rows = (await getStore().activities.list()).slice().sort(newestFirst)
     if (query.plantId) rows = rows.filter((row) => row.plantId === query.plantId)
     if (query.userId) rows = rows.filter((row) => row.userId === query.userId)
     if (query.limit != null && query.limit >= 0) rows = rows.slice(0, query.limit)
     return rows
   },
 
-  listForPlant(plantId: string): Activity[] {
+  async listForPlant(plantId: string): Promise<Activity[]> {
     return activityService.list({ plantId })
   },
 
-  record(input: ActivityInput): Activity {
+  async record(input: ActivityInput): Promise<Activity> {
     if (!input?.kind || !input.userId || !input.body || !input.bodyHe) {
       throw Errors.invalid('Activity kind, userId, body, and bodyHe are required')
     }
@@ -53,9 +36,9 @@ export const activityService = {
       bodyHe: input.bodyHe,
       createdAt: input.createdAt ?? new Date().toISOString(),
     }
-    const rows = loadAll()
+    const rows = await getStore().activities.list()
     rows.unshift(activity)
-    saveAll(rows)
+    await getStore().activities.saveAll(rows)
     return activity
   },
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { adminNav } from '../../features/admin/components/AdminTabs/AdminTabs'
+import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
 import { groupByRarity, wikiRarityTitle } from '../../features/species/wikiGroups'
 import { categoryName, classDictionary } from '../../mock/classDictionary'
@@ -154,6 +155,7 @@ export function TopBar() {
       </NavItems>
 
       <Actions>
+        {canChooseLocale() && (
         <Lang role="group" aria-label={t.nav.language}>
           <LangBtn
             type="button"
@@ -172,6 +174,7 @@ export function TopBar() {
             {t.landing.langEn}
           </LangBtn>
         </Lang>
+        )}
         {signedIn && currentUser ? (
           <Account ref={accountRef}>
             <AccountCluster>

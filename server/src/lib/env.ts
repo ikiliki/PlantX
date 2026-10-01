@@ -1,5 +1,6 @@
 export type PlantxEnv = 'mock' | 'qa' | 'prod'
 export type PlantxSeed = 'empty' | 'demo'
+export type PlantxDb = 'supabase'
 
 function normalizeEnv(raw: string | undefined): PlantxEnv {
   const value = (raw || '').trim().toLowerCase()
@@ -11,16 +12,22 @@ function normalizeEnv(raw: string | undefined): PlantxEnv {
 
 /**
  * mock → browser UI only. This process should not be started for it.
- * qa → QA database. JSON files in server/data until a separate QA database exists.
- * prod → production database. JSON files on the Vercel server (server/data-prod when run here).
+ * qa → local Docker Supabase (`npm run dev:qa`).
+ * prod → hosted Supabase (`npm run dev:prod`). On Vercel this is the default.
  */
 export function plantxEnv(): PlantxEnv {
+  if (!(process.env.PLANTX_ENV || '').trim() && process.env.VERCEL) return 'prod'
   return normalizeEnv(process.env.PLANTX_ENV)
 }
 
+/** The API always uses the Supabase driver. Mock mode never starts this process. */
+export function plantxDb(): PlantxDb {
+  return 'supabase'
+}
+
 /**
- * Which JSON world to seed when the data folder is empty.
- * mock → demo fixtures. qa and prod → empty live (bootstrap admin only).
+ * What to write when the database has not been seeded.
+ * mock → demo fixtures. qa and prod → empty live (bootstrap admin, one category).
  * PLANTX_SEED overrides when set explicitly.
  */
 export function plantxSeed(): PlantxSeed {
@@ -32,6 +39,6 @@ export function plantxSeed(): PlantxSeed {
 
 export function plantxEnvLabel(env: PlantxEnv = plantxEnv()): string {
   if (env === 'mock') return 'local · ui mocks'
-  if (env === 'prod') return 'prod · json db'
-  return 'qa · json db'
+  if (env === 'prod') return 'prod · hosted supabase'
+  return 'qa · docker'
 }

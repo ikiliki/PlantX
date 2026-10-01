@@ -43,6 +43,19 @@ export const Layout = styled.div`
   }
 `
 
+/** Friends filter sits with the shortcuts. The left rail hides below 900px, so the feed keeps a copy there. */
+export const RailFilter = styled.div`
+  @container (max-width: 899px) {
+    display: none;
+  }
+`
+
+export const FeedFilterSlot = styled.div`
+  @container (min-width: 900px) {
+    display: none;
+  }
+`
+
 export const Rail = styled.aside`
   display: grid;
   gap: 16px;

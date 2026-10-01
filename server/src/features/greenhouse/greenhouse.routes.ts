@@ -6,27 +6,27 @@ import { greenhouseService } from './greenhouse.service.ts'
 
 export const greenhouseRoutes = new Hono()
 
-greenhouseRoutes.get('/', (c) => c.json({ plants: greenhouseService.list() }))
+greenhouseRoutes.get('/', async (c) => c.json({ plants: await greenhouseService.list() }))
 
-greenhouseRoutes.get('/:id', (c) => {
-  const plant = greenhouseService.get(c.req.param('id'))
+greenhouseRoutes.get('/:id', async (c) => {
+  const plant = await greenhouseService.get(c.req.param('id'))
   return c.json({ plant })
 })
 
 /** Plant card / passport: plant from greenhouse, timeline from activity. */
-greenhouseRoutes.get('/:id/activities', (c) => {
-  const plant = greenhouseService.get(c.req.param('id'))
+greenhouseRoutes.get('/:id/activities', async (c) => {
+  const plant = await greenhouseService.get(c.req.param('id'))
   return c.json({
     plantId: plant.id,
-    activities: activityService.listForPlant(plant.id),
+    activities: await activityService.listForPlant(plant.id),
   })
 })
 
 greenhouseRoutes.post('/', async (c) => {
-  const user = requireUser(c)
+  const user = await requireUser(c)
   const plant = (await c.req.json()) as Plant
-  const created = greenhouseService.add(plant, user.id)
-  const activities = activityService.list()
+  const created = await greenhouseService.add(plant, user.id)
+  const activities = await activityService.list()
   return c.json({
     plant: created,
     /** Client still expects `updates` on live merges. */
@@ -35,10 +35,10 @@ greenhouseRoutes.post('/', async (c) => {
   })
 })
 
-greenhouseRoutes.post('/:id/water', (c) => {
-  const user = requireUser(c)
-  const result = greenhouseService.water(c.req.param('id'), user.id)
-  const activities = activityService.list()
+greenhouseRoutes.post('/:id/water', async (c) => {
+  const user = await requireUser(c)
+  const result = await greenhouseService.water(c.req.param('id'), user.id)
+  const activities = await activityService.list()
   return c.json({
     plant: result.plant,
     update: result.activity,
@@ -48,10 +48,10 @@ greenhouseRoutes.post('/:id/water', (c) => {
   })
 })
 
-greenhouseRoutes.post('/:id/photo', (c) => {
-  const user = requireUser(c)
-  const result = greenhouseService.refreshPhoto(c.req.param('id'), user.id)
-  const activities = activityService.list()
+greenhouseRoutes.post('/:id/photo', async (c) => {
+  const user = await requireUser(c)
+  const result = await greenhouseService.refreshPhoto(c.req.param('id'), user.id)
+  const activities = await activityService.list()
   return c.json({
     plant: result.plant,
     update: result.activity,

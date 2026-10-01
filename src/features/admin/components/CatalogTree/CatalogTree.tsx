@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { CatalogCategory, CatalogProperty, CatalogSubcategory } from '../../../../mock/types'
@@ -17,7 +18,7 @@ import { AdminTable } from '../AdminTable/AdminTable'
 import { CategoryEditorDialog } from '../CatalogEditor/CategoryEditorDialog'
 import { PropertyEditorDialog } from '../CatalogEditor/PropertyEditorDialog'
 import { SubcategoryEditorDialog } from '../CatalogEditor/SubcategoryEditorDialog'
-import { Backdrop, Close, DialogTitle, Nested, TreeDialog } from './CatalogTree.styles'
+import { Backdrop, Close, DialogTitle, Nested, Photo, TreeDialog } from './CatalogTree.styles'
 
 type PropertyScope =
   | { level: 'category'; categoryId: string }
@@ -73,11 +74,25 @@ export function CatalogTree({
         empty={t.admin.serverEmpty}
         addLabel={t.admin.addCategory}
         onAdd={onlyCategoryId ? undefined : () => setDialog({ kind: 'category' })}
+        onRowClick={(row) => setDialog({ kind: 'category', item: row })}
         expandable
         expandedIds={expanded}
         onExpandedChange={setExpanded}
         columns={[
-          { id: 'name', header: t.admin.serverColName, cell: (row) => tr(row.name, row.nameHe) },
+          {
+            id: 'name',
+            header: t.admin.serverColName,
+            cell: (row) => (
+              <>
+                {row.photo ? (
+                  <Photo>
+                    <PlantImage src={row.photo} alt="" />
+                  </Photo>
+                ) : null}
+                {tr(row.name, row.nameHe)}
+              </>
+            ),
+          },
           { id: 'ticker', header: t.admin.serverColCode, cell: (row) => row.ticker, muted: true },
           {
             id: 'subs',
@@ -97,6 +112,9 @@ export function CatalogTree({
                 empty={t.admin.serverEmpty}
                 addLabel={t.admin.addSubcategory}
                 onAdd={() => setDialog({ kind: 'subcategory', categoryId: category.id })}
+                onRowClick={(row) =>
+                  setDialog({ kind: 'subcategory', categoryId: category.id, item: row })
+                }
                 columns={[
                   { id: 'name', header: t.admin.serverColName, cell: (row) => tr(row.name, row.nameHe) },
                   { id: 'code', header: t.admin.serverColCode, cell: (row) => row.code, muted: true },
@@ -254,6 +272,7 @@ function PropertiesList({
           empty={t.admin.noCategoryProperties}
           addLabel={t.admin.addProperty}
           onAdd={onAdd}
+          onRowClick={onEdit}
           columns={[
             { id: 'name', header: t.admin.serverColName, cell: (row) => tr(row.name, row.nameHe) },
             { id: 'sign', header: t.admin.sign, cell: (row) => row.sign || '—', muted: true },

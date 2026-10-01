@@ -1,10 +1,13 @@
-﻿import type { User, Plant, FeedUpdate, CatalogSubcategory, CatalogProperty } from '../../../src/mock/types.ts'
-import { DEFAULT_SYSTEM } from '../../../src/theme/release.ts'
-import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
+﻿import { readFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { plantxEnv, plantxEnvLabel, plantxSeed } from './env.ts'
-import { fileExists, hasDataFiles, readJson, writeJson, dataDir } from './jsonStore.ts'
+import type { Catalog, CatalogCategory, CatalogSubcategory, Plant, User } from '../../../src/mock/types.ts'
+import { DEFAULT_SYSTEM, normalizeSystem } from '../../../src/theme/release.ts'
+import { explainDbError, getStore } from '../db/index.ts'
+import type { PlantxStore } from '../db/store.ts'
+import type { Activity } from '../features/activity/activity.types.ts'
+import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
+import { plantxDb, plantxEnv, plantxEnvLabel, plantxSeed } from './env.ts'
 import { logger } from './logger.ts'
 
 /** Default empty-live operator — Gmail SSO only (no password). */
@@ -29,49 +32,85 @@ export const BOOTSTRAP_ADMIN: User = {
   accountStatus: 'active',
 }
 
+/** One catalog photo so an empty world is not a blank catalog. */
+const EXAMPLE_CATEGORY: CatalogCategory = {
+  id: 'pothos',
+  speciesId: 'sp-pothos',
+  name: 'Pothos',
+  nameHe: 'פוטוס',
+  ticker: 'POT',
+  photo: '/class-photos/pot-gold-a-xl-mat.jpg',
+}
+
+const EXAMPLE_SUBCATEGORY: CatalogSubcategory = {
+  id: 'pothos-gold',
+  categoryId: 'pothos',
+  name: 'Golden',
+  nameHe: 'זהוב',
+  code: 'GOLD',
+}
+
 function fixturesDir() {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
   return path.join(root, 'fixtures', 'demo')
 }
 
-function seedMode(): 'empty' | 'demo' {
-  return plantxSeed()
+function readFixture<T>(name: string): T {
+  const file = path.join(fixturesDir(), name)
+  return JSON.parse(readFileSync(file, 'utf8')) as T
 }
 
-function copyDemoFixtures() {
+async function seedEmpty(store: PlantxStore) {
+  await store.system.save(DEFAULT_SYSTEM)
+  await store.users.saveAll([structuredClone(BOOTSTRAP_ADMIN)])
+  await store.catalog.save({
+    categories: [EXAMPLE_CATEGORY],
+    subcategories: [EXAMPLE_SUBCATEGORY],
+    properties: [],
+  })
+  await store.plants.saveAll([])
+  await store.activities.saveAll([])
+  await store.pendingUsers.saveAll([])
+  await store.pendingTransactions.saveAll([])
+  logger.info('Seeded empty live data (bootstrap admin, one category, one subcategory)')
+}
+
+async function seedDemo(store: PlantxStore) {
   const from = fixturesDir()
-  const to = dataDir
   if (!existsSync(from)) {
     throw new Error(`Demo fixtures missing at ${from}. Run: npm run seed:fixtures`)
   }
-  mkdirSync(to, { recursive: true })
-  for (const name of readdirSync(from)) {
-    if (!name.endsWith('.json')) continue
-    copyFileSync(path.join(from, name), path.join(to, name))
-  }
-  logger.info(`Seeded ${to} from fixtures/demo (local example mocks)`)
+  await store.system.save(normalizeSystem(readFixture('system.json')))
+  await store.users.saveAll(readFixture<User[]>('users.json'))
+  await store.catalog.save(readFixture<Catalog>('catalog.json'))
+  await store.plants.saveAll(readFixture<Plant[]>('plants.json'))
+  await store.activities.saveAll(readFixture<Activity[]>('activities.json'))
+  await store.pendingUsers.saveAll(readFixture<PendingUser[]>('pending-users.json'))
+  await store.pendingTransactions.saveAll(readFixture<PendingTransaction[]>('pending-transactions.json'))
+  logger.info('Seeded demo fixtures')
 }
 
-function writeEmptyLive() {
-  writeJson('system.json', DEFAULT_SYSTEM)
-  writeJson('users.json', [structuredClone(BOOTSTRAP_ADMIN)])
-  writeJson('plants.json', [])
-  writeJson('activities.json', [])
-  writeJson('catalog-categories.json', [])
-  writeJson('catalog-subcategories.json', [])
-  writeJson('catalog-properties.json', [])
-  writeJson('pending-users.json', [])
-  writeJson('pending-transactions.json', [])
-  logger.info('Seeded empty live data (bootstrap admin only)')
+async function ensureExampleCatalog(store: PlantxStore) {
+  if (plantxSeed() === 'demo') return
+  const catalog = await store.catalog.get()
+  if (catalog.categories.length > 0 && catalog.subcategories.length > 0) return
+  const categories = catalog.categories.length > 0 ? catalog.categories : [EXAMPLE_CATEGORY]
+  const subcategories =
+    catalog.subcategories.length > 0
+      ? catalog.subcategories
+      : [{ ...EXAMPLE_SUBCATEGORY, categoryId: categories[0].id }]
+  await store.catalog.save({ ...catalog, categories, subcategories })
+  logger.info('Restored the example category and subcategory')
 }
 
 /** Always keep the bootstrap Gmail as the sole active admin (empty or demo). */
-export function ensureBootstrapAdmin() {
-  if (!fileExists('users.json')) {
-    writeJson('users.json', [structuredClone(BOOTSTRAP_ADMIN)])
+export async function ensureBootstrapAdmin() {
+  const store = getStore()
+  const users = await store.users.list()
+  if (users.length === 0) {
+    await store.users.saveAll([structuredClone(BOOTSTRAP_ADMIN)])
     return
   }
-  const users = readJson<User[]>('users.json', [])
   const email = (BOOTSTRAP_ADMIN.email ?? '').toLowerCase()
   let row = users.find((user) => user.email?.toLowerCase() === email)
   if (!row) {
@@ -96,7 +135,6 @@ export function ensureBootstrapAdmin() {
     if (!row.nameHe) row.nameHe = BOOTSTRAP_ADMIN.nameHe
   }
 
-  // qa/prod: this Gmail is the only admin. Mock keeps the example persona roles.
   if (plantxEnv() !== 'mock') {
     for (const user of users) {
       if (user.id === row?.id) continue
@@ -104,72 +142,94 @@ export function ensureBootstrapAdmin() {
     }
   }
 
-  writeJson('users.json', users)
+  await store.users.saveAll(users)
 }
 
 /** Drop rows whose foreign keys do not point at a real parent. */
-function pruneBrokenRelations() {
+async function pruneBrokenRelations(store: PlantxStore) {
   if (plantxEnv() === 'mock') return
-  const users = readJson<User[]>('users.json', [])
+  const users = await store.users.list()
   const userIds = new Set(users.map((user) => user.id))
+  let usersChanged = false
+  const nextUsers = users.map((user) => {
+    const friendIds = (user.friendIds ?? []).filter((id) => userIds.has(id) && id !== user.id)
+    if (friendIds.length !== (user.friendIds ?? []).length) {
+      usersChanged = true
+      return { ...user, friendIds }
+    }
+    return user
+  })
+  if (usersChanged) await store.users.saveAll(nextUsers)
 
-  const plants = readJson<Plant[]>('plants.json', [])
-  const keptPlants = plants.filter((plant) => userIds.has(plant.ownerId))
-  if (keptPlants.length !== plants.length) {
-    writeJson('plants.json', keptPlants)
-    logger.info(`Removed ${plants.length - keptPlants.length} plants with missing owners`)
-  }
-  const plantIds = new Set(keptPlants.map((plant) => plant.id))
-
-  const activities = readJson<FeedUpdate[]>('activities.json', [])
-  const keptActivities = activities.filter(
-    (row) => userIds.has(row.userId) && (!row.plantId || plantIds.has(row.plantId)),
-  )
-  if (keptActivities.length !== activities.length) {
-    writeJson('activities.json', keptActivities)
-    logger.info(`Removed ${activities.length - keptActivities.length} activities with missing user or plant`)
-  }
-
-  const categories = new Set(readJson<{ id: string }[]>('catalog-categories.json', []).map((row) => row.id))
-  const subcategories = readJson<CatalogSubcategory[]>('catalog-subcategories.json', [])
-  const keptSubs = subcategories.filter((row) => categories.has(row.categoryId))
-  if (keptSubs.length !== subcategories.length) writeJson('catalog-subcategories.json', keptSubs)
+  const catalog = await store.catalog.get()
+  const categories = new Set(catalog.categories.map((row) => row.id))
+  const keptSubs = catalog.subcategories.filter((row) => categories.has(row.categoryId))
   const subIds = new Set(keptSubs.map((row) => row.id))
-
-  const properties = readJson<CatalogProperty[]>('catalog-properties.json', [])
-  const keptProps = properties.map((row) => ({
+  const keptProps = catalog.properties.map((row) => ({
     ...row,
     categoryIds: row.categoryIds.filter((id) => categories.has(id)),
     subcategoryIds: row.subcategoryIds.filter((id) => subIds.has(id)),
   }))
-  if (JSON.stringify(keptProps) !== JSON.stringify(properties)) writeJson('catalog-properties.json', keptProps)
-}
+  if (
+    keptSubs.length !== catalog.subcategories.length ||
+    JSON.stringify(keptProps) !== JSON.stringify(catalog.properties)
+  ) {
+    await store.catalog.save({ ...catalog, subcategories: keptSubs, properties: keptProps })
+  }
 
-function ensureAccessAndCatalog() {
-  if (!fileExists('pending-users.json')) writeJson('pending-users.json', [])
-  if (!fileExists('pending-transactions.json')) writeJson('pending-transactions.json', [])
-  const split =
-    fileExists('catalog-categories.json') ||
-    fileExists('catalog-subcategories.json') ||
-    fileExists('catalog-properties.json')
-  if (!split && !fileExists('catalog.json')) {
-    writeJson('catalog-categories.json', [])
-    writeJson('catalog-subcategories.json', [])
-    writeJson('catalog-properties.json', [])
+  const plants = await store.plants.list()
+  const keptIds = new Set(plants.filter((plant) => userIds.has(plant.ownerId)).map((plant) => plant.id))
+  let plantsChanged = plants.length !== keptIds.size
+  const keptPlants = plants
+    .filter((plant) => keptIds.has(plant.id))
+    .map((plant) => {
+      let next = plant
+      if (next.parentId && !keptIds.has(next.parentId)) {
+        plantsChanged = true
+        next = { ...next }
+        delete next.parentId
+      }
+      if (next.subcategoryId && !subIds.has(next.subcategoryId)) {
+        plantsChanged = true
+        next = { ...next }
+        delete next.subcategoryId
+      }
+      return next
+    })
+  if (plantsChanged) {
+    await store.plants.saveAll(keptPlants)
+    if (plants.length !== keptPlants.length) {
+      logger.info(`Removed ${plants.length - keptPlants.length} plants with missing owners`)
+    }
+  }
+
+  const activities = await store.activities.list()
+  const keptActivities = activities.filter(
+    (row) => userIds.has(row.userId) && (!row.plantId || keptIds.has(row.plantId)),
+  )
+  if (keptActivities.length !== activities.length) {
+    await store.activities.saveAll(keptActivities)
+    logger.info(`Removed ${activities.length - keptActivities.length} activities with missing user or plant`)
   }
 }
 
-/** Write launch JSON files when the data folder is empty. mock → demo fixtures; qa/prod → empty live. */
-export function ensureDataFiles() {
-  if (!hasDataFiles()) {
-    if (seedMode() === 'demo') copyDemoFixtures()
-    else writeEmptyLive()
+/** Write launch data when this environment has not been seeded. mock → demo fixtures; qa/prod → empty live. */
+export async function ensureDataFiles() {
+  const store = getStore()
+  try {
+    if (!(await store.isReady())) {
+      if (plantxSeed() === 'demo') await seedDemo(store)
+      else await seedEmpty(store)
+    }
+    await ensureExampleCatalog(store)
+    await ensureBootstrapAdmin()
+    await pruneBrokenRelations(store)
+  } catch (err) {
+    throw explainDbError(err)
   }
-  ensureAccessAndCatalog()
-  ensureBootstrapAdmin()
-  pruneBrokenRelations()
   logger.info(`PlantX data ready (${plantxEnvLabel()})`, {
     env: plantxEnv(),
-    seed: seedMode(),
+    db: plantxDb(),
+    seed: plantxSeed(),
   })
 }

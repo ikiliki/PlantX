@@ -1,12 +1,7 @@
-# Demo fixtures (mock backup)
+# Demo fixtures
 
 Generated from `src/mock` via `npm run seed:fixtures`.
 
-Use for local runs:
+These files are the demo seed payload. The API loads them into Supabase when `PLANTX_SEED=demo`. They are not a database.
 
-```bash
-npm run seed:demo
-npm run dev:demo
-```
-
-Empty live (default) uses `npm run seed:empty` — bootstrap admin only, no plants/catalog rows.
+Empty live (QA and production) seeds the bootstrap admin, one category, and one subcategory into Supabase on first boot.

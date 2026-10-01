@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { serve } from '@hono/node-server'
-import { app } from './app.ts'
+import { app, boot } from './app.ts'
 import { plantxEnv } from './lib/env.ts'
 import { logger } from './lib/logger.ts'
 
@@ -29,6 +29,7 @@ function loadEnvFile() {
 }
 
 loadEnvFile()
+await boot()
 
 const port = Number(process.env.PORT || 8787)
 const hostname = plantxEnv() === 'prod' ? '0.0.0.0' : '127.0.0.1'

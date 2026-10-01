@@ -172,6 +172,37 @@ export const SubHead = styled.div`
   }
 `
 
+export const UserHover = styled.div`
+  position: fixed;
+  z-index: ${theme.z.dialog};
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  width: min(260px, calc(100vw - 24px));
+  padding: 12px;
+  border-radius: ${theme.radii.lg};
+  border: 1px solid ${theme.colors.border};
+  background: ${theme.colors.creamCard};
+  box-shadow: ${theme.shadow.soft};
+  pointer-events: none;
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    font-size: 14px;
+  }
+
+  span {
+    margin-top: 2px;
+    color: ${theme.colors.muted};
+    font-size: 12px;
+  }
+`
+
 export const RelationLink = styled.button`
   margin: 0;
   padding: 0;
