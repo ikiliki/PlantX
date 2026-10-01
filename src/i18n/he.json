@@ -914,7 +914,6 @@
     "systemNoFlag": "בלי דגל",
     "plain": {
       "home.lure": "פיתוי החממה",
-      "home.shortcuts": "קיצורי דרך",
       "home.top": "חממות מובילות",
       "market.ticker": "סרט מחירים",
       "market.search": "חיפוש",
@@ -1038,7 +1037,6 @@
     "logout": "יציאה לדמו"
   },
   "feed": {
-    "shortcuts": "קיצורי דרך",
     "people": "בחממה",
     "latestSales": "מכירות אחרונות",
     "sale": "מכירה",

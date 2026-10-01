@@ -27,5 +27,3 @@ export default {
   component: PlainPreview,
   decorators: [withApp],
 }
-
-export const Shortcuts = () => <PlainPreview id="home.shortcuts" />

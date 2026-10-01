@@ -3,7 +3,6 @@ import { PageGate } from '../../components/PageGate/PageGate'
 import { GreenhouseLure } from '../../features/discover/components/GreenhouseLure/GreenhouseLure'
 import { FeedFilter } from '../../features/feed/components/FeedFilter/FeedFilter'
 import { FeedUpdate } from '../../features/feed/components/FeedUpdate/FeedUpdate'
-import { ShortcutRail } from '../../features/feed/components/HomeRails/HomeRails'
 import { MarketRail } from '../../features/feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../features/feed/components/RankRail/RankRail'
 import { TopGreenhouses } from '../../features/feed/components/TopGreenhouses/TopGreenhouses'
@@ -47,7 +46,6 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
       <Layout>
         <Rail>
           <GreenhouseLure />
-          <ShortcutRail />
           <RailFilter>
             <FeedFilter />
           </RailFilter>

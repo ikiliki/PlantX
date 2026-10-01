@@ -1,6 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { GreenhouseLure } from '../../../discover/components/GreenhouseLure/GreenhouseLure'
-import { ShortcutRail } from '../../../feed/components/HomeRails/HomeRails'
 import { TopGreenhouses } from '../../../feed/components/TopGreenhouses/TopGreenhouses'
 import { AddPlantCard } from '../../../greenhouse/components/AddPlantCard/AddPlantCard'
 import { ListingMap } from '../../../market/components/ListingMap/ListingMap'
@@ -53,8 +52,6 @@ function previewFor(id: PlainId): ReactNode {
   switch (id) {
     case 'home.lure':
       return <GreenhouseLure />
-    case 'home.shortcuts':
-      return <ShortcutRail />
     case 'home.top':
       return <TopGreenhouses />
     case 'market.ticker':

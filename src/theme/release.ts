@@ -51,7 +51,6 @@ export type PlacementId = (typeof PLACEMENTS)[number]['id']
 /** Visible pieces with no release flag. They stay on; Admin does not edit them. */
 export const PLAIN = [
   { id: 'home.lure', pageId: 'home' },
-  { id: 'home.shortcuts', pageId: 'home' },
   { id: 'home.top', pageId: 'home' },
   { id: 'market.ticker', pageId: 'market' },
   { id: 'market.search', pageId: 'market' },

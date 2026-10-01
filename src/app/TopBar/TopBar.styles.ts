@@ -62,12 +62,30 @@ export const NavItems = styled.nav`
   }
 `
 
+export const NavMark = styled.span`
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-inline-end: 6px;
+  border-radius: 7px;
+  background: ${theme.colors.chipGreen};
+  color: ${theme.colors.forest};
+  font-family: ${theme.fonts.body};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+`
+
 export const NavItem = styled(Link)<{ $active?: boolean }>`
   position: relative;
+  display: inline-flex;
+  align-items: center;
   padding: 6px 0;
-  font-size: 14px;
+  font-family: ${theme.fonts.display};
+  font-size: 20px;
+  font-weight: 400;
   white-space: nowrap;
-  font-weight: ${({ $active }) => ($active ? 700 : 500)};
   color: ${({ $active }) => ($active ? theme.colors.forest : theme.colors.muted)};
   transition: color ${theme.motion.fast} ${theme.motion.ease};
   &::after {

@@ -25,6 +25,7 @@ import {
   MenuToggle,
   NavItem,
   NavItems,
+  NavMark,
 } from './TopBar.styles'
 
 function initials(name: string) {
@@ -114,6 +115,7 @@ export function TopBar() {
         )}
         {show('market') && (
           <NavItem to="/market" $active={isActive('/market')} aria-current={isActive('/market') ? 'page' : undefined}>
+            <NavMark aria-hidden>◈</NavMark>
             {t.nav.market}
           </NavItem>
         )}
@@ -123,16 +125,19 @@ export function TopBar() {
             $active={isActive('/greenhouse')}
             aria-current={isActive('/greenhouse') ? 'page' : undefined}
           >
+            <NavMark aria-hidden>⚘</NavMark>
             {t.nav.greenhouse}
           </NavItem>
         )}
         {show('rank') && (
           <NavItem to="/rank" $active={isActive('/rank')} aria-current={isActive('/rank') ? 'page' : undefined}>
+            <NavMark aria-hidden>✦</NavMark>
             {t.nav.rank}
           </NavItem>
         )}
         {show('wiki') && (
           <NavMenu
+            mark="❧"
             label={t.nav.wiki}
             to="/wiki"
             open={openNav === 'wiki'}

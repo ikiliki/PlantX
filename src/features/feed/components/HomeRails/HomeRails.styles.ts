@@ -55,13 +55,3 @@ export const PersonMeta = styled.span`
   text-overflow: ellipsis;
 `
 
-export const Mark = styled.span`
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: ${theme.radii.sm};
-  background: ${theme.colors.chipGreen};
-  color: ${theme.colors.forest};
-  font-size: 16px;
-`

@@ -914,7 +914,6 @@
     "systemNoFlag": "No flag",
     "plain": {
       "home.lure": "Greenhouse lure",
-      "home.shortcuts": "Shortcuts",
       "home.top": "Top greenhouses",
       "market.ticker": "Ticker",
       "market.search": "Search",
@@ -1038,7 +1037,6 @@
     "logout": "Exit to demo login"
   },
   "feed": {
-    "shortcuts": "Shortcuts",
     "people": "In the greenhouse",
     "latestSales": "Latest sales",
     "sale": "Sale",
