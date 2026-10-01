@@ -33,20 +33,20 @@ await build({
   entryPoints: ['server/src/vercel.ts'],
   bundle: true,
   platform: 'node',
-  format: 'esm',
+  format: 'cjs',
   outfile: path.join(funcDir, 'index.js'),
   packages: 'bundle',
   external: ['pg-native'],
   logLevel: 'info',
+  footer: { js: 'module.exports = module.exports.default;' },
 })
-await writeFile(path.join(funcDir, 'package.json'), JSON.stringify({ type: 'module' }))
 await writeFile(
   path.join(funcDir, '.vc-config.json'),
   JSON.stringify({
     runtime: 'nodejs22.x',
     handler: 'index.js',
     launcherType: 'Nodejs',
-    shouldAddHelpers: false,
+    shouldAddHelpers: true,
   }),
 )
 await writeFile(
