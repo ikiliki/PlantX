@@ -185,6 +185,14 @@ export function postEnableUser(id: string) {
   })
 }
 
+export function postPreapproved(id: string, preapproved: boolean) {
+  return request<{ user: import('./types').User }>(`/api/users/${encodeURIComponent(id)}/preapproved`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ preapproved }),
+  })
+}
+
 export function fetchPendingTransactions() {
   return request<{ transactions: import('./types').PendingTransaction[] }>(
     '/api/users/transactions/pending',

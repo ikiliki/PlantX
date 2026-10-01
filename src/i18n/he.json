@@ -695,6 +695,9 @@
     "statusPending": "ממתין",
     "statusActive": "פעיל",
     "statusDisabled": "מושבת",
+    "preapproved": "מאושר מראש",
+    "markPreapproved": "אישור מראש",
+    "unmarkPreapproved": "הסרת אישור מראש",
     "txKind": {
       "purchase": "רכישה",
       "listing": "מודעה",

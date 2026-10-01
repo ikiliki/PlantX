@@ -695,6 +695,9 @@
     "statusPending": "Pending",
     "statusActive": "Active",
     "statusDisabled": "Disabled",
+    "preapproved": "Pre-approved",
+    "markPreapproved": "Pre-approve",
+    "unmarkPreapproved": "Remove pre-approval",
     "txKind": {
       "purchase": "Purchase",
       "listing": "Listing",

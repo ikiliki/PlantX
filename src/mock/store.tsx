@@ -43,6 +43,7 @@ import {
   postApprovePending,
   postDisableUser,
   postEnableUser,
+  postPreapproved,
   postGoogleSessionResult,
   postPlant,
   postPlantPhoto,
@@ -167,6 +168,7 @@ interface StoreApi {
   rejectPendingUser: (id: string) => Promise<boolean>
   disableUser: (id: string) => Promise<boolean>
   enableUser: (id: string) => Promise<boolean>
+  setPreapproved: (id: string, preapproved: boolean) => Promise<boolean>
   liveMeta: LiveMeta | null
   loadSlice: (part: ServerSlice) => Promise<boolean>
   refreshAccessQueue: (part: 'pending' | 'transactions') => Promise<void>
@@ -614,6 +616,7 @@ export function StoreProvider({
           avatarColor: '#1FA85A',
           friendIds: [],
           accountStatus: 'active',
+          preapproved: true,
         }
         row.status = 'approved'
         row.approvedAt = new Date().toISOString()
@@ -677,6 +680,26 @@ export function StoreProvider({
       update((d) => {
         const user = d.users.find((item) => item.id === id)
         if (user) user.accountStatus = 'active'
+        return d
+      })
+      return true
+    },
+    setPreapproved: async (id, preapproved) => {
+      if (liveWritable) {
+        const res = await postPreapproved(id, preapproved)
+        if (!res) return false
+        update((d) => {
+          const user = d.users.find((item) => item.id === id)
+          if (user) user.preapproved = Boolean(res.user.preapproved)
+          return d
+        })
+        return true
+      }
+      update((d) => {
+        const user = d.users.find((item) => item.id === id)
+        if (!user || user.role === 'admin') return d
+        if ((user.accountStatus ?? 'active') === 'disabled' && preapproved) return d
+        user.preapproved = preapproved
         return d
       })
       return true

@@ -142,6 +142,7 @@ export function createSupabaseStore(): PlantxStore {
         avatarColor: text(row, 'avatar_color'),
         friendIds: friends.filter((item) => text(item, 'user_id') === id).map((item) => text(item, 'friend_id')),
         accountStatus: text(row, 'account_status') as User['accountStatus'],
+        preapproved: Boolean(row.preapproved),
       }
       const businessName = optional(row, 'business_name')
       const businessNameHe = optional(row, 'business_name_he')
@@ -174,9 +175,9 @@ export function createSupabaseStore(): PlantxStore {
         `insert into users (
           id, position, name, name_he, role, business_name, business_name_he,
           region, region_he, lat, lng, bio, bio_he, rating, completed_orders,
-          verification_rate, cancellations, avatar_color, email, account_status
+          verification_rate, cancellations, avatar_color, email, account_status, preapproved
         ) values (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
         )
         on conflict (id) do update set
           position = excluded.position,
@@ -197,7 +198,8 @@ export function createSupabaseStore(): PlantxStore {
           cancellations = excluded.cancellations,
           avatar_color = excluded.avatar_color,
           email = excluded.email,
-          account_status = excluded.account_status`,
+          account_status = excluded.account_status,
+          preapproved = excluded.preapproved`,
         [
           user.id,
           position,
@@ -219,6 +221,7 @@ export function createSupabaseStore(): PlantxStore {
           user.avatarColor,
           user.email?.trim() ? user.email.trim() : null,
           user.accountStatus ?? 'active',
+          Boolean(user.preapproved),
         ],
       )
     }

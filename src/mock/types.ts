@@ -69,6 +69,8 @@ export interface User {
   friendIds: string[]
   /** Absent means active. Disabled accounts cannot sign in. */
   accountStatus?: 'active' | 'disabled'
+  /** Can enter while the public app flag is off. */
+  preapproved?: boolean
 }
 
 export type PendingUserStatus = 'pending' | 'approved' | 'rejected'

@@ -16,6 +16,10 @@ A page is a container of features. Pages never show an empty screen. Gate featur
 
 Types and defaults live in `src/theme/release.ts`. Values persist on `MockDb.system`.
 
+`/admin` never shows the maintenance hold. It stays the operator sign-in or the admin shell.
+
+`launched: false` shows the not-launched hold. The operator and members with `preapproved` still enter. Approving an application marks that account pre-approved. Admin can clear the mark on the member.
+
 **Pages** (`live` | `maintenance`):
 
 - `maintenance` hides the page from nav. Direct visits show one shared maintenance notice (`PageGate`) — no feature UI peek underneath. Feature status is separate; page maintenance wins for the route.

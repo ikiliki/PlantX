@@ -56,3 +56,9 @@ usersRoutes.post('/:id/enable', async (c) => {
   await requireAdmin(c)
   return c.json({ user: await usersService.setAccountStatus(c.req.param('id'), 'active') })
 })
+
+usersRoutes.post('/:id/preapproved', async (c) => {
+  await requireAdmin(c)
+  const body = (await c.req.json().catch(() => ({}))) as { preapproved?: boolean }
+  return c.json({ user: await usersService.setPreapproved(c.req.param('id'), Boolean(body.preapproved)) })
+})

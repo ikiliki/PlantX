@@ -5,7 +5,7 @@ import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { NotLaunched } from '../../components/NotLaunched/NotLaunched'
 import { AdminGate } from '../../features/admin/components/AdminGate/AdminGate'
 import { useStore } from '../../mock/store'
-import { isOperator } from '../../theme/operator'
+import { admitsWhenClosed } from '../../theme/operator'
 import { AppShell } from '../AppShell/AppShell'
 import { PassportDialog } from '../../features/greenhouse/components/PassportDialog/PassportDialog'
 import { SellerDialog } from '../../features/sellers/components/SellerDialog/SellerDialog'
@@ -36,10 +36,11 @@ type SellerState = { sellerFull?: boolean } | null
 /** Offline and unlaunched apps paint a full page. The operator sees the real app when the API is up. */
 function ProductShell() {
   const { currentUser, db, liveStatus } = useStore()
+  const { pathname } = useLocation()
   if (liveStatus === 'loading') return <LoaderShell fill />
   if (liveStatus === 'down') return <HoldNotice mode="maintenance" />
-  if (isOperator(currentUser)) return <AppShell />
-  if (!db.system.launched) return <NotLaunched />
+  const open = db.system.launched || admitsWhenClosed(currentUser)
+  if (!open && pathname !== '/login') return <NotLaunched />
   return <AppShell />
 }
 

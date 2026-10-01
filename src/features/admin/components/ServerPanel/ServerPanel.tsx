@@ -234,6 +234,7 @@ function UserPreview({
   onClose,
   onDisable,
   onEnable,
+  onPreapproved,
 }: {
   row: User
   plantCount: number
@@ -241,6 +242,7 @@ function UserPreview({
   onClose: () => void
   onDisable: () => void
   onEnable: () => void
+  onPreapproved: (value: boolean) => void
 }) {
   const { t, tr, locale } = useI18n()
   const disabled = (row.accountStatus ?? 'active') === 'disabled'
@@ -264,11 +266,24 @@ function UserPreview({
             <Button size="sm" variant="growth" disabled={busy} onClick={onEnable}>
               {t.admin.enable}
             </Button>
+            {row.preapproved ? (
+              <Button size="sm" variant="secondary" disabled={busy} onClick={() => onPreapproved(false)}>
+                {t.admin.unmarkPreapproved}
+              </Button>
+            ) : null}
           </>
         ) : (
           <>
             <Button size="sm" variant="ghost" onClick={onClose}>
               {t.common.cancel}
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={busy}
+              onClick={() => onPreapproved(!row.preapproved)}
+            >
+              {row.preapproved ? t.admin.unmarkPreapproved : t.admin.markPreapproved}
             </Button>
             <Button size="sm" variant="danger" disabled={busy} onClick={onDisable}>
               {t.admin.disable}
@@ -299,7 +314,10 @@ function UserPreview({
           </div>
           <div>
             <dt>{t.admin.accountStatus}</dt>
-            <dd>{disabled ? t.admin.statusDisabled : t.admin.statusActive}</dd>
+            <dd>
+              {disabled ? t.admin.statusDisabled : t.admin.statusActive}
+              {row.preapproved ? ` · ${t.admin.preapproved}` : ''}
+            </dd>
           </div>
         </PreviewStats>
       </PreviewCard>
@@ -604,6 +622,7 @@ export function ServerPanel() {
     retryLive,
     disableUser,
     enableUser,
+    setPreapproved,
     approvePendingUser,
     rejectPendingUser,
     liveMeta,
@@ -957,9 +976,12 @@ export function ServerPanel() {
               cell: (row) => {
                 const disabled = (row.accountStatus ?? 'active') === 'disabled'
                 return (
-                  <Badge $tone={disabled ? 'muted' : 'forest'}>
-                    {disabled ? t.admin.statusDisabled : t.admin.statusActive}
-                  </Badge>
+                  <>
+                    <Badge $tone={disabled ? 'muted' : 'forest'}>
+                      {disabled ? t.admin.statusDisabled : t.admin.statusActive}
+                    </Badge>
+                    {row.preapproved ? <Badge $tone="warn">{t.admin.preapproved}</Badge> : null}
+                  </>
                 )
               },
             },
@@ -1306,6 +1328,7 @@ export function ServerPanel() {
               return ok
             })
           }
+          onPreapproved={(value) => void run(userPreview.id, () => setPreapproved(userPreview.id, value))}
         />
       )}
 

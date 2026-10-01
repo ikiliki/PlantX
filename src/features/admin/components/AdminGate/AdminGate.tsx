@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { AppShell } from '../../../../app/AppShell/AppShell'
-import { HoldNotice } from '../../../../components/HoldNotice/HoldNotice'
 import { HoldStage } from '../../../../components/HoldStage/HoldStage'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { AuthPanel } from '../../../auth/components/AuthPanel/AuthPanel'
@@ -8,7 +7,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isOperator } from '../../../../theme/operator'
 
-/** /admin stays open. Signed-out visitors get the same full-screen hold, with Google only. */
+/** /admin stays open. It never shows the public maintenance hold. */
 export function AdminGate() {
   const { t } = useI18n()
   const { currentUser, liveStatus, loginAs } = useStore()
@@ -19,7 +18,6 @@ export function AdminGate() {
   }, [currentUser, loginAs])
 
   if (liveStatus === 'loading') return <LoaderShell fill />
-  if (liveStatus === 'down') return <HoldNotice mode="maintenance" />
   if (allowed) return <AppShell />
 
   return (

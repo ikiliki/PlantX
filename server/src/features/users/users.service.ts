@@ -96,6 +96,7 @@ export const usersService = {
       avatarColor: avatarColor(row.email),
       friendIds: [],
       accountStatus: 'active',
+      preapproved: true,
     }
     users.push(user)
     await store.users.saveAll(users)
@@ -148,6 +149,19 @@ export const usersService = {
       throw Errors.forbidden('Admin accounts cannot be disabled')
     }
     ;(user as ManagedUser).accountStatus = accountStatus
+    await store.users.saveAll(users)
+    return withAccountStatus(user)
+  },
+
+  async setPreapproved(userId: string, preapproved: boolean) {
+    const store = getStore()
+    const users = await store.users.list()
+    const user = users.find((item) => item.id === userId && item.role !== 'guest')
+    if (!user) throw Errors.missing(`User ${userId} not found`)
+    if ((user.accountStatus ?? 'active') === 'disabled' && preapproved) {
+      throw Errors.invalid('A disabled account cannot be pre-approved')
+    }
+    user.preapproved = preapproved
     await store.users.saveAll(users)
     return withAccountStatus(user)
   },
