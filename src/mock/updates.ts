@@ -66,6 +66,7 @@ export function seedUpdates(): FeedUpdate[] {
       id: 'up-noa-water',
       kind: 'water',
       userId: 'u-noa',
+      plantId: 'pl-draft-target',
       body: 'Water confirmed on the office pothos.',
       bodyHe: 'השקיה אושרה לפוטוס המשרד.',
       createdAt: ago(10),

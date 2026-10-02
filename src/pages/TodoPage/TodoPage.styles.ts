@@ -11,33 +11,18 @@ export const Page = styled.div`
 `
 
 export const Heading = styled.header`
-  display: grid;
-  gap: 6px;
   min-width: 0;
 
   h1 {
     margin: 0;
-    font-size: clamp(28px, 4vw, 36px);
-    font-weight: 800;
+    font-size: clamp(28px, 7vw, 44px);
     color: ${theme.colors.ink};
+    overflow-wrap: anywhere;
   }
-`
 
-export const Eyebrow = styled.p`
-  margin: 0;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: ${theme.colors.moss};
-`
-
-export const Description = styled.p`
-  margin: 0;
-  max-width: 52ch;
-  color: ${theme.colors.muted};
-  font-size: 15px;
-  line-height: 1.45;
+  @container (max-width: 720px) {
+    display: none;
+  }
 `
 
 export const GuestAuth = styled.div`

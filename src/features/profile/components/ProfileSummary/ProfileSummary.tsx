@@ -1,10 +1,8 @@
-import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isPlacementReady } from '../../../../theme/release'
 import {
-  AvatarButton,
   AvatarRing,
   Bio,
   Foot,
@@ -13,7 +11,6 @@ import {
   Missing,
   Name,
   NameBlock,
-  NameButton,
   Role,
   Root,
   Specialties,
@@ -34,7 +31,6 @@ export function ProfileSummary({
 }) {
   const { db } = useStore()
   const { t, tr, locale } = useI18n()
-  const navigate = useNavigate()
   const user = db.users.find((item) => item.id === userId && item.role !== 'guest')
   if (!user) return <Missing id={titleId}>{t.seller.notFound}</Missing>
 
@@ -43,32 +39,14 @@ export function ProfileSummary({
   const specialties = locale === 'he' ? user.specialtiesHe : user.specialties
   const showMarketStats = isPlacementReady(db.system, 'profile.market.stats')
 
-  const openFull = () => {
-    navigate(`/profile/${user.id}`)
-  }
-
   return (
     <Root $compact={compact} aria-label={name}>
       <Identity>
         <AvatarRing>
-          {compact ? (
-            <AvatarButton type="button" onClick={openFull} aria-label={name}>
-              <Avatar name={user.name} color={user.avatarColor} size={76} />
-            </AvatarButton>
-          ) : (
-            <Avatar name={user.name} color={user.avatarColor} size={76} />
-          )}
+          <Avatar name={user.name} color={user.avatarColor} size={76} />
         </AvatarRing>
         <NameBlock>
-          {compact ? (
-            <Name id={titleId}>
-              <NameButton type="button" onClick={openFull}>
-                {name}
-              </NameButton>
-            </Name>
-          ) : (
-            <Name id={titleId}>{name}</Name>
-          )}
+          <Name id={titleId}>{name}</Name>
           <Role>
             {[t.roles[user.role], business, tr(user.region, user.regionHe)].filter(Boolean).join(' · ')}
           </Role>

@@ -4,6 +4,7 @@ import { Icon, type IconName } from '../../components/Icon/Icon'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { LiveBanner } from '../../components/LiveBanner/LiveBanner'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
+import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
 import { isOperator } from '../../theme/operator'
@@ -19,9 +20,15 @@ function isMarketClassPath(path: string) {
   return /^\/market\/(?!categories(?:\/|$))[^/]+$/.test(path)
 }
 
+/** Plant passport and seller card open over the current page. */
+function isOverlayPath(path: string) {
+  return /^\/plants\/[^/]+$/.test(path) || /^\/sellers\/[^/]+$/.test(path)
+}
+
 export function AppShell() {
   const { t } = useI18n()
   const { db, currentUser } = useStore()
+  const taskCount = useTaskTabCount()
   const loc = useLocation()
   const navType = useNavigationType()
   const mainRef = useRef<HTMLElement>(null)
@@ -36,6 +43,7 @@ export function AppShell() {
       return
     }
     if (isMarketClassPath(previous) && isMarketClassPath(loc.pathname)) return
+    if (isOverlayPath(previous) || isOverlayPath(loc.pathname)) return
     if (navType !== 'POP') window.scrollTo({ top: 0, behavior: 'instant' })
     if (reducedMotion()) return
     mainRef.current?.animate(
@@ -52,7 +60,12 @@ export function AppShell() {
       { to: '/home', label: t.nav.home, icon: 'home' as const, pageId: 'home' as const },
       { to: '/market', label: t.nav.market, icon: 'market' as const, pageId: 'market' as const },
       { to: '/greenhouse', label: t.nav.greenhouse, icon: 'greenhouse' as const, pageId: 'greenhouse' as const },
-      { to: '/tasks', label: t.nav.todo, icon: 'drop' as const, pageId: 'todo' as const },
+      {
+        to: '/tasks',
+        label: taskCount > 0 ? `${t.nav.todo} (${taskCount})` : t.nav.todo,
+        icon: 'drop' as const,
+        pageId: 'todo' as const,
+      },
       { to: '/rank', label: t.nav.rank, icon: 'rank' as const, pageId: 'rank' as const },
       { to: '/wiki', label: t.nav.wiki, icon: 'wiki' as const, pageId: 'wiki' as const },
     ] satisfies { to: string; label: string; icon: IconName; pageId: PageId }[]

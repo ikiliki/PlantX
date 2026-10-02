@@ -21,42 +21,68 @@ export const Root = styled.button<{ $hero?: boolean }>`
   align-content: center;
   justify-items: center;
   gap: 10px;
-  min-height: 280px;
+  min-height: 0;
   padding: 20px;
   border-radius: ${theme.radii.lg};
   border: 1px dashed ${theme.colors.border};
-  background: transparent;
+  background: ${theme.colors.creamCard};
   color: ${theme.colors.forest};
   font: inherit;
   text-align: center;
   cursor: pointer;
   overflow: hidden;
 
-  > strong {
-    font-size: 14px;
-    font-weight: 700;
-  }
-
   &:hover {
-    background: ${theme.colors.creamCard};
     border-color: ${theme.colors.moss};
-    transform: translateY(-3px);
     box-shadow: ${theme.shadow.lift};
   }
 
   ${({ $hero }) =>
     !$hero &&
     css`
-      @container (max-width: 559px) {
-        min-height: 0;
-        aspect-ratio: 1;
-        gap: 0;
-        padding: 8px;
-        border-radius: ${theme.radii.md};
+      align-self: stretch;
+      justify-items: stretch;
+      align-content: stretch;
+      grid-template-rows: auto minmax(0, 1fr);
+      width: 100%;
+      gap: 0;
+      padding: 0;
 
-        > strong,
-        > span:last-of-type {
-          display: none;
+      &:hover,
+      &:focus-visible {
+        z-index: 1;
+        border-color: ${theme.colors.moss};
+        transform: scale(1.04);
+        box-shadow: ${theme.shadow.lift};
+      }
+
+      &:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        &:hover,
+        &:focus-visible,
+        &:active:not(:disabled) {
+          transform: none;
+        }
+      }
+
+      @container (max-width: 559px) {
+        align-self: start;
+        width: 100%;
+        aspect-ratio: 1;
+        grid-template-rows: 1fr;
+        padding: 8px;
+
+        &:hover,
+        &:focus-visible {
+          transform: none;
+          box-shadow: none;
+        }
+
+        &:active:not(:disabled) {
+          transform: scale(0.97);
         }
       }
     `}
@@ -82,6 +108,7 @@ export const Root = styled.button<{ $hero?: boolean }>`
         background:
           radial-gradient(circle at 12% 30%, rgba(207, 234, 120, 0.55), transparent 50%),
           linear-gradient(135deg, ${theme.colors.forest} 0%, ${theme.colors.forestSoft} 100%);
+        transform: translateY(-3px);
       }
 
       @container (max-width: 560px) {
@@ -93,6 +120,54 @@ export const Root = styled.button<{ $hero?: boolean }>`
     `}
 `
 
+/** Square stand-in for the plant photo, so the tile matches that card. */
+export const Stage = styled.span`
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 0;
+
+  @container (max-width: 559px) {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+`
+
+export const Copy = styled.span`
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  justify-items: stretch;
+  text-align: center;
+  min-width: 0;
+  width: 100%;
+  padding: 14px 16px 16px;
+
+  strong,
+  span {
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+  }
+
+  strong {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.25;
+    -webkit-line-clamp: 1;
+  }
+
+  span {
+    -webkit-line-clamp: 2;
+  }
+
+  @container (max-width: 559px) {
+    display: none;
+  }
+`
+
 export const Orb = styled.span`
   position: relative;
   display: grid;
@@ -101,8 +176,8 @@ export const Orb = styled.span`
   height: 84px;
 
   @container (max-width: 559px) {
-    width: 42px;
-    height: 42px;
+    width: 64px;
+    height: 64px;
   }
 `
 
@@ -120,9 +195,9 @@ export const Plus = styled.span`
   animation: ${breathe} 2.4s ${theme.motion.ease} infinite;
 
   @container (max-width: 559px) {
-    width: 36px;
-    height: 36px;
-    font-size: 22px;
+    width: 52px;
+    height: 52px;
+    font-size: 28px;
   }
 `
 

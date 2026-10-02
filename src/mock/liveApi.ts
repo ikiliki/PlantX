@@ -1,5 +1,6 @@
 import { failureFromResponse, failureFromThrow, type ApiOutcome } from '../lib/apiFailure'
 import { plantFetch } from '../lib/httpNotice'
+import type { IssueReport } from '../lib/issueReport'
 import type {
   Diagnosis,
   FeedUpdate,
@@ -396,6 +397,15 @@ export function fetchIdentifyHistory(query?: { mode?: IdentifyMode; limit?: numb
   if (query?.limit != null) params.set('limit', String(query.limit))
   const qs = params.toString()
   return request<{ requests: IdentifyRequestRecord[] }>(`/api/identify/history${qs ? `?${qs}` : ''}`)
+}
+
+export function fetchIssuesOutcome() {
+  return requestOutcome<{ issues: IssueReport[] }>('/api/issues')
+}
+
+export function setIssueStatus(id: string, status: 'resolved' | 'dismissed') {
+  const action = status === 'resolved' ? 'resolve' : 'dismiss'
+  return requestOutcome<{ ok: boolean }>(`/api/issues/${encodeURIComponent(id)}/${action}`, { method: 'POST' })
 }
 
 export function fetchIdentifyHistoryOutcome(query?: { mode?: IdentifyMode; limit?: number }) {

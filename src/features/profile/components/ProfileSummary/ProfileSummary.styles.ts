@@ -20,11 +20,13 @@ export const Root = styled.aside<{ $compact?: boolean }>`
   ${({ $compact }) =>
     $compact &&
     css`
+      height: auto;
+      grid-template-rows: auto;
       gap: 12px;
       padding: 18px 20px 16px;
     `}
   ${media.md} {
-    overflow: ${({ $compact }) => ($compact ? 'hidden' : 'auto')};
+    overflow: ${({ $compact }) => ($compact ? 'visible' : 'auto')};
     scrollbar-width: none;
   }
 `
@@ -46,19 +48,6 @@ export const AvatarRing = styled.div`
   animation: ${popIn} ${theme.motion.slow} ${theme.motion.spring} backwards;
 `
 
-export const AvatarButton = styled.button`
-  display: block;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.growth};
-    outline-offset: 3px;
-  }
-`
-
 export const NameBlock = styled.div`
   display: grid;
   gap: 6px;
@@ -73,21 +62,6 @@ export const Name = styled.h2`
   font-weight: 400;
   line-height: 1.1;
   color: ${theme.colors.cream};
-`
-
-export const NameButton = styled.button`
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.growth};
-    outline-offset: 3px;
-  }
 `
 
 export const Role = styled.p`

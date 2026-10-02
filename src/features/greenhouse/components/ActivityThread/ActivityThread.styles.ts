@@ -1,5 +1,7 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { theme } from '../../../../theme/tokens'
+import type { FeedUpdateKind } from '../../../../mock/types'
+import { momentSurface } from '../../../feed/components/ActivityMoment/ActivityMoment.styles'
 
 export const Root = styled.aside<{ $height?: number }>`
   display: grid;
@@ -44,6 +46,12 @@ export const Title = styled.h2`
   color: ${theme.colors.forest};
 `
 
+export const ScrollFrame = styled.div`
+  position: relative;
+  min-height: 0;
+  height: 100%;
+`
+
 export const Scroll = styled.div`
   display: flex;
   flex-direction: column;
@@ -52,23 +60,95 @@ export const Scroll = styled.div`
   height: 100%;
   overflow-y: auto;
   padding: 12px;
+
+  @container (max-width: 960px) {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+  }
 `
 
-export const Message = styled.div<{ $scan?: boolean }>`
+/** Top hint that older activity still sits above. The bar itself stays hidden. */
+export const MoreAbove = styled.div<{ $on?: boolean }>`
+  display: none;
+
+  @container (max-width: 960px) {
+    display: block;
+    position: absolute;
+    z-index: 2;
+    inset-inline: 0;
+    inset-block-start: 0;
+    height: 64px;
+    pointer-events: none;
+    opacity: ${({ $on }) => ($on ? 1 : 0)};
+    transition: opacity ${theme.motion.base} ${theme.motion.ease};
+    background: linear-gradient(
+      180deg,
+      rgba(255, 254, 250, 0.98) 0%,
+      rgba(255, 254, 250, 0.55) 48%,
+      rgba(255, 254, 250, 0) 100%
+    );
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-inline: 12px;
+      inset-block-start: 0;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(93, 124, 78, 0.4) 14%,
+        rgba(93, 124, 78, 0.4) 86%,
+        transparent 100%
+      );
+    }
+  }
+`
+
+export const Message = styled.div<{ $kind?: FeedUpdateKind; $open?: boolean }>`
+  position: relative;
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr);
   gap: 10px;
   align-items: start;
+  flex: none;
+  width: 100%;
+  margin: 0;
   padding: 10px 12px;
   border-radius: ${theme.radii.md};
-  background: ${({ $scan }) =>
-    $scan ? 'linear-gradient(135deg, rgba(207, 234, 120, 0.22), rgba(255, 254, 250, 0.92))' : 'rgba(255, 254, 250, 0.88)'};
-  border: 1px ${({ $scan }) => ($scan ? 'dashed' : 'solid')} ${({ $scan }) => ($scan ? theme.colors.moss : theme.colors.border)};
+  border: 1px solid ${theme.colors.border};
+  background: rgba(255, 254, 250, 0.88);
   color: inherit;
+  font: inherit;
+  text-align: start;
   text-decoration: none;
+  overflow: hidden;
+  ${({ $kind }) => $kind && momentSurface($kind)}
+  ${({ $open }) =>
+    $open &&
+    css`
+      cursor: pointer;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: ${theme.shadow.soft};
+      }
+
+      &:focus-visible {
+        outline: 2px solid ${theme.colors.moss};
+        outline-offset: 2px;
+      }
+    `}
 `
 
 export const Photo = styled.div<{ $scan?: boolean }>`
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 36px;
@@ -88,9 +168,13 @@ export const Photo = styled.div<{ $scan?: boolean }>`
 `
 
 export const Meta = styled.div`
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 4px;
   min-width: 0;
+  /* Clears the corner motion so the scan frame and other marks stay off the words. */
+  padding-inline-end: 40px;
 `
 
 export const Event = styled.p`
@@ -98,6 +182,7 @@ export const Event = styled.p`
   font-size: 13px;
   line-height: 1.4;
   color: ${theme.colors.ink};
+  overflow-wrap: anywhere;
 
   strong {
     font-weight: 700;

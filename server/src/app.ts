@@ -10,6 +10,7 @@ import { activityRoutes } from './features/activity/activity.routes.ts'
 import { catalogRoutes } from './features/catalog/catalog.routes.ts'
 import { greenhouseRoutes } from './features/greenhouse/greenhouse.routes.ts'
 import { identifyRoutes } from './features/identify/identify.routes.ts'
+import { issueRoutes } from './features/issues/issues.routes.ts'
 import { liveRoutes } from './features/live/live.routes.ts'
 import { sessionRoutes } from './features/session/session.routes.ts'
 import { systemRoutes } from './features/system/system.routes.ts'
@@ -69,6 +70,7 @@ app.route('/api/users', usersRoutes)
 app.route('/api/system', systemRoutes)
 app.route('/api/catalog', catalogRoutes)
 app.route('/api/identify', identifyRoutes)
+app.route('/api/issues', issueRoutes)
 app.route('/api/activities', activityRoutes)
 app.route('/api/todos', todoRoutes)
 app.route('/api/plants', greenhouseRoutes)

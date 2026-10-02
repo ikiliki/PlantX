@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { ActivityThread, type ActivityEntry } from '../ActivityThread/ActivityThread'
 import { AddPlantCard } from '../AddPlantCard/AddPlantCard'
@@ -30,6 +30,8 @@ import {
   Growing,
   Rail,
   Shelf,
+  ShelfFrame,
+  ShelfMore,
   Toolbar,
 } from './CollectionBoard.styles'
 
@@ -156,6 +158,25 @@ export function CollectionBoard({
   const shelfRef = useRef<HTMLDivElement>(null)
   const railRef = useRef<HTMLElement>(null)
   const [activityHeight, setActivityHeight] = useState<number>()
+  const [moreBelow, setMoreBelow] = useState(false)
+
+  useEffect(() => {
+    if (compact) return
+    const node = shelfRef.current
+    if (!node) return
+    const measure = () => {
+      setMoreBelow(node.scrollHeight - node.clientHeight - node.scrollTop > 24)
+    }
+    measure()
+    node.addEventListener('scroll', measure, { passive: true })
+    const observer = new ResizeObserver(measure)
+    observer.observe(node)
+    if (node.firstElementChild) observer.observe(node.firstElementChild)
+    return () => {
+      node.removeEventListener('scroll', measure)
+      observer.disconnect()
+    }
+  }, [compact, filter, list.shown.length, waterList.shown.length, photoList.shown.length])
 
   useLayoutEffect(() => {
     if (compact) return
@@ -326,7 +347,10 @@ export function CollectionBoard({
 
   return (
     <Board $split>
-      <Shelf ref={shelfRef}>{shelf}</Shelf>
+      <ShelfFrame>
+        <Shelf ref={shelfRef}>{shelf}</Shelf>
+        <ShelfMore $on={moreBelow} aria-hidden />
+      </ShelfFrame>
       <Rail ref={railRef}>
         <ActivityThread activity={activity} height={activityHeight} />
       </Rail>

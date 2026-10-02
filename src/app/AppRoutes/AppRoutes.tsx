@@ -38,6 +38,16 @@ function TodoRedirect() {
   return <Navigate to={todoId ? `/tasks/${todoId}` : '/tasks'} replace />
 }
 
+function PublicGreenhouseRoute() {
+  const { ownerId = '' } = useParams()
+  return <GreenhousePage ownerId={ownerId} />
+}
+
+function ProfileRedirect() {
+  const { id = '' } = useParams()
+  return <Navigate to={id ? `/greenhouse/${id}` : '/greenhouse'} replace />
+}
+
 type SellerState = { sellerFull?: boolean; profilePreview?: string } | null
 
 /** Offline and unlaunched apps paint a full page. Sign-in stays up either way, with no product header. */
@@ -100,6 +110,7 @@ export function AppRoutes() {
           <Route path="market/categories/:speciesId" element={<CategoryPage />} />
           <Route path="market/:id" element={<MarketClassPage />} />
           <Route path="greenhouse" element={<GreenhousePage />} />
+          <Route path="greenhouse/:ownerId" element={<PublicGreenhouseRoute />} />
           <Route path="tasks" element={<TodoPage />} />
           <Route path="tasks/:todoId" element={<TodoPage />} />
           <Route path="todo" element={<Navigate to="/tasks" replace />} />
@@ -109,7 +120,7 @@ export function AppRoutes() {
           <Route path="wiki/:speciesId" element={<WikiPage />} />
           <Route path="sellers/:id" element={<SellerProfilePage />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="profile/:id" element={<SellerProfilePage />} />
+          <Route path="profile/:id" element={<ProfileRedirect />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route element={<AdminGate />}>

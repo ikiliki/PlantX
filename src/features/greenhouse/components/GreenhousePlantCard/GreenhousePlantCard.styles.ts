@@ -9,7 +9,13 @@ const freshGlow = keyframes`
   100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0); transform: none; }
 `
 
-export const Root = styled.article<{ $fresh?: boolean; $care?: boolean }>`
+/** Same living halo as the add-photo plus, kept inside the shelf gap. */
+const livingPulse = keyframes`
+  0%, 100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.7); }
+  50% { box-shadow: 0 0 0 7px rgba(207, 234, 120, 0); }
+`
+
+export const Root = styled.article<{ $fresh?: boolean; $care?: boolean; $living?: boolean }>`
   display: grid;
   grid-template-rows: auto 1fr;
   border-radius: ${theme.radii.lg};
@@ -51,8 +57,77 @@ export const Root = styled.article<{ $fresh?: boolean; $care?: boolean }>`
   }
 
   @container (max-width: 559px) {
-    border-radius: ${theme.radii.md};
+    align-self: start;
+    width: 100%;
+    border-radius: ${theme.radii.lg};
+    border-color: transparent;
+    box-shadow: ${theme.shadow.soft};
+
+    &:hover,
+    &:hover img {
+      transform: none;
+    }
+
+    &:hover {
+      box-shadow: ${theme.shadow.soft};
+    }
   }
+
+  ${({ $living }) =>
+    $living &&
+    css`
+      &&& {
+        border: 2px dashed ${theme.colors.moss};
+        animation:
+          ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards,
+          ${livingPulse} 2.4s ${theme.motion.ease} infinite;
+      }
+
+      &&&:hover,
+      &&&:focus-within {
+        border-style: solid;
+        border-color: ${theme.colors.forest};
+        animation: none;
+        box-shadow: 0 0 0 5px ${theme.colors.chipGreen}, ${theme.shadow.lift};
+      }
+
+      &&&:active {
+        transform: translateY(-1px) scale(0.985);
+        border-style: solid;
+        border-color: ${theme.colors.forest};
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        &&& {
+          animation: none;
+        }
+      }
+
+      @container (max-width: 559px) {
+        &&& {
+          border: 2px dashed ${theme.colors.moss};
+        }
+
+        &&&:hover {
+          transform: none;
+          border-style: dashed;
+          border-color: ${theme.colors.moss};
+          animation:
+            ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards,
+            ${livingPulse} 2.4s ${theme.motion.ease} infinite;
+          box-shadow: none;
+        }
+
+        &&&:active,
+        &&&:focus-within {
+          transform: scale(0.985);
+          border-style: solid;
+          border-color: ${theme.colors.forest};
+          animation: none;
+          box-shadow: 0 0 0 4px ${theme.colors.chipGreen};
+        }
+      }
+    `}
 `
 
 export const PhotoLink = styled(Link)`
@@ -105,36 +180,78 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
   text-transform: uppercase;
   box-shadow: ${theme.shadow.soft};
 
+  ${({ $tone }) =>
+    $tone === 'calm' &&
+    css`
+      border: 1.5px dashed ${theme.colors.moss};
+      transition:
+        background ${theme.motion.fast} ${theme.motion.ease},
+        border-color ${theme.motion.fast} ${theme.motion.ease},
+        transform ${theme.motion.fast} ${theme.motion.ease};
+
+      ${Root}:hover &,
+      ${Root}:focus-within &,
+      ${Root}:active & {
+        background: ${theme.colors.growth};
+        border-style: solid;
+        border-color: ${theme.colors.forest};
+        transform: translateY(-1px);
+      }
+    `}
+
   @container (max-width: 559px) {
-    inset-block-start: 4px;
-    inset-inline-start: 4px;
-    max-width: calc(100% - 8px);
-    padding: 2px 5px;
-    font-size: 8px;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    inset-block-start: 8px;
+    inset-inline-start: 8px;
+    max-width: calc(100% - 16px);
+    padding: 4px 8px;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    white-space: normal;
+
+    ${({ $tone }) =>
+      $tone === 'calm' &&
+      css`
+        ${Root}:hover & {
+          background: rgba(255, 254, 250, 0.92);
+          border-style: dashed;
+          border-color: ${theme.colors.moss};
+          transform: none;
+        }
+
+        ${Root}:active & {
+          background: ${theme.colors.growth};
+          border-style: solid;
+          border-color: ${theme.colors.forest};
+          transform: translateY(-1px);
+        }
+      `}
   }
 `
 
-export const Details = styled.div<{ $care?: boolean }>`
+export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
   display: grid;
   gap: 10px;
   align-content: start;
   padding: 14px 16px 16px;
 
   @container (max-width: 559px) {
-    ${({ $care }) =>
-      $care
+    ${({ $care, $preview }) =>
+      $preview
         ? css`
             display: grid;
-            gap: 6px;
-            padding: 8px 8px 10px;
+            gap: 8px;
+            padding: 12px;
           `
-        : css`
-            display: none;
-          `}
+        : $care
+          ? css`
+              display: grid;
+              gap: 6px;
+              padding: 8px 8px 10px;
+            `
+          : css`
+              display: none;
+            `}
   }
 `
 
@@ -260,11 +377,11 @@ export const CareDate = styled.span`
   box-shadow: ${theme.shadow.soft};
 
   @container (max-width: 559px) {
-    inset-block: auto 4px;
-    inset-inline: 4px auto;
-    max-width: calc(100% - 8px);
-    padding: 2px 5px;
-    font-size: 8px;
+    inset-block: auto 8px;
+    inset-inline: 8px auto;
+    max-width: calc(100% - 16px);
+    padding: 4px 8px;
+    font-size: 10px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -288,18 +405,22 @@ export const PhotoCount = styled.span`
   backdrop-filter: blur(6px);
 
   @container (max-width: 559px) {
-    inset-block-end: 4px;
-    inset-inline-end: 4px;
-    gap: 2px;
-    padding: 2px 5px;
-    font-size: 9px;
+    inset-block-end: 8px;
+    inset-inline-end: 8px;
+    gap: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
   }
 `
 
 export const CollectionGrid = styled.div`
   display: grid;
-  gap: ${theme.space.sm};
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+  /* Room for the add tile on the start edge, including its hover scale. */
+  padding-inline-start: 16px;
+  padding-block: 8px 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   @container (min-width: 560px) {
     gap: ${theme.space.md};

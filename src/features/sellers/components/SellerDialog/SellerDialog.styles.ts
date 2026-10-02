@@ -19,19 +19,15 @@ export const Dialog = styled.div`
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(1000px, calc(100vw - 32px));
-  max-height: 50vh;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100svh - 32px);
   overflow: hidden;
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.creamCard};
   ${dialogEnter}
   ${sheetSurface}
-  ${media.md} {
-    height: auto;
-    max-height: 50vh;
-  }
   ${media.sm} {
-    max-height: 70vh;
+    max-height: calc(100svh - 16px);
     padding-bottom: env(safe-area-inset-bottom);
   }
   &:focus,

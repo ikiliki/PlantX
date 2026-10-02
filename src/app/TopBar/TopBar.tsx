@@ -7,6 +7,8 @@ import { categoryName, classDictionary } from '../../mock/classDictionary'
 import { useStore } from '../../mock/store'
 import { isOperator } from '../../theme/operator'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
+import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/ActivityBell'
+import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { NavMenu } from './NavMenu/NavMenu'
 import {
   Account,
@@ -19,6 +21,7 @@ import {
   LangBtn,
   LoginButton,
   Menu,
+  MobileOnly,
   MenuButton,
   MenuItem,
   MenuLang,
@@ -38,6 +41,7 @@ function initials(name: string) {
 export function TopBar() {
   const { t, locale } = useI18n()
   const { currentUser, db, signedIn, loginAs, setLocale } = useStore()
+  const taskCount = useTaskTabCount()
   const loc = useLocation()
   const [open, setOpen] = useState(false)
   const [openNav, setOpenNav] = useState<string | null>(null)
@@ -150,7 +154,7 @@ export function TopBar() {
         )}
         {show('todo') && (
           <NavItem to="/tasks" $active={isActive('/tasks')} aria-current={isActive('/tasks') ? 'page' : undefined}>
-            {t.nav.todo}
+            {taskCount > 0 ? `${t.nav.todo} (${taskCount})` : t.nav.todo}
           </NavItem>
         )}
         {show('rank') && (
@@ -188,42 +192,47 @@ export function TopBar() {
 
       <Actions>
         {signedIn && currentUser ? (
-          <Account ref={accountRef}>
-            <AvatarBubble
-              type="button"
-              $open={open}
-              aria-label={locale === 'he' ? currentUser.nameHe : currentUser.name}
-              aria-expanded={open}
-              aria-haspopup="menu"
-              onClick={() => setOpen((value) => !value)}
-            >
-              {initials(locale === 'he' ? currentUser.nameHe : currentUser.name)}
-            </AvatarBubble>
-            {open && (
-              <Menu role="menu">
-                <MenuItem to="/profile" role="menuitem" $active={isActive('/profile')} onClick={() => setOpen(false)}>
-                  {t.nav.profile}
-                </MenuItem>
-                {chooseLocale && (
-                  <MenuLang>
-                    <span>{t.nav.language}</span>
-                    {langToggle}
-                  </MenuLang>
-                )}
-                <MenuButton
-                  type="button"
-                  role="menuitem"
-                  $split
-                  onClick={() => {
-                    setOpen(false)
-                    loginAs(null)
-                  }}
-                >
-                  {t.profile.signOut}
-                </MenuButton>
-              </Menu>
-            )}
-          </Account>
+          <>
+            <MobileOnly>
+              <ActivityBell />
+            </MobileOnly>
+            <Account ref={accountRef}>
+              <AvatarBubble
+                type="button"
+                $open={open}
+                aria-label={locale === 'he' ? currentUser.nameHe : currentUser.name}
+                aria-expanded={open}
+                aria-haspopup="menu"
+                onClick={() => setOpen((value) => !value)}
+              >
+                {initials(locale === 'he' ? currentUser.nameHe : currentUser.name)}
+              </AvatarBubble>
+              {open && (
+                <Menu role="menu">
+                  <MenuItem to="/profile" role="menuitem" $active={isActive('/profile')} onClick={() => setOpen(false)}>
+                    {t.nav.profile}
+                  </MenuItem>
+                  {chooseLocale && (
+                    <MenuLang>
+                      <span>{t.nav.language}</span>
+                      {langToggle}
+                    </MenuLang>
+                  )}
+                  <MenuButton
+                    type="button"
+                    role="menuitem"
+                    $split
+                    onClick={() => {
+                      setOpen(false)
+                      loginAs(null)
+                    }}
+                  >
+                    {t.profile.signOut}
+                  </MenuButton>
+                </Menu>
+              )}
+            </Account>
+          </>
         ) : (
           <>
             {chooseLocale && langToggle}

@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom'
 import styled, { css } from 'styled-components'
-import { media, riseIn } from '../../../../theme/motion'
+import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
+
+/** One preview row, including its photo. The dialog window is a count of these. */
+export const PREVIEW_ROW = 104
+export const PREVIEW_GAP = 10
 
 const gentleScroll = css`
   overflow-x: hidden;
-  overflow-y: scroll;
-  scrollbar-gutter: stable;
+  overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(93, 124, 78, 0.55) transparent;
@@ -15,7 +18,7 @@ const gentleScroll = css`
   }
   &::-webkit-scrollbar-track {
     background: transparent;
-    margin: 10px 0;
+    margin: 4px 0;
   }
   &::-webkit-scrollbar-thumb {
     border: 2px solid transparent;
@@ -26,30 +29,32 @@ const gentleScroll = css`
 `
 
 export const Root = styled.div<{ $compact?: boolean }>`
-  display: grid;
+  display: flex;
+  flex-direction: column;
   align-content: start;
-  gap: ${theme.space.xl};
   min-width: 0;
   min-height: 0;
   padding: ${theme.space.xl} ${theme.space.lg};
-  ${media.md} {
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
   ${({ $compact }) =>
     $compact &&
     css`
-      max-height: 50vh;
-      ${gentleScroll}
-      ${media.sm} {
-        max-height: 70vh;
-      }
+      flex: 1 1 auto;
+      overflow: hidden;
+      padding: 16px 16px 18px;
     `}
 `
 
-export const Section = styled.section`
-  display: grid;
+export const Section = styled.section<{ $compact?: boolean }>`
+  display: flex;
+  flex-direction: column;
   gap: ${theme.space.md};
+  min-width: 0;
+  min-height: 0;
+  ${({ $compact }) =>
+    $compact &&
+    css`
+      flex: 1 1 auto;
+    `}
   &:first-child header {
     padding-inline-end: 48px;
   }
@@ -57,6 +62,7 @@ export const Section = styled.section`
 
 export const SectionHead = styled.header`
   display: flex;
+  flex: 0 0 auto;
   align-items: baseline;
   gap: ${theme.space.sm};
   h3 {
@@ -78,45 +84,28 @@ export const Count = styled.span`
   font-variant-numeric: tabular-nums;
 `
 
-const stagger = [1, 2, 3, 4, 5, 6, 7, 8]
-  .map((n) => `& > :nth-child(${n}) { animation-delay: ${n * 50}ms; }`)
-  .join('\n')
-
-const sideScroll = css`
+export const PlantScroll = styled.div<{ $rows: number }>`
+  ${gentleScroll}
   display: flex;
-  align-items: flex-start;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  & > * {
-    scroll-snap-align: start;
-    animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
-  }
-  ${stagger}
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: ${PREVIEW_GAP}px;
+  min-height: 0;
+  max-height: ${({ $rows }) => {
+    if ($rows <= 0) return '0px'
+    return `${$rows * PREVIEW_ROW + ($rows - 1) * PREVIEW_GAP}px`
+  }};
 `
 
-const tileWidth = '156px'
-
-export const PlantGrid = styled.div`
-  ${sideScroll}
-  gap: ${theme.space.sm};
-  & > * {
-    flex: 0 0 ${tileWidth};
-    width: ${tileWidth};
-  }
-`
-
-export const SeeGreenhouse = styled(Link)`
-  align-self: flex-start;
-  display: block;
-  min-width: 0;
-  background: ${theme.colors.creamCard};
+const pressable = css`
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: inherit;
-  text-decoration: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
   &:focus-visible {
     outline: 2px solid ${theme.colors.moss};
     outline-offset: 3px;
@@ -124,50 +113,70 @@ export const SeeGreenhouse = styled(Link)`
   }
 `
 
-export const SeeFace = styled.span`
+export const PlantRow = styled.button`
+  ${pressable}
   display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 8px;
-  aspect-ratio: 1;
-  padding: 12px;
-  border: 1px dashed ${theme.colors.border};
+  flex: 0 0 ${PREVIEW_ROW}px;
+  grid-template-columns: ${PREVIEW_ROW}px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  height: ${PREVIEW_ROW}px;
+  min-width: 0;
+  animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
+`
+
+export const RowThumb = styled.span`
+  display: block;
+  width: ${PREVIEW_ROW}px;
+  height: ${PREVIEW_ROW}px;
+  overflow: hidden;
   border-radius: ${theme.radii.md};
-  background: transparent;
-  color: ${theme.colors.forest};
-  transition:
-    background ${theme.motion.fast} ${theme.motion.ease},
-    border-color ${theme.motion.fast} ${theme.motion.ease};
-
-  ${SeeGreenhouse}:hover & {
-    background: ${theme.colors.creamCard};
-    border-color: ${theme.colors.moss};
-  }
+  background: ${theme.colors.chipGreen};
 `
 
-export const SeeMark = styled.span`
+export const RowCopy = styled.span`
   display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
-  font-size: 26px;
-  font-weight: 500;
-  line-height: 1;
+  gap: 4px;
+  min-width: 0;
+`
 
-  html[dir='rtl'] & {
-    transform: scaleX(-1);
+export const GoGreenhouse = styled(Link)`
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 10px 16px;
+  border-radius: ${theme.radii.md};
+  background: ${theme.colors.forest};
+  color: ${theme.colors.creamCard};
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  &:hover {
+    background: ${theme.colors.forestMid};
+  }
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.moss};
+    outline-offset: 3px;
   }
 `
 
-export const SeeLabel = styled.span`
-  max-width: 100%;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
-  text-align: center;
+const stagger = [1, 2, 3, 4, 5, 6, 7, 8]
+  .map((n) => `& > :nth-child(${n}) { animation-delay: ${n * 50}ms; }`)
+  .join('\n')
+
+export const PlantGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: ${theme.space.sm};
+  & > * {
+    animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
+  }
+  ${stagger}
 `
 
 const tileFace = css`
@@ -177,8 +186,10 @@ const tileFace = css`
   color: ${theme.colors.ink};
 `
 
-export const PlantTile = styled.div`
+export const PlantTile = styled.button`
   ${tileFace}
+  ${pressable}
+  width: 100%;
 `
 
 export const PlantThumb = styled.span`

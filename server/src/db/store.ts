@@ -11,6 +11,7 @@ import type {
   User,
 } from '../../../src/mock/types.ts'
 import type { SystemConfig } from '../../../src/theme/release.ts'
+import type { IssueContext, IssueReport } from '../../../src/lib/issueReport.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
 import type { Todo } from '../features/todo/todo.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
@@ -80,6 +81,12 @@ export interface PlantxStore {
     add(record: IdentifyRequestRecord): Promise<void>
     /** Marks a request as added with this plant and photo. */
     link(id: string, link: { plantId: string; photoIndex: number; fields?: IdentifyFieldChecks }): Promise<void>
+  }
+  /** Grower reports of HTTP 500s and page crashes. */
+  issueReports: {
+    list(): Promise<IssueReport[]>
+    add(input: { userId: string | null; note: string; context: IssueContext }): Promise<IssueReport>
+    setStatus(id: string, status: 'resolved' | 'dismissed'): Promise<void>
   }
   identifySettings: {
     /** Saved admin switches. A provider without a row is enabled and ready. */

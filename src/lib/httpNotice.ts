@@ -1,11 +1,11 @@
-export type NoticeTone = 'pending' | 'ok' | 'fail'
+import { sanitizeContext, type IssueContext, type IssueKind } from './issueReport'
+
+export type NoticeTone = 'fail'
 
 export type HttpNotice = {
   id: number
-  method: string
-  path: string
-  status: number
   tone: NoticeTone
+  context: IssueContext
 }
 
 type Listener = (items: readonly HttpNotice[]) => void
@@ -13,7 +13,7 @@ type Listener = (items: readonly HttpNotice[]) => void
 const listeners = new Set<Listener>()
 let items: HttpNotice[] = []
 let seq = 0
-const timers = new Map<number, number>()
+let watching = false
 
 function emit() {
   const snapshot = items.slice()
@@ -29,34 +29,146 @@ export function subscribeHttpNotices(listener: Listener) {
 }
 
 export function dismissHttpNotice(id: number) {
-  const timer = timers.get(id)
-  if (timer != null) window.clearTimeout(timer)
-  timers.delete(id)
   items = items.filter((item) => item.id !== id)
   emit()
 }
 
-function push(notice: HttpNotice) {
-  items = [notice, ...items.filter((item) => item.id !== notice.id)].slice(0, 4)
+function networkType() {
+  const nav = navigator as Navigator & { connection?: { effectiveType?: string } }
+  return nav.connection?.effectiveType ?? ''
+}
+
+function browserFields() {
+  return {
+    page: window.location.href,
+    referrer: document.referrer,
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    viewport: `${window.innerWidth}x${window.innerHeight}@${window.devicePixelRatio}`,
+    screen: `${window.screen.width}x${window.screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
+    network: networkType(),
+    online: navigator.onLine,
+    at: new Date().toISOString(),
+  }
+}
+
+function noticeKey(context: IssueContext) {
+  return `${context.kind}|${context.status}|${context.method}|${context.path}|${context.message.slice(0, 160)}`
+}
+
+function push(context: IssueContext) {
+  const clean = sanitizeContext(context)
+  if (!clean) return
+  const key = noticeKey(clean)
+  if (items.some((item) => noticeKey(item.context) === key)) return
+  const notice: HttpNotice = { id: ++seq, tone: 'fail', context: clean }
+  items = [notice, ...items].slice(0, 4)
   emit()
 }
 
-/** Show a notice only when the server answers 200 or 500. */
-export function reportHttp(method: string, path: string, status: number) {
-  if (status !== 200 && status !== 500) return
-  const id = ++seq
-  const tone: NoticeTone = status === 200 ? 'ok' : 'fail'
-  push({ id, method, path, status, tone })
-  const timer = window.setTimeout(() => dismissHttpNotice(id), status === 200 ? 2800 : 5200)
-  timers.set(id, timer)
+function reportError(input: {
+  kind: IssueKind
+  status: number
+  method: string
+  path: string
+  message: string
+  stack: string
+  response: string
+}) {
+  push({ ...browserFields(), ...input })
 }
 
-/** Writes report 200 and 500. Reads stay quiet so a save is one alert. */
+function messageFromBody(raw: string) {
+  try {
+    const body = JSON.parse(raw) as { message?: unknown; error?: unknown }
+    if (typeof body.message === 'string' && body.message) return body.message
+    if (typeof body.error === 'string' && body.error) return body.error
+  } catch {
+    /* not json */
+  }
+  return raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300)
+}
+
+/** Popup for HTTP 500s, failed connections, and page crashes. Success stays quiet. */
 export function plantFetch(path: string, init?: RequestInit) {
   const method = (init?.method ?? 'GET').toUpperCase()
   const clean = path.split('?')[0] || path
-  return fetch(path, init).then((res) => {
-    if (method !== 'GET' && (res.status === 200 || res.status === 500)) reportHttp(method, clean, res.status)
-    return res
+  return fetch(path, init).then(
+    async (res) => {
+      if (res.status >= 500) {
+        const raw = await res.clone().text().catch(() => '')
+        reportError({
+          kind: 'http',
+          status: res.status,
+          method,
+          path: clean,
+          message: messageFromBody(raw),
+          stack: new Error(`HTTP ${res.status} ${method} ${clean}`).stack ?? '',
+          response: raw,
+        })
+      }
+      return res
+    },
+    (err: unknown) => {
+      const error = err instanceof Error ? err : new Error('Request failed')
+      const timedOut = error.name === 'AbortError'
+      reportError({
+        kind: 'http',
+        status: 0,
+        method,
+        path: clean,
+        message: timedOut ? 'timeout' : error.message || 'offline',
+        stack: error.stack ?? '',
+        response: '',
+      })
+      throw err
+    },
+  )
+}
+
+function reportClient(message: string, stack: string, path: string) {
+  if (/ResizeObserver loop/.test(message)) return
+  if (message === 'Script error.' && !stack) return
+  reportError({
+    kind: 'client',
+    status: 0,
+    method: '',
+    path,
+    message,
+    stack,
+    response: '',
   })
+}
+
+/** Once per page. Crashes that never hit the API still get a report. */
+export function watchClientErrors() {
+  if (watching || typeof window === 'undefined') return
+  watching = true
+  window.addEventListener('error', (event) => {
+    const error = event.error
+    const stack = error instanceof Error ? (error.stack ?? '') : ''
+    const where = event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : window.location.pathname
+    reportClient(event.message || 'Script error', stack, where)
+  })
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason
+    const error = reason instanceof Error ? reason : new Error(typeof reason === 'string' ? reason : 'Unhandled rejection')
+    reportClient(error.message || 'Unhandled rejection', error.stack ?? '', window.location.pathname)
+  })
+}
+
+/** Raw fetch so a failed report does not open another error popup. */
+export async function sendIssueReport(note: string, context: IssueContext) {
+  try {
+    const res = await fetch('/api/issues', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: note.trim(), context }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
 }

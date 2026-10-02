@@ -11,8 +11,8 @@ export const Bar = styled.header<{ $scrolled?: boolean }>`
   align-items: center;
   justify-content: space-between;
   gap: ${theme.space.md};
-  height: 68px;
-  padding: 0 ${theme.space.md};
+  height: calc(68px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) ${theme.space.md} 0;
   background: ${({ $scrolled }) => ($scrolled ? 'rgba(255, 254, 250, 0.86)' : theme.colors.creamCard)};
   backdrop-filter: ${({ $scrolled }) => ($scrolled ? 'blur(14px) saturate(1.2)' : 'none')};
   border-bottom: 1px solid ${theme.colors.border};
@@ -101,6 +101,15 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   }
   &:hover::after {
     transform: scaleX(1);
+  }
+`
+
+/** Greenhouse activity bell sits with the account control on the phone shell only. */
+export const MobileOnly = styled.div`
+  display: contents;
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    display: none;
   }
 `
 

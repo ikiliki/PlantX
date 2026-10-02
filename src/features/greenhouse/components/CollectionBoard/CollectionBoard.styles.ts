@@ -26,6 +26,17 @@ export const Board = styled.div<{ $split?: boolean }>`
   `}
 `
 
+export const ShelfFrame = styled.div`
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+
+  @container (max-width: 960px) {
+    height: auto;
+  }
+`
+
 export const Shelf = styled.div`
   display: grid;
   gap: ${theme.space.lg};
@@ -34,6 +45,13 @@ export const Shelf = styled.div`
   min-height: 0;
   height: 100%;
   overflow-y: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 
   @container (min-width: 961px) {
     padding-inline-end: ${theme.space.lg};
@@ -42,6 +60,38 @@ export const Shelf = styled.div`
   @container (max-width: 960px) {
     height: auto;
     overflow: visible;
+  }
+`
+
+/** Bottom hint that the shelf still has more plants. The bar itself stays hidden. */
+export const ShelfMore = styled.div<{ $on?: boolean }>`
+  position: absolute;
+  z-index: 2;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 72px;
+  pointer-events: none;
+  opacity: ${({ $on }) => ($on ? 1 : 0)};
+  transition: opacity ${theme.motion.base} ${theme.motion.ease};
+  background: linear-gradient(180deg, rgba(244, 241, 232, 0) 0%, rgba(244, 241, 232, 0.55) 46%, ${theme.colors.cream} 100%);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: 4px 28px;
+    inset-block-end: 12px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(93, 124, 78, 0.4) 14%,
+      rgba(93, 124, 78, 0.4) 86%,
+      transparent 100%
+    );
+  }
+
+  @container (max-width: 960px) {
+    display: none;
   }
 `
 
@@ -70,6 +120,10 @@ export const Rail = styled.aside`
         transparent 100%
       );
     }
+  }
+
+  @media (max-width: calc(${theme.breakpoints.md} - 1px)) {
+    display: none;
   }
 `
 
@@ -105,12 +159,14 @@ export const CareSectionHead = styled.h3`
 
 export const CareGrid = styled.div`
   display: grid;
-  gap: ${theme.space.sm};
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   min-width: 0;
 
   @container (min-width: 560px) {
     gap: ${theme.space.md};
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   > * {
@@ -140,6 +196,25 @@ export const FilterBar = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+
+  @container (max-width: 720px) {
+    gap: 6px;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 2px;
+    overscroll-behavior-x: contain;
+    padding-inline-end: 2px;
+  }
+
+  @container (max-width: 559px) {
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    box-sizing: border-box;
+    width: calc(100% + 2 * ${theme.space.md});
+    margin-inline: calc(-1 * ${theme.space.md});
+    padding-inline: 6px;
+  }
 `
 
 export const Filter = styled.button<{ $on?: boolean }>`
@@ -163,6 +238,25 @@ export const Filter = styled.button<{ $on?: boolean }>`
 
   &:hover {
     border-color: ${theme.colors.forest};
+  }
+
+  @container (max-width: 720px) {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    min-height: 34px;
+    padding: 0 12px;
+    border-color: transparent;
+    background: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.chipNeutral)};
+    box-shadow: ${({ $on }) => ($on ? 'none' : theme.shadow.soft)};
+  }
+
+  @container (max-width: 559px) {
+    flex: 0 0 auto;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 6px;
+    font-size: 11px;
+    gap: 4px;
   }
 `
 

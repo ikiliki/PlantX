@@ -10,17 +10,19 @@ function CardStory({
   identification,
   fresh,
   photos,
+  preview,
 }: {
   identification?: PlantIdentification
   fresh?: boolean
   photos?: string[]
+  preview?: boolean
 }) {
   const { db, currentUser } = useStore()
   const ownerId = currentUser?.id ?? db.visitorId
   const found = db.plants.find((item) => item.ownerId === ownerId) ?? db.plants[0]
   if (!found) return null
   const plant = { ...found, identification: identification ?? found.identification, photos: photos ?? found.photos }
-  return <GreenhousePlantCard fresh={fresh} plant={plant} />
+  return <GreenhousePlantCard fresh={fresh} plant={plant} preview={preview} />
 }
 
 const withApp = (Story: () => ReactNode) => (
@@ -57,6 +59,8 @@ export const ThreePhotos = () => (
     identification={{ source: 'ai', provider: 'plantnet', mode: 'live', probability: 0.87, at }}
   />
 )
+
+export const Preview = () => <CardStory preview />
 
 export const JustAdded = () => (
   <CardStory fresh identification={{ source: 'ai', provider: 'gemini', mode: 'live', probability: 0.82, at }} />

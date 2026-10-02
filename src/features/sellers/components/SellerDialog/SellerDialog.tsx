@@ -20,7 +20,8 @@ export function SellerDialog({ userId, onClose }: { userId: string; onClose: () 
       if (
         document.getElementById('sell-dialog-title') ||
         document.getElementById('auth-dialog-title') ||
-        document.getElementById('market-peek-title')
+        document.getElementById('market-peek-title') ||
+        document.getElementById('plant-passport-title')
       )
         return
       onClose()

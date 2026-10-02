@@ -63,7 +63,8 @@ export const theme = {
     lg: '1280px',
   },
   fonts: {
-    body: "'Inter', 'Heebo', system-ui, sans-serif",
+    // Inter has no Hebrew glyphs, so Rubik picks up body text in RTL.
+    body: "'Inter', 'Rubik', system-ui, sans-serif",
     // DM Serif Display carries no Hebrew glyphs, so Frank Ruhl Libre picks up RTL text.
     display: "'DM Serif Display', 'Frank Ruhl Libre', Georgia, serif",
   },

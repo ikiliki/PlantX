@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { theme } from '../../../../theme/tokens'
+import type { FeedUpdateKind } from '../../../../mock/types'
+import { kindInk, momentSurface } from '../ActivityMoment/ActivityMoment.styles'
 
 const face = `
   display: grid;
@@ -22,14 +23,19 @@ const face = `
   }
 `
 
-export const Card = styled.article`
+export const Card = styled.article<{ $kind: FeedUpdateKind }>`
   ${face}
+  position: relative;
+  overflow: hidden;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
   column-gap: 10px;
+  ${({ $kind }) => momentSurface($kind)}
 `
 
 export const ProfileButton = styled.button`
+  position: relative;
+  z-index: 1;
   grid-row: 1;
   margin: 2px 0 0;
   padding: 0;
@@ -44,25 +50,30 @@ export const ProfileButton = styled.button`
   }
 `
 
-const copyColumn = `
+export const Open = styled.button`
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 6px;
   min-width: 0;
   grid-column: 2;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  padding-inline-end: 36px;
 
-  article:not(:has(button)) & {
+  article:not(:has(${ProfileButton})) & {
     grid-column: 1 / -1;
   }
-`
 
-export const Body = styled.div`
-  ${copyColumn}
-`
-
-export const BodyLink = styled(Link)`
-  ${copyColumn}
-  color: inherit;
-  text-decoration: none;
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.moss};
+    outline-offset: 3px;
+  }
 `
 
 export const Meta = styled.div`
@@ -72,12 +83,15 @@ export const Meta = styled.div`
   gap: 8px 12px;
 `
 
-export const Kind = styled.span`
+export const Kind = styled.span<{ $kind: FeedUpdateKind }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: ${theme.colors.moss};
+  color: ${({ $kind }) => kindInk($kind)};
 `
 
 export const Grower = styled.span`

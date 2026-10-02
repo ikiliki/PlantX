@@ -53,6 +53,22 @@ export function canFillTodo(todo: Todo, todos: Todo[], now = todayIso()) {
   return todo.dueOn <= now
 }
 
+/** Signed-in grower with no plants yet. The first-plant task is undated and mandatory. */
+export function needsFirstPlant(plants: Plant[], ownerId: string | null) {
+  if (!ownerId) return false
+  return !plants.some((plant) => plant.ownerId === ownerId)
+}
+
+/**
+ * Open care tasks for the tab label.
+ * An empty greenhouse counts as 1 (add your first plant), not 0.
+ */
+export function taskTabCount(todos: Todo[], plants: Plant[], ownerId: string | null) {
+  if (!ownerId) return 0
+  if (needsFirstPlant(plants, ownerId)) return 1
+  return todos.filter((todo) => todo.ownerId === ownerId && isOpenTodo(todo)).length
+}
+
 /** Open todos that need attention today or earlier, plus first-watering sessions. */
 export function dueTodos(todos: Todo[], now = todayIso()) {
   return todos.filter((todo) => {

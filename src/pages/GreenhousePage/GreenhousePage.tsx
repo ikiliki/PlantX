@@ -4,19 +4,18 @@ import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
-import type { ActivityEntry } from '../../features/greenhouse/components/ActivityThread/ActivityThread'
 import { CollectionBoard, greenhouseFilter } from '../../features/greenhouse/components/CollectionBoard/CollectionBoard'
 import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
 import { GreenhouseWallet } from '../../features/greenhouse/components/GreenhouseWallet/GreenhouseWallet'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
+import { ownerActivity } from '../../features/greenhouse/ownerActivity'
 import { useStore } from '../../mock/store'
-import type { FeedUpdateKind } from '../../mock/types'
 import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
 import { isPlacementReady } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
-import { Description, Eyebrow, GuestAuth, Heading, HeadingCopy, Page } from './GreenhousePage.styles'
+import { GuestAuth, Heading, HeadingCopy, Page, PublicHeading, PublicPage } from './GreenhousePage.styles'
 
 const WIDGET_PLANTS = 2
 
@@ -32,21 +31,31 @@ export function GreenhousePage({
 }) {
   useServerSlices(['users', 'plants', 'updates', 'todos', 'catalog'])
   if (ownerId) {
-    return <GreenhousePublic ownerId={ownerId} compact={compact ?? view === 'widget'} />
+    return <PublicGreenhouse ownerId={ownerId} compact={compact ?? view === 'widget'} />
   }
   return <GreenhouseOwner view={view} />
 }
 
-const ACTIVITY_KIND_KEY = {
-  photo: 'updatePhoto',
-  water: 'updateWater',
-  propagate: 'updatePropagate',
-  grade: 'updateGrade',
-  passport: 'updatePassport',
-  listing: 'updateListing',
-  scan: 'updateScan',
-  added: 'updateAdded',
-} as const satisfies Record<FeedUpdateKind, 'updatePhoto' | 'updateWater' | 'updatePropagate' | 'updateGrade' | 'updatePassport' | 'updateListing' | 'updateScan' | 'updateAdded'>
+function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: boolean }) {
+  const { db } = useStore()
+  const { t, tr } = useI18n()
+  const user = db.users.find((item) => item.id === ownerId && item.role !== 'guest')
+  const name = user ? tr(user.name, user.nameHe) : t.nav.greenhouse
+  const plants = <GreenhousePublic ownerId={ownerId} compact={compact} />
+  if (compact) return plants
+  return (
+    <PageGate pageId="greenhouse" title={name}>
+      <FeatureGate placement="greenhouse.board" title={name}>
+        <PublicPage>
+          <PublicHeading>
+            <h1>{name}</h1>
+          </PublicHeading>
+          {plants}
+        </PublicPage>
+      </FeatureGate>
+    </PageGate>
+  )
+}
 
 function GreenhouseOwner({ view }: { view: ComponentView }) {
   const fetching = useSectionFetch(true, ['plants', 'updates', 'todos'])
@@ -68,23 +77,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     return sum + (mc ? mc.lastPrice * p.quantity : 0)
   }, 0)
 
-  // This owner's log, every kind, oldest first so the latest sits at the bottom.
-  const activity: ActivityEntry[] = (fullDb.updates ?? [])
-    .filter((item) => item.userId === ownerId)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-    .map((item) => {
-      const plant = item.plantId ? mine.find((p) => p.id === item.plantId) : undefined
-      const scan = item.kind === 'scan'
-      return {
-        at: item.createdAt.slice(0, 16).replace('T', ' '),
-        plant: plant ? tr(plant.title, plant.titleHe) : t.feed[ACTIVITY_KIND_KEY[item.kind]],
-        plantId: plant?.id,
-        photo: plant?.photos[0],
-        label: tr(item.body, item.bodyHe),
-        kind: scan ? ('scan' as const) : undefined,
-        tag: scan ? (plant ? t.addPlant.scanAdded : t.addPlant.scanNotAdded) : undefined,
-      }
-    })
+  const activity = ownerActivity(fullDb, ownerId, mine, tr, t)
 
   const setFilter = (next: typeof filter) => {
     const nextParams = new URLSearchParams(params)
@@ -97,9 +90,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     <Page $fill={view === 'page'}>
       <Heading>
         <HeadingCopy>
-          <Eyebrow>{t.greenhouse.eyebrow}</Eyebrow>
           <h1>{t.greenhouse.title}</h1>
-          <Description>{t.greenhouse.description}</Description>
         </HeadingCopy>
         {view === 'page' && (
           <GreenhouseWallet

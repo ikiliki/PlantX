@@ -6,6 +6,9 @@ export const GlobalStyle = createGlobalStyle`
   html, body, #root { height: 100%; }
   html {
     scroll-behavior: smooth;
+    /* Always show the bar so a popup's scroll lock cannot widen the page into the gap it leaves. */
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
     scrollbar-color: rgba(18, 60, 45, 0.28) transparent;
     -webkit-text-size-adjust: 100%;
   }

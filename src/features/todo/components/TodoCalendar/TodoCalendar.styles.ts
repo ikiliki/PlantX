@@ -172,14 +172,18 @@ export const Week = styled.div`
   }
 `
 
+const dayTrack = '78px'
+
 export const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: ${dayTrack};
   gap: 4px;
 `
 
 export const Cell = styled.div`
-  min-height: 78px;
+  height: 100%;
+  min-height: 0;
 `
 
 export const Day = styled.div<{
@@ -192,9 +196,11 @@ export const Day = styled.div<{
   gap: 6px;
   align-content: start;
   width: 100%;
-  min-height: 78px;
+  height: 100%;
+  min-height: 0;
   min-width: 0;
   padding: 6px 4px 8px;
+  overflow: visible;
   border: 2px solid
     ${({ $tone, $active, $selected }) => {
       if ($selected) return theme.colors.forest
@@ -217,6 +223,28 @@ export const Day = styled.div<{
   font: inherit;
   text-align: start;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+
+  &[data-open='true'] {
+    z-index: 4;
+    border-color: transparent;
+    background: transparent;
+
+    [data-lift] {
+      display: flex;
+    }
+
+    > :not([data-lift]) {
+      visibility: hidden;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.growth};
+    outline-offset: 2px;
+  }
 
   @container (max-width: 400px) {
     padding-inline: 2px;
@@ -233,13 +261,108 @@ export const DayNum = styled.span`
 
 export const Icons = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
-  gap: 4px;
+  align-items: center;
+  height: 28px;
   min-width: 0;
 `
 
-export const PlantBtn = styled.span<{ $tone: 'water' | 'photo'; $open?: boolean }>`
+export const More = styled.span`
+  position: absolute;
+  z-index: 1;
+  top: -6px;
+  inset-inline-end: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.forest};
+  color: ${theme.colors.creamCard};
+  box-shadow: 0 0 0 1px ${theme.colors.creamCard};
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+`
+
+const liftIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`
+
+export const Lift = styled.div<{
+  $tone?: 'water' | 'photo' | 'mixed'
+  $selected?: boolean
+}>`
+  display: none;
+  position: absolute;
+  z-index: 2;
+  top: -2px;
+  bottom: auto;
+  inset-inline: -2px;
+  align-self: start;
+  height: auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-height: min(280px, 70vh);
+  padding: 6px 4px 10px;
+  overflow: auto;
+  border: 2px solid
+    ${({ $tone, $selected }) => {
+      if ($selected) return theme.colors.forest
+      if ($tone === 'photo') return metal
+      if ($tone === 'water' || $tone === 'mixed') return water
+      return theme.colors.border
+    }};
+  border-radius: ${theme.radii.md};
+  background: ${({ $tone, $selected }) => {
+    if ($selected) return '#F3F7E4'
+    if ($tone === 'water') return '#E8F1FB'
+    if ($tone === 'photo') return '#ECEEF0'
+    if ($tone === 'mixed') return '#E7EEF2'
+    return theme.colors.creamCard
+  }};
+  box-shadow: ${theme.shadow.lift};
+  animation: ${liftIn} ${theme.motion.fast} ${theme.motion.ease};
+  scrollbar-width: thin;
+
+  ${DayNum} {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  @container (max-width: 400px) {
+    padding-inline: 2px;
+    border-radius: ${theme.radii.sm};
+  }
+`
+
+export const Stack = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 2px 4px 4px;
+
+  > span {
+    pointer-events: auto;
+    transition: transform ${theme.motion.fast} ${theme.motion.ease};
+  }
+
+  > span:hover {
+    transform: scale(1.08);
+  }
+`
+
+export const PlantBtn = styled.span<{ $tone: 'water' | 'photo'; $open?: boolean; $stacked?: boolean }>`
   position: relative;
   display: block;
   flex: 0 0 auto;
@@ -249,7 +372,11 @@ export const PlantBtn = styled.span<{ $tone: 'water' | 'photo'; $open?: boolean 
   border-radius: 999px;
   overflow: visible;
   background: ${theme.colors.cream};
-  box-shadow: ${({ $tone }) => `0 0 0 1px ${$tone === 'water' ? water : metal}`};
+  box-shadow: ${({ $tone, $stacked }) => {
+    const ring = $tone === 'water' ? water : metal
+    if (!$stacked) return `0 0 0 1px ${ring}`
+    return `0 0 0 1px ${ring}, 0 3px 0 0 ${theme.colors.creamCard}, 0 4px 0 0 ${ring}`
+  }};
   pointer-events: none;
 
   img {

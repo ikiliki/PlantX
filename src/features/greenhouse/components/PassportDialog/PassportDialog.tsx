@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { TodoSubcategory } from '../../../../mock/types'
+import { SheetGrip, useSheetDrag } from '../../../../components/SheetGrip/SheetGrip'
 import { PlantPassport } from '../PlantPassport/PlantPassport'
 import { Backdrop, Close, CloseBar, Dialog } from './PassportDialog.styles'
 
@@ -20,12 +21,27 @@ export function PassportDialog({
 }) {
   const { t } = useI18n()
   const dialogRef = useRef<HTMLDivElement>(null)
+  const sheet = useSheetDrag(onClose)
 
-  useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    dialogRef.current?.scrollTo(0, 0)
-    dialogRef.current?.focus()
+  useLayoutEffect(() => {
+    const y = window.scrollY
+    const html = document.documentElement
+    const body = document.body
+    const previous = {
+      bodyOverflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+    }
+    body.style.overflow = 'hidden'
+    body.style.position = 'fixed'
+    body.style.top = `-${y}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.width = '100%'
+    dialogRef.current?.focus({ preventScroll: true })
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       if (document.getElementById('sell-dialog-title') || document.getElementById('auth-dialog-title')) return
@@ -33,7 +49,16 @@ export function PassportDialog({
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previous
+      body.style.overflow = previous.bodyOverflow
+      body.style.position = previous.position
+      body.style.top = previous.top
+      body.style.left = previous.left
+      body.style.right = previous.right
+      body.style.width = previous.width
+      const behavior = html.style.scrollBehavior
+      html.style.scrollBehavior = 'auto'
+      window.scrollTo(0, y)
+      html.style.scrollBehavior = behavior
       window.removeEventListener('keydown', onKey)
     }
   }, [onClose, plantId])
@@ -41,13 +66,17 @@ export function PassportDialog({
   return createPortal(
     <Backdrop onClick={onClose}>
       <Dialog
-        ref={dialogRef}
+        ref={(node) => {
+          dialogRef.current = node
+          sheet.bind(node)
+        }}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="plant-passport-title"
         onClick={(event) => event.stopPropagation()}
       >
+        <SheetGrip label={t.common.dragToClose} {...sheet.grip} />
         <CloseBar>
           <Close type="button" onClick={onClose} aria-label={t.common.cancel}>
             ×

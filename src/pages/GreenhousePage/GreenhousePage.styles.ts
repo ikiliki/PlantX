@@ -11,6 +11,10 @@ export const Page = styled.div<{ $fill?: boolean }>`
   min-width: 0;
   width: 100%;
   margin-top: -20px;
+
+  @media (max-width: 899px) {
+    margin-top: 0;
+  }
   ${({ $fill }) =>
     $fill &&
     `
@@ -32,13 +36,14 @@ export const Heading = styled.header`
     grid-template-columns: 1fr;
     align-items: stretch;
     row-gap: ${theme.space.md};
+
+    &:not(:has(aside)) {
+      display: none;
+    }
   }
 `
 
 export const HeadingCopy = styled.div`
-  display: grid;
-  gap: 8px;
-  flex: 1 1 220px;
   min-width: 0;
   max-width: 460px;
   h1 {
@@ -46,21 +51,28 @@ export const HeadingCopy = styled.div`
     color: ${theme.colors.ink};
     overflow-wrap: anywhere;
   }
+
+  @container (max-width: 720px) {
+    display: none;
+  }
 `
 
-export const Eyebrow = styled.span`
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: ${theme.colors.moss};
+export const PublicPage = styled.div`
+  display: grid;
+  gap: ${theme.space.lg};
+  min-width: 0;
 `
 
-export const Description = styled.p`
-  font-size: 14px;
-  line-height: 1.5;
-  color: ${theme.colors.muted};
-  overflow-wrap: anywhere;
+export const PublicHeading = styled.header`
+  min-width: 0;
+  h1 {
+    margin: 0;
+    font-family: ${theme.fonts.display};
+    font-size: clamp(28px, 7vw, 44px);
+    font-weight: 400;
+    color: ${theme.colors.ink};
+    overflow-wrap: anywhere;
+  }
 `
 
 export const GuestAuth = styled.div`

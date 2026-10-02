@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { backdropEnter, closeButton, dialogEnter, media, sheetBackdrop, sheetSurface } from '../../../../theme/motion'
+import { backdropEnter, closeButton, dialogEnter, media, sheetBackdrop, sheetSurface, sheetUp } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 export const Backdrop = styled.div`
@@ -37,10 +37,13 @@ export const Dialog = styled.div`
   ${sheetSurface}
   ${media.sm} {
     width: 100%;
-    height: 94svh;
-    max-height: 94svh;
+    height: 75svh;
+    max-height: 75svh;
+    padding-top: 28px;
     padding-bottom: 0;
     border-radius: ${theme.radii.lg} ${theme.radii.lg} 0 0;
+    scroll-behavior: auto;
+    animation: ${sheetUp} 240ms ${theme.motion.ease} both;
   }
   &::-webkit-scrollbar {
     display: none;

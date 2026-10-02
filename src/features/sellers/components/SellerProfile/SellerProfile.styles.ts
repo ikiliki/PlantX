@@ -7,16 +7,29 @@ export const Root = styled.div<{ $dialog?: boolean }>`
   ${({ $dialog }) =>
     $dialog &&
     css`
-      max-height: 50vh;
-      ${media.sm} {
-        max-height: 70vh;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+      > :first-child {
+        flex: 0 0 auto;
+      }
+      > :last-child {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
       }
     `}
-  ${media.md} {
-    grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
-    grid-template-rows: minmax(0, auto);
-    height: ${({ $dialog }) => ($dialog ? 'auto' : '100%')};
-    min-height: 0;
-    max-height: ${({ $dialog }) => ($dialog ? '50vh' : 'none')};
-  }
+  ${({ $dialog }) =>
+    !$dialog &&
+    css`
+      ${media.md} {
+        grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+        grid-template-rows: minmax(0, auto);
+        height: 100%;
+        min-height: 0;
+      }
+    `}
 `

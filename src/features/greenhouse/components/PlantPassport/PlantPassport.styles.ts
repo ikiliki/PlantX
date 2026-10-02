@@ -57,6 +57,7 @@ export const Board = styled.article<{ $embedded?: boolean; $dialog?: boolean }>`
     grid-template-rows: none;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scroll-behavior: auto;
     background:
       linear-gradient(165deg, rgba(207, 234, 120, 0.5), rgba(255, 254, 250, 0.18) 42%, rgba(243, 246, 236, 0.96) 100%),
       #f3f6ec;
@@ -174,6 +175,7 @@ export const PhotoIcon = styled.div`
   ${stacked} {
     width: 68px;
     height: 68px;
+    animation: none;
   }
 `
 
@@ -184,6 +186,9 @@ export const CareMarkSlot = styled.span`
   z-index: 2;
   line-height: 0;
   animation: ${popIn} ${theme.motion.slow} ${theme.motion.spring} both;
+  ${stacked} {
+    animation: none;
+  }
 `
 
 export const NameBlock = styled.div`
@@ -319,12 +324,18 @@ export const RarityBanner = styled.div<{ $rarity: PlantRarity }>`
   text-transform: uppercase;
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
   animation-delay: 60ms;
+  ${stacked} {
+    animation: none;
+  }
 `
 
 export const AsideStat = styled.div`
   ${asideStatTile}
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
   ${[1, 2, 3, 4, 5, 6].map((n) => `&:nth-child(${n}) { animation-delay: ${100 + n * 40}ms; }`).join('\n')}
+  ${stacked} {
+    animation: none;
+  }
 `
 
 export const AsideStatButton = styled.button`
@@ -335,6 +346,9 @@ export const AsideStatButton = styled.button`
   cursor: help;
   position: relative;
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
+  ${stacked} {
+    animation: none;
+  }
   &:focus-visible {
     outline: 2px solid ${theme.colors.growth};
     outline-offset: 2px;

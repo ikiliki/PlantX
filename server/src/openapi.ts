@@ -16,6 +16,7 @@ export const openApiDocument = {
     { name: 'identify', description: 'Photo diagnosis providers and fallback chain' },
     { name: 'activities', description: 'Generic activity log (news + plant timeline)' },
     { name: 'plants', description: 'Greenhouse plants and care' },
+    { name: 'issues', description: 'Grower reports of failed requests and page crashes' },
   ],
   components: {
     securitySchemes: {
@@ -259,6 +260,27 @@ export const openApiDocument = {
     },
   },
   paths: {
+    '/api/issues': {
+      post: {
+        tags: ['issues'],
+        summary: 'Report an issue',
+        description:
+          'Anyone can send a report. The note is at most 50 words. Context is the captured request or crash, not shown in the popup.',
+        responses: {
+          '201': { description: 'Stored' },
+          '400': { description: 'Note is too long, or the context is missing', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        },
+      },
+      get: {
+        tags: ['issues'],
+        summary: 'List issue reports',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          '200': { description: 'Newest first' },
+          '403': { description: 'Admin only', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        },
+      },
+    },
     '/api/live': {
       get: {
         tags: ['live'],

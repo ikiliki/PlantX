@@ -14,6 +14,7 @@ import type { PendingTransaction, PendingUser } from '../../features/users/users
 import type { PlantxStore } from '../store.ts'
 import { supabaseCatalogSuggestions } from './supabaseCatalogSuggestions.ts'
 import { supabaseIdentifyRequests } from './supabaseIdentifyRequests.ts'
+import { supabaseIssueReports } from './supabaseIssueReports.ts'
 import { supabaseIdentifySettings } from './supabaseIdentifySettings.ts'
 
 const { Pool } = pg
@@ -149,6 +150,7 @@ export function createSupabaseStore(): PlantxStore {
       save: (system) => withTx((client) => saveSystem(client, system)),
     },
     identifyRequests: supabaseIdentifyRequests(pool),
+    issueReports: supabaseIssueReports(pool),
     identifySettings: supabaseIdentifySettings(pool),
     catalogSuggestions: supabaseCatalogSuggestions(pool),
   }

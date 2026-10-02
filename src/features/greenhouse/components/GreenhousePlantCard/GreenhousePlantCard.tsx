@@ -65,6 +65,7 @@ export function GreenhousePlantCard({
   careKind,
   careScope = 'due',
   onCare,
+  preview,
 }: {
   plant: Plant
   /** Just added: the card glows once. */
@@ -75,6 +76,8 @@ export function GreenhousePlantCard({
   careScope?: 'due' | 'upcoming'
   /** Care filter: open the day popup for this todo instead of navigating. */
   onCare?: (todo: Todo) => void
+  /** Activity popup: same card, name stays visible, and it does not navigate. */
+  preview?: boolean
 }) {
   const { db } = useStore()
   const { t, tr, locale } = useI18n()
@@ -101,6 +104,7 @@ export function GreenhousePlantCard({
     <Root
       $fresh={fresh}
       $care={careMode}
+      $living={status.tone === 'calm'}
       onClick={careMode ? openCare : undefined}
       onKeyDown={
         careMode
@@ -114,7 +118,7 @@ export function GreenhousePlantCard({
       role={careMode ? 'button' : undefined}
       tabIndex={careMode ? 0 : undefined}
     >
-      {careMode ? (
+      {careMode || preview ? (
         <Photo $stale={isPhotoStale(plant, todos)}>
           <PlantImage src={photos[0]} alt="" />
           <StatusMark $tone={status.tone}>{status.label}</StatusMark>
@@ -138,10 +142,10 @@ export function GreenhousePlantCard({
           </Photo>
         </PhotoLink>
       )}
-      <Details $care={careMode}>
+      <Details $care={careMode} $preview={preview}>
         <NameRow>
           <PlantCatalogMark plant={plant} size={24} />
-          {careMode ? (
+          {careMode || preview ? (
             <CareName>{tr(plant.title, plant.titleHe)}</CareName>
           ) : (
             <Name to={`/plants/${plant.id}`}>{tr(plant.title, plant.titleHe)}</Name>

@@ -1,6 +1,6 @@
 import { Icon, type IconName } from './Icon'
 
-const names: IconName[] = ['home', 'market', 'greenhouse', 'rank', 'wiki', 'admin', 'chevron', 'arrowUp', 'light', 'drop', 'food', 'chart', 'globe', 'friends']
+const names: IconName[] = ['home', 'market', 'greenhouse', 'rank', 'wiki', 'admin', 'chevron', 'arrowUp', 'light', 'drop', 'food', 'chart', 'globe', 'friends', 'bell']
 
 export default {
   title: 'Components/Icon',

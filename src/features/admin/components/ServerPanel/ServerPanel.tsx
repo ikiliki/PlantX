@@ -15,9 +15,12 @@ import { useStore, type LiveStatus } from '../../../../mock/store'
 import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
 import { IdentifyBadge } from '../../../greenhouse/components/IdentifyBadge/IdentifyBadge'
+import { PassportDialog } from '../../../greenhouse/components/PassportDialog/PassportDialog'
 import { PhotoChecks } from '../../../greenhouse/components/PhotoChecks/PhotoChecks'
+import { ActivityKindMark, ActivityMoment } from '../../../feed/components/ActivityMoment/ActivityMoment'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { ApiDown } from '../ApiDown/ApiDown'
+import { IssueReports } from '../IssueReports/IssueReports'
 import { EnvMissing } from '../EnvMissing/EnvMissing'
 import { CatalogTree, CatalogTreeDialog } from '../CatalogTree/CatalogTree'
 import {
@@ -389,89 +392,6 @@ function ActivityVerification({ row, plant }: { row: FeedUpdate; plant?: Plant }
   )
 }
 
-function ActivityPreview({
-  row,
-  plant,
-  userLabel,
-  userEmail,
-  plantLabel,
-  plantCode,
-  plantOwner,
-  plantStatus,
-  onClose,
-}: {
-  row: FeedUpdate
-  plant?: Plant
-  userLabel: string
-  userEmail: string
-  plantLabel: string
-  plantCode: string
-  plantOwner: string
-  plantStatus: string
-  onClose: () => void
-}) {
-  const { t, tr } = useI18n()
-
-  return (
-    <PreviewShell
-      titleId="server-activity-preview"
-      title={t.admin.previewActivity}
-      onClose={onClose}
-      actions={
-        <Button size="sm" variant="ghost" onClick={onClose}>
-          {t.common.cancel}
-        </Button>
-      }
-    >
-      <PreviewCard>
-        <PreviewIdentity>
-          <Avatar name={userLabel} color={avatarTone(row.userId)} size={64} />
-          <PreviewName>
-            <strong>{activityKindLabel(row.kind, t.feed)}</strong>
-            <span>
-              {userLabel} · {row.createdAt.slice(0, 16).replace('T', ' ')}
-            </span>
-          </PreviewName>
-        </PreviewIdentity>
-        <PreviewNote>{tr(row.body, row.bodyHe)}</PreviewNote>
-        <PreviewStats>
-          <div>
-            <dt>{t.admin.serverColKind}</dt>
-            <dd>{activityKindLabel(row.kind, t.feed)}</dd>
-          </div>
-          <div>
-            <dt>{t.admin.serverColPlant}</dt>
-            <dd>{row.plantId ?? '—'}</dd>
-          </div>
-          <div>
-            <dt>{t.admin.serverColWhen}</dt>
-            <dd>{row.createdAt.slice(0, 10)}</dd>
-          </div>
-        </PreviewStats>
-        <ActivityVerification row={row} plant={plant} />
-      </PreviewCard>
-      <PreviewDetails>
-        <AdminDetailGrid
-          items={[
-            { label: t.admin.serverColId, value: row.id },
-            { label: t.admin.serverColUser, value: userLabel },
-            { label: t.admin.serverColEmail, value: userEmail },
-            { label: t.admin.serverColPlant, value: plantLabel },
-            { label: t.admin.serverColCode, value: plantCode },
-            { label: t.admin.serverColOwner, value: plantOwner },
-            { label: t.admin.serverColStatus, value: plantStatus },
-            ...(row.identifyRequestId ? [{ label: t.admin.serverColRequest, value: row.identifyRequestId }] : []),
-            {
-              label: t.admin.serverColWhen,
-              value: row.createdAt.replace('T', ' ').slice(0, 19),
-            },
-          ]}
-        />
-      </PreviewDetails>
-    </PreviewShell>
-  )
-}
-
 function ReportPreview({
   row,
   onClose,
@@ -584,6 +504,7 @@ export function ServerPanel() {
   const [expandedUsers, setExpandedUsers] = useState<string[]>([])
   const [userPreviewId, setUserPreviewId] = useState<string | null>(null)
   const [plantPreviewId, setPlantPreviewId] = useState<string | null>(null)
+  const [passportPlantId, setPassportPlantId] = useState<string | null>(null)
   const [activityPreviewId, setActivityPreviewId] = useState<string | null>(null)
   const [reportPreviewId, setReportPreviewId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -662,31 +583,10 @@ export function ServerPanel() {
     return user ? tr(user.name, user.nameHe) : userId
   }
 
-  const openSection = (id: string) => {
-    setOpenSections((current) => ({ ...current, [id]: true }))
-  }
-
-  const goToUser = (userId: string) => {
-    if (!db.users.some((user) => user.id === userId)) return
-    openSection('users')
-    window.setTimeout(() => {
-      document
-        .querySelector(`#server-users [data-row-id="${CSS.escape(userId)}"]`)
-        ?.scrollIntoView({ block: 'nearest' })
-    }, 0)
-  }
-
-  const focusPlant = (plantId: string) => {
-    if (!plants.some((plant) => plant.id === plantId)) return
-    openSection('plants')
-    setPlantPreviewId(plantId)
-    setExpandedPlants((ids) => (ids.includes(plantId) ? ids : [...ids, plantId]))
-  }
-
   const userLink = (userId: string) => {
     const user = db.users.find((item) => item.id === userId)
     if (!user) return userName(userId)
-    return <UserNameLink user={user} onOpen={goToUser} />
+    return <UserNameLink user={user} onOpen={setUserPreviewId} />
   }
 
   const plantLink = (plantId?: string) => {
@@ -694,7 +594,13 @@ export function ServerPanel() {
     const plant = plants.find((item) => item.id === plantId)
     if (!plant) return plantId
     return (
-      <RelationLink type="button" onClick={() => focusPlant(plant.id)}>
+      <RelationLink
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation()
+          setPassportPlantId(plant.id)
+        }}
+      >
         {tr(plant.title, plant.titleHe)}
       </RelationLink>
     )
@@ -764,6 +670,7 @@ export function ServerPanel() {
         </StatusActions>
       </StatusCard>
       <EnvMissing />
+      <IssueReports />
 
       {mock && reports.length > 0 && (
       <Section $demo>
@@ -1072,7 +979,9 @@ export function ServerPanel() {
             {
               id: 'kind',
               header: t.admin.serverColKind,
-              cell: (row) => activityKindLabel(row.kind, t.feed),
+              cell: (row) => (
+                <ActivityKindMark kind={row.kind}>{activityKindLabel(row.kind, t.feed)}</ActivityKindMark>
+              ),
             },
             {
               id: 'user',
@@ -1247,29 +1156,13 @@ export function ServerPanel() {
         />
       )}
 
-      {activityPreview && (() => {
-        const user = db.users.find((item) => item.id === activityPreview.userId)
-        const plant = activityPreview.plantId
-          ? plants.find((item) => item.id === activityPreview.plantId)
-          : undefined
-        return (
-          <ActivityPreview
-            row={activityPreview}
-            plant={plant}
-            userLabel={user ? tr(user.name, user.nameHe) : activityPreview.userId}
-            userEmail={user?.email ?? '—'}
-            plantLabel={
-              plant
-                ? `${tr(plant.title, plant.titleHe)} (${plant.id})`
-                : (activityPreview.plantId ?? '—')
-            }
-            plantCode={plant?.code ?? '—'}
-            plantOwner={plant ? userName(plant.ownerId) : '—'}
-            plantStatus={plant?.status ?? '—'}
-            onClose={() => setActivityPreviewId(null)}
-          />
-        )
-      })()}
+      {passportPlantId && (
+        <PassportDialog plantId={passportPlantId} onClose={() => setPassportPlantId(null)} />
+      )}
+
+      {activityPreview ? (
+        <ActivityMoment update={activityPreview} onClose={() => setActivityPreviewId(null)} />
+      ) : null}
 
       {reportPreview && (
         <ReportPreview
