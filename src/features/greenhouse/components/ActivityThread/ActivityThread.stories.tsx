@@ -62,7 +62,7 @@ export const WithScans = () => (
       {
         at: '2026-10-01 09:12',
         plant: 'AI scan',
-        label: 'AI scan: Golden pothos · Plant.id 93%.',
+        label: 'AI scan: Golden pothos · 93%.',
         kind: 'scan',
         updateId: 'up-maya-scan',
         tag: 'Added',
@@ -81,7 +81,7 @@ export const WithScans = () => (
       {
         at: '2026-10-01 10:40',
         plant: 'AI scan',
-        label: 'AI scan: Monstera deliciosa · Pl@ntNet 71%.',
+        label: 'AI scan: Monstera deliciosa · 71%.',
         kind: 'scan',
         tag: 'Not added yet',
       },

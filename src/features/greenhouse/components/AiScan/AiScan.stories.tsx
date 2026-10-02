@@ -40,7 +40,7 @@ export const Answered = () => (
     photo={PHOTO}
     state="answered"
     facts={facts}
-    provider="plantid"
+    provider="gemini"
     probability={0.93}
     mode="live"
   />
@@ -55,7 +55,7 @@ export const AnsweredAfterFallback = () => (
     probability={0.78}
     mode="mock"
     tried={[
-      { provider: 'plantid', reason: 'exhausted' },
+      { provider: 'gemini', reason: 'exhausted' },
       { provider: 'plantnet', reason: 'timeout' },
     ]}
   />
@@ -66,7 +66,7 @@ export const Unverified = () => (
     photo={PHOTO}
     state="unverified"
     tried={[
-      { provider: 'plantid', reason: 'missingKey' },
+      { provider: 'gemini', reason: 'missingKey' },
       { provider: 'plantnet', reason: 'error' },
       { provider: 'gemini', reason: 'disabled' },
     ]}

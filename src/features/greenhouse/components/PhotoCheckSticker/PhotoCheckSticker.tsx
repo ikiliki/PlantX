@@ -1,6 +1,5 @@
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { PhotoCheck } from '../../../../mock/types'
-import { PROVIDER_LABEL } from '../../identification'
 import { Label, Pct, Root, type StickerTone } from './PhotoCheckSticker.styles'
 
 const TONE: Record<PhotoCheck['result'], StickerTone> = {
@@ -31,14 +30,13 @@ export function PhotoCheckSticker({
   }
   if (!check) return null
 
-  const provider = check.provider ? PROVIDER_LABEL[check.provider] : ''
   const pct = check.probability != null ? `${Math.round(check.probability * 100)}%` : ''
   const compactMatch = size === 'sm' && pct
   const text =
     check.result === 'match'
       ? compactMatch
         ? `✓ ${pct}`
-        : `✓ ${provider || t.addPlant.stickerMatch}`
+        : `✓ ${t.addPlant.stickerMatch}`
       : check.result === 'mismatch'
         ? `≠ ${t.addPlant.stickerMismatch}`
         : check.result === 'notPlant'
@@ -48,7 +46,7 @@ export function PhotoCheckSticker({
             : t.addPlant.stickerUnscanned
   const title = [
     t.addPlant.stickerPhoto.replace('{n}', String(check.position + 1)),
-    check.label && provider ? t.addPlant.stickerSaw.replace('{provider}', provider).replace('{label}', check.label) : '',
+    check.label ? t.addPlant.stickerSaw.replace('{label}', check.label) : '',
     pct,
     check.mode === 'mock' ? t.addPlant.badgeDemo : '',
   ]

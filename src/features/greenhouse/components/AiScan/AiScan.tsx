@@ -2,14 +2,10 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { IdentifyMode, IdentifyProviderId, IdentifyTried } from '../../../../mock/types'
-import { skipLabelKey } from '../../../admin/identifyLabels'
-import { PROVIDER_CHAIN, PROVIDER_LABEL } from '../../identification'
 import {
   Attribution,
   Body,
   Caret,
-  Chain,
-  ChainItem,
   Corner,
   DemoNote,
   Fact,
@@ -83,13 +79,6 @@ function useElapsed(key: string, limit: number) {
   return ms
 }
 
-function chainState(provider: IdentifyProviderId, answered: IdentifyProviderId | undefined, tried: IdentifyTried[]) {
-  if (provider === answered) return { tone: 'ok' as const, reason: undefined }
-  const skipped = tried.find((item) => item.provider === provider)
-  if (skipped) return { tone: 'skip' as const, reason: skipped.reason }
-  return { tone: 'idle' as const, reason: undefined }
-}
-
 /**
  * The photo while a provider reads it, then the answer typed in field by field.
  * `unverified` is every case where no provider vouched for a catalog class.
@@ -101,7 +90,6 @@ export function AiScan({
   provider,
   probability,
   mode,
-  tried = [],
   notice,
   onRemove,
   removeLabel,
@@ -235,34 +223,12 @@ export function AiScan({
             </Notice>
           )}
 
-          {state === 'ready' ? null : state !== 'scanning' ? (
-            <Attribution $in={state === 'unverified' || attributed}>
-              {state === 'answered' && provider ? (
-                <strong>{t.addPlant.verifiedBy.replace('{provider}', PROVIDER_LABEL[provider])}</strong>
-              ) : null}
-              <Chain aria-label={t.addPlant.chainLabel}>
-                {PROVIDER_CHAIN.map((id) => {
-                  const item = chainState(id, state === 'answered' ? provider : undefined, tried)
-                  return (
-                    <ChainItem key={id} $tone={item.tone}>
-                      {item.tone === 'ok' ? '✓ ' : ''}
-                      {PROVIDER_LABEL[id]}
-                      {item.reason ? <small>{t.admin[skipLabelKey[item.reason]]}</small> : null}
-                    </ChainItem>
-                  )
-                })}
-              </Chain>
-              {state === 'answered' && mode === 'mock' ? <DemoNote>{t.addPlant.demoNote}</DemoNote> : null}
+          {state === 'answered' && attributed ? (
+            <Attribution $in>
+              <strong>{t.addPlant.verifiedBy}</strong>
+              {mode === 'mock' ? <DemoNote>{t.addPlant.demoNote}</DemoNote> : null}
             </Attribution>
-          ) : (
-            <Chain aria-label={t.addPlant.chainLabel}>
-              {PROVIDER_CHAIN.map((id, index) => (
-                <ChainItem key={id} $tone="idle" $pulse style={{ animationDelay: `${index * 400}ms` }}>
-                  {PROVIDER_LABEL[id]}
-                </ChainItem>
-              ))}
-            </Chain>
-          )}
+          ) : null}
         </Panel>
       </Layout>
     </Root>

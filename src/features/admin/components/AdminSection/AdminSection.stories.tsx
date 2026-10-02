@@ -12,7 +12,7 @@ export const WithLead = () => (
 )
 
 export const WithAside = () => (
-  <AdminSection title="Plant.id" aside="Order 1">
+  <AdminSection title="Gemini" aside="Order 1">
     <p>Section body</p>
   </AdminSection>
 )

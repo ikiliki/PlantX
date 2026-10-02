@@ -5,15 +5,21 @@ import type {
   IdentifyRequestStatus,
   IdentifySkipReason,
   IdentifySource,
+  IdentifyStepId,
   IdentifyTarget,
   Locale,
 } from '../../mock/types'
 
 export const providerNameKey = {
-  plantid: 'apisProviderPlantid',
   plantnet: 'apisProviderPlantnet',
   gemini: 'apisProviderGemini',
 } as const satisfies Record<IdentifyProviderId, string>
+
+export const stepLabelKey = {
+  gate: 'apisStepGate',
+  species: 'apisStepSpecies',
+  draft: 'apisStepDraft',
+} as const satisfies Record<IdentifyStepId, string>
 
 export const targetLabelKey = {
   chain: 'apisTargetChain',
@@ -55,7 +61,7 @@ export const requestStatusKey = {
   unavailable: 'apisUnavailable',
 } as const satisfies Record<IdentifyRequestStatus, string>
 
-export const identifyTargets: IdentifyTarget[] = ['chain', 'plantid', 'plantnet', 'gemini']
+export const identifyTargets: IdentifyTarget[] = ['chain', 'gemini', 'plantnet']
 export const identifyScenarios: IdentifyMockScenario[] = ['match', 'notInCatalog', 'notPlant', 'error']
 
 export function modeTone(mode: IdentifyMode) {

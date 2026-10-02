@@ -88,7 +88,11 @@ export function IdentifyHistory({
         row.diagnosis ? (
           <Answer>
             <span>{row.diagnosis.label || t.admin.apisScenarioNotPlant}</span>
-            <small>{t.admin[providerNameKey[row.diagnosis.provider]]}</small>
+            <small>
+              {row.diagnosis.provider in providerNameKey
+                ? t.admin[providerNameKey[row.diagnosis.provider]]
+                : '—'}
+            </small>
           </Answer>
         ) : (
           '—'

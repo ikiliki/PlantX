@@ -22,12 +22,12 @@ export default {
 export const AllResults = () => (
   <>
     <PhotoCheckSticker
-      check={{ position: 0, result: 'match', provider: 'plantid', mode: 'live', label: 'Golden pothos', probability: 0.93 }}
+      check={{ position: 0, result: 'match', provider: 'gemini', mode: 'live', label: 'Golden pothos', probability: 0.93 }}
     />
     <PhotoCheckSticker
       check={{ position: 1, result: 'mismatch', provider: 'plantnet', label: 'Monstera deliciosa', probability: 0.71 }}
     />
-    <PhotoCheckSticker check={{ position: 2, result: 'notPlant', provider: 'plantid' }} />
+    <PhotoCheckSticker check={{ position: 2, result: 'notPlant', provider: 'gemini' }} />
     <PhotoCheckSticker check={{ position: 0, result: 'failed' }} />
     <PhotoCheckSticker check={{ position: 1, result: 'unscanned' }} />
     <PhotoCheckSticker scanning />

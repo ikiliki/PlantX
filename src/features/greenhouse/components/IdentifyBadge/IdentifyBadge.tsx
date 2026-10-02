@@ -1,6 +1,5 @@
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { PlantIdentification } from '../../../../mock/types'
-import { PROVIDER_LABEL } from '../../identification'
 import { Detail, Mark, Root, Text } from './IdentifyBadge.styles'
 
 /**
@@ -15,16 +14,11 @@ export function IdentifyBadge({
   compact?: boolean
 }) {
   const { t } = useI18n()
-  const { source, provider, probability, mode, label }: PlantIdentification = identification ?? { source: 'manual', at: '' }
-  const providerName = provider ? PROVIDER_LABEL[provider] : ''
+  const { source, probability, mode, label }: PlantIdentification = identification ?? { source: 'manual', at: '' }
   const pct = probability != null ? Math.round(probability * 100) : null
 
   const title =
-    source === 'ai'
-      ? t.addPlant.badgeAiBy.replace('{provider}', providerName)
-      : source === 'edited'
-        ? t.addPlant.badgeEdited
-        : t.addPlant.badgeManual
+    source === 'ai' ? t.addPlant.badgeAiBy : source === 'edited' ? t.addPlant.badgeEdited : t.addPlant.badgeManual
 
   const detail =
     source === 'ai'
@@ -32,13 +26,12 @@ export function IdentifyBadge({
           .filter(Boolean)
           .join(' · ')
       : source === 'edited'
-        ? t.addPlant.badgeEditedDetail.replace('{provider}', providerName).replace('{label}', label ?? '')
+        ? t.addPlant.badgeEditedDetail.replace('{label}', label ?? '')
         : identification
           ? t.addPlant.badgeManualDetail
           : ''
 
-  const short =
-    source === 'ai' ? `AI · ${providerName}` : source === 'edited' ? t.addPlant.badgeEditedShort : t.addPlant.badgeNeedsAi
+  const short = source === 'ai' ? 'AI' : source === 'edited' ? t.addPlant.badgeEditedShort : t.addPlant.badgeNeedsAi
 
   return (
     <Root $source={source} $compact={compact} title={compact ? [title, detail].filter(Boolean).join(' — ') : undefined}>

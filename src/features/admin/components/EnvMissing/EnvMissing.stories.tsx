@@ -17,7 +17,7 @@ export default {
 export const Missing = () => (
   <EnvMissing
     names={[
-      { name: 'KINDWISE_API_KEY', need: 'identify' },
+      { name: 'GEMINI_API_KEY', need: 'identify' },
       { name: 'GOOGLE_CLIENT_ID', need: 'app' },
     ]}
   />

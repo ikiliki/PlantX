@@ -15,7 +15,7 @@ export const mockMatchRecord: IdentifyRequestRecord = {
   durationMs: 42,
   tried: [],
   diagnosis: {
-    provider: 'plantid',
+    provider: 'gemini',
     mode: 'mock',
     label: 'Golden pothos',
     scientificName: 'Epipremnum aureum',
@@ -31,6 +31,11 @@ export const mockMatchRecord: IdentifyRequestRecord = {
       traits: { 'growth-form': 'climbing', variegation: 'high' },
     },
     tried: [],
+    steps: [
+      { id: 'gate', provider: 'gemini', ok: true, isPlant: true },
+      { id: 'species', provider: 'plantnet', ok: true, label: 'Golden pothos', scientificName: 'Epipremnum aureum', probability: 0.94, isPlant: true },
+      { id: 'draft', provider: 'gemini', ok: true, label: 'Golden pothos', probability: 0.91, isPlant: true },
+    ],
   },
 }
 
@@ -48,9 +53,9 @@ export const liveFallbackRecord: IdentifyRequestRecord = {
   plantId: 'pl-draft-target',
   photoIndex: 0,
   fields: { category: 'kept', subcategory: 'changed', quality: 'manual', size: 'manual', stage: 'manual' },
-  tried: [{ provider: 'plantid', reason: 'disabled' }],
+  tried: [],
   diagnosis: {
-    provider: 'plantnet',
+    provider: 'gemini',
     mode: 'live',
     label: 'Monstera deliciosa',
     scientificName: 'Monstera deliciosa Liebm.',
@@ -58,7 +63,12 @@ export const liveFallbackRecord: IdentifyRequestRecord = {
     probability: 0.78,
     isPlant: true,
     draft: { categoryId: 'monstera', subcategoryId: 'monstera-std' },
-    tried: [{ provider: 'plantid', reason: 'disabled' }],
+    tried: [],
+    steps: [
+      { id: 'gate', provider: 'gemini', ok: true, isPlant: true },
+      { id: 'species', provider: 'plantnet', ok: true, label: 'Monstera deliciosa', scientificName: 'Monstera deliciosa', probability: 0.94, isPlant: true },
+      { id: 'draft', provider: 'gemini', ok: true, label: 'Monstera deliciosa', probability: 0.78, isPlant: true },
+    ],
   },
 }
 
@@ -98,7 +108,7 @@ export const liveNotInCatalogRecord: IdentifyRequestRecord = {
   diagnosis: {
     ...mockNotInCatalogRecord.diagnosis!,
     mode: 'live',
-    provider: 'plantnet',
+    provider: 'gemini',
   },
 }
 
@@ -109,13 +119,13 @@ export const mockNotPlantRecord: IdentifyRequestRecord = {
   userName: 'Dana Levi',
   source: 'playground',
   mode: 'mock',
-  target: 'plantid',
+  target: 'chain',
   scenario: 'notPlant',
   status: 'ok',
   durationMs: 12,
   tried: [],
   diagnosis: {
-    provider: 'plantid',
+    provider: 'gemini',
     mode: 'mock',
     label: '',
     scientificName: '',
@@ -124,6 +134,7 @@ export const mockNotPlantRecord: IdentifyRequestRecord = {
     isPlant: false,
     draft: {},
     tried: [],
+    steps: [{ id: 'gate', provider: 'gemini', ok: true, isPlant: false }],
   },
 }
 
@@ -139,9 +150,13 @@ export const liveUnavailableRecord: IdentifyRequestRecord = {
   thumb: '/class-photos/pot-njoy-b-m-est.jpg',
   durationMs: 30010,
   tried: [
-    { provider: 'plantid', reason: 'exhausted', detail: '429 credits exhausted' },
-    { provider: 'plantnet', reason: 'timeout', detail: 'No answer in 10s' },
-    { provider: 'gemini', reason: 'missingKey' },
+    { provider: 'plantnet', reason: 'exhausted', detail: 'Daily identify quota exhausted' },
+    { provider: 'gemini', reason: 'error', detail: 'Gemini HTTP 503' },
+  ],
+  steps: [
+    { id: 'gate', provider: 'gemini', ok: true, isPlant: true },
+    { id: 'species', provider: 'plantnet', ok: false, detail: 'Daily identify quota exhausted' },
+    { id: 'draft', provider: 'gemini', ok: false, detail: 'Gemini HTTP 503' },
   ],
 }
 

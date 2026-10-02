@@ -2,12 +2,12 @@ import type { Catalog, Diagnosis } from './types'
 
 const MOCK_DELAY_MS = 500
 
-/** UI-mock answer for Add Plant when no server runs: the first catalog class, from Plant.id. */
+/** UI-mock answer for Add Plant when no server runs: the first catalog class. */
 export function mockDiagnosis(catalog: Catalog): Diagnosis {
   const category = catalog.categories[0]
   const sub = catalog.subcategories.find((item) => item.categoryId === category?.id)
   return {
-    provider: 'plantid',
+    provider: 'gemini',
     mode: 'mock',
     label: category?.name ?? '',
     scientificName: category?.name ?? '',

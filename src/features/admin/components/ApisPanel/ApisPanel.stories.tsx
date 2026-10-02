@@ -24,21 +24,21 @@ const ready = defaultIdentifySettings()
 const readyProviders: IdentifyProviderStatus[] = [
   {
     ...ready,
-    id: 'plantid',
+    id: 'gemini',
     order: 1,
-    name: 'Plant.id',
-    returns: 'is_plant, catalog match',
-    docsUrl: 'https://web.plant.id/plant-identification-api/',
+    name: 'Gemini',
+    returns: 'Plant check, then catalog fields',
+    docsUrl: 'https://ai.google.dev/gemini-api/docs',
     keySet: true,
     status: 'ready',
-    credits: { remaining: 420, used: 80 },
+    model: 'gemini-3.8-flash',
     lastUsedAt: '2026-09-28T14:22:00.000Z',
   },
   {
     id: 'plantnet',
     order: 2,
     name: 'Pl@ntNet',
-    returns: 'species suggestions',
+    returns: 'Species, genus, common names',
     docsUrl: 'https://my.plantnet.org/doc/api/identify',
     ...ready,
     keySet: true,
@@ -46,34 +46,20 @@ const readyProviders: IdentifyProviderStatus[] = [
     credits: { remaining: 350, total: 500, period: 'day' },
     lastUsedAt: '2026-09-27T09:10:00.000Z',
   },
-  {
-    id: 'gemini',
-    order: 3,
-    name: 'Gemini',
-    returns: 'catalog draft + traits',
-    docsUrl: 'https://ai.google.dev/gemini-api/docs',
-    ...ready,
-    keySet: true,
-    status: 'ready',
-    model: 'gemini-3.8-flash',
-    lastUsedAt: '2026-09-26T18:40:00.000Z',
-  },
 ]
 
 const oneExhausted: IdentifyProviderStatus[] = [
+  readyProviders[0],
   {
-    ...readyProviders[0],
+    ...readyProviders[1],
     status: 'exhausted',
-    credits: { remaining: 0, used: 500 },
+    credits: { remaining: 0, total: 500, period: 'day' },
   },
-  readyProviders[1],
-  readyProviders[2],
 ]
 
 const oneDisabled: IdentifyProviderStatus[] = [
   readyProviders[0],
   { ...readyProviders[1], enabled: false },
-  readyProviders[2],
 ]
 
 const keysMissing: IdentifyProviderStatus[] = readyProviders.map((provider) => ({
@@ -128,7 +114,6 @@ const mockMatch: IdentifyProviderStatus[] = [
     match: { categoryId: 'pothos', subcategory: true, subcategoryId: 'pothos-gold', properties: { size: 'L' } },
   },
   readyProviders[1],
-  readyProviders[2],
 ]
 
 const fiddle: CatalogSuggestion = {
@@ -138,7 +123,7 @@ const fiddle: CatalogSuggestion = {
   scientificName: 'Ficus lyrata',
   genus: 'Ficus',
   commonNames: ['Fiddle-leaf fig'],
-  provider: 'plantid',
+  provider: 'gemini',
   hits: 2,
   status: 'open',
   draft: {

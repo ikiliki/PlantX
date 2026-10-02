@@ -15,7 +15,7 @@ import type { Activity } from '../activity/activity.types.ts'
 import { identifyService, type IdentifyOutcome } from './identify.service.ts'
 
 const MODES: IdentifyMode[] = ['mock', 'live']
-const PROVIDERS: IdentifyProviderId[] = ['plantid', 'plantnet', 'gemini']
+const PROVIDERS: IdentifyProviderId[] = ['gemini', 'plantnet']
 const TARGETS: IdentifyTarget[] = ['chain', ...PROVIDERS]
 const SCENARIOS: IdentifyMockScenario[] = ['match', 'notInCatalog', 'notPlant', 'error']
 const HISTORY_DEFAULT_LIMIT = 50

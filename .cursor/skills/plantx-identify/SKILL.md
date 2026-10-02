@@ -1,8 +1,8 @@
 ---
 name: plantx-identify
 description: >-
-  PlantX photo diagnosis providers, fallback chain, mock/live mode, request history,
-  and catalog mapping. Use when changing identify routes, Plant.id, Pl@ntNet, Gemini,
+  PlantX photo diagnosis pipeline, mock/live mode, request history,
+  and catalog mapping. Use when changing identify routes, Pl@ntNet, Gemini,
   identify mocks, the Admin APIs playground or history, or Add Plant photo identify.
 ---
 
@@ -10,29 +10,31 @@ description: >-
 
 ## Layout
 
-`server/src/features/identify/` — providers, `mock/` fixtures, chain, mapper, routes.
+`server/src/features/identify/` — providers, `mock/` fixtures, pipeline, mapper, routes.
 
-Each provider: `status()`, an HTTP call, and a pure `parse…Body(body, catalog)`. A provider does not call another.
+Each provider: `status()`, an HTTP call, and a pure `parse…Body(body, catalog)`. A provider does not call another. Only `identify.service.ts` orders the steps.
 
-## Chain order
+## Pipeline
 
-Only `identify.service.ts` knows the order: Plant.id → Pl@ntNet → Gemini.
+Add Plant (`target: chain`) runs three steps. The catalog schema is built per call, so a category or property added in admin is included on the next scan.
 
-- **Skip** when disabled by admin (Add Plant only), key missing, credits/quota gone, or call fails/times out.
-- **Stop** when a provider answers, even if nothing matches the catalog.
-- Plant.id `is_plant: false` is an answer.
+1. **Gate** — Gemini, photo only: is this a plant? `false` stops. Pl@ntNet is not called.
+2. **Species** — Pl@ntNet names the plant and score. A failure is recorded and the draft still runs from the photo.
+3. **Draft** — Gemini gets the Pl@ntNet JSON, the photo, and the current catalog (categories, subcategories, size, stage, traits). It fills only ids that exist. Empty stays empty. The server drops ids that are not in the catalog.
+
+Gemini off, missing a key, or failing the gate stops the pipeline before Pl@ntNet. The playground can still test `gemini` or `plantnet` alone. Grower UI says AI only. Admin history shows each step, the mapped draft, and kept / changed / manual on saved fields.
 
 ## Mode
 
-- Add Plant (`POST /api/identify`) walks the chain. Each provider is `ready` (live) or `mock` from admin config. `ready` calls the real API. `mock` uses the saved scenario and spends nothing.
-- Settings live in `identify_provider_settings` (`enabled`, `config` jsonb). No row means enabled and ready. `PUT /api/identify/providers/:id` saves a partial patch. Add Plant skips a disabled provider with reason `disabled`; all off → 503.
+- Add Plant (`POST /api/identify`) runs the pipeline. Each provider is `ready` (live) or `mock` from admin config. `ready` calls the real API. `mock` uses the saved scenario and spends nothing.
+- Settings live in `identify_provider_settings` (`enabled`, `config` jsonb). No row means enabled and ready. `PUT /api/identify/providers/:id` saves a partial patch. Gemini disabled stops Add Plant with reason `disabled`. Pl@ntNet disabled skips species and still drafts.
 - Mock `match` fills the category, the subcategory when that switch is on, and any properties set (grade, size, stage, traits, more properties). Unset properties stay empty. Mock `notInCatalog` uses the chosen suggestion's names and maps to no category. `notPlant` and `error` stay the canned answers.
 - Admin playground (`POST /api/identify/test`) picks mode, target, and scenario per run, and ignores `enabled` and `response`. `mock` builds a body in the provider's real response shape and runs the same parser and mapper (no network, no credits). `live` calls the real API with the real key.
 - UI-mock mode has no server: `src/mock/identifyMock.ts` answers on the client. Never run `live` or `POST /api/identify` in automated checks.
 
 ## History
 
-Every request is saved to `identify_requests` (thumb, mode, source, diagnosis, tried). History must never fail an identify call; a missing table is a warning. Admin reads `GET /api/identify/history?mode=`.
+Every request is saved to `identify_requests` (thumb, mode, source, diagnosis, steps, tried). History must never fail an identify call; a missing table is a warning. Admin reads `GET /api/identify/history?mode=`.
 
 ## Plant verification
 
@@ -50,12 +52,12 @@ Return only catalog ids that exist. Category: name / nameHe / ticker. Subcategor
 
 ## Keys
 
-`KINDWISE_API_KEY`, `PLANTNET_API_KEY`, `GEMINI_API_KEY`, optional `GEMINI_MODEL`. Gemini tries its model, then `MODEL_FALLBACKS` in `providers/gemini.ts`, when Google returns 404, 429, or 503. Never send keys to the browser. Admin status reports key set or not, never the secret.
+`PLANTNET_API_KEY`, `GEMINI_API_KEY`, optional `GEMINI_MODEL`. Gemini tries its model, then `MODEL_FALLBACKS` in `providers/gemini.ts`, when Google returns 404, 429, or 503. Never send keys to the browser. Admin status reports key set or not, never the secret. Grower copy does not name these providers.
 
 ## New provider
 
 1. Add a provider file implementing the interface, with a separate parse function.
 2. Add a mock fixture covering every `IdentifyMockScenario`.
-3. Register it in the chain.
-4. Add an Admin APIs row (docs, credits/status).
-5. Extend `IdentifyProviderId` in `src/mock/types.ts`, the `identify_requests.target` check, the `identify_provider_settings.provider_id` check, the `plant_identifications.provider` check, and `PROVIDER_LABEL` / `PROVIDER_CHAIN` in `src/features/greenhouse/identification.ts`.
+3. Call it from the pipeline in `identify.service.ts` only.
+4. Add an Admin APIs row (docs, credits/status). Do not show the name on Add Plant, badges, stickers, or activity text.
+5. Extend `IdentifyProviderId` in `src/mock/types.ts`, the `identify_requests.target` check, the `identify_provider_settings.provider_id` check, and the `plant_identifications.provider` check.

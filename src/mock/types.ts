@@ -425,13 +425,27 @@ export type PlantClassDraft = {
   traits: Record<string, string>
 }
 
-export type IdentifyProviderId = 'plantid' | 'plantnet' | 'gemini'
+export type IdentifyProviderId = 'plantnet' | 'gemini'
 
 export type IdentifySkipReason = 'disabled' | 'missingKey' | 'exhausted' | 'error' | 'timeout'
 
 export type IdentifyTried = {
   provider: IdentifyProviderId
   reason: IdentifySkipReason
+  detail?: string
+}
+
+/** `gate`: is this a plant? `species`: the name. `draft`: catalog fields filled from the live catalog. */
+export type IdentifyStepId = 'gate' | 'species' | 'draft'
+
+export type IdentifyStep = {
+  id: IdentifyStepId
+  provider: IdentifyProviderId
+  ok: boolean
+  isPlant?: boolean
+  label?: string
+  scientificName?: string
+  probability?: number
   detail?: string
 }
 
@@ -484,12 +498,14 @@ export type Diagnosis = {
   isPlant: boolean
   draft: Partial<PlantClassDraft>
   tried: IdentifyTried[]
+  /** Pipeline runs record the gate, the species call, and the catalog draft. */
+  steps?: IdentifyStep[]
 }
 
 /** `mock` parses canned provider responses and spends no credits. `live` calls the real APIs. */
 export type IdentifyMode = 'mock' | 'live'
 
-/** Which providers a request may use. `chain` walks the fallback order. */
+/** `chain` is the Add Plant pipeline. A named provider is a single playground test. */
 export type IdentifyTarget = 'chain' | IdentifyProviderId
 
 /** Mock-only answer shape, so every Add Plant state can be exercised. */
@@ -535,6 +551,8 @@ export type IdentifyRequestRecord = {
   durationMs: number
   diagnosis?: Diagnosis
   tried: IdentifyTried[]
+  /** Present on pipeline runs, including ones that stopped early. */
+  steps?: IdentifyStep[]
   /** Set when an Add Plant request was saved with a plant. Absent means it was never added. */
   plantId?: string
   photoIndex?: number
@@ -629,6 +647,8 @@ export interface MockDb {
   updates: FeedUpdate[]
   todos: Todo[]
   topGreenhouses: TopGreenhouse[]
+  /** Viewer pins, at most three greenhouse owners. Absent until they pin. */
+  pinnedGreenhouseIds?: string[] | null
   pendingUsers: PendingUser[]
   pendingTransactions: PendingTransaction[]
   currentUserId: string | null

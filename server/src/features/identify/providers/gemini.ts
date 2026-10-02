@@ -167,6 +167,116 @@ export function parseGeminiBody(body: GeminiBody, _catalog: Catalog): RawSuggest
   return suggestionFromJson(parsed)
 }
 
+/** One Gemini JSON call. Retries the next model on 404, 429, or 503. */
+async function generate(image: string, prompt: string, schema: unknown): Promise<string> {
+  const key = apiKey()
+  if (!key) throw new Error('GEMINI_API_KEY missing')
+  const { mime, base64 } = stripDataUrl(image)
+  lastUsedAt = new Date().toISOString()
+  const requestBody = JSON.stringify({
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: base64 } }],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: schema,
+    },
+  })
+  let lastFailure = 'Gemini failed'
+  for (const model of modelsToTry()) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
+    try {
+      const res = await fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody,
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        lastFailure = `Gemini HTTP ${res.status}${text ? `: ${text.slice(0, 180)}` : ''}`
+        if (RETRYABLE_STATUS.has(res.status)) continue
+        break
+      }
+      const body = (await res.json()) as GeminiBody
+      const text = body.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || ''
+      if (!text.trim()) {
+        lastFailure = 'Gemini returned empty content'
+        break
+      }
+      activeModel = model
+      lastError = undefined
+      return text
+    } catch (err) {
+      if (err instanceof Error && err.name === 'IdentifyTimeoutError') throw err
+      lastFailure = err instanceof Error ? err.message : 'Gemini failed'
+      break
+    }
+  }
+  lastError = lastFailure
+  throw new Error(lastFailure)
+}
+
+const GATE_SCHEMA = {
+  type: 'OBJECT',
+  properties: { isPlant: { type: 'BOOLEAN', description: 'True only when the image shows a plant' } },
+  required: ['isPlant'],
+}
+
+/** Cheap first call. A false result means Pl@ntNet must not be called. */
+export async function gatePlant(image: string): Promise<boolean> {
+  const text = await generate(
+    image,
+    [
+      'Does this image show a plant, part of a plant, or a planted pot?',
+      'Set isPlant true for those. Set isPlant false for people, animals, rooms, objects, food, or anything else.',
+    ].join('\n'),
+    GATE_SCHEMA,
+  )
+  const parsed = JSON.parse(text) as { isPlant?: boolean }
+  return Boolean(parsed.isPlant)
+}
+
+/** Species fields the catalog draft is allowed to see. */
+export type SpeciesHint = {
+  label: string
+  scientificName: string
+  commonNames: string[]
+  genus?: string
+  cultivar?: string
+  probability: number
+}
+
+/**
+ * Second Gemini call. The schema is the catalog at this moment, so new categories
+ * and properties are included. Unknown fields stay null.
+ */
+export async function draftPlantClass(image: string, catalog: Catalog, species: SpeciesHint | null): Promise<RawSuggestion> {
+  const speciesBlock = species
+    ? `Species result JSON:\n${JSON.stringify(species)}`
+    : 'The species call did not return a name. Use the photo and the catalog.'
+  const prompt = [
+    'Fill a PlantX greenhouse draft for the plant in the photo.',
+    speciesBlock,
+    'Compare that result with the catalog. Use only the allowed ids.',
+    'Fill categoryId, subcategoryId, size, stage, and trait option ids when you can.',
+    'Leave a field null when you are not sure. Do not assign a grade.',
+    'Set isPlant true unless the photo is clearly not a plant.',
+    '',
+    catalogBrief(catalog),
+  ].join('\n')
+  const text = await generate(image, prompt, buildSchema(catalog))
+  let parsed: GeminiJson
+  try {
+    parsed = JSON.parse(text) as GeminiJson
+  } catch {
+    throw new Error('Gemini returned invalid JSON')
+  }
+  return suggestionFromJson(parsed)
+}
+
 /** Size only, after another provider already named the plant. Failures stay inside identify. */
 export async function guessPlantSize(image: string, catalog: Catalog): Promise<string | undefined> {
   const key = apiKey()
@@ -221,15 +331,15 @@ export async function guessPlantSize(image: string, catalog: Catalog): Promise<s
 
 export const geminiProvider: IdentifyProvider = {
   id: 'gemini',
-  order: 3,
+  order: 1,
 
   async status(): Promise<ProviderHealth> {
     const key = apiKey()
     return {
       id: 'gemini',
-      order: 3,
+      order: 1,
       name: 'Gemini',
-      returns: 'Catalog match plus size, stage, traits',
+      returns: 'Plant check, then catalog fields from the current catalog',
       docsUrl: DOCS_URL,
       keySet: Boolean(key),
       status: key ? 'ready' : 'missingKey',
@@ -240,62 +350,23 @@ export const geminiProvider: IdentifyProvider = {
   },
 
   async identify(image: string, catalog: Catalog): Promise<RawSuggestion> {
-    const key = apiKey()
-    if (!key) throw new Error('GEMINI_API_KEY missing')
-    const { mime, base64 } = stripDataUrl(image)
-    lastUsedAt = new Date().toISOString()
-
     const prompt = [
       'Identify the plant in the image for a greenhouse marketplace catalog.',
       'Pick the best matching catalog category and subcategory ids when possible.',
       'Estimate size, stage, and trait option ids only from the allowed enums. Do not assign a grade.',
-      'If unsure about a field, use an empty string or omit it.',
+      'If unsure about a field, use null.',
       'Set isPlant false when the image is not a plant.',
       '',
       catalogBrief(catalog),
     ].join('\n')
-
-    const requestBody = JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: base64 } }],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: buildSchema(catalog),
-      },
-    })
-
-    let lastFailure = 'Gemini failed'
-    for (const model of modelsToTry()) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
-      try {
-        const res = await fetchWithTimeout(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: requestBody,
-        })
-        if (!res.ok) {
-          const text = await res.text().catch(() => '')
-          lastFailure = `Gemini HTTP ${res.status}${text ? `: ${text.slice(0, 180)}` : ''}`
-          if (RETRYABLE_STATUS.has(res.status)) continue
-          break
-        }
-        const body = (await res.json()) as GeminiBody
-        const suggestion = parseGeminiBody(body, catalog)
-        activeModel = model
-        lastError = undefined
-        return suggestion
-      } catch (err) {
-        if (err instanceof Error && err.name === 'IdentifyTimeoutError') throw err
-        lastFailure = err instanceof Error ? err.message : 'Gemini failed'
-        break
-      }
+    const text = await generate(image, prompt, buildSchema(catalog))
+    let parsed: GeminiJson
+    try {
+      parsed = JSON.parse(text) as GeminiJson
+    } catch {
+      throw new Error('Gemini returned invalid JSON')
     }
-    lastError = lastFailure
-    throw new Error(lastFailure)
+    return suggestionFromJson(parsed)
   },
 }
 

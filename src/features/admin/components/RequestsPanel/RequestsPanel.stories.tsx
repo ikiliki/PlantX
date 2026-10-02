@@ -69,7 +69,7 @@ const suggestions: CatalogSuggestion[] = [
     scientificName: '',
     genus: '',
     commonNames: [],
-    provider: 'plantid',
+    provider: 'gemini',
     hits: 1,
     status: 'dismissed',
     draft,

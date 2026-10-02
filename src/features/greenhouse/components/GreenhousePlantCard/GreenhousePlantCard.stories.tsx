@@ -48,7 +48,7 @@ const at = '2026-10-01T12:00:00.000Z'
 export const NeedsAiCheck = () => <CardStory />
 
 export const AiVerified = () => (
-  <CardStory identification={{ source: 'ai', provider: 'plantid', mode: 'live', probability: 0.94, at }} />
+  <CardStory identification={{ source: 'ai', provider: 'gemini', mode: 'live', probability: 0.94, at }} />
 )
 
 export const Manual = () => <CardStory identification={{ source: 'manual', at }} />

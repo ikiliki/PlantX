@@ -13,7 +13,7 @@ const SAMPLE_PHOTO =
   )
 
 export const matchedDiagnosis: Diagnosis = {
-  provider: 'plantid',
+  provider: 'gemini',
   mode: 'mock',
   label: 'Monstera deliciosa',
   scientificName: 'Monstera deliciosa',
@@ -44,7 +44,7 @@ export const notInCatalogDiagnosis: Diagnosis = {
 }
 
 export const notPlantDiagnosis: Diagnosis = {
-  provider: 'plantid',
+  provider: 'gemini',
   mode: 'mock',
   label: 'cat',
   scientificName: '',
@@ -98,7 +98,7 @@ export const Identifying = () => <Frame initial={[scan('a', 'identifying')]} />
 export const Matched = () => (
   <Frame
     initial={[scan('a', 'matched', matchedDiagnosis)]}
-    checks={[{ position: 0, result: 'match', provider: 'plantid', mode: 'mock', probability: 0.91 }]}
+    checks={[{ position: 0, result: 'match', provider: 'gemini', mode: 'mock', probability: 0.91 }]}
   />
 )
 export const ThreePhotos = () => (
@@ -110,8 +110,8 @@ export const ThreePhotos = () => (
       scan('c', 'identifying'),
     ]}
     checks={[
-      { position: 0, result: 'match', provider: 'plantid', mode: 'mock', probability: 0.91 },
-      { position: 1, result: 'notPlant', provider: 'plantid', mode: 'mock' },
+      { position: 0, result: 'match', provider: 'gemini', mode: 'mock', probability: 0.91 },
+      { position: 1, result: 'notPlant', provider: 'gemini', mode: 'mock' },
     ]}
   />
 )
@@ -120,7 +120,7 @@ export const Failed = () => (
   <Frame
     initial={[
       scan('a', 'failed', undefined, [
-        { provider: 'plantid', reason: 'exhausted' },
+        { provider: 'gemini', reason: 'exhausted' },
         { provider: 'plantnet', reason: 'timeout' },
         { provider: 'gemini', reason: 'error' },
       ]),

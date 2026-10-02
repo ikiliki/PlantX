@@ -2,7 +2,14 @@ import type { ReactNode } from 'react'
 import { Badge } from '../../../../components/Badge/Badge'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
-import type { Catalog, IdentifyRequestRecord, Locale, PlantClassDraft } from '../../../../mock/types'
+import type {
+  Catalog,
+  IdentifyFieldCheck,
+  IdentifyFieldId,
+  IdentifyRequestRecord,
+  Locale,
+  PlantClassDraft,
+} from '../../../../mock/types'
 import { catalogName, categoryById, optionLabel, propertyById, subcategoryById } from '../../../catalog/catalog'
 import {
   modeLabelKey,
@@ -12,12 +19,35 @@ import {
   requestStatusTone,
   scenarioLabelKey,
   skipLabelKey,
+  stepLabelKey,
   targetLabelKey,
 } from '../../identifyLabels'
+import { FieldChip, FieldChips } from '../IdentifyHistory/IdentifyHistory.styles'
 import { AdminDetailGrid } from '../AdminTable/AdminTable'
 import { Answer, Badges, Block, Note, Problem, Raw, Root, Subhead, TriedList } from './IdentifyResult.styles'
 
 type DetailItem = { label: string; value: ReactNode }
+
+const fieldOrder: IdentifyFieldId[] = ['category', 'subcategory', 'quality', 'size', 'stage']
+
+const fieldLabelKey = {
+  category: 'category',
+  subcategory: 'subcategory',
+  quality: 'grade',
+  size: 'size',
+  stage: 'stage',
+} as const satisfies Record<IdentifyFieldId, string>
+
+const fieldStateKey = {
+  kept: 'apisFieldKept',
+  changed: 'apisFieldChanged',
+  manual: 'apisFieldManual',
+} as const satisfies Record<IdentifyFieldCheck, string>
+
+function providerLabel(id: string, t: ReturnType<typeof useI18n>['t']) {
+  if (id === 'plantnet' || id === 'gemini') return t.admin[providerNameKey[id]]
+  return '—'
+}
 
 function optionText(catalog: Catalog, propertyId: string, value: string, locale: Locale) {
   const option = propertyById(catalog, propertyId)?.options.find((item) => item.id === value)
@@ -71,11 +101,13 @@ export function IdentifyResult({
   const { db } = useStore()
   const diagnosis = record.diagnosis
   const tried = diagnosis?.tried.length ? diagnosis.tried : record.tried
+  const steps = diagnosis?.steps?.length ? diagnosis.steps : (record.steps ?? [])
+  const fieldEntries = fieldOrder.filter((field) => record.fields?.[field])
 
   const facts: DetailItem[] = []
   if (diagnosis) {
     facts.push(
-      { label: t.admin.apisAnsweredBy, value: t.admin[providerNameKey[diagnosis.provider]] },
+      { label: t.admin.apisAnsweredBy, value: providerLabel(diagnosis.provider, t) },
       { label: t.admin.apisProbability, value: `${Math.round(diagnosis.probability * 100)}%` },
       { label: t.admin.apisIsPlant, value: diagnosis.isPlant ? t.admin.apisYes : t.admin.apisNo },
     )
@@ -127,13 +159,51 @@ export function IdentifyResult({
         </Block>
       )}
 
+      {steps.length > 0 && (
+        <Block>
+          <Subhead>{t.admin.apisSteps}</Subhead>
+          <TriedList>
+            {steps.map((step) => (
+              <li key={step.id}>
+                <strong>{t.admin[stepLabelKey[step.id]]}</strong>
+                <Badge $tone={step.ok ? 'lime' : 'warn'}>{step.ok ? t.admin.apisStatusOk : t.admin.apisSkipError}</Badge>
+                {step.label ? <small>{step.label}</small> : null}
+                {step.scientificName && step.scientificName !== step.label ? <small>{step.scientificName}</small> : null}
+                {step.probability != null && step.probability > 0 ? (
+                  <small>{`${Math.round(step.probability * 100)}%`}</small>
+                ) : null}
+                {step.isPlant != null ? <small>{step.isPlant ? t.admin.apisYes : t.admin.apisNo}</small> : null}
+                {step.detail ? <small>{step.detail}</small> : null}
+              </li>
+            ))}
+          </TriedList>
+        </Block>
+      )}
+
+      {fieldEntries.length > 0 && (
+        <Block>
+          <Subhead>{t.admin.apisFields}</Subhead>
+          <FieldChips>
+            {fieldEntries.map((field) => {
+              const state = record.fields![field]!
+              return (
+                <FieldChip key={field} $state={state}>
+                  {t.admin[fieldLabelKey[field]]}
+                  <small>{t.admin[fieldStateKey[state]]}</small>
+                </FieldChip>
+              )
+            })}
+          </FieldChips>
+        </Block>
+      )}
+
       {tried.length > 0 && (
         <Block>
           <Subhead>{t.admin.apisTried}</Subhead>
           <TriedList>
             {tried.map((item) => (
               <li key={item.provider}>
-                <strong>{t.admin[providerNameKey[item.provider]]}</strong>
+                <strong>{providerLabel(item.provider, t)}</strong>
                 <Badge $tone={item.reason === 'missingKey' || item.reason === 'disabled' ? 'muted' : 'warn'}>
                   {t.admin[skipLabelKey[item.reason]]}
                 </Badge>

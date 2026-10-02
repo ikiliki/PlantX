@@ -13,8 +13,8 @@ export function seedUpdates(): FeedUpdate[] {
       userId: 'u-maya',
       plantId: 'pl-maya-njoy',
       identifyRequestId: 'req-maya-njoy',
-      body: "AI scan: Epipremnum aureum · Plant.id 91%.",
-      bodyHe: "סריקת AI: Epipremnum aureum · Plant.id 91%.",
+      body: "AI scan: Epipremnum aureum · 91%.",
+      bodyHe: "סריקת AI: Epipremnum aureum · 91%.",
       createdAt: ago(100),
     },
     {
@@ -23,8 +23,8 @@ export function seedUpdates(): FeedUpdate[] {
       userId: 'u-maya',
       plantId: 'pl-maya-njoy',
       identifyRequestId: 'req-maya-njoy',
-      body: "N'Joy pothos ×6 added to the greenhouse · AI verified by Plant.id.",
-      bodyHe: "פוטוס אן ג'וי ×6 נוסף לחממה · אומת ב־AI על ידי Plant.id.",
+      body: "N'Joy pothos ×6 added to the greenhouse · verified by AI.",
+      bodyHe: "פוטוס אן ג'וי ×6 נוסף לחממה · אומת ב־AI.",
       createdAt: ago(99),
     },
     {

@@ -3,21 +3,12 @@ import type {
   Diagnosis,
   IdentifyFieldCheck,
   IdentifyFieldChecks,
-  IdentifyProviderId,
   PhotoCheck,
   PlantClassDraft,
   PlantIdentification,
 } from '../../mock/types'
 
 /** Shared by the server (trust rules) and the client (optimistic preview). Pure, no React. */
-
-export const PROVIDER_LABEL: Record<IdentifyProviderId, string> = {
-  plantid: 'Plant.id',
-  plantnet: 'Pl@ntNet',
-  gemini: 'Gemini',
-}
-
-export const PROVIDER_CHAIN: IdentifyProviderId[] = ['plantid', 'plantnet', 'gemini']
 
 /** Storage cap. PhotoIdentify and stories can still fill every slot. */
 export const MAX_PLANT_PHOTOS = 3
@@ -150,8 +141,8 @@ function pctOf(probability: number) {
 export function scanActivityText(diagnosis: Diagnosis | undefined) {
   if (!diagnosis) {
     return {
-      body: 'AI scan: no provider could identify the photo.',
-      bodyHe: 'סריקת AI: אף ספק לא הצליח לזהות את התמונה.',
+      body: 'AI scan: the photo could not be identified.',
+      bodyHe: 'סריקת AI: לא הצלחנו לזהות את התמונה.',
     }
   }
   if (!diagnosis.isPlant) {
@@ -160,20 +151,18 @@ export function scanActivityText(diagnosis: Diagnosis | undefined) {
       bodyHe: 'סריקת AI: בתמונה לא נמצא צמח.',
     }
   }
-  const by = `${PROVIDER_LABEL[diagnosis.provider]} ${pctOf(diagnosis.probability)}`
   return {
-    body: `AI scan: ${diagnosis.label} · ${by}.`,
-    bodyHe: `סריקת AI: ${diagnosis.label} · ${by}.`,
+    body: `AI scan: ${diagnosis.label} · ${pctOf(diagnosis.probability)}.`,
+    bodyHe: `סריקת AI: ${diagnosis.label} · ${pctOf(diagnosis.probability)}.`,
   }
 }
 
 /** Text of the `added` activity. */
 export function addedActivityText(title: string, titleHe: string, identification: PlantIdentification) {
-  const provider = identification.provider ? PROVIDER_LABEL[identification.provider] : ''
   if (identification.source === 'ai') {
     return {
-      body: `${title} added to the greenhouse · AI verified by ${provider}.`,
-      bodyHe: `${titleHe} נוסף לחממה · אומת ב־AI על ידי ${provider}.`,
+      body: `${title} added to the greenhouse · verified by AI.`,
+      bodyHe: `${titleHe} נוסף לחממה · אומת ב־AI.`,
     }
   }
   if (identification.source === 'edited') {

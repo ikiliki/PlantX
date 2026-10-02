@@ -24,7 +24,7 @@ const at = '2026-10-01T12:00:00.000Z'
 
 export const aiIdentification: PlantIdentification = {
   source: 'ai',
-  provider: 'plantid',
+  provider: 'gemini',
   mode: 'live',
   label: 'Monstera deliciosa',
   scientificName: 'Monstera deliciosa',

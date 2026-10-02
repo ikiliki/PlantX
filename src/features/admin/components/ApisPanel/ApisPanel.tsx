@@ -36,7 +36,7 @@ import {
   Toolbar,
 } from './ApisPanel.styles'
 
-const PROVIDERS: IdentifyProviderId[] = ['plantid', 'plantnet', 'gemini']
+const PROVIDERS: IdentifyProviderId[] = ['gemini', 'plantnet']
 const SKIP_PROPERTIES = new Set(['area'])
 
 const statusLabelKey = {
@@ -59,16 +59,6 @@ function formatCredits(
   t: ReturnType<typeof useI18n>['t'],
 ): string | null {
   if (!credits) return null
-  if (id === 'plantid') {
-    const parts: string[] = []
-    if (credits.remaining != null) {
-      parts.push(t.admin.apisCreditsRemaining.replace('{remaining}', String(credits.remaining)))
-    }
-    if (credits.used != null) {
-      parts.push(t.admin.apisCreditsUsed.replace('{used}', String(credits.used)))
-    }
-    return parts.length ? parts.join(' · ') : null
-  }
   if (id === 'plantnet' && credits.remaining != null && credits.total != null) {
     return t.admin.apisCreditsOf
       .replace('{remaining}', String(credits.remaining))
@@ -107,7 +97,7 @@ export function ApisPanel({
   catalogLoading?: boolean
 }) {
   const { t } = useI18n()
-  const [tab, setTab] = useState<IdentifyProviderId>('plantid')
+  const [tab, setTab] = useState<IdentifyProviderId>('gemini')
   const sorted = [...providers].sort((a, b) => a.order - b.order)
   const tabs = sorted.length ? sorted.map((provider) => provider.id) : PROVIDERS
   const activeId = tabs.includes(tab) ? tab : tabs[0]

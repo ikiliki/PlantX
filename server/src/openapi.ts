@@ -13,7 +13,7 @@ export const openApiDocument = {
     { name: 'session', description: 'Demo login and register' },
     { name: 'system', description: 'Admin release config' },
     { name: 'catalog', description: 'Market catalog taxonomy' },
-    { name: 'identify', description: 'Photo diagnosis providers and fallback chain' },
+    { name: 'identify', description: 'Photo diagnosis pipeline: plant check, species, catalog fields' },
     { name: 'activities', description: 'Generic activity log (news + plant timeline)' },
     { name: 'plants', description: 'Greenhouse plants and care' },
     { name: 'issues', description: 'Grower reports of failed requests and page crashes' },
@@ -102,7 +102,7 @@ export const openApiDocument = {
         description: 'Set by the server from a saved Add Plant identify request. Client values are ignored.',
         properties: {
           source: { type: 'string', enum: ['ai', 'edited', 'manual'] },
-          provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          provider: { type: 'string', enum: ['plantnet', 'gemini'] },
           mode: { type: 'string', enum: ['mock', 'live'] },
           label: { type: 'string' },
           scientificName: { type: 'string' },
@@ -120,7 +120,7 @@ export const openApiDocument = {
           position: { type: 'integer' },
           result: { type: 'string', enum: ['match', 'mismatch', 'notPlant', 'failed', 'unscanned'] },
           requestId: { type: 'string' },
-          provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          provider: { type: 'string', enum: ['plantnet', 'gemini'] },
           mode: { type: 'string', enum: ['mock', 'live'] },
           label: { type: 'string' },
           probability: { type: 'number' },
@@ -145,7 +145,7 @@ export const openApiDocument = {
       IdentifyTried: {
         type: 'object',
         properties: {
-          provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          provider: { type: 'string', enum: ['plantnet', 'gemini'] },
           reason: { type: 'string', enum: ['disabled', 'missingKey', 'exhausted', 'error', 'timeout'] },
           detail: { type: 'string' },
         },
@@ -154,7 +154,7 @@ export const openApiDocument = {
       IdentifyProviderStatus: {
         type: 'object',
         properties: {
-          id: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          id: { type: 'string', enum: ['plantnet', 'gemini'] },
           order: { type: 'integer' },
           name: { type: 'string' },
           returns: { type: 'string' },
@@ -190,7 +190,7 @@ export const openApiDocument = {
       Diagnosis: {
         type: 'object',
         properties: {
-          provider: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] },
+          provider: { type: 'string', enum: ['plantnet', 'gemini'] },
           mode: { type: 'string', enum: ['mock', 'live'] },
           label: { type: 'string' },
           scientificName: { type: 'string' },
@@ -199,6 +199,24 @@ export const openApiDocument = {
           isPlant: { type: 'boolean' },
           draft: { type: 'object', additionalProperties: true, description: 'Existing catalog ids only' },
           tried: { type: 'array', items: { $ref: '#/components/schemas/IdentifyTried' } },
+          steps: {
+            type: 'array',
+            description: 'Pipeline: plant check, species, catalog draft.',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', enum: ['gate', 'species', 'draft'] },
+                provider: { type: 'string', enum: ['plantnet', 'gemini'] },
+                ok: { type: 'boolean' },
+                isPlant: { type: 'boolean' },
+                label: { type: 'string' },
+                scientificName: { type: 'string' },
+                probability: { type: 'number' },
+                detail: { type: 'string' },
+              },
+              required: ['id', 'provider', 'ok'],
+            },
+          },
         },
         required: ['provider', 'mode', 'label', 'scientificName', 'commonNames', 'probability', 'isPlant', 'draft', 'tried'],
       },
@@ -211,7 +229,7 @@ export const openApiDocument = {
           userName: { type: 'string' },
           source: { type: 'string', enum: ['addPlant', 'playground'] },
           mode: { type: 'string', enum: ['mock', 'live'] },
-          target: { type: 'string', enum: ['chain', 'plantid', 'plantnet', 'gemini'] },
+          target: { type: 'string', enum: ['chain', 'plantnet', 'gemini'] },
           scenario: { type: 'string', enum: ['match', 'notInCatalog', 'notPlant', 'error'], description: 'Mock only' },
           status: { type: 'string', enum: ['ok', 'unavailable'] },
           thumb: { type: 'string', description: 'Small image data URL; dropped when over ~40KB' },
@@ -347,7 +365,7 @@ export const openApiDocument = {
         tags: ['identify'],
         summary: 'Diagnose a plant photo',
         description:
-          'Signed-in only. Tries Plant.id, then Pl@ntNet, then Gemini. Stops on the first answer (including is_plant false). Always live (real APIs, spends credits); providers the admin switched off are skipped with reason disabled. Every request is saved to history.',
+          'Signed-in only. Gemini checks the photo is a plant. A non-plant stops before Pl@ntNet. Pl@ntNet then names the species, and Gemini fills PlantX fields from that result and the current catalog, including categories and properties added later. Each step uses that provider Ready or Mock setting. A disabled Gemini stops the pipeline. Every request is saved with its steps.',
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -404,7 +422,7 @@ export const openApiDocument = {
                   image: { type: 'string', description: 'Image data URL' },
                   thumb: { type: 'string' },
                   mode: { type: 'string', enum: ['mock', 'live'] },
-                  target: { type: 'string', enum: ['chain', 'plantid', 'plantnet', 'gemini'] },
+                  target: { type: 'string', enum: ['chain', 'plantnet', 'gemini'] },
                   scenario: { type: 'string', enum: ['match', 'notInCatalog', 'notPlant', 'error'] },
                 },
                 required: ['image', 'mode', 'target'],
@@ -516,7 +534,7 @@ export const openApiDocument = {
           'Admin only. Saved in identify_provider_settings. A disabled provider is skipped by POST /api/identify. response ready calls the real API; mock uses the scenario. The playground ignores both.',
         security: [{ cookieAuth: [] }],
         parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string', enum: ['plantid', 'plantnet', 'gemini'] } },
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', enum: ['plantnet', 'gemini'] } },
         ],
         requestBody: {
           required: true,
