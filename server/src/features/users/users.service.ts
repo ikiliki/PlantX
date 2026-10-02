@@ -66,6 +66,15 @@ export const usersService = {
     return row
   },
 
+  /** Google sign-up for a new email. Reuses an open application; a declined one stays declined. */
+  async signUpFromGoogle(input: { name: string; email: string }) {
+    const pending = await getStore().pendingUsers.list()
+    const mine = pending.filter((item) => item.email.toLowerCase() === input.email)
+    if (mine.some((item) => item.status === 'pending')) return
+    if (mine.some((item) => item.status === 'rejected')) throw Errors.declined('Sign-up was declined')
+    await usersService.requestAccess(input)
+  },
+
   async approve(id: string) {
     const store = getStore()
     const pending = await store.pendingUsers.list()

@@ -20,5 +20,9 @@ export const Errors = {
   missing: (message = 'Not found') => new AppError(404, 'missing', message),
   unknown: (message = 'Unknown account') => new AppError(404, 'unknown', message),
   exists: (message = 'Already exists') => new AppError(409, 'exists', message),
+  /** Signed up and waiting for admin approval. */
+  pending: (message = 'Waiting for approval') => new AppError(403, 'pending', message),
+  /** Sign-up was declined, or the account is disabled. */
+  declined: (message = 'Account cannot sign in') => new AppError(403, 'declined', message),
   internal: (message = 'Internal error') => new AppError(500, 'internal', message),
 }

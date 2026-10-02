@@ -16,7 +16,9 @@ A page is a container of features. Pages never show an empty screen. Gate featur
 
 Types and defaults live in `src/theme/release.ts`. Values persist on `MockDb.system`.
 
-`/admin` never shows the maintenance hold. It stays the operator sign-in or the admin shell. `/login` uses that same hold — back to landing, no product header — and stays open when the API is down. The request-access form is a separate card and is not part of that hold. When the API is down, failed lists say unavailable and the status line shows why (HTTP status and the server message). Demo rows are not substituted. Empty environment names are listed on the signed-in admin server status only; the values are never shown, and the sign-in card does not list them.
+`/admin` never shows the maintenance hold. There is no separate admin sign-in: a signed-out visit goes to `/login?next=/admin/...`, a signed-in non-operator goes to `/home`, and the operator (the bootstrap Gmail, the only admin) gets the admin shell. `/login` is the hold — back to landing, no product header — and stays open when the API is down. `?mode=signup` opens it on Sign up; `next` returns only to same-site paths.
+
+Sign-in is Google only (mock mode uses a stand-in button that signs in the operator). Log in and sign up are one flow: a Google email with no account files a pending application and the card shows "Thanks for signing up" (server error `pending`); a repeat sign-in reuses the open application; a rejected application or disabled account gets `declined`. Admin approves in Requests, then the next Google sign-in opens the account. Do not call it early access or request access anywhere. When the API is down, failed lists say unavailable and the status line shows why (HTTP status and the server message). Demo rows are not substituted. Empty environment names are listed on the signed-in admin server status only; the values are never shown, and the sign-in card does not list them.
 
 `launched: false` shows the not-launched hold. The operator and members with `preapproved` still enter. Approving an application marks that account pre-approved. Admin can clear the mark on the member.
 
@@ -51,7 +53,7 @@ Home hosts market, rank, and wiki rails. Each rail has its own placement. Greenh
 
 ## Landing
 
-Frames mount the real page with `view="widget"`. Each page already wraps its feature UI in `FeatureGate`, so not-ready features show the blurred mock and banner — not an empty card.
+The landing uses stills of the real app, not mounted pages (see plantx-views). Only features that are ready get a section or a tour tab.
 
 ## Reserved later
 

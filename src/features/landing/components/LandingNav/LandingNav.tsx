@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { canChooseLocale } from '../../../../i18n/locales'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
-import { Actions, Bar, Brand, BrandMark, Enter, Jump, Lang, LangBtn, Links } from './LandingNav.styles'
+import { Actions, Bar, Brand, BrandMark, Enter, Jump, Lang, LangBtn, Links, Login } from './LandingNav.styles'
 
 export function LandingNav() {
   const { t, locale } = useI18n()
@@ -23,34 +23,34 @@ export function LandingNav() {
         {t.appName}
       </Brand>
       <Links>
-        <Jump href="#how">{t.landing.navHow}</Jump>
-        <Jump href="#product">{t.landing.navProduct}</Jump>
-        <Jump href="#access">{t.landing.navWhy}</Jump>
+        <Jump href="#ai">{t.landing.navAi}</Jump>
+        <Jump href="#tour">{t.landing.navTour}</Jump>
       </Links>
       <Actions>
         {canChooseLocale() && (
-        <Lang>
-          <LangBtn
-            type="button"
-            $on={locale === 'he'}
-            $solid={solid}
-            aria-pressed={locale === 'he'}
-            onClick={() => setLocale('he')}
-          >
-            {t.landing.langHe}
-          </LangBtn>
-          <LangBtn
-            type="button"
-            $on={locale === 'en'}
-            $solid={solid}
-            aria-pressed={locale === 'en'}
-            onClick={() => setLocale('en')}
-          >
-            {t.landing.langEn}
-          </LangBtn>
-        </Lang>
+          <Lang>
+            <LangBtn
+              type="button"
+              $on={locale === 'he'}
+              $solid={solid}
+              aria-pressed={locale === 'he'}
+              onClick={() => setLocale('he')}
+            >
+              {t.landing.langHe}
+            </LangBtn>
+            <LangBtn
+              type="button"
+              $on={locale === 'en'}
+              $solid={solid}
+              aria-pressed={locale === 'en'}
+              onClick={() => setLocale('en')}
+            >
+              {t.landing.langEn}
+            </LangBtn>
+          </Lang>
         )}
-        <Enter href="#access">{t.landing.navRegister}</Enter>
+        <Login to="/login">{t.landing.navLogin}</Login>
+        <Enter to="/login?mode=signup">{t.landing.navSignup}</Enter>
       </Actions>
     </Bar>
   )

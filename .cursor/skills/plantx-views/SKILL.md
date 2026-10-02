@@ -23,7 +23,7 @@ Shared type: `ComponentView` in `src/theme/view.ts` — `'page' | 'widget'`.
 - `page` is the route. It can show the header, map, table of contents, and rails.
 - `widget` is the same component in a smaller frame. Pass `view="widget"`. Show the same children, fewer rows, and drop chrome that only belongs on the route (page title block, map, toc).
 - Default the prop to `'page'` so existing call sites stay full pages.
-- The landing product section is feature copy plus stills from `public/landing/` (desk greenhouse, phone greenhouse, phone home). How steps crop those same stills. Do not mount a live page there.
+- The landing shows the app through stills in `public/landing/`, listed once in `src/features/landing/landingShots.ts` and framed by `DeviceFrame` (browser or phone). Do not mount a live page there. Sections, in order: hero (Sign up / Take the tour, desk + phone still), proof row, `LandingAi` (Add Plant's four AI steps, auto-advancing until picked), `LandingTour` (the interactive dashboard: area tabs + Desktop/Phone switch; phone widths start on phone stills; an area without a phone still disables Phone), `LandingJoin` (the real `AuthPanel` sign-up card). Only show live features; market and rank stay off the landing while they are not ready. Landing sections size with `@container landing` on `LandingPage` `Main`, not on `Page`, so fixed children keep the viewport. Re-shoot stills from mock mode as persona Maya (Add Plant with a pothos photo: the mock AI always answers golden pothos).
 
 `GradeStack` uses `tab | page | widget`. The widget deck is `min(320px, 100%)` wide with a 3:4 ratio. Do not size a deck with `100svh` inside a card.
 

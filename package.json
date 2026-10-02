@@ -8,6 +8,7 @@
     "dev:local": "tsx scripts/dev-web.ts mock",
     "dev:mock": "tsx scripts/dev-web.ts mock",
     "dev:qa": "concurrently -k -n qa-api,qa-web -c green,cyan \"npm run dev:api:qa\" \"npm run dev:web:qa\"",
+    "dev:qa:lan": "concurrently -k -n qa-api,qa-web -c green,cyan \"npm run dev:api:qa\" \"tsx scripts/dev-web.ts qa --lan\"",
     "dev:prod": "concurrently -k -n prod-api,prod-web -c magenta,white \"npm run dev:api:prod\" \"npm run dev:web:prod\"",
     "dev:web:local": "tsx scripts/dev-web.ts mock",
     "dev:web:mock": "tsx scripts/dev-web.ts mock",

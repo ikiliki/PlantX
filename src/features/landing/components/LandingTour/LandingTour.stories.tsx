@@ -1,23 +1,22 @@
 import type { ReactNode } from 'react'
-import { MemoryRouter } from 'react-router-dom'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { StoreProvider } from '../../../../mock/store'
-import { LandingHow } from './LandingHow'
+import { LandingTour } from './LandingTour'
 
 const withApp = (Story: () => ReactNode) => (
   <StoreProvider source="example">
     <I18nProvider>
-      <MemoryRouter>
+      <div style={{ containerType: 'inline-size', containerName: 'landing', background: '#F4F1E8' }}>
         <Story />
-      </MemoryRouter>
+      </div>
     </I18nProvider>
   </StoreProvider>
 )
 
 export default {
-  title: 'Features/Landing/LandingHow',
-  component: LandingHow,
+  title: 'Features/Landing/LandingTour',
+  component: LandingTour,
   decorators: [withApp],
 }
 
-export const Default = () => <LandingHow />
+export const Tour = () => <LandingTour />

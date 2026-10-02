@@ -1,36 +1,19 @@
-import { useEffect } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
 import { AppShell } from '../../../../app/AppShell/AppShell'
-import { HoldStage } from '../../../../components/HoldStage/HoldStage'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
-import { AuthPanel } from '../../../auth/components/AuthPanel/AuthPanel'
-import { useI18n } from '../../../../i18n/I18nProvider'
-import { formatApiFailure } from '../../../../lib/apiFailure'
 import { useStore } from '../../../../mock/store'
 import { isOperator } from '../../../../theme/operator'
 
-/** /admin stays open. It never shows the public maintenance hold. */
+/**
+ * /admin never shows the public maintenance hold. There is no separate admin sign-in:
+ * the operator signs in with Google on /login like everyone else and comes back here.
+ */
 export function AdminGate() {
-  const { t } = useI18n()
-  const { currentUser, liveStatus, liveFailure, loginAs } = useStore()
-  const allowed = isOperator(currentUser)
+  const { currentUser, liveStatus } = useStore()
+  const { pathname } = useLocation()
 
-  useEffect(() => {
-    if (currentUser && !isOperator(currentUser)) loginAs(null)
-  }, [currentUser, loginAs])
-
-  if (allowed && liveStatus === 'loading') return <LoaderShell fill />
-  if (allowed) return <AppShell />
-
-  const body =
-    liveStatus === 'down'
-      ? formatApiFailure(liveFailure, t.admin)
-      : liveStatus === 'loading'
-        ? t.admin.serverLoadingBody
-        : t.admin.operatorOnly
-
-  return (
-    <HoldStage mode="admin" mark={t.admin.title} title={t.auth.google} body={body}>
-      <AuthPanel embedded ssoOnly titleId="admin-sso-title" onSuccess={() => undefined} />
-    </HoldStage>
-  )
+  if (liveStatus === 'loading') return <LoaderShell fill />
+  if (isOperator(currentUser)) return <AppShell />
+  if (currentUser) return <Navigate to="/home" replace />
+  return <Navigate to={`/login?next=${encodeURIComponent(pathname)}`} replace />
 }

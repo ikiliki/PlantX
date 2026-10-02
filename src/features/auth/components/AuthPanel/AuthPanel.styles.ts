@@ -101,79 +101,17 @@ export const Lead = styled.p<{ $compact?: boolean }>`
   color: ${onForest(0.7)};
 `
 
-export const Form = styled.form`
-  display: grid;
-  gap: 12px;
-  width: 100%;
-`
-
-export const Input = styled.input`
-  width: 100%;
-  min-height: 48px;
+export const Pending = styled.p`
   margin: 0;
-  padding: 0 18px;
-  border: 0;
-  border-radius: ${theme.radii.pill};
-  background: ${onForest(0.14)};
-  color: ${theme.colors.cream};
-  font: inherit;
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  backdrop-filter: blur(10px);
-  transition:
-    background ${theme.motion.fast} ${theme.motion.ease},
-    box-shadow ${theme.motion.base} ${theme.motion.ease};
-  &::placeholder {
-    color: ${onForest(0.5)};
-    font-weight: 400;
-  }
-  &:hover {
-    background: ${onForest(0.18)};
-  }
-  &:focus,
-  &:focus-visible {
-    outline: none;
-    background: ${onForest(0.2)};
-    box-shadow: 0 0 0 2px ${theme.colors.growth};
-  }
-`
-
-export const Options = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px 16px;
-  padding: 0 4px;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  color: ${onForest(0.72)};
-`
-
-export const Remember = styled.label`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 400;
-  cursor: pointer;
-  user-select: none;
-  input {
-    width: 16px;
-    height: 16px;
-    accent-color: ${theme.colors.growth};
-  }
-`
-
-export const Hint = styled.p`
-  margin: 0;
-  padding: 0 4px;
-  font-size: 12px;
+  padding: 14px 18px;
+  border-radius: ${theme.radii.lg};
+  background: ${onForest(0.12)};
+  box-shadow: inset 0 0 0 1px ${onForest(0.18)};
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
-  letter-spacing: 0.015em;
-  color: ${onForest(0.55)};
+  letter-spacing: 0.01em;
+  color: ${theme.colors.cream};
 `
 
 export const GoogleSlot = styled.div`

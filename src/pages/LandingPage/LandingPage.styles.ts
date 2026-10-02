@@ -8,14 +8,10 @@ export const Page = styled.div`
   color: ${theme.colors.ink};
 `
 
-export const HowWrap = styled.div`
-  width: min(100%, 1180px);
-  margin-inline: auto;
-  padding: 28px ${theme.space.md} 8px;
-
-  @media (min-width: ${theme.breakpoints.md}) {
-    padding: 36px 56px 12px;
-  }
+/** Landing sections size from this container (`@container landing`), not the viewport. */
+export const Main = styled.main`
+  container: landing / inline-size;
+  min-width: 0;
 `
 
 export const Foot = styled.footer`

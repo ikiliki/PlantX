@@ -1,6 +1,8 @@
 import { spawn } from 'node:child_process'
 
 const arg = process.argv[2]
+// --lan listens on every interface so a phone on the same Wi-Fi can open the app.
+const host = process.argv.includes('--lan') ? '0.0.0.0' : '127.0.0.1'
 const mode = arg === 'qa' || arg === 'prod' || arg === 'mock' ? arg : 'mock'
 const ports = {
   mock: { web: '5174' },
@@ -16,7 +18,7 @@ const api = 'api' in ports[mode] ? ports[mode].api : undefined
 if (api) env.VITE_API_PORT = api
 else delete env.VITE_API_PORT
 
-const child = spawn('npx', ['vite', '--host', '127.0.0.1', '--port', ports[mode].web, '--strictPort'], {
+const child = spawn('npx', ['vite', '--host', host, '--port', ports[mode].web, '--strictPort'], {
   stdio: 'inherit',
   shell: true,
   env,

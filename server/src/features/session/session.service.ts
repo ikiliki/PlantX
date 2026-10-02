@@ -3,6 +3,8 @@ import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { BOOTSTRAP_ADMIN } from '../../lib/ensureData.ts'
 import type { GoogleProfile } from '../../lib/googleAuth.ts'
+import { usersService } from '../users/users.service.ts'
+
 function isActive(user: User) {
   return (user.accountStatus ?? 'active') === 'active'
 }
@@ -83,9 +85,11 @@ export const sessionService = {
     }
 
     if (!user) {
-      throw Errors.unknown('No PlantX account for this Google email. Request access first.')
+      // The first Google sign-in is the sign-up: file it for admin approval.
+      await usersService.signUpFromGoogle({ name: profile.name || email.split('@')[0], email })
+      throw Errors.pending('Your account is waiting for approval')
     }
-    if (!isActive(user)) throw Errors.forbidden('Account disabled')
+    if (!isActive(user)) throw Errors.declined('Account disabled')
     if (profile.name && !user.name) user.name = profile.name
     await store.users.saveAll(users)
     return user

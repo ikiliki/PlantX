@@ -88,6 +88,11 @@ export const Lang = styled.div`
   border-radius: ${theme.radii.pill};
   border: 1px solid currentColor;
   opacity: 0.9;
+
+  /* Mock-only toggle; on the narrowest phones Settings still switches language. */
+  @media (max-width: 359px) {
+    display: none;
+  }
 `
 
 export const LangBtn = styled.button<{ $on: boolean; $solid: boolean }>`
@@ -106,20 +111,33 @@ export const LangBtn = styled.button<{ $on: boolean; $solid: boolean }>`
     $on ? ($solid ? theme.colors.creamCard : theme.colors.forest) : 'inherit'};
 `
 
-export const Enter = styled.a`
-  ${pressable}
+export const Login = styled(Link)`
   display: none;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 8px 16px;
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
+  padding: 8px 6px;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 
   @media (min-width: ${theme.breakpoints.sm}) {
     display: inline-flex;
   }
+`
+
+export const Enter = styled(Link)`
+  ${pressable}
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.forest};
+  color: ${theme.colors.cream};
+  font-size: 13px;
+  font-weight: 700;
 `

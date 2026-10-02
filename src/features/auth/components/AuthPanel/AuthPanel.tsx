@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { fetchGoogleAuth } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
@@ -11,14 +11,10 @@ import {
   BrandTagline,
   ErrorText,
   Foot,
-  Form,
   GoogleSlot,
-  Hint,
-  Input,
   Lead,
-  Options,
   Panel,
-  Remember,
+  Pending,
   Shell,
   Stack,
   Submit,
@@ -92,84 +88,70 @@ function envGoogleClientId() {
   return id || null
 }
 
+/**
+ * Google is the only sign-in. Log in and sign up are one flow: a new Google email
+ * files a sign-up, and the account opens once an admin approves it.
+ */
 export function AuthPanel({
   reason = 'buy',
   start,
   dialog = false,
   gate = false,
-  ssoOnly = false,
-  embedded = false,
   titleId = 'auth-dialog-title',
   onSuccess,
   onContinue,
 }: {
   reason?: AuthReason
   start?: 'login' | 'register'
-  showDemo?: boolean
   /** Compact card for popup / overlay. */
   dialog?: boolean
   /** Same card as login; primary CTA only (e.g. go to /login). */
   gate?: boolean
-  /** Google button only. No email, password, or register. */
-  ssoOnly?: boolean
-  /** Google control only, for the shared public hold card. */
-  embedded?: boolean
   titleId?: string
   onSuccess: () => void
-  onGuest?: () => void
   onContinue?: () => void
 }) {
   const { t, locale } = useI18n()
-  const { loginByEmail, loginWithGoogle, loginWithMockSso, requestAccess } = useStore()
+  const { loginWithGoogle, loginWithMockSso } = useStore()
   const [mode, setMode] = useState<'login' | 'register'>(start ?? (reason === 'sell' ? 'register' : 'login'))
-  const [loginStep, setLoginStep] = useState<'sso' | 'manual'>('sso')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [pending, setPending] = useState(false)
   const [googleClientId, setGoogleClientId] = useState<string | null>(() => envGoogleClientId())
   const googleRef = useRef<HTMLDivElement>(null)
+  // Callers and the store pass fresh functions each render; read the latest from refs so Google
+  // is initialized once per button, not on every render.
+  const onSuccessRef = useRef(onSuccess)
+  onSuccessRef.current = onSuccess
+  const loginRef = useRef(loginWithGoogle)
+  loginRef.current = loginWithGoogle
 
-  const googleReady = Boolean(googleClientId)
-  const mockSso = ssoOnly && clientEnv() === 'mock'
-  const showSso = mockSso
-    ? !pending
-    : ssoOnly
-      ? googleReady && !pending
-      : !gate && mode === 'login' && !pending && googleReady && loginStep === 'sso'
-  const showManualLogin =
-    !ssoOnly && !gate && mode === 'login' && !pending && (!googleReady || loginStep === 'manual')
+  const mockSso = clientEnv() === 'mock'
+  const showGoogle = !gate && !pending && !mockSso && Boolean(googleClientId)
   const googleLocale = locale === 'he' ? 'he' : 'en'
 
-  const heading = ssoOnly
-    ? t.admin.title
-    : gate
-      ? t.auth.login
-      : pending
-        ? t.auth.pendingTitle
-        : mode === 'register'
-          ? t.auth.register
-          : t.auth.login
-  const copy = ssoOnly
-    ? t.admin.operatorOnly
-    : gate
-      ? ''
-      : pending
-        ? t.auth.pendingBody
-        : mode === 'register'
-          ? reasonBody(reason, t)
-          : ''
+  const heading = gate
+    ? t.auth.login
+    : pending
+      ? t.auth.pendingTitle
+      : mode === 'register'
+        ? t.auth.register
+        : t.auth.login
+  const copy = gate
+    ? ''
+    : pending
+      ? t.auth.pendingBody
+      : mode === 'register'
+        ? reasonBody(reason, t) || t.auth.registerBody
+        : t.auth.loginBody
 
   useEffect(() => {
-    if (clientEnv() === 'mock') return
+    if (mockSso) return
     void fetchGoogleAuth().then((res) => {
       if (res?.enabled && res.clientId) setGoogleClientId(res.clientId)
       else if (!envGoogleClientId()) setGoogleClientId(null)
     })
-  }, [])
+  }, [mockSso])
 
   const onMockSso = async () => {
     setBusy(true)
@@ -184,7 +166,7 @@ export function AuthPanel({
   }
 
   useEffect(() => {
-    if (mockSso || !showSso || !googleClientId) return
+    if (!showGoogle || !googleClientId) return
     let cancelled = false
     void (async () => {
       try {
@@ -197,19 +179,23 @@ export function AuthPanel({
             void (async () => {
               setBusy(true)
               setError('')
-              const result = await loginWithGoogle(response.credential)
+              const result = await loginRef.current(response.credential)
               setBusy(false)
-              if (!result.ok) {
-                setError(
-                  result.reason === 'unknown'
-                    ? t.auth.googleUnknown
-                    : result.reason === 'offline'
-                      ? t.auth.offline
-                      : t.auth.googleFailed,
-                )
+              if (result.ok) {
+                onSuccessRef.current()
                 return
               }
-              onSuccess()
+              if (result.reason === 'pending') {
+                setPending(true)
+                return
+              }
+              setError(
+                result.reason === 'declined'
+                  ? t.auth.declined
+                  : result.reason === 'offline'
+                    ? t.auth.offline
+                    : t.auth.googleFailed,
+              )
             })()
           },
           cancel_on_tap_outside: true,
@@ -218,88 +204,23 @@ export function AuthPanel({
           theme: 'outline',
           size: 'large',
           shape: 'pill',
-          text: 'continue_with',
+          text: mode === 'register' ? 'signup_with' : 'continue_with',
           width: 280,
           locale: googleLocale,
         })
       } catch {
-        if (!cancelled) {
-          setGoogleClientId(null)
-          if (!ssoOnly) setLoginStep('manual')
-        }
+        if (!cancelled) setGoogleClientId(null)
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [mockSso, showSso, googleClientId, googleLocale, loginWithGoogle, onSuccess, ssoOnly, t.auth.googleFailed])
-
-  const onLogin = async (event: FormEvent) => {
-    event.preventDefault()
-    if (!password.trim()) {
-      setError(t.auth.invalid)
-      return
-    }
-    setBusy(true)
-    setError('')
-    const ok = await loginByEmail(email)
-    setBusy(false)
-    if (!ok) {
-      setError(t.auth.invalid)
-      return
-    }
-    onSuccess()
-  }
-
-  const onRegister = async (event: FormEvent) => {
-    event.preventDefault()
-    if (!name.trim() || !email.includes('@') || !password.trim()) {
-      setError(t.auth.invalid)
-      return
-    }
-    setBusy(true)
-    setError('')
-    const result = await requestAccess({ name, email })
-    setBusy(false)
-    if (!result.ok) {
-      setError(
-        result.reason === 'exists'
-          ? t.auth.exists
-          : result.reason === 'offline'
-            ? t.auth.offline
-            : t.auth.invalid,
-      )
-      return
-    }
-    setPending(true)
-  }
+  }, [showGoogle, googleClientId, googleLocale, mode, t.auth])
 
   const switchMode = (next: 'login' | 'register') => {
     setMode(next)
     setError('')
     setPending(false)
-    setLoginStep(googleReady ? 'sso' : 'manual')
-  }
-
-  if (embedded) {
-    if (mockSso) {
-      return (
-        <>
-          <Submit type="button" onClick={() => void onMockSso()} disabled={busy}>
-            {busy ? t.common.loading : t.auth.google}
-          </Submit>
-          {error && <ErrorText>{error}</ErrorText>}
-        </>
-      )
-    }
-    return showSso ? (
-      <>
-        <GoogleSlot ref={googleRef} aria-label={t.auth.google} />
-        {error && <ErrorText>{error}</ErrorText>}
-      </>
-    ) : (
-      <ErrorText>{t.auth.googleFailed}</ErrorText>
-    )
   }
 
   return (
@@ -332,128 +253,36 @@ export function AuthPanel({
               {t.profile.lockedAction}
             </Submit>
           ) : pending ? (
-            <Foot>
-              <TextButton type="button" onClick={() => switchMode('login')}>
-                {t.auth.switchToLogin}
-              </TextButton>
-            </Foot>
-          ) : showSso ? (
             <>
-              {mockSso ? (
-                <Submit type="button" onClick={() => void onMockSso()} disabled={busy}>
-                  {busy ? t.common.loading : t.auth.google}
-                </Submit>
-              ) : (
-                <GoogleSlot ref={googleRef} aria-label={t.auth.google} />
-              )}
-              {error && <ErrorText>{error}</ErrorText>}
-              {!ssoOnly && (
-                <Foot>
-                  <TextButton
-                    type="button"
-                    onClick={() => {
-                      setError('')
-                      setLoginStep('manual')
-                    }}
-                  >
-                    {t.auth.useEmail}
-                  </TextButton>
-                  <TextButton type="button" onClick={() => switchMode('register')}>
-                    {t.auth.switchToRegister}
-                  </TextButton>
-                </Foot>
-              )}
-            </>
-          ) : ssoOnly ? (
-            <ErrorText>{t.auth.googleFailed}</ErrorText>
-          ) : showManualLogin ? (
-            <>
-              <Form onSubmit={(event) => void onLogin(event)}>
-                <Input
-                  type="email"
-                  autoComplete="email"
-                  placeholder={t.auth.email}
-                  aria-label={t.auth.email}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <Input
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder={t.auth.password}
-                  aria-label={t.auth.password}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <Options>
-                  <Remember>
-                    <input
-                      type="checkbox"
-                      checked={remember}
-                      onChange={(e) => setRemember(e.target.checked)}
-                    />
-                    {t.auth.remember}
-                  </Remember>
-                </Options>
-                <Hint>{t.auth.passwordHint}</Hint>
-                {error && <ErrorText>{error}</ErrorText>}
-                <Submit type="submit" disabled={busy}>
-                  {t.auth.submitLogin}
-                </Submit>
-              </Form>
+              <Pending>{t.auth.pendingHint}</Pending>
               <Foot>
-                {googleReady && (
-                  <TextButton
-                    type="button"
-                    onClick={() => {
-                      setError('')
-                      setLoginStep('sso')
-                    }}
-                  >
-                    {t.auth.useGoogle}
-                  </TextButton>
-                )}
-                <TextButton type="button" onClick={() => switchMode('register')}>
-                  {t.auth.switchToRegister}
+                <TextButton type="button" onClick={() => switchMode('login')}>
+                  {t.auth.tryAgain}
                 </TextButton>
               </Foot>
             </>
           ) : (
             <>
-              <Form onSubmit={(event) => void onRegister(event)}>
-                <Input
-                  autoComplete="name"
-                  placeholder={t.auth.name}
-                  aria-label={t.auth.name}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <Input
-                  type="email"
-                  autoComplete="email"
-                  placeholder={t.auth.email}
-                  aria-label={t.auth.email}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <Input
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder={t.auth.password}
-                  aria-label={t.auth.password}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <Hint>{t.auth.passwordHint}</Hint>
-                {error && <ErrorText>{error}</ErrorText>}
-                <Submit type="submit" disabled={busy}>
-                  {busy ? t.auth.submitPending : t.auth.submitRegister}
+              {mockSso ? (
+                <Submit type="button" onClick={() => void onMockSso()} disabled={busy}>
+                  {busy ? t.common.loading : t.auth.google}
                 </Submit>
-              </Form>
+              ) : showGoogle ? (
+                <GoogleSlot ref={googleRef} aria-label={t.auth.google} aria-busy={busy} />
+              ) : (
+                <ErrorText>{t.auth.googleUnavailable}</ErrorText>
+              )}
+              {error && <ErrorText>{error}</ErrorText>}
               <Foot>
-                <TextButton type="button" onClick={() => switchMode('login')}>
-                  {t.auth.switchToLogin}
-                </TextButton>
+                {mode === 'login' ? (
+                  <TextButton type="button" onClick={() => switchMode('register')}>
+                    {t.auth.switchToRegister}
+                  </TextButton>
+                ) : (
+                  <TextButton type="button" onClick={() => switchMode('login')}>
+                    {t.auth.switchToLogin}
+                  </TextButton>
+                )}
               </Foot>
             </>
           )}

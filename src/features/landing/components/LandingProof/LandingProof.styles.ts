@@ -9,15 +9,11 @@ export const Band = styled.section`
 
 export const Grid = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 
-  @media (min-width: 640px) {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  @media (min-width: ${theme.breakpoints.md}) {
-    grid-template-columns: repeat(4, 1fr);
+  @container landing (min-width: 900px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 `
 

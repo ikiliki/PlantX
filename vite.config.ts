@@ -29,14 +29,16 @@ export default defineConfig(({ mode }) => {
       },
     }),
   ],
-  server: apiPort
-    ? {
-        proxy: {
+  server: {
+    // Cloudflare quick tunnels, so Google sign-in can be tested from a phone.
+    allowedHosts: ['.trycloudflare.com'],
+    proxy: apiPort
+      ? {
           '/api': {
             target: `http://127.0.0.1:${apiPort}`,
           },
-        },
-      }
-    : undefined,
+        }
+      : undefined,
+  },
   }
 })

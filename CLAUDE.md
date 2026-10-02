@@ -36,7 +36,7 @@ PlantX is a bilingual (English + Hebrew) marketplace for living plants.
 - `src/app/AppRoutes/AppRoutes.tsx` — all routes; `/plants/:id` and `/sellers/:id` open as dialogs.
 - `src/mock/store.tsx` — the app state layer in **every** mode (despite the folder name). `src/mock/liveApi.ts` talks to `/api` in qa/prod.
 - `src/mock/types.ts` — shared domain types, also imported by the server.
-- `src/i18n/` — `t`, `tr(en, he)`, `dir`, `formatMoney`; `en.json` and `he.json` must stay in sync. Production is English-only for now (`locales.ts`).
+- `src/i18n/` — `t`, `tr(en, he)`, `dir`, `formatMoney`; `en.json` and `he.json` must stay in sync. QA and production are English-only for now (`locales.ts`); mock mode keeps Hebrew so it stays maintained.
 - `src/theme/release.ts` — `PageGate` / `FeatureGate`; `audience.ts` guest rules; `plantxEnv.ts` mode detection.
 - `server/src/features/<feature>/` — `*.routes.ts` + `*.service.ts` per feature (session, users, catalog, identify, plants, todos, ...).
 - `server/src/features/identify/identify.service.ts` — the only orchestrator of the identify chain (Gemini plant check → Pl@ntNet → Gemini draft).
@@ -61,7 +61,7 @@ Hard rules:
 
 ## Known issues (follow-ups)
 
-- **Auth:** `POST /api/session` with `{ userId }` signs in as any active user, including the admin (`server/src/features/session/session.routes.ts`, `session.service.ts` `requireById`).
+- **Auth:** `POST /api/session` with `{ userId }` or `{ email }` signs in as any active user without a password, including the admin by id (the UI is Google-only now, but the endpoint remains) (`server/src/features/session/session.routes.ts`, `session.service.ts` `requireById`).
 - **Auth:** session cookie is the raw, unsigned user id (`server/src/lib/session.ts`).
 - **Auth:** Google token check falls back to unverified claims when tokeninfo is unreachable (`server/src/lib/googleAuth.ts`).
 - `.env.example` still mentions Plant.id / `KINDWISE_API_KEY` (removed). `scripts/smoke.mjs` visits routes that no longer exist.

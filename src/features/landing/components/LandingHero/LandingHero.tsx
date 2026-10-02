@@ -1,19 +1,18 @@
-import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { Link } from 'react-router-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { classPhotos } from '../../../../mock/images'
+import { landingShots } from '../../landingShots'
+import { DeviceFrame } from '../DeviceFrame/DeviceFrame'
 import {
   Actions,
+  Desk,
   Hero,
   Kicker,
-  MarketCard,
-  PhotoMain,
-  PhotoSmall,
-  Price,
+  LoginLine,
+  Mobile,
   Primary,
   Secondary,
   Sub,
   Title,
-  Trust,
   Visual,
 } from './LandingHero.styles'
 
@@ -27,37 +26,21 @@ export function LandingHero() {
         <Title>{t.landing.heroTitle}</Title>
         <Sub>{t.landing.heroSub}</Sub>
         <Actions>
-          <Primary href="#access">{t.landing.requestAccess}</Primary>
-          <Secondary href="#how">{t.landing.seeHow}</Secondary>
+          <Primary to="/login?mode=signup">{t.landing.signUp}</Primary>
+          <Secondary href="#tour">{t.landing.seeTour}</Secondary>
         </Actions>
-        <Trust>
-          <span>
-            <strong>{t.landing.trustVerified}</strong> {t.landing.trustVerifiedRest}
-          </span>
-          <span aria-hidden="true">•</span>
-          <span>
-            <strong>{t.landing.trustCommunity}</strong> {t.landing.trustCommunityRest}
-          </span>
-        </Trust>
+        <LoginLine>
+          {t.landing.haveAccount}{' '}
+          <Link to="/login">{t.landing.logIn}</Link>
+        </LoginLine>
       </div>
       <Visual>
-        <PhotoMain>
-          <PlantImage src={classPhotos.monStdXl} alt="" />
-        </PhotoMain>
-        <PhotoSmall $slot="a">
-          <PlantImage src={classPhotos.potGoldL} alt="" />
-        </PhotoSmall>
-        <PhotoSmall $slot="b">
-          <PlantImage src={classPhotos.potNjoy} alt="" />
-        </PhotoSmall>
-        <MarketCard>
-          <PlantImage src={classPhotos.potGoldS} alt="" />
-          <div>
-            <small>{t.landing.readyToList}</small>
-            <strong>{t.landing.heroListing}</strong>
-          </div>
-          <Price>₪45</Price>
-        </MarketCard>
+        <Desk>
+          <DeviceFrame device="desk" src={landingShots.greenhouseDesk} alt={t.landing.tourGreenhouseTitle} eager />
+        </Desk>
+        <Mobile>
+          <DeviceFrame device="phone" src={landingShots.homePhone} alt={t.landing.tourHomeTitle} eager />
+        </Mobile>
       </Visual>
     </Hero>
   )
