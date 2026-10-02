@@ -52,7 +52,7 @@ Return only catalog ids that exist. A species or common name that matches a cata
 
 ## Keys
 
-`PLANTNET_API_KEY`, `GEMINI_API_KEY`, optional `GEMINI_MODEL`. Gemini tries its model, then `MODEL_FALLBACKS` in `providers/gemini.ts`, when Google returns 404, 429, or 503. Never send keys to the browser. Admin status reports key set or not, never the secret. Grower copy does not name these providers.
+`PLANTNET_API_KEY`, `GEMINI_API_KEY`, optional `GEMINI_MODEL`. Gemini tries `GEMINI_MODEL`, then `MODEL_FALLBACKS` in `providers/gemini.ts` (steady flash first; the newest flash model is last because Google overloads and rate-limits it). It moves to the next model on 404, 429, 503, a timeout, or a 400 that rejects the thinking setting, inside a 20s budget per step. Every call sends `thinkingConfig.thinkingLevel: low`; Gemini 3 otherwise thinks at medium depth and a plant check can take 30s+. Never send keys to the browser. Admin status reports key set or not, never the secret. Grower copy does not name these providers.
 
 ## New provider
 

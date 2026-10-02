@@ -5,10 +5,17 @@ import { IDENTIFY_TIMEOUT_MS, type IdentifyProvider, type ProviderHealth, type R
 
 const DOCS_URL = 'https://ai.google.dev/gemini-api/docs'
 /**
- * Newest first. Google retires flash models and overloads the latest one (404 / 503),
- * so a failed model is skipped for the next. GEMINI_MODEL is tried before this list.
+ * Steady and fast first. The newest flash model is the one Google overloads and rate-limits
+ * (2026-10-02: gemini-3.8-flash took 49s on a one-line prompt, then 503 and 429, while
+ * gemini-3.5-flash answered in 1.4s), so it is the last resort, not the default.
+ * A failed model is skipped for the next. GEMINI_MODEL is tried before this list.
  */
-const MODEL_FALLBACKS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite']
+const MODEL_FALLBACKS = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']
+/**
+ * Gemini 3 thinks at medium depth unless told otherwise. A plant check and a catalog
+ * pick are short classifications, so keep thinking low and the scan fast.
+ */
+const THINKING_LEVEL = 'low'
 /** Overloaded, retired, or out of quota: try the next model. Anything else is a real failure. */
 const RETRYABLE_STATUS = new Set([404, 429, 503])
 /**
@@ -190,6 +197,7 @@ async function generate(image: string, prompt: string, schema: unknown): Promise
     generationConfig: {
       responseMimeType: 'application/json',
       responseSchema: schema,
+      thinkingConfig: { thinkingLevel: THINKING_LEVEL },
     },
   })
   let lastFailure = 'Gemini failed'
@@ -213,7 +221,8 @@ async function generate(image: string, prompt: string, schema: unknown): Promise
       if (!res.ok) {
         const text = await res.text().catch(() => '')
         lastFailure = `Gemini HTTP ${res.status}${text ? `: ${text.slice(0, 180)}` : ''}`
-        if (RETRYABLE_STATUS.has(res.status)) continue
+        // A model that rejects the thinking setting is skipped like an overloaded one.
+        if (RETRYABLE_STATUS.has(res.status) || (res.status === 400 && /thinking/i.test(text))) continue
         break
       }
       const body = (await res.json()) as GeminiBody
@@ -320,6 +329,7 @@ export async function guessPlantSize(image: string, catalog: Catalog): Promise<s
     ],
     generationConfig: {
       responseMimeType: 'application/json',
+      thinkingConfig: { thinkingLevel: THINKING_LEVEL },
       responseSchema: {
         type: 'OBJECT',
         properties: { size: nullableEnum(sizes) },
@@ -480,6 +490,7 @@ export async function draftCatalogEntry(image: string, hint: CatalogDraftHint): 
     generationConfig: {
       responseMimeType: 'application/json',
       responseSchema: DRAFT_SCHEMA,
+      thinkingConfig: { thinkingLevel: THINKING_LEVEL },
     },
   })
 
