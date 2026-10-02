@@ -32,11 +32,12 @@ const WIDGET_ITEMS = 2
 
 type HomeFeedFilter = 'all' | 'activities' | 'tasks'
 
-/** Completed care (water, photo) are tasks; everything else a grower does is an activity. */
-const TASK_KINDS: FeedUpdateKind[] = ['water', 'photo']
+/** A new plant and completed care (water, photo) are tasks. Everything else is an activity. */
+const TASK_KINDS: FeedUpdateKind[] = ['added', 'water', 'photo']
 
 function homeFeedFilter(value: string | null): HomeFeedFilter {
-  return value === 'activities' || value === 'tasks' ? value : 'all'
+  if (value === 'all' || value === 'activities' || value === 'tasks') return value
+  return 'tasks'
 }
 
 function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) {
@@ -53,7 +54,7 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   const empty = filter === 'all' ? t.feed.empty : t.feed.filterEmpty
   const setFilter = (next: HomeFeedFilter) => {
     const nextParams = new URLSearchParams(params)
-    if (next === 'all') nextParams.delete('feed')
+    if (next === 'tasks') nextParams.delete('feed')
     else nextParams.set('feed', next)
     setParams(nextParams, { replace: true })
   }
