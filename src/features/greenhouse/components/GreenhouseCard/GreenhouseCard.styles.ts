@@ -110,3 +110,11 @@ export const EmptyTile = styled.span<{ $compact?: boolean }>`
   background: ${theme.colors.chipNeutral};
   color: ${theme.colors.moss};
 `
+
+/** "Level 3 · Leafling" under the grower name. */
+export const LevelLine = styled.span`
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: ${theme.colors.moss};
+`

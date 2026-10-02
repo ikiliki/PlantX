@@ -1,32 +1,20 @@
-import { useMemo } from 'react'
-import { Icon } from '../../../../components/Icon/Icon'
+import { useMemo, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { userPlace } from '../../../../mock/locations'
 import { useStore } from '../../../../mock/store'
 import type { Listing } from '../../../../mock/types'
 import type { ComponentView } from '../../../../theme/view'
+import { createSeed } from '../../../../mock/seed'
 import { listingFilterMeta } from '../../listingFilterMeta'
 import { emptyMarketFilters } from '../../marketFilters'
 import { useOpenMarketListing } from '../../useOpenMarketListing'
 import { ListingMap } from '../ListingMap/ListingMap'
 import { ListingTable } from '../ListingTable/ListingTable'
 import { MarketSearch } from '../MarketSearch/MarketSearch'
+import { MarketSplit } from '../MarketSplit/MarketSplit'
 import { MarketViewToggle } from '../MarketViewToggle/MarketViewToggle'
 import { TickerStrip } from '../MarketTicker/TickerStrip'
-import {
-  ChartsLink,
-  Copy,
-  DataBlur,
-  FilterBlur,
-  Head,
-  MapSlot,
-  Root,
-  SoonBanner,
-  Split,
-  Sub,
-  Veil,
-  Widget,
-} from './MarketPending.styles'
+import { DataBlur, Root, SoonBanner, SoonPill, Widget } from './MarketPending.styles'
 
 function previewListings(listings: Listing[], limit: number) {
   return listings.filter((item) => item.status === 'active').slice(0, limit)
@@ -41,6 +29,12 @@ export function MarketPending({ view = 'page' }: { view?: ComponentView }) {
   const banner = status === 'maintenance' ? t.release.maintenance : t.release.comingSoon
   const listings = previewListings(db.listings, view === 'widget' ? 3 : 6)
   const filters = emptyMarketFilters()
+  const [paneView, setPaneView] = useState<'list' | 'map'>('list')
+  // Sample market from the demo seed, built once, only used while the market has no real listings.
+  const sample = useMemo(() => {
+    const seed = createSeed()
+    return { listings: previewListings(seed.listings, 8), source: seed }
+  }, [])
   const origin = userPlace(currentUser)
   const meta = useMemo(
     () =>
@@ -71,48 +65,29 @@ export function MarketPending({ view = 'page' }: { view?: ComponentView }) {
     )
   }
 
+  // No real listings yet (QA, a fresh production): sample ones, blurred, under the "sample listings" pill.
+  const preview = listings.length > 0 ? { listings, source: undefined } : sample
   return (
     <Root>
-      <Head>
-        <Copy>
-          <h1>{t.exchange.title}</h1>
-          <Sub>{t.exchange.subtitle}</Sub>
-        </Copy>
-        <ChartsLink to="/market/categories">
-          <Icon name="chart" size={18} />
-          {t.nav.charts}
-        </ChartsLink>
-      </Head>
+      <SoonPill role="status">
+        <span aria-hidden>✦</span>
+        {banner}
+      </SoonPill>
 
-      <Veil>
-        <DataBlur aria-hidden="true">
-          <TickerStrip variant="bar" prices="masked" />
-        </DataBlur>
-        <SoonBanner>
-          <span>{banner}</span>
-        </SoonBanner>
-      </Veil>
+      {/* Filters show what is coming but do nothing yet; the list / map switch at the end works. */}
+      <MarketSearch
+        filters={filters}
+        onChange={() => {}}
+        meta={meta}
+        inactive
+        end={<MarketViewToggle view={paneView} onChange={setPaneView} />}
+      />
 
-      <FilterBlur inert aria-hidden="true">
-        <MarketSearch
-          filters={filters}
-          onChange={() => {}}
-          meta={meta}
-          end={<MarketViewToggle view="map" onChange={() => {}} />}
-        />
-      </FilterBlur>
-
-      <Split>
-        <Veil>
-          <ListingTable listings={listings} masked onOpen={openListing} />
-          <SoonBanner>
-            <span>{banner}</span>
-          </SoonBanner>
-        </Veil>
-        <MapSlot>
-          <ListingMap listings={listings} tall masked />
-        </MapSlot>
-      </Split>
+      <MarketSplit
+        view={paneView}
+        list={<ListingTable listings={preview.listings} masked source={preview.source} />}
+        map={() => <ListingMap listings={preview.listings} tall masked source={preview.source} />}
+      />
     </Root>
   )
 }

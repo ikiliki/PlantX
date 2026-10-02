@@ -42,27 +42,6 @@ export const CategoriesLink = styled(Link)`
   }
 `
 
-export const Stage = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-
-  @container (min-width: 960px) {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-`
-
-export const Results = styled.div`
-  flex: 1 1 auto;
-  min-width: 0;
-  display: grid;
-  gap: 12px;
-  align-content: start;
-`
-
 export const ResultsHead = styled.div`
   display: flex;
   align-items: center;
@@ -71,32 +50,4 @@ export const ResultsHead = styled.div`
   font-size: 15px;
   font-weight: 700;
   color: ${theme.colors.ink};
-`
-
-export const MapPane = styled.div<{ $open: boolean }>`
-  order: -1;
-  overflow: hidden;
-  min-width: 0;
-  opacity: ${({ $open }) => ($open ? 1 : 0)};
-  max-height: ${({ $open }) => ($open ? '420px' : '0px')};
-  margin-bottom: ${({ $open }) => ($open ? '16px' : '0')};
-  pointer-events: ${({ $open }) => ($open ? 'auto' : 'none')};
-  transition:
-    max-height 0.32s ease,
-    opacity 0.22s ease,
-    margin 0.32s ease,
-    flex 0.32s ease;
-
-  @container (min-width: 960px) {
-    order: 0;
-    position: sticky;
-    top: calc(${theme.layout.topBar} + 12px);
-    flex: ${({ $open }) => ($open ? '0 0 34%' : '0 0 0%')};
-    min-width: ${({ $open }) => ($open ? '280px' : '0')};
-    max-width: ${({ $open }) => ($open ? '420px' : '0')};
-    height: ${({ $open }) => ($open ? 'calc(100svh - 150px)' : '0px')};
-    max-height: ${({ $open }) => ($open ? 'calc(100svh - 150px)' : '0px')};
-    margin-bottom: 0;
-    margin-inline-start: ${({ $open }) => ($open ? '16px' : '0')};
-  }
 `

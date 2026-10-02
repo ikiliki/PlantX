@@ -1,5 +1,4 @@
-import { useEffect, useId, useState, type CSSProperties } from 'react'
-import { Avatar } from '../../../../components/Avatar/Avatar'
+import { useEffect, useId, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { fetchGreenhouseLevel } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
@@ -15,12 +14,8 @@ import {
   Inner,
   Label,
   Next,
-  OwnerBadge,
   Progress,
   Rank,
-  Ring,
-  RingNumber,
-  RingWrap,
   Root,
   Tally,
   TallyRow,
@@ -28,6 +23,7 @@ import {
   TopCopy,
   Xp,
 } from './GreenhouseLevelCard.styles'
+import { LevelBadge } from '../LevelBadge/LevelBadge'
 
 const SEEN_KEY = 'plantx.greenhouseLevel.'
 
@@ -73,20 +69,7 @@ export function GreenhouseLevelView({
       {celebrate ? <Burst role="status">{t.greenhouse.levelUp}</Burst> : null}
       <Inner>
       <Top>
-        <RingWrap>
-          <Ring
-            role="img"
-            aria-label={t.greenhouse.levelN.replace('{n}', String(summary.level))}
-            style={{ '--progress': summary.progress } as CSSProperties}
-          >
-            <RingNumber>{summary.level}</RingNumber>
-          </Ring>
-          {owner ? (
-            <OwnerBadge title={owner.name}>
-              <Avatar name={owner.name} color={owner.color} size={28} />
-            </OwnerBadge>
-          ) : null}
-        </RingWrap>
+        <LevelBadge level={summary.level} progress={summary.progress} owner={owner} />
         <TopCopy>
           <Label>{t.greenhouse.levelLabel}</Label>
           <Rank>{rankName}</Rank>

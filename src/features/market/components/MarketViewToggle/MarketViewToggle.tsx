@@ -30,6 +30,7 @@ function MapIcon() {
   )
 }
 
+/** Icon-only list / map switch. Only shown where the page has room for one pane (see MarketSplit). */
 export function MarketViewToggle({
   view,
   onChange,
@@ -46,18 +47,20 @@ export function MarketViewToggle({
         $on={view === 'list'}
         aria-pressed={view === 'list'}
         onClick={() => onChange('list')}
+        aria-label={t.market.viewList}
+        title={t.market.viewList}
       >
         <ListIcon />
-        {t.market.viewList}
       </Option>
       <Option
         type="button"
         $on={view === 'map'}
         aria-pressed={view === 'map'}
         onClick={() => onChange('map')}
+        aria-label={t.market.viewMap}
+        title={t.market.viewMap}
       >
         <MapIcon />
-        {t.market.viewMap}
       </Option>
     </Track>
   )

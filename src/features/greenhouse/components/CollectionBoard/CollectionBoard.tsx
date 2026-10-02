@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { FilterChips } from '../../../../components/FilterChips/FilterChips'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { ActivityThread, type ActivityEntry } from '../ActivityThread/ActivityThread'
 import { AddPlantCard } from '../AddPlantCard/AddPlantCard'
@@ -25,8 +26,6 @@ import {
   CareSections,
   Count,
   Empty,
-  Filter,
-  FilterBar,
   Growing,
   Rail,
   Shelf,
@@ -238,20 +237,7 @@ export function CollectionBoard({
     <Growing>
       {!compact && living.length > 0 && !empty ? (
         <Toolbar>
-          <FilterBar role="tablist" aria-label={t.greenhouse.title}>
-            {filters.map((item) => (
-              <Filter
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={filter === item.id}
-                $on={filter === item.id}
-                onClick={() => setFilter(item.id)}
-              >
-                {item.label} <Count>({item.count})</Count>
-              </Filter>
-            ))}
-          </FilterBar>
+          <FilterChips label={t.greenhouse.title} options={filters} value={filter} onChange={setFilter} />
         </Toolbar>
       ) : null}
 

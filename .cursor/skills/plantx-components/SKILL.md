@@ -42,6 +42,7 @@ A pattern appears twice or more (same Field + Select + "Choose", same admin head
 - `AdminSection` — admin card with heading, lead, side note
 - `Pager` (`src/components`) — previous / next with `PAGE_SIZE` (10). `AdminTable` and the market use `usePaged`. A single page hides the control. `anchor: 'end'` opens a timeline on the latest page.
 - `InfiniteScroll` (`src/components`) — same page size, loaded when the edge scrolls into view. News grows downward. Greenhouse activity opens on the latest rows and loads older rows when its thread scrolls up.
+- `FilterChips` (`src/components`) — one row of filter chips with optional icon and count, scrolling sideways on a phone. Greenhouse filters and the Home feed use it.
 - `Switch` (`src/components`) — on/off `role="switch"` with busy spinner; System and APIs admin toggles
 - `SuggestionEditorDialog` — catalog suggestion form for category, subcategory, properties, and both photos. Requests opens it from an open category row.
 - `RequestsPanel` — Admin → Requests. Applications are one Server-style table, suggested categories are another. Open rows sit with added and declined rows. Each table selects, expands, and pages by 10.

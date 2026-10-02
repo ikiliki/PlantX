@@ -32,7 +32,6 @@ import {
   Sprout,
   Stamp,
   Stem,
-  Sweep,
   When,
 } from './ActivityMoment.styles'
 
@@ -70,7 +69,6 @@ export function MomentPlay({ kind }: { kind: FeedUpdateKind }) {
         </>
       ) : null}
       {kind === 'listing' ? <PriceTag /> : null}
-      {kind === 'scan' ? <Sweep /> : null}
       {kind === 'passport' ? <Stamp>✓</Stamp> : null}
     </Play>
   )

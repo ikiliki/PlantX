@@ -60,44 +60,8 @@ export const Top = styled.div`
   min-width: 0;
 `
 
-export const RingWrap = styled.div`
-  position: relative;
-  flex: none;
-`
-
-/** The grower's avatar, pinned to the level ring. */
-export const OwnerBadge = styled.span`
-  position: absolute;
-  inset-inline-end: -6px;
-  bottom: -4px;
-  display: grid;
-  border-radius: 50%;
-  box-shadow: 0 0 0 3px ${theme.colors.creamCard};
-`
-
 export const Progress = styled.div`
   min-width: 0;
-`
-
-/** Level number inside a ring that fills with progress to the next level. */
-export const Ring = styled.div`
-  --progress: 0;
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  background:
-    radial-gradient(closest-side, ${theme.colors.forest} 76%, transparent 78%),
-    conic-gradient(${theme.colors.growth} calc(var(--progress) * 360deg), rgba(18, 60, 45, 0.14) 0);
-`
-
-export const RingNumber = styled.span`
-  font-family: ${theme.fonts.display};
-  font-size: 26px;
-  line-height: 1;
-  color: ${theme.colors.growth};
 `
 
 export const TopCopy = styled.div`

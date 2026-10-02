@@ -15,6 +15,9 @@ usersRoutes.post('/pending', async (c) => {
   return c.json({ pending }, 201)
 })
 
+/** Public: every greenhouse's level, for the Global directory. Counts and XP only. */
+usersRoutes.get('/levels', async (c) => c.json({ levels: await usersService.levels() }))
+
 /** Public: a greenhouse's level for its public page. Counts and XP only. */
 usersRoutes.get('/:id/level', async (c) => c.json({ level: await usersService.level(c.req.param('id')) }))
 

@@ -146,6 +146,18 @@ export const usersService = {
     return greenhouseLevel(userId, plants, todos)
   },
 
+  /** Every member's public level, keyed by user id. One read of plants and tasks for the whole directory. */
+  async levels() {
+    const store = getStore()
+    const [users, plants, todos] = await Promise.all([store.users.list(), store.plants.list(), store.todos.list()])
+    const levels: Record<string, ReturnType<typeof greenhouseLevel>> = {}
+    for (const user of users) {
+      if (user.role === 'guest') continue
+      levels[user.id] = greenhouseLevel(user.id, plants, todos)
+    }
+    return levels
+  },
+
   async listMembers() {
     const users = await getStore().users.list()
     return users.filter((item) => item.role !== 'guest').map(withAccountStatus)

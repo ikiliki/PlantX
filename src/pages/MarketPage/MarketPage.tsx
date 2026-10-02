@@ -6,6 +6,7 @@ import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { ListingMap } from '../../features/market/components/ListingMap/ListingMap'
 import { ListingTable } from '../../features/market/components/ListingTable/ListingTable'
 import { MarketSearch } from '../../features/market/components/MarketSearch/MarketSearch'
+import { MarketSplit } from '../../features/market/components/MarketSplit/MarketSplit'
 import { MarketViewToggle } from '../../features/market/components/MarketViewToggle/MarketViewToggle'
 import { MarketTicker } from '../../features/market/components/MarketTicker/MarketTicker'
 import { listingFilterMeta } from '../../features/market/listingFilterMeta'
@@ -22,7 +23,7 @@ import type { ComponentView } from '../../theme/view'
 import { MarketPending } from '../../features/market/components/MarketPending/MarketPending'
 import { Icon } from '../../components/Icon/Icon'
 import { Pager, usePaged } from '../../components/Pager/Pager'
-import { BlurTape, CategoriesLink, Board, MapPane, Results, ResultsHead, Stage } from './MarketPage.styles'
+import { BlurTape, Board, CategoriesLink, ResultsHead } from './MarketPage.styles'
 
 const WIDGET_LISTINGS = 4
 
@@ -33,7 +34,7 @@ function MarketReady({ view }: { view: ComponentView }) {
   const [params] = useSearchParams()
   const seenArrival = useRef('')
   const [filters, setFilters] = useState<MarketFilterState>(() => emptyMarketFilters(params.get('species') ?? ''))
-  const [showMap, setShowMap] = useState(true)
+  const [paneView, setPaneView] = useState<'list' | 'map'>('list')
   const origin = userPlace(currentUser)
   useEffect(() => {
     const itemId = params.get('item')
@@ -107,11 +108,13 @@ function MarketReady({ view }: { view: ComponentView }) {
         filters={filters}
         onChange={setFilters}
         meta={meta}
-        end={<MarketViewToggle view={showMap ? 'map' : 'list'} onChange={(next) => setShowMap(next === 'map')} />}
+        end={<MarketViewToggle view={paneView} onChange={setPaneView} />}
       />
 
-      <Stage>
-        <Results>
+      <MarketSplit
+        view={paneView}
+        list={
+          <>
           <ResultsHead>
             <span>
               {listings.length} {t.market.listings}
@@ -130,9 +133,10 @@ function MarketReady({ view }: { view: ComponentView }) {
           ) : (
             <ListingTable listings={visible} onOpen={openListing} />
           )}
-        </Results>
-        <MapPane $open={showMap}>{showMap ? <ListingMap listings={visible} tall /> : null}</MapPane>
-      </Stage>
+          </>
+        }
+        map={() => <ListingMap listings={visible} tall />}
+      />
     </Board>
   )
 }

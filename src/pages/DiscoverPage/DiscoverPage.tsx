@@ -17,21 +17,44 @@ import { useServerSlices } from '../../mock/useServerSlices'
 import { useStore } from '../../mock/store'
 import { isFeatureEnabled } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
-import type { Todo } from '../../mock/types'
+import type { FeedUpdateKind, Todo } from '../../mock/types'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { FilterChips } from '../../components/FilterChips/FilterChips'
 import { Empty, Feed, Layout, Rail, RailLure, Shell, Widget } from './DiscoverPage.styles'
 
 const WIDGET_ITEMS = 2
 
+type HomeFeedFilter = 'all' | 'activities' | 'tasks'
+
+/** Completed care (water, photo) are tasks; everything else a grower does is an activity. */
+const TASK_KINDS: FeedUpdateKind[] = ['water', 'photo']
+
+function homeFeedFilter(value: string | null): HomeFeedFilter {
+  return value === 'activities' || value === 'tasks' ? value : 'all'
+}
+
 function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) {
   const { t } = useI18n()
-  const { items } = useHomeFeed()
+  const { items: allItems } = useHomeFeed()
   const { db, signedIn, currentUser, completeTodo } = useStore()
   const [careTodo, setCareTodo] = useState<Todo | undefined>()
-  const empty = t.feed.empty
+  const [params, setParams] = useSearchParams()
+  const filter = view === 'page' ? homeFeedFilter(params.get('feed')) : 'all'
+  const isTask = (item: (typeof allItems)[number]) => TASK_KINDS.includes(item.update.kind)
+  const taskItems = allItems.filter(isTask)
+  const activityItems = allItems.filter((item) => !isTask(item))
+  const items = filter === 'tasks' ? taskItems : filter === 'activities' ? activityItems : allItems
+  const empty = filter === 'all' ? t.feed.empty : t.feed.filterEmpty
+  const setFilter = (next: HomeFeedFilter) => {
+    const nextParams = new URLSearchParams(params)
+    if (next === 'all') nextParams.delete('feed')
+    else nextParams.set('feed', next)
+    setParams(nextParams, { replace: true })
+  }
   const feed = useInfiniteList(items, {
     enabled: paged && view === 'page',
-    signature: items.map((item) => item.id).join('|'),
+    signature: `${filter}|${items.map((item) => item.id).join('|')}`,
   })
   const shown = view === 'widget' ? items.slice(0, WIDGET_ITEMS) : feed.shown
   const ownerId = signedIn && currentUser ? currentUser.id : null
@@ -84,6 +107,16 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
         </Rail>
         <Feed>
           <FeatureGate placement="home.feed" title={t.nav.home}>
+            <FilterChips
+              label={t.feed.filterLabel}
+              value={filter}
+              onChange={setFilter}
+              options={[
+                { id: 'all', label: t.feed.filterAll, count: allItems.length, icon: 'home' },
+                { id: 'activities', label: t.feed.filterActivities, count: activityItems.length, icon: 'greenhouse' },
+                { id: 'tasks', label: t.feed.filterTasks, count: taskItems.length, icon: 'drop' },
+              ]}
+            />
             {feed.total === 0 && <Empty>{empty}</Empty>}
             {shown.map((item, index) => (
               <Reveal key={item.id} index={index}>

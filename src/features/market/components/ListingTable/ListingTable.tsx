@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import type { MockDb } from '../../../../mock/types'
 import type { Listing, Plant } from '../../../../mock/types'
 import { maskedChange, maskedPrice, maskedQty } from '../../maskedQuote'
 import { ListingRow } from '../ListingRow/ListingRow'
@@ -42,6 +43,7 @@ export function ListingTable({
   sortDir: controlledDir,
   onSortChange,
   masked = false,
+  source,
 }: {
   listings: Listing[]
   onOpen?: (id: string) => void
@@ -51,8 +53,11 @@ export function ListingTable({
   onSortChange?: (key: SortKey, dir: 1 | -1) => void
   /** Coming-soon board: stand-in figures, with the row itself blurred by the caller. */
   masked?: boolean
+  /** Where listings' plants, classes and species are looked up. Defaults to the store; previews pass sample data. */
+  source?: Pick<MockDb, 'plants' | 'marketClasses' | 'species'>
 }) {
-  const { db } = useStore()
+  const { db: storeDb } = useStore()
+  const db = source ?? storeDb
   const { t, formatMoney, locale } = useI18n()
   const [localKey, setLocalKey] = useState<SortKey>('name')
   const [localDir, setLocalDir] = useState<1 | -1>(1)

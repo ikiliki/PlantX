@@ -3,6 +3,10 @@ import { menuIn, pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 export const Bar = styled.div`
+  [data-inactive] {
+    opacity: 0.6;
+  }
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -65,12 +69,55 @@ export const SearchBox = styled.label`
       max-width: none;
     }
   }
+
+  @media (max-width: ${theme.breakpoints.sm}) {
+    flex: 1 0 100%;
+    min-width: 0;
+  }
 `
 
 export const End = styled.div`
   margin-inline-start: auto;
   display: flex;
   align-items: center;
+
+  /* Phone: the list/map toggle ends the filter pills row. */
+  @media (max-width: ${theme.breakpoints.sm}) {
+    order: 3;
+    margin-inline-start: 0;
+  }
+`
+
+/**
+ * Filter pills. Wide: they wrap with the bar. Phone: one row that scrolls sideways and never
+ * wraps (menus open as a sheet, see PillMenu), edge to edge like the greenhouse chips.
+ */
+export const Pills = styled.div`
+  display: contents;
+
+  @media (max-width: ${theme.breakpoints.sm}) {
+    order: 2;
+    display: flex;
+    flex: 1 1 0;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    margin-inline-start: calc(-1 * ${theme.space.md});
+    padding: 2px 0 2px ${theme.space.md};
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    > * {
+      flex: none;
+      scroll-snap-align: start;
+    }
+  }
 `
 
 export const PillWrap = styled.div`

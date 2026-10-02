@@ -10,7 +10,7 @@ const INK: Record<FeedUpdateKind, string> = {
   propagate: '#2F6B4A',
   grade: '#8A6416',
   listing: '#8A6416',
-  scan: '#3D5C32',
+  scan: '#5B4A9B',
   passport: '#123C2D',
 }
 
@@ -55,11 +55,12 @@ const surface: Record<FeedUpdateKind, ReturnType<typeof css>> = {
       linear-gradient(165deg, #fff3e2 0%, #fffefa 70%);
     border-color: #e4c29a;
   `,
+  // AI scans have their own lavender: no other kind uses it (green is a new plant, blue is water).
   scan: css`
     background:
-      linear-gradient(135deg, rgba(207, 234, 120, 0.35), rgba(255, 254, 250, 0.96) 62%);
-    border-color: ${theme.colors.moss};
-    border-style: dashed;
+      radial-gradient(90% 120% at 100% 90%, rgba(178, 162, 232, 0.45), transparent 58%),
+      linear-gradient(165deg, #f1edfb 0%, #fffefa 70%);
+    border-color: #b9aee0;
   `,
   passport: css`
     background:
@@ -115,11 +116,6 @@ const twinkle = keyframes`
 const bob = keyframes`
   0%, 100% { transform: translateY(0) rotate(-8deg); }
   50% { transform: translateY(-6px) rotate(6deg); }
-`
-
-const sweep = keyframes`
-  0% { transform: translateY(-120%); }
-  100% { transform: translateY(220%); }
 `
 
 const stamp = keyframes`
@@ -282,29 +278,6 @@ export const PriceTag = styled.span`
   }
 `
 
-export const Sweep = styled.span`
-  position: absolute;
-  inset-inline-end: 4px;
-  top: 10px;
-  width: 26px;
-  height: 18px;
-  border-radius: 6px;
-  border: 1px dashed ${theme.colors.moss};
-  overflow: hidden;
-
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: ${theme.colors.growth};
-    box-shadow: 0 0 8px ${theme.colors.growth};
-    animation: ${sweep} 1.8s linear infinite;
-    ${still}
-  }
-`
-
 export const Stamp = styled.span`
   position: absolute;
   inset-inline-end: 4px;
@@ -377,20 +350,9 @@ const glyph: Record<FeedUpdateKind, ReturnType<typeof css>> = {
     box-shadow: inset 4px 0 0 #fffefa;
     animation: ${bob} 1.8s ease-in-out infinite;
   `,
+  // No glyph: the "AI scan" label and the lavender card say it.
   scan: css`
-    width: 12px;
-    height: 10px;
-    border: 1px dashed ${theme.colors.moss};
-    border-radius: 2px;
-    overflow: hidden;
-
-    &::after {
-      content: '';
-      display: block;
-      height: 2px;
-      background: ${theme.colors.growth};
-      animation: ${sweep} 1.6s linear infinite;
-    }
+    display: none;
   `,
   passport: css`
     width: 12px;

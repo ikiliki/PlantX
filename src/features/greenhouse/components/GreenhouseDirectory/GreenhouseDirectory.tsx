@@ -3,11 +3,15 @@ import { InfiniteSentinel, useInfiniteList } from '../../../../components/Infini
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { Plant, User } from '../../../../mock/types'
+import { useGreenhouseLevels } from '../../useGreenhouseLevels'
 import { GreenhouseCard, greenhouseHref, greenhouseShelf } from '../GreenhouseCard/GreenhouseCard'
 import { Empty, List, Root, Search } from './GreenhouseDirectory.styles'
 
-function isGrower(user: User) {
-  return user.role !== 'guest' && user.role !== 'admin'
+/** Anyone with a greenhouse. The operator is listed once they grow something too. */
+function isGrower(user: User, plants: Plant[]) {
+  if (user.role === 'guest') return false
+  if (user.role === 'admin') return plants.some((plant) => plant.ownerId === user.id)
+  return true
 }
 
 function livingCount(plants: Plant[], ownerId: string) {
@@ -28,13 +32,20 @@ export function GreenhouseDirectory() {
   const { t } = useI18n()
   const [query, setQuery] = useState('')
 
-  const growers = useMemo(() => db.users.filter(isGrower), [db.users])
+  const levels = useGreenhouseLevels()
+  const growers = useMemo(() => db.users.filter((user) => isGrower(user, db.plants)), [db.users, db.plants])
+  // Highest level first; XP breaks ties inside a level, then the name keeps the order stable.
+  const byLevel = (a: User, b: User) =>
+    (levels[b.id]?.level ?? 0) - (levels[a.id]?.level ?? 0) ||
+    (levels[b.id]?.xp ?? 0) - (levels[a.id]?.xp ?? 0) ||
+    a.name.localeCompare(b.name)
   const needle = query.trim().toLowerCase()
   const verifiedUsers = (db.verifiedGreenhouseIds ?? [])
     .map((id) => growers.find((user) => user.id === id))
     .filter((user): user is User => Boolean(user))
+    .sort(byLevel)
   const verifiedIds = new Set(verifiedUsers.map((user) => user.id))
-  const rest = growers.filter((user) => !verifiedIds.has(user.id) && matches(user, needle))
+  const rest = growers.filter((user) => !verifiedIds.has(user.id) && matches(user, needle)).sort(byLevel)
   const list = useInfiniteList(rest, { signature: `${needle}|${rest.map((user) => user.id).join('|')}` })
 
   const card = (user: User, verified = false) => (
@@ -45,6 +56,7 @@ export function GreenhouseDirectory() {
       plantCount={livingCount(db.plants, user.id)}
       photos={greenhouseShelf(db.plants, user.id)}
       verified={verified}
+      level={levels[user.id]}
     />
   )
 

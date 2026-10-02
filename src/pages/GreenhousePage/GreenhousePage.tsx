@@ -7,7 +7,7 @@ import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
 import { CollectionBoard, greenhouseFilter } from '../../features/greenhouse/components/CollectionBoard/CollectionBoard'
 import { GreenhouseDirectory } from '../../features/greenhouse/components/GreenhouseDirectory/GreenhouseDirectory'
 import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
-import { GreenhouseScope, useHeaderNav, type GreenhouseScopeId } from '../../features/greenhouse/components/GreenhouseScope/GreenhouseScope'
+import { GreenhouseBack, GreenhouseScope, useHeaderNav, type GreenhouseScopeId } from '../../features/greenhouse/components/GreenhouseScope/GreenhouseScope'
 import { GreenhouseLevelCard } from '../../features/greenhouse/components/GreenhouseLevelCard/GreenhouseLevelCard'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -43,6 +43,7 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
   const { t, tr } = useI18n()
   const user = db.users.find((item) => item.id === ownerId && item.role !== 'guest')
   const name = user ? tr(user.name, user.nameHe) : t.nav.greenhouse
+  const headerNav = useHeaderNav()
   const plants = <GreenhousePublic ownerId={ownerId} compact={compact} />
   if (compact) return plants
   return (
@@ -54,6 +55,7 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
             <GreenhouseLevelCard ownerId={ownerId} publicView />
           </PublicHeading>
           {plants}
+          {headerNav ? null : <GreenhouseBack />}
         </PublicPage>
       </FeatureGate>
     </PageGate>
@@ -96,7 +98,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   const board = (
     <Page $fill={view === 'page' && scope === 'mine'}>
       <HeadBlock>
-        {view === 'page' && !headerNav && <GreenhouseScope value={scope} onChange={setScope} />}
+        {view === 'page' && !headerNav && <GreenhouseScope value={scope} onChange={setScope} floating />}
         <Heading>
         <HeadingCopy>
           <h1>{t.greenhouse.title}</h1>

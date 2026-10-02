@@ -7,10 +7,12 @@ import {
   Bar,
   Choice,
   ChoiceRow,
-  Menu,
   Pill,
   PillWrap,
 } from '../../../market/components/MarketSearch/MarketSearch.styles'
+import { PillMenu } from '../../../market/components/PillMenu/PillMenu'
+import { useMediaQuery } from '../../../../lib/useMediaQuery'
+import { theme } from '../../../../theme/tokens'
 
 type MenuId = 'species' | 'subcategory' | 'health' | 'size' | 'stage' | 'area' | 'radius' | 'price' | string
 
@@ -54,6 +56,9 @@ export function CatalogFilterPills({
   const localRef = useRef<HTMLDivElement>(null)
   const barRef = containerRef ?? localRef
   const [menu, setMenu] = useState<MenuId | null>(null)
+  // Phone: pills scroll in one row, so menus open as a bottom sheet outside it.
+  const phone = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const patch = (partial: Partial<MarketFilterState>) => onChange({ ...filters, ...partial })
   useEffect(() => {
@@ -62,7 +67,8 @@ export function CatalogFilterPills({
       if (event.key === 'Escape') setMenu(null)
     }
     const onPointer = (event: PointerEvent) => {
-      if (!barRef.current?.contains(event.target as Node)) setMenu(null)
+      const target = event.target as Node
+      if (!barRef.current?.contains(target) && !sheetRef.current?.contains(target)) setMenu(null)
     }
     document.addEventListener('keydown', onKey)
     document.addEventListener('pointerdown', onPointer)
@@ -102,7 +108,7 @@ export function CatalogFilterPills({
           <Chevron open={menu === 'species'} />
         </Pill>
         {menu === 'species' && (
-          <Menu>
+          <PillMenu phone={phone} sheetRef={sheetRef}>
             <ChoiceRow>
               <Choice
                 type="button"
@@ -132,7 +138,7 @@ export function CatalogFilterPills({
                 </Choice>
               ))}
             </ChoiceRow>
-          </Menu>
+          </PillMenu>
         )}
       </PillWrap>
 
@@ -147,7 +153,7 @@ export function CatalogFilterPills({
           <Chevron open={menu === 'subcategory'} />
         </Pill>
         {menu === 'subcategory' && (
-          <Menu>
+          <PillMenu phone={phone} sheetRef={sheetRef}>
             <ChoiceRow>
               <Choice
                 type="button"
@@ -172,7 +178,7 @@ export function CatalogFilterPills({
                 </Choice>
               ))}
             </ChoiceRow>
-          </Menu>
+          </PillMenu>
         )}
       </PillWrap>
 
@@ -187,7 +193,7 @@ export function CatalogFilterPills({
           <Chevron open={menu === 'health'} />
         </Pill>
         {menu === 'health' && (
-          <Menu>
+          <PillMenu phone={phone} sheetRef={sheetRef}>
             <ChoiceRow>
               <Choice type="button" $on={filters.grades.length === 0} onClick={() => patch({ grades: [] })}>
                 {t.market.all}
@@ -203,7 +209,7 @@ export function CatalogFilterPills({
                 </Choice>
               ))}
             </ChoiceRow>
-          </Menu>
+          </PillMenu>
         )}
       </PillWrap>
 
@@ -218,7 +224,7 @@ export function CatalogFilterPills({
           <Chevron open={menu === 'size'} />
         </Pill>
         {menu === 'size' && (
-          <Menu>
+          <PillMenu phone={phone} sheetRef={sheetRef}>
             <ChoiceRow>
               <Choice type="button" $on={filters.sizes.length === 0} onClick={() => patch({ sizes: [] })}>
                 {t.market.all}
@@ -234,7 +240,7 @@ export function CatalogFilterPills({
                 </Choice>
               ))}
             </ChoiceRow>
-          </Menu>
+          </PillMenu>
         )}
       </PillWrap>
 
@@ -253,7 +259,7 @@ export function CatalogFilterPills({
           <Chevron open={menu === 'stage'} />
         </Pill>
         {menu === 'stage' && (
-          <Menu>
+          <PillMenu phone={phone} sheetRef={sheetRef}>
             <ChoiceRow>
               <Choice type="button" $on={filters.stages.length === 0} onClick={() => patch({ stages: [] })}>
                 {t.market.all}
@@ -269,7 +275,7 @@ export function CatalogFilterPills({
                 </Choice>
               ))}
             </ChoiceRow>
-          </Menu>
+          </PillMenu>
         )}
       </PillWrap>
 
@@ -286,7 +292,7 @@ export function CatalogFilterPills({
               <Chevron open={menu === 'area'} />
             </Pill>
             {menu === 'area' && (
-              <Menu>
+              <PillMenu phone={phone} sheetRef={sheetRef}>
                 <ChoiceRow>
                   <Choice
                     type="button"
@@ -312,7 +318,7 @@ export function CatalogFilterPills({
                     </Choice>
                   ))}
                 </ChoiceRow>
-              </Menu>
+              </PillMenu>
             )}
           </PillWrap>
 
@@ -329,7 +335,7 @@ export function CatalogFilterPills({
               <Chevron open={menu === 'radius'} />
             </Pill>
             {menu === 'radius' && (
-              <Menu $flip>
+              <PillMenu phone={phone} sheetRef={sheetRef} flip>
                 <ChoiceRow>
                   <Choice
                     type="button"
@@ -355,7 +361,7 @@ export function CatalogFilterPills({
                     </Choice>
                   ))}
                 </ChoiceRow>
-              </Menu>
+              </PillMenu>
             )}
           </PillWrap>
 
@@ -370,7 +376,7 @@ export function CatalogFilterPills({
               <Chevron open={menu === 'price'} />
             </Pill>
             {menu === 'price' && (
-              <Menu $flip>
+              <PillMenu phone={phone} sheetRef={sheetRef} flip>
                 <ChoiceRow>
                   <Choice
                     type="button"
@@ -396,7 +402,7 @@ export function CatalogFilterPills({
                     </Choice>
                   ))}
                 </ChoiceRow>
-              </Menu>
+              </PillMenu>
             )}
           </PillWrap>
         </>

@@ -4,7 +4,7 @@ import { CatalogFilterPills } from '../../../catalog/components/CatalogFilterPil
 import type { ListingFilterMeta } from '../../listingFilterMeta'
 import { customFilterCount, type MarketFilterState } from '../../marketFilters'
 import { MarketFiltersDialog } from '../MarketFiltersDialog/MarketFiltersDialog'
-import { Bar, End, Pill, SearchBox } from './MarketSearch.styles'
+import { Bar, End, Pill, SearchBox, Pills } from './MarketSearch.styles'
 
 function SlidersIcon() {
   return (
@@ -25,11 +25,14 @@ export function MarketSearch({
   onChange,
   meta,
   end,
+  inactive = false,
 }: {
   filters: MarketFilterState
   onChange: (next: MarketFilterState) => void
   meta: ListingFilterMeta
   end?: ReactNode
+  /** Coming soon: search and pills show but do nothing; the end slot (list / map toggle) still works. */
+  inactive?: boolean
 }) {
   const { t } = useI18n()
   const barRef = useRef<HTMLDivElement>(null)
@@ -55,7 +58,7 @@ export function MarketSearch({
   return (
     <>
       <Bar ref={barRef}>
-        <SearchBox>
+        <SearchBox inert={inactive} data-inactive={inactive || undefined}>
           <img src="/icons/search.svg" alt="" />
           <input
             value={filters.query}
@@ -65,6 +68,7 @@ export function MarketSearch({
           />
         </SearchBox>
 
+        <Pills inert={inactive} data-inactive={inactive || undefined}>
         <Pill
           type="button"
           $on={customCount > 0}
@@ -82,6 +86,7 @@ export function MarketSearch({
           onChange={onChange}
           showLocation
         />
+        </Pills>
 
         {end ? <End>{end}</End> : null}
       </Bar>

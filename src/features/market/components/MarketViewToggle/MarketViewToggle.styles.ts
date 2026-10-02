@@ -11,6 +11,11 @@ export const Track = styled.div`
   border: 1.5px solid ${theme.colors.border};
   background: ${theme.colors.creamCard};
   flex-shrink: 0;
+
+  /* Desktop shows list and map together, so there is nothing to switch. */
+  @container (min-width: 960px) {
+    display: none;
+  }
 `
 
 export const Option = styled.button<{ $on?: boolean }>`
@@ -18,8 +23,9 @@ export const Option = styled.button<{ $on?: boolean }>`
   align-items: center;
   justify-content: center;
   gap: 6px;
+  width: 40px;
   height: 32px;
-  padding: 0 14px;
+  padding: 0;
   border: none;
   border-radius: ${theme.radii.pill};
   background: ${({ $on }) => ($on ? theme.colors.forest : 'transparent')};
@@ -32,8 +38,8 @@ export const Option = styled.button<{ $on?: boolean }>`
     color 0.18s ease;
 
   svg {
-    width: 14px;
-    height: 14px;
+    width: 17px;
+    height: 17px;
     flex-shrink: 0;
   }
 

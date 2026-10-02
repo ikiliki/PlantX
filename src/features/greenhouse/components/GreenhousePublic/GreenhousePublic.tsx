@@ -52,10 +52,13 @@ export function GreenhousePublic({
   return (
     <Root $compact={compact}>
       <Section $compact={compact}>
-        <SectionHead>
-          <h3>{t.seller.greenhouse}</h3>
-          <Count>{plants.length}</Count>
-        </SectionHead>
+        {/* The full page leads with the level card; only the grower popup labels its list. */}
+        {compact ? (
+          <SectionHead>
+            <h3>{t.seller.greenhouse}</h3>
+            <Count>{plants.length}</Count>
+          </SectionHead>
+        ) : null}
         {plants.length ? (
           compact ? (
             <PlantScroll $rows={previewRows(plants.length)}>

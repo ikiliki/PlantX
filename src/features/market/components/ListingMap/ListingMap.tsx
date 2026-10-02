@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { listingPlace } from '../../../../mock/locations'
 import { useStore } from '../../../../mock/store'
+import type { MockDb } from '../../../../mock/types'
 import type { Listing, MarketClass, Plant } from '../../../../mock/types'
 import { maskedPrice } from '../../maskedQuote'
 import { MarketPeekCard } from '../MarketPeek/MarketPeek'
@@ -70,14 +71,18 @@ export function ListingMap({
   listings,
   tall = false,
   masked = false,
+  source,
 }: {
   listings: Listing[]
   tall?: boolean
   onOpen?: (listingId: string) => void
   /** Coming-soon map: stand-in prices, with pins and the hover card blurred. */
   masked?: boolean
+  /** Where listings' plants and classes are looked up. Defaults to the store; previews pass sample data. */
+  source?: Pick<MockDb, 'plants' | 'marketClasses'>
 }) {
-  const { db } = useStore()
+  const { db: storeDb } = useStore()
+  const db = source ?? storeDb
   const { locale, formatMoney } = useI18n()
   const canvasRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
