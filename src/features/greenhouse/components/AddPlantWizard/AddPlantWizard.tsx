@@ -212,9 +212,12 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       ...emptyClassDraft,
       ...diagnosis.draft,
       categoryId: hasCategory ? (diagnosis.draft.categoryId ?? OTHER_CATEGORY_ID) : OTHER_CATEGORY_ID,
-      subcategoryId: hasCategory ? (diagnosis.draft.subcategoryId ?? '') : '',
+      // Subcategory is required. An answer with no variety gets Other, so size and stage are checked against it.
+      subcategoryId: hasCategory ? diagnosis.draft.subcategoryId || OTHER_SUBCATEGORY_ID : '',
       traits: { ...diagnosis.draft.traits },
     })
+    // A variety id the catalog no longer has can still narrow to empty: Other, not empty.
+    if (!next.subcategoryId) next.subcategoryId = OTHER_SUBCATEGORY_ID
     // Review needs a size and a stage. Use the answer when it has one, otherwise the first choice.
     if (!next.size) {
       const band = sizeChoices(catalog, next)[0]
