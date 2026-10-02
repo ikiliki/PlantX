@@ -1,11 +1,15 @@
+import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { PlantImage } from '../PlantImage/PlantImage'
-import { Chip, ChipHint, ChipPhoto, ChipText, ChipThumb, Empty, Group, Legend, MoreChip, Required, Suggested } from './ChoiceChips.styles'
+import { Chip, ChipHint, ChipPhoto, ChipText, ChipThumb, Empty, Group, Legend, MoreChip, Required, Suggested, Tip } from './ChoiceChips.styles'
 
 export type ChoiceChipOption = {
   id: string
   label: string
   hint?: string
   photo?: string
+  /** Short catalog note. Hover shows it; a click on that note can open the full card. */
+  tip?: string
 }
 
 /** Single choice as tappable chips, or photo tiles. A suggested option carries a small mark. */
@@ -22,6 +26,7 @@ export function ChoiceChips({
   more,
   emptyLabel,
   onPick,
+  onTip,
 }: {
   label: string
   options: ChoiceChipOption[]
@@ -38,7 +43,30 @@ export function ChoiceChips({
   emptyLabel?: string
   /** When set, a tap hands the option here (e.g. to open a preview) instead of selecting it. */
   onPick?: (id: string) => void
+  /** Click on the hover note, not the chip. */
+  onTip?: (id: string) => void
 }) {
+  const [hover, setHover] = useState<{ id: string; text: string; top: number; left: number; above: boolean } | null>(null)
+  const hideTimer = useRef<number | null>(null)
+  const clearHide = () => {
+    if (hideTimer.current != null) window.clearTimeout(hideTimer.current)
+    hideTimer.current = null
+  }
+  const showTip = (id: string, text: string, rect: DOMRect) => {
+    clearHide()
+    const above = rect.top > 72
+    setHover({
+      id,
+      text,
+      top: above ? rect.top - 4 : rect.bottom + 4,
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - 188)),
+      above,
+    })
+  }
+  const hideTip = () => {
+    clearHide()
+    hideTimer.current = window.setTimeout(() => setHover(null), 160)
+  }
   return (
     <Group disabled={disabled}>
       <Legend>
@@ -60,7 +88,17 @@ export function ChoiceChips({
               $tile={layout === 'tiles'}
               $suggested={suggested}
               style={{ animationDelay: `${Math.min(index, 12) * 28}ms` }}
-              onClick={() => (onPick ? onPick(option.id) : onChange(on && !required ? '' : option.id))}
+              onMouseEnter={(event) => {
+                if (!option.tip) return
+                showTip(option.id, option.tip, event.currentTarget.getBoundingClientRect())
+              }}
+              onMouseLeave={hideTip}
+              onClick={() => {
+                clearHide()
+                setHover(null)
+                if (onPick) onPick(option.id)
+                else onChange(on && !required ? '' : option.id)
+              }}
             >
               {layout === 'tiles' ? (
                 <ChipPhoto>{option.photo ? <PlantImage src={option.photo} alt="" /> : null}</ChipPhoto>
@@ -83,6 +121,26 @@ export function ChoiceChips({
           </MoreChip>
         ) : null}
       </div>
+      {hover
+        ? createPortal(
+            <Tip
+              type="button"
+              $above={hover.above}
+              style={{ top: hover.top, left: hover.left, transform: hover.above ? 'translateY(-100%)' : undefined }}
+              onMouseEnter={clearHide}
+              onMouseLeave={hideTip}
+              onClick={() => {
+                const id = hover.id
+                clearHide()
+                setHover(null)
+                onTip?.(id)
+              }}
+            >
+              {hover.text}
+            </Tip>,
+            document.body,
+          )
+        : null}
     </Group>
   )
 }

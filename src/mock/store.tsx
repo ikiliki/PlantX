@@ -193,6 +193,8 @@ interface StoreApi {
   setPreapproved: (id: string, preapproved: boolean) => Promise<boolean>
   liveMeta: LiveMeta | null
   loadSlice: (part: ServerSlice) => Promise<boolean>
+  /** Fetch a slice again even if it already loaded (pull-to-refresh, the refresh icon). */
+  reloadSlice: (part: ServerSlice) => Promise<boolean>
   refreshAccessQueue: (part: 'pending' | 'transactions') => Promise<void>
   resetDemo: () => void
   createListing: (input: {
@@ -510,6 +512,15 @@ export function StoreProvider({
     return job
   }, [uiMocks, update, noteSlice])
 
+  /** Loaded slices stay cached for the session; a refresh drops that and fetches again. */
+  const reloadSlice = useCallback(
+    (part: ServerSlice) => {
+      sliceJobs.current.delete(part)
+      return loadSlice(part)
+    },
+    [loadSlice],
+  )
+
   useEffect(() => {
     if (uiMocks) return
     void retryLive()
@@ -539,6 +550,7 @@ export function StoreProvider({
     plantxSeed: runtimeSeed,
     liveMeta,
     loadSlice,
+    reloadSlice,
     retryLive: () => retryLive(),
     setLocale: (locale) => {
       if (!supportedLocales().includes(locale)) return

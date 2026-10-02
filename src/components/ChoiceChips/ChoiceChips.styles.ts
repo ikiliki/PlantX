@@ -205,6 +205,35 @@ export const ChipHint = styled.small`
   opacity: 0.72;
 `
 
+export const Tip = styled.button<{ $above: boolean }>`
+  position: fixed;
+  z-index: ${theme.z.dialogTop};
+  width: max-content;
+  max-width: 168px;
+  margin: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: ${theme.colors.ink};
+  color: ${theme.colors.cream};
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: start;
+  white-space: pre-line;
+  cursor: pointer;
+  box-shadow: ${theme.shadow.lift};
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    height: 12px;
+    ${({ $above }) => ($above ? 'top: 100%;' : 'bottom: 100%;')}
+  }
+`
+
 export const Suggested = styled.span`
   display: inline-flex;
   align-items: center;

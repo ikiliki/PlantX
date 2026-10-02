@@ -2,7 +2,16 @@ import { useEffect, useState } from 'react'
 import { Icon } from '../Icon/Icon'
 import { Fab } from './ScrollTopButton.styles'
 
-export function ScrollTopButton({ label, threshold = 900 }: { label: string; threshold?: number }) {
+/** Back to the top once the page is scrolled down. `side` keeps it clear of other floating buttons. */
+export function ScrollTopButton({
+  label,
+  threshold = 900,
+  side = 'end',
+}: {
+  label: string
+  threshold?: number
+  side?: 'start' | 'end'
+}) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -19,6 +28,7 @@ export function ScrollTopButton({ label, threshold = 900 }: { label: string; thr
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
       $visible={visible}
+      $side={side}
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
     >
       <Icon name="arrowUp" size={20} />

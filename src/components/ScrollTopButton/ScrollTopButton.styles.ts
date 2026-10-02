@@ -2,11 +2,11 @@ import styled from 'styled-components'
 import { pressable } from '../../theme/motion'
 import { theme } from '../../theme/tokens'
 
-export const Fab = styled.button<{ $visible: boolean }>`
+export const Fab = styled.button<{ $visible: boolean; $side: 'start' | 'end' }>`
   ${pressable}
   position: fixed;
   z-index: ${theme.z.floating};
-  inset-inline-end: ${theme.space.lg};
+  ${({ $side }) => ($side === 'start' ? 'inset-inline-start' : 'inset-inline-end')}: ${theme.space.lg};
   bottom: calc(${theme.layout.bottomNav} + ${theme.space.md} + env(safe-area-inset-bottom));
   display: grid;
   place-items: center;

@@ -66,6 +66,22 @@ export const Disabled = () => (
   <ChoiceChips label="Health" disabled options={healthLetters} value="" onChange={() => undefined} />
 )
 
+export const CatalogTip = () => {
+  const [value, setValue] = useState('pothos')
+  return (
+    <ChoiceChips
+      label="Category"
+      required
+      value={value}
+      onChange={setValue}
+      options={[
+        { id: 'pothos', label: 'Pothos', tip: 'Epipremnum aureum\nLight: bright, indirect\nWater: when the top dries' },
+        { id: 'monstera', label: 'Monstera', tip: 'Monstera deliciosa\nLight: bright, indirect\nWater: weekly' },
+      ]}
+    />
+  )
+}
+
 export const Waiting = () => (
   <ChoiceChips label="Subcategory" required disabled options={[]} value="" onChange={() => undefined} />
 )

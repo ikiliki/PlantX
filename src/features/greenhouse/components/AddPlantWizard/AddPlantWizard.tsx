@@ -11,6 +11,7 @@ import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { useStore } from '../../../../mock/store'
 import type { CatalogProperty, Diagnosis, PlantClassDraft, SizeBand, StageBand } from '../../../../mock/types'
 import { catalogName, optionLabel, propertiesForPlant } from '../../../catalog/catalog'
+import { catalogSpecies } from '../../../species/catalogSpecies'
 import {
   ADD_PLANT_UPLOAD_LIMIT,
   draftMatchesDiagnosis,
@@ -35,8 +36,10 @@ import { theme } from '../../../../theme/tokens'
 import { CatalogPreview } from '../../../species/components/CatalogPreview/CatalogPreview'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
-import { PhotoIdentify, wasScanned, type PhotoScan } from '../PhotoIdentify/PhotoIdentify'
+import { identifyFacts, PhotoIdentify, wasScanned, type PhotoScan } from '../PhotoIdentify/PhotoIdentify'
 import {
+  AiAnswer,
+  AiFact,
   Banner,
   BannerAction,
   Burst,
@@ -72,6 +75,14 @@ type StepId = (typeof STEPS)[number]
 const CATEGORY_SEARCH_MIN = 9
 const CHIP_PREVIEW = 4
 const AI_MARK = '✦ AI'
+
+function careTip(species: ReturnType<typeof catalogSpecies>, locale: string, light: string) {
+  if (!species) return undefined
+  const he = locale === 'he'
+  const lightLine = he ? species.conditions.lightHe : species.conditions.light
+  const lines = [species.scientificName, lightLine ? `${light}: ${lightLine}` : ''].filter(Boolean)
+  return lines.length ? lines.join('\n') : undefined
+}
 
 function previewOptions<T extends { id: string }>(
   options: T[],
@@ -278,10 +289,16 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const place = ownerGreenhousePlace(signedIn ? currentUser : null)
 
   const save = () => {
-    if (!matched || !description.trim()) return
+    if (!matched || !description.trim()) {
+      setSaveFailed(true)
+      return
+    }
     const traits = traitsWithoutArea(draft.traits)
     if (isOther) {
-      if (!draft.size || !draft.stage) return
+      if (!draft.size || !draft.stage) {
+        setSaveFailed(true)
+        return
+      }
       const id = addGreenhousePlant({
         title: matched.name,
         titleHe: matched.nameHe,
@@ -307,14 +324,17 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     const category = catalog.categories.find((item) => item.id === draft.categoryId)
     const species = db.species.find((item) => item.id === category?.speciesId)
     const sub = isOtherSub ? undefined : catalog.subcategories.find((item) => item.id === draft.subcategoryId)
-    if (!category || !species || !draft.size || !draft.stage) return
+    if (!category || !draft.size || !draft.stage) {
+      setSaveFailed(true)
+      return
+    }
     const id = addGreenhousePlant({
       title: matched.name,
       titleHe: matched.nameHe,
       description: descriptionTouched ? description : matched.observed,
       descriptionHe: descriptionTouched ? description : matched.observedHe,
       photos,
-      speciesId: species.id,
+      speciesId: species?.id ?? category.speciesId,
       variety: isOtherSub ? 'Other' : (sub?.name ?? category.name),
       varietyHe: isOtherSub ? 'אחר' : (sub?.nameHe ?? category.nameHe),
       quality: draft.quality,
@@ -436,14 +456,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       <CatalogPreview
         speciesId={previewCategory.speciesId}
         subcategoryId={preview.kind === 'sub' ? preview.id : undefined}
-        action={{
-          label: t.addPlant.choose,
-          onClick: () => {
-            if (preview.kind === 'category') chooseCategory(preview.id)
-            else chooseSub(preview.id)
-            setPreview(null)
-          },
-        }}
+        infoOnly
         onClose={() => setPreview(null)}
       />
     ) : null
@@ -468,6 +481,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             id: item.id,
             label: catalogName(item, locale),
             photo: item.photo,
+            tip: phone
+              ? undefined
+              : careTip(catalogSpecies(db, item.speciesId), locale, t.plant.light),
           })),
           ...(searching && !t.addPlant.otherCategory.toLowerCase().includes(categoryQuery.trim().toLowerCase())
             ? []
@@ -486,6 +502,13 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 id: item.id,
                 label: catalogName(item, locale),
                 photo: item.photo,
+                tip: phone
+                  ? undefined
+                  : careTip(
+                      catalogSpecies(db, selectedCategory?.speciesId ?? ''),
+                      locale,
+                      t.plant.light,
+                    ),
               })),
               { id: OTHER_SUBCATEGORY_ID, label: t.addPlant.otherCategory },
             ]
@@ -501,7 +524,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
           <>
             <StepHead>
               <StepTitle>{t.addPlant.identityTitle}</StepTitle>
-              <StepLead>{ai ? t.addPlant.identityLeadAi : t.addPlant.identityLeadManual}</StepLead>
+              {ai || phone ? (
+                <StepLead>{ai ? t.addPlant.identityLeadAi : t.addPlant.identityLeadManual}</StepLead>
+              ) : null}
             </StepHead>
             {banner}
             <Section>
@@ -534,7 +559,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                       )
                 }
                 onChange={chooseCategory}
-                onPick={phone ? undefined : (id) => (id === OTHER_CATEGORY_ID ? chooseCategory(id) : setPreview({ kind: 'category', id }))}
+                onTip={(id) => {
+                  if (id !== OTHER_CATEGORY_ID) setPreview({ kind: 'category', id })
+                }}
               />
             </Section>
             <Section>
@@ -560,7 +587,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 )}
                 emptyLabel={t.addPlant.subcategoryFirst}
                 onChange={chooseSub}
-                onPick={phone ? undefined : (id) => (id === OTHER_SUBCATEGORY_ID ? chooseSub(id) : setPreview({ kind: 'sub', id }))}
+                onTip={(id) => {
+                  if (id !== OTHER_SUBCATEGORY_ID) setPreview({ kind: 'sub', id })
+                }}
               />
             </Section>
           </>
@@ -729,6 +758,17 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                     </ReviewRow>
                   ))}
                 </ReviewRows>
+                {recognized ? (
+                  <AiAnswer>
+                    <strong>{t.addPlant.resultTitle}</strong>
+                    {identifyFacts(recognized, catalog, locale, t).map((fact) => (
+                      <AiFact key={fact.id}>
+                        <span>{fact.label}</span>
+                        {fact.value}
+                      </AiFact>
+                    ))}
+                  </AiAnswer>
+                ) : null}
                 {description ? <StepLead>{description}</StepLead> : null}
               </ReviewBody>
             </Review>
@@ -746,7 +786,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         return {
           label: t.addPlant.next,
           disabled: !identityReady,
-          hint: identityReady ? '' : t.addPlant.needIdentity,
+          hint: identityReady || !phone ? '' : t.addPlant.needIdentity,
         }
       case 'specs':
         return {
@@ -764,7 +804,15 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         return {
           label: t.greenhouse.savePlant,
           disabled: !detailsReady || !specsReady || !identityReady,
-          hint: saveFailed ? t.addPlant.saveFailed : '',
+          hint: saveFailed
+            ? t.addPlant.saveFailed
+            : !identityReady
+              ? t.addPlant.needIdentity
+              : !specsReady
+                ? t.addPlant.needSpecs
+                : !detailsReady
+                  ? t.addPlant.needDetails
+                  : '',
         }
     }
   })()
@@ -790,6 +838,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             checks={identification.photos}
             max={ADD_PLANT_UPLOAD_LIMIT}
             analyze={withAi}
+            showAnswer={false}
           />
         </div>
       </Scroll>

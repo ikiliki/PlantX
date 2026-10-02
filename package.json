@@ -27,6 +27,7 @@
     "build:prod": "node scripts/build-prod.mjs",
     "preview": "vite preview",
     "smoke": "node scripts/smoke.mjs",
+    "mock:cases": "node scripts/mock-cases.mjs",
     "scrape": "node scripts/scrape.mjs --headless",
     "scrape:headed": "node scripts/scrape.mjs --headed"
   },

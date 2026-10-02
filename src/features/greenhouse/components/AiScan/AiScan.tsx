@@ -91,6 +91,7 @@ export function AiScan({
   probability,
   mode,
   notice,
+  quiet = false,
   onRemove,
   removeLabel,
 }: {
@@ -102,6 +103,8 @@ export function AiScan({
   mode?: IdentifyMode
   tried?: IdentifyTried[]
   notice?: { title: string; body: string }
+  /** Photo only. The answer panel lives on the review step. */
+  quiet?: boolean
   /** Clears this photo. Used when there is no thumbnail strip under the scan. */
   onRemove?: () => void
   removeLabel?: string
@@ -153,7 +156,7 @@ export function AiScan({
           ) : null}
         </PhotoWell>
 
-        <Panel aria-live="polite">
+        {quiet ? null : <Panel aria-live="polite">
           {state === 'scanning' ? (
             <>
               <Head>
@@ -229,7 +232,7 @@ export function AiScan({
               {mode === 'mock' ? <DemoNote>{t.addPlant.demoNote}</DemoNote> : null}
             </Attribution>
           ) : null}
-        </Panel>
+        </Panel>}
       </Layout>
     </Root>
   )

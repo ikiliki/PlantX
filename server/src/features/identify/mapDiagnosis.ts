@@ -3,7 +3,12 @@ import type { Catalog, PlantClassDraft, QualityGrade, SizeBand, StageBand } from
 import type { RawSuggestion } from './types.ts'
 
 function norm(value: string) {
-  return value.trim().toLowerCase()
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 /** Providers often leave genus empty; the first word of a binomial is the genus. */
@@ -63,6 +68,11 @@ function hasOption(catalog: Catalog, propertyId: string, optionId: string) {
   return Boolean(prop?.options.some((opt) => opt.id === optionId))
 }
 
+function epithetOf(raw?: RawSuggestion | null) {
+  const parts = raw?.scientificName?.trim().split(/\s+/) ?? []
+  return parts.length > 1 ? norm(parts[1]) : ''
+}
+
 function bestId(
   needles: string[],
   rows: Array<{ id: string; name: string; nameHe: string; code: string }>,
@@ -89,10 +99,22 @@ function bestId(
 }
 
 function matchCategory(raw: RawSuggestion, catalog: Catalog, species?: RawSuggestion | null) {
-  const named = bestId(
-    tokensOf(raw, species),
-    catalog.categories.map((item) => ({ id: item.id, name: item.name, nameHe: item.nameHe, code: item.ticker })),
-  )
+  // The species epithet names its own category (adansonii → Swiss cheese plant).
+  // Otherwise a category named the genus wins, so deliciosa stays Monstera even when
+  // a shared common name like "Swiss cheese plant" also matches.
+  const epithet = epithetOf(species) || epithetOf(raw)
+  const epithetCategory = epithet
+    ? catalog.categories.find((item) => norm(item.id) === epithet || norm(item.name) === epithet)
+    : undefined
+  const genus = genusOf(species) || genusOf(raw)
+  const genusCategory = genus ? catalog.categories.find((item) => norm(item.name) === norm(genus)) : undefined
+  const named =
+    epithetCategory?.id ??
+    genusCategory?.id ??
+    bestId(
+      tokensOf(raw, species),
+      catalog.categories.map((item) => ({ id: item.id, name: item.name, nameHe: item.nameHe, code: item.ticker })),
+    )
   const hinted = raw.categoryId && catalog.categories.some((item) => item.id === raw.categoryId) ? raw.categoryId : undefined
   if (named && hinted && named !== hinted) return named
   return hinted ?? named

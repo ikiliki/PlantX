@@ -18,10 +18,15 @@ import { useStore } from '../../mock/store'
 import { isFeatureEnabled } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
 import type { FeedUpdateKind, Todo } from '../../mock/types'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
+import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
+import { RefreshButton } from '../../components/RefreshButton/RefreshButton'
+import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
+import { useMediaQuery } from '../../lib/useMediaQuery'
+import { theme } from '../../theme/tokens'
 import { useSearchParams } from 'react-router-dom'
 import { FilterChips } from '../../components/FilterChips/FilterChips'
-import { Empty, Feed, Layout, Rail, RailLure, Shell, Widget } from './DiscoverPage.styles'
+import { Empty, Feed, FeedTools, Layout, Rail, RailLure, Shell, Widget } from './DiscoverPage.styles'
 
 const WIDGET_ITEMS = 2
 
@@ -52,6 +57,16 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
     else nextParams.set('feed', next)
     setParams(nextParams, { replace: true })
   }
+  // Refresh: pull down on a phone, or the icon at the end of the filter row.
+  const phone = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`)
+  const { reloadSlice } = useStore()
+  const [refreshing, setRefreshing] = useState(false)
+  const refresh = useCallback(() => {
+    if (refreshing) return
+    setRefreshing(true)
+    const minimum = new Promise((resolve) => window.setTimeout(resolve, 600))
+    void Promise.all([reloadSlice('updates'), reloadSlice('todos'), reloadSlice('plants'), minimum]).finally(() => setRefreshing(false))
+  }, [reloadSlice, refreshing])
   const feed = useInfiniteList(items, {
     enabled: paged && view === 'page',
     signature: `${filter}|${items.map((item) => item.id).join('|')}`,
@@ -107,16 +122,20 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
         </Rail>
         <Feed>
           <FeatureGate placement="home.feed" title={t.nav.home}>
-            <FilterChips
-              label={t.feed.filterLabel}
-              value={filter}
-              onChange={setFilter}
-              options={[
-                { id: 'all', label: t.feed.filterAll, count: allItems.length, icon: 'home' },
-                { id: 'activities', label: t.feed.filterActivities, count: activityItems.length, icon: 'greenhouse' },
-                { id: 'tasks', label: t.feed.filterTasks, count: taskItems.length, icon: 'drop' },
-              ]}
-            />
+            <PullToRefresh enabled={phone} busy={refreshing} label={t.feed.refreshing} onRefresh={refresh} />
+            <FeedTools>
+              <FilterChips
+                label={t.feed.filterLabel}
+                value={filter}
+                onChange={setFilter}
+                options={[
+                  { id: 'all', label: t.feed.filterAll, count: allItems.length, icon: 'home' },
+                  { id: 'activities', label: t.feed.filterActivities, count: activityItems.length, icon: 'greenhouse' },
+                  { id: 'tasks', label: t.feed.filterTasks, count: taskItems.length, icon: 'drop' },
+                ]}
+              />
+              {phone ? null : <RefreshButton label={t.feed.refresh} busy={refreshing} onClick={refresh} />}
+            </FeedTools>
             {feed.total === 0 && <Empty>{empty}</Empty>}
             {shown.map((item, index) => (
               <Reveal key={item.id} index={index}>
@@ -138,6 +157,8 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
         </Rail>
       </Layout>
       <HomeMobileFloats />
+      {/* Bottom start: the Needs-today chip owns the other corner on phones. */}
+      <ScrollTopButton label={t.common.backToTop} threshold={600} side="start" />
       {careDialog}
     </Shell>
   )

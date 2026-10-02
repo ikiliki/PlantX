@@ -26,16 +26,19 @@ import {
  * Catalog card for a species, as a popup (a sheet on a phone).
  * `subcategoryId` leads with that variety's photo, name, and code.
  * `action` adds a primary button (Add Plant's Choose) in place of the link to the catalog page.
+ * `infoOnly` shows the card with neither button — the chip is already selected.
  */
 export function CatalogPreview({
   speciesId,
   subcategoryId,
   action,
+  infoOnly,
   onClose,
 }: {
   speciesId: string
   subcategoryId?: string
   action?: { label: string; onClick: () => void }
+  infoOnly?: boolean
   onClose: () => void
 }) {
   const { db } = useStore()
@@ -118,7 +121,7 @@ export function CatalogPreview({
               </div>
             ) : null}
           </Facts>
-          {action ? (
+          {infoOnly ? null : action ? (
             <Choose type="button" onClick={action.onClick}>
               {action.label}
             </Choose>

@@ -68,7 +68,7 @@ export function wasScanned(scan: PhotoScan) {
   return scan.phase !== 'noAccess' && scan.phase !== 'held'
 }
 
-function diagnosisFacts(
+export function identifyFacts(
   diagnosis: Diagnosis,
   catalog: Catalog,
   locale: Locale,
@@ -108,6 +108,7 @@ export function PhotoIdentify({
   checks = [],
   max = MAX_PLANT_PHOTOS,
   analyze = true,
+  showAnswer = true,
 }: {
   scans: PhotoScan[]
   onScansChange: ScansUpdate
@@ -115,6 +116,8 @@ export function PhotoIdentify({
   max?: number
   /** When false, a new photo is kept and not sent until this becomes true. */
   analyze?: boolean
+  /** The answer panel belongs on the review step. The photo step keeps the photo. */
+  showAnswer?: boolean
 }) {
   const { t, locale } = useI18n()
   const { db, currentUser, signedIn, liveWritable, plantxEnv, noteActivity } = useStore()
@@ -268,16 +271,20 @@ export function PhotoIdentify({
     }
   })()
 
+  const answered = selected.phase === 'matched' || selected.phase === 'notInCatalog'
+  const photoOnly = !showAnswer && answered
+
   return (
     <Root>
       {input}
       <AiScan
         key={selected.id}
         photo={selected.photo}
-        state={scanState(selected.phase)}
+        state={photoOnly ? 'ready' : scanState(selected.phase)}
+        quiet={photoOnly}
         facts={
-          selected.phase === 'matched' && selected.diagnosis
-            ? diagnosisFacts(selected.diagnosis, db.catalog, locale, t)
+          !photoOnly && selected.phase === 'matched' && selected.diagnosis
+            ? identifyFacts(selected.diagnosis, db.catalog, locale, t)
             : []
         }
         provider={selected.diagnosis?.provider}

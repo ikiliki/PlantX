@@ -88,3 +88,11 @@ export const Empty = styled.p`
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
 `
+
+/** Feed filter chips with the refresh icon at the end of the same row. */
+export const FeedTools = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+`
