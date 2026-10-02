@@ -41,7 +41,7 @@ function initials(name: string) {
 export function TopBar() {
   const { t, locale } = useI18n()
   const { currentUser, db, signedIn, loginAs, setLocale } = useStore()
-  const taskCount = useTaskTabCount()
+  const tasks = useTaskTabCount()
   const loc = useLocation()
   const [open, setOpen] = useState(false)
   const [openNav, setOpenNav] = useState<string | null>(null)
@@ -166,9 +166,25 @@ export function TopBar() {
           />
         )}
         {show('todo') && (
-          <NavItem to="/tasks" $active={isActive('/tasks')} aria-current={isActive('/tasks') ? 'page' : undefined}>
-            {taskCount > 0 ? `${t.nav.todo} (${taskCount})` : t.nav.todo}
-          </NavItem>
+          <NavMenu
+            label={tasks.today > 0 ? `${t.nav.todo} (${tasks.today})` : t.nav.todo}
+            to="/tasks"
+            open={openNav === 'todo'}
+            onOpen={() => setOpenNav('todo')}
+            onClose={() => setOpenNav((current) => (current === 'todo' ? null : current))}
+            items={[
+              {
+                to: '/tasks',
+                label: `${t.todo.navToday} (${tasks.today})`,
+                active: (here) => here.pathname.startsWith('/tasks') && new URLSearchParams(here.search).get('view') !== 'planned',
+              },
+              {
+                to: '/tasks?view=planned',
+                label: `${t.todo.navPlanned} (${tasks.planned})`,
+                active: (here) => here.pathname.startsWith('/tasks') && new URLSearchParams(here.search).get('view') === 'planned',
+              },
+            ]}
+          />
         )}
         {show('rank') && (
           <NavItem to="/rank" $active={isActive('/rank')} aria-current={isActive('/rank') ? 'page' : undefined}>
@@ -183,10 +199,10 @@ export function TopBar() {
             onOpen={() => setOpenNav('wiki')}
             onClose={() => setOpenNav((current) => (current === 'wiki' ? null : current))}
             items={[
-              { to: '/wiki', label: t.guide.all },
+              { to: '/wiki', label: `${t.guide.all} (${wikiPlants.length})` },
               ...wikiGroups.map((group, index) => ({
                 to: `/wiki#${group.rarity}`,
-                label: wikiRarityTitle(group.rarity, t.plant),
+                label: `${wikiRarityTitle(group.rarity, t.plant)} (${group.items.length})`,
                 dividerBefore: index === 0,
                 children: group.items.map((item) => ({
                   to: `/wiki/${item.id}`,

@@ -27,7 +27,7 @@ function isOverlayPath(path: string) {
 export function AppShell() {
   const { t } = useI18n()
   const { db, currentUser } = useStore()
-  const taskCount = useTaskTabCount()
+  const tasks = useTaskTabCount()
   const loc = useLocation()
   const navType = useNavigationType()
   const mainRef = useRef<HTMLElement>(null)
@@ -61,7 +61,7 @@ export function AppShell() {
       { to: '/greenhouse', label: t.nav.greenhouse, icon: 'greenhouse' as const, pageId: 'greenhouse' as const },
       {
         to: '/tasks',
-        label: taskCount > 0 ? `${t.nav.todo} (${taskCount})` : t.nav.todo,
+        label: tasks.today > 0 ? `${t.nav.todo} (${tasks.today})` : t.nav.todo,
         icon: 'drop' as const,
         pageId: 'todo' as const,
       },

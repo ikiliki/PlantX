@@ -20,7 +20,8 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
   const rows = speciesIds ? listed.filter((item) => speciesIds.includes(item.id)) : listed
   const groups = groupByRarity(rows).map((group) => ({
     ...group,
-    title: wikiRarityTitle(group.rarity, t.plant),
+    // Each catalog group shows how many species it holds.
+    title: `${wikiRarityTitle(group.rarity, t.plant)} (${group.items.length})`,
   }))
   const [open, setOpen] = useState<Record<string, boolean>>({ common: true })
 

@@ -127,13 +127,14 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
           </FeatureGate>
         </Feed>
         <Rail>
-          {todoRail}
           <TopGreenhouses />
           <MarketRail />
           <RankRail />
           <div data-wiki-rail>
             <WikiRail />
           </div>
+          {/* Needs you today sits under the catalog. */}
+          {todoRail}
         </Rail>
       </Layout>
       <HomeMobileFloats />

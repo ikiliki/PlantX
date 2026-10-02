@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { FilterChips } from '../../../../components/FilterChips/FilterChips'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { AddPlantCard } from '../../../greenhouse/components/AddPlantCard/AddPlantCard'
 import { PassportDialog } from '../../../greenhouse/components/PassportDialog/PassportDialog'
@@ -10,7 +11,6 @@ import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
 import {
   Board,
   Cell,
-  Chip,
   Day,
   DayList,
   DayNum,
@@ -18,10 +18,7 @@ import {
   DayPanelHead,
   DropIcon,
   EmptyDay,
-  FilterLabel,
-  FilterRow,
   FilterSelect,
-  Filters,
   Grid,
   Head,
   Icons,
@@ -33,6 +30,7 @@ import {
   PlantKind,
   Root,
   Stack,
+  Toolbar,
   Week,
 } from './TodoCalendar.styles'
 
@@ -86,6 +84,15 @@ function DayMarks({ items, plants }: { items: Todo[]; plants: Plant[] }) {
   )
 }
 
+export type TodoWhen = 'today' | 'planned'
+
+/** Overdue tasks belong to both views, so nothing past due is ever hidden. */
+function matchesWhen(todo: Todo, when: TodoWhen, today: string) {
+  if (todo.dueOn != null && todo.dueOn < today) return true
+  if (when === 'today') return todo.dueOn == null || todo.dueOn === today
+  return todo.dueOn != null && todo.dueOn > today
+}
+
 export function TodoCalendar({
   year,
   month,
@@ -94,6 +101,8 @@ export function TodoCalendar({
   focusTodoId,
   firstPlant = false,
   showFilters = true,
+  when = 'today',
+  onWhen,
   onAddFirstPlant,
   onMonthChange,
   onComplete,
@@ -109,6 +118,12 @@ export function TodoCalendar({
   firstPlant?: boolean
   /** Hide filters while the plant list is still loading. */
   showFilters?: boolean
+  /**
+   * Today: due today or undated. Planned: due after today. Overdue tasks show under both.
+   * Switching selects today, or every planned day.
+   */
+  when?: TodoWhen
+  onWhen?: (when: TodoWhen) => void
   onAddFirstPlant?: () => void
   onMonthChange: (year: number, month: number) => void
   onComplete: (todo: Todo) => void
@@ -137,13 +152,37 @@ export function TodoCalendar({
   const heldOpen = useRef(false)
   const ignoreClickDay = useRef<string | null>(null)
 
-  const filtered = useMemo(() => {
-    return open.filter((todo) => {
-      if (plantFilter !== 'all' && todo.plantId !== plantFilter) return false
-      if (kindFilter !== 'all' && todo.subcategory !== kindFilter) return false
-      return true
-    })
-  }, [open, plantFilter, kindFilter])
+  const today = todayIso()
+  const scoped = useMemo(
+    () =>
+      open.filter((todo) => {
+        if (plantFilter !== 'all' && todo.plantId !== plantFilter) return false
+        if (kindFilter !== 'all' && todo.subcategory !== kindFilter) return false
+        return true
+      }),
+    [open, plantFilter, kindFilter],
+  )
+  const whenCounts = useMemo(
+    () => ({
+      today: scoped.filter((todo) => matchesWhen(todo, 'today', today)).length,
+      planned: scoped.filter((todo) => matchesWhen(todo, 'planned', today)).length,
+    }),
+    [scoped, today],
+  )
+  const filtered = useMemo(() => scoped.filter((todo) => matchesWhen(todo, when, today)), [scoped, when, today])
+
+  // Switching Today / Planned selects today, or every planned day.
+  useEffect(() => {
+    if (focusTodoId) return
+    if (when === 'today') {
+      setSelectedDays([today])
+      return
+    }
+    const days = [...new Set(filtered.filter((todo) => todo.dueOn && todo.dueOn > today).map((todo) => todo.dueOn as string))].sort()
+    setSelectedDays(days.length ? days : [today])
+    // Only on a switch, not on every task change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [when])
 
   useEffect(() => {
     if (!focusTodoId || focusedRef.current === focusTodoId) return
@@ -275,50 +314,46 @@ export function TodoCalendar({
     }, 760)
   }
 
+  const kindOptions = [
+    { id: 'all' as const, label: t.todo.filterAllKinds },
+    ...kinds.map((kind) => ({ id: kind, label: kindLabel(kind, t.todo), iconNode: <TodoKindIcon kind={kind} size={14} /> })),
+  ]
+
   return (
     <Root>
+      {/* Filters sit above the calendar card, as chips like the greenhouse. */}
+      {!firstPlant && showFilters ? (
+        <Toolbar>
+          <FilterChips
+            label={t.todo.filterWhen}
+            value={when}
+            onChange={(next) => onWhen?.(next)}
+            options={[
+              { id: 'today', label: t.todo.navToday, count: whenCounts.today, icon: 'drop' },
+              { id: 'planned', label: t.todo.navPlanned, count: whenCounts.planned, icon: 'chart' },
+            ]}
+          />
+          <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
+          <FilterSelect
+            aria-label={t.todo.filterPlants}
+            value={plantFilter}
+            onChange={(event) => {
+              const value = event.target.value
+              setPlantFilter(value === 'all' ? 'all' : value)
+            }}
+          >
+            <option value="all">{t.todo.filterAllPlants}</option>
+            {living.map((plant) => (
+              <option key={plant.id} value={plant.id}>
+                {tr(plant.title, plant.titleHe)}
+              </option>
+            ))}
+          </FilterSelect>
+        </Toolbar>
+      ) : null}
       <Board>
         {firstPlant ? (
           <AddPlantCard hero onClick={() => onAddFirstPlant?.()} />
-        ) : showFilters ? (
-          <Filters>
-            <FilterRow>
-              <FilterLabel id="todo-plant-label">{t.todo.filterPlants}</FilterLabel>
-              <FilterSelect
-                aria-labelledby="todo-plant-label"
-                value={plantFilter}
-                onChange={(event) => {
-                  const value = event.target.value
-                  setPlantFilter(value === 'all' ? 'all' : value)
-                }}
-              >
-                <option value="all">{t.todo.filterAllPlants}</option>
-                {living.map((plant) => (
-                  <option key={plant.id} value={plant.id}>
-                    {tr(plant.title, plant.titleHe)}
-                  </option>
-                ))}
-              </FilterSelect>
-            </FilterRow>
-            <FilterRow role="tablist" aria-label={t.todo.filterKinds}>
-              <FilterLabel>{t.todo.filterKinds}</FilterLabel>
-              <Chip type="button" $on={kindFilter === 'all'} onClick={() => setKindFilter('all')}>
-                {t.todo.filterAllKinds}
-              </Chip>
-              {kinds.map((kind) => (
-                <Chip
-                  key={kind}
-                  type="button"
-                  $on={kindFilter === kind}
-                  $tone={kind}
-                  onClick={() => setKindFilter(kind)}
-                >
-                  <TodoKindIcon kind={kind} size={14} />
-                  {kindLabel(kind, t.todo)}
-                </Chip>
-              ))}
-            </FilterRow>
-          </Filters>
         ) : null}
 
         <Head>

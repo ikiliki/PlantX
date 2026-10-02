@@ -10,19 +10,15 @@ export const Page = styled.div`
   min-width: 0;
 `
 
+/** Visually hidden on every width: the filter chips lead the page; the h1 stays for screen readers. */
 export const Heading = styled.header`
-  min-width: 0;
-
-  h1 {
-    margin: 0;
-    font-size: clamp(28px, 7vw, 44px);
-    color: ${theme.colors.ink};
-    overflow-wrap: anywhere;
-  }
-
-  @container (max-width: 720px) {
-    display: none;
-  }
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 `
 
 export const GuestAuth = styled.div`

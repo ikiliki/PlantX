@@ -28,24 +28,18 @@ export const Board = styled.div`
   }
 `
 
-export const Filters = styled.div`
-  display: grid;
-  gap: 10px;
-  min-width: 0;
-`
-
-export const FilterRow = styled.div`
+/** Chips and the plant picker above the calendar card; the picker drops under the chips when narrow. */
+export const Toolbar = styled.div`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 10px 12px;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  margin-bottom: 14px;
 
-  &::-webkit-scrollbar {
-    display: none;
+  > select {
+    flex: 0 1 220px;
+    min-width: 0;
   }
 `
 
@@ -71,53 +65,6 @@ export const FilterSelect = styled.select`
   &:focus-visible {
     outline: 2px solid ${theme.colors.growth};
     outline-offset: 2px;
-  }
-`
-
-export const FilterLabel = styled.span`
-  flex: 0 0 auto;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: ${theme.colors.moss};
-`
-
-export const Chip = styled.button<{ $on?: boolean; $tone?: 'water' | 'photo' }>`
-  ${pressable}
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid
-    ${({ $on, $tone }) => {
-      if (!$on) return theme.colors.border
-      if ($tone === 'photo') return metal
-      if ($tone === 'water') return water
-      return theme.colors.forest
-    }};
-  border-radius: ${theme.radii.pill};
-  background: ${({ $on, $tone }) => {
-    if (!$on) return theme.colors.creamCard
-    if ($tone === 'photo') return metal
-    if ($tone === 'water') return water
-    return theme.colors.forest
-  }};
-  color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.ink)};
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-
-  img {
-    width: 20px;
-    height: 20px;
-    border-radius: 999px;
-    object-fit: cover;
   }
 `
 

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Icon, type IconName } from '../Icon/Icon'
 import { Bar, Chip, Count } from './FilterChips.styles'
 
@@ -6,6 +7,8 @@ export type FilterChipOption<T extends string> = {
   label: string
   count?: number
   icon?: IconName
+  /** Any icon element, when the shared icon set has no match. */
+  iconNode?: ReactNode
 }
 
 /**
@@ -35,7 +38,7 @@ export function FilterChips<T extends string>({
           $on={value === item.id}
           onClick={() => onChange(item.id)}
         >
-          {item.icon ? <Icon name={item.icon} size={14} /> : null}
+          {item.iconNode ?? (item.icon ? <Icon name={item.icon} size={14} /> : null)}
           {item.label}
           {item.count != null ? <Count>({item.count})</Count> : null}
         </Chip>

@@ -9,7 +9,7 @@ export type GreenhouseScopeId = 'mine' | 'global'
 
 const HEADER_NAV = `(min-width: ${theme.breakpoints.md})`
 
-/** True when the shell header nav is on screen, so the page toggle stays off. */
+/** True when the shell header nav is on screen (desktop): Mine / Global live in the nav menu, not a toggle. */
 export function useHeaderNav() {
   const [on, setOn] = useState(() => (typeof window !== 'undefined' ? window.matchMedia(HEADER_NAV).matches : false))
   useEffect(() => {
