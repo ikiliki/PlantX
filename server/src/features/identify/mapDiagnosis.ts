@@ -6,16 +6,56 @@ function norm(value: string) {
   return value.trim().toLowerCase()
 }
 
-function tokensOf(raw: RawSuggestion): string[] {
-  const values = [raw.scientificName, raw.genus, raw.cultivar, ...raw.commonNames]
-  return values.map((item) => (item ? norm(item) : '')).filter(Boolean)
+/** Providers often leave genus empty; the first word of a binomial is the genus. */
+function genusOf(raw?: RawSuggestion | null) {
+  return raw?.genus || raw?.scientificName?.trim().split(/\s+/)[0]
 }
 
-function looseMatch(a: string, b: string) {
-  if (!a || !b) return false
-  if (a === b) return true
-  if (a.length < 3 || b.length < 3) return false
-  return a.includes(b) || b.includes(a)
+function tokensOf(raw: RawSuggestion, species?: RawSuggestion | null): string[] {
+  const values = [
+    raw.scientificName,
+    genusOf(raw),
+    raw.cultivar,
+    raw.label,
+    ...raw.commonNames,
+    species?.scientificName,
+    genusOf(species),
+    species?.cultivar,
+    species?.label,
+    ...(species?.commonNames ?? []),
+  ]
+  return [...new Set(values.map((item) => (item ? norm(item) : '')).filter(Boolean))]
+}
+
+function words(value: string) {
+  return norm(value).split(/[^\p{L}\p{N}]+/u).filter(Boolean)
+}
+
+/** Whole words only, so "ant" does not match inside "plant" and "mon" does not match inside a longer name. */
+function phraseInside(haystack: string, needle: string) {
+  const hay = words(haystack)
+  const pin = words(needle)
+  if (pin.length === 0 || hay.length < pin.length) return false
+  for (let i = 0; i <= hay.length - pin.length; i += 1) {
+    if (pin.every((word, index) => hay[i + index] === word)) return true
+  }
+  return false
+}
+
+/**
+ * Exact name is strongest. A catalog name inside the species string is next ("pothos" in "golden pothos").
+ * A species phrase inside a longer catalog name counts only when it is most of that name, so "money plant"
+ * does not claim "Chinese money plant". A ticker or code counts only when it is the whole token.
+ */
+function scoreField(needle: string, field: string, kind: 'name' | 'code') {
+  if (!needle || !field) return 0
+  if (norm(needle) === norm(field)) return kind === 'code' ? 80 : 1000
+  if (kind === 'code') return 0
+  const fieldWords = words(field)
+  if (fieldWords.length === 0 || words(needle).length === 0) return 0
+  if (phraseInside(needle, field) && (field.length >= 4 || fieldWords.length > 1)) return 200 + field.length
+  if (phraseInside(field, needle) && needle.length >= 4 && needle.length * 5 >= field.length * 4) return 40 + needle.length
+  return 0
 }
 
 function hasOption(catalog: Catalog, propertyId: string, optionId: string) {
@@ -23,56 +63,59 @@ function hasOption(catalog: Catalog, propertyId: string, optionId: string) {
   return Boolean(prop?.options.some((opt) => opt.id === optionId))
 }
 
-function matchCategory(raw: RawSuggestion, catalog: Catalog) {
-  if (raw.categoryId && catalog.categories.some((item) => item.id === raw.categoryId)) {
-    return raw.categoryId
-  }
-  const needles = tokensOf(raw)
-  let best: { id: string; score: number } | undefined
-  for (const category of catalog.categories) {
-    const fields = [category.name, category.nameHe, category.ticker].map(norm)
-    for (const field of fields) {
-      for (const needle of needles) {
-        if (!looseMatch(needle, field)) continue
-        const score = needle === field ? 3 : Math.min(needle.length, field.length)
-        if (!best || score > best.score) best = { id: category.id, score }
+function bestId(
+  needles: string[],
+  rows: Array<{ id: string; name: string; nameHe: string; code: string }>,
+) {
+  // Ties go to the earlier needle: scientific name, genus and label before common names.
+  let best: { id: string; score: number; needle: number } | undefined
+  for (const row of rows) {
+    const fields: Array<[string, 'name' | 'code']> = [
+      [row.name, 'name'],
+      [row.nameHe, 'name'],
+      [row.code, 'code'],
+    ]
+    for (const [field, kind] of fields) {
+      for (const [index, needle] of needles.entries()) {
+        const score = scoreField(needle, field, kind)
+        if (score <= 0) continue
+        if (!best || score > best.score || (score === best.score && index < best.needle)) {
+          best = { id: row.id, score, needle: index }
+        }
       }
     }
   }
   return best?.id
 }
 
-function matchSubcategory(raw: RawSuggestion, catalog: Catalog, categoryId: string) {
-  if (
-    raw.subcategoryId &&
-    catalog.subcategories.some((item) => item.id === raw.subcategoryId && item.categoryId === categoryId)
-  ) {
-    return raw.subcategoryId
-  }
-  const cultivar = raw.cultivar ? norm(raw.cultivar) : ''
-  const needles = [cultivar, ...tokensOf(raw)].filter(Boolean)
+function matchCategory(raw: RawSuggestion, catalog: Catalog, species?: RawSuggestion | null) {
+  const named = bestId(
+    tokensOf(raw, species),
+    catalog.categories.map((item) => ({ id: item.id, name: item.name, nameHe: item.nameHe, code: item.ticker })),
+  )
+  const hinted = raw.categoryId && catalog.categories.some((item) => item.id === raw.categoryId) ? raw.categoryId : undefined
+  if (named && hinted && named !== hinted) return named
+  return hinted ?? named
+}
+
+function matchSubcategory(raw: RawSuggestion, catalog: Catalog, categoryId: string, species?: RawSuggestion | null) {
   const pool = catalog.subcategories.filter((item) => item.categoryId === categoryId)
-  let best: { id: string; score: number } | undefined
-  for (const sub of pool) {
-    const fields = [sub.name, sub.nameHe, sub.code].map(norm)
-    for (const field of fields) {
-      for (const needle of needles) {
-        if (!looseMatch(needle, field)) continue
-        const score = needle === field ? 3 : Math.min(needle.length, field.length)
-        if (!best || score > best.score) best = { id: sub.id, score }
-      }
-    }
-  }
-  return best?.id
+  const named = bestId(
+    tokensOf(raw, species),
+    pool.map((item) => ({ id: item.id, name: item.name, nameHe: item.nameHe, code: item.code })),
+  )
+  const hinted = raw.subcategoryId && pool.some((item) => item.id === raw.subcategoryId) ? raw.subcategoryId : undefined
+  if (named && hinted && named !== hinted) return named
+  return hinted ?? named
 }
 
-/** Map a provider suggestion onto existing catalog ids only. */
-export function mapDiagnosis(raw: RawSuggestion, catalog: Catalog): Partial<PlantClassDraft> {
+/** Map a provider suggestion onto existing catalog ids only. Species names win over a conflicting catalog id. */
+export function mapDiagnosis(raw: RawSuggestion, catalog: Catalog, species?: RawSuggestion | null): Partial<PlantClassDraft> {
   const draft: Partial<PlantClassDraft> = {}
-  const categoryId = matchCategory(raw, catalog)
+  const categoryId = matchCategory(raw, catalog, species)
   if (categoryId) {
     draft.categoryId = categoryId
-    const subcategoryId = matchSubcategory(raw, catalog, categoryId)
+    const subcategoryId = matchSubcategory(raw, catalog, categoryId, species)
     if (subcategoryId) draft.subcategoryId = subcategoryId
   }
 

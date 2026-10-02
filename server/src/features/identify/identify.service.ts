@@ -94,7 +94,13 @@ function settingsFor(
   return flags[id] ?? defaultIdentifySettings(true)
 }
 
-function toDiagnosis(raw: RawSuggestion, catalog: Catalog, mode: IdentifyMode, tried: IdentifyTried[]): Diagnosis {
+function toDiagnosis(
+  raw: RawSuggestion,
+  catalog: Catalog,
+  mode: IdentifyMode,
+  tried: IdentifyTried[],
+  species?: RawSuggestion | null,
+): Diagnosis {
   return {
     provider: raw.provider,
     mode,
@@ -103,7 +109,7 @@ function toDiagnosis(raw: RawSuggestion, catalog: Catalog, mode: IdentifyMode, t
     commonNames: raw.commonNames,
     probability: raw.probability,
     isPlant: raw.isPlant,
-    draft: mapDiagnosis(raw, catalog),
+    draft: mapDiagnosis(raw, catalog, species),
     tried,
   }
 }
@@ -221,8 +227,9 @@ async function settle(
   scenario: IdentifyMockScenario,
   settings: IdentifyProviderSettings,
   steps?: IdentifyStep[],
+  species?: RawSuggestion | null,
 ) {
-  const diagnosis = toDiagnosis(raw, ctx.catalog, mode, tried)
+  const diagnosis = toDiagnosis(raw, ctx.catalog, mode, tried, species)
   if (steps) diagnosis.steps = steps
   const adminMock = Boolean(ctx.run.honorEnabled && useMock && (scenario === 'match' || scenario === 'notInCatalog'))
   if (useMock && scenario === 'notInCatalog') {
@@ -430,7 +437,7 @@ async function diagnosePipeline(ctx: DiagnoseCtx): Promise<{ diagnosis: Diagnosi
       probability: raw.probability,
     })
     const mode: IdentifyMode = sawLive ? 'live' : 'mock'
-    return settle(raw, ctx, tried, mode, draftMock, draftScenario, draftSettings, steps)
+    return settle(raw, ctx, tried, mode, draftMock, draftScenario, draftSettings, steps, species)
   } catch (err) {
     const fail = failedTry(geminiProvider, err)
     tried.push(fail)
