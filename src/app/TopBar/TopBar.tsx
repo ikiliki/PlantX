@@ -196,11 +196,6 @@ export function TopBar() {
             ]}
           />
         )}
-        {isOperator(currentUser) && (
-          <NavItem to="/admin/server" $active={isActive('/admin')} aria-current={isActive('/admin') ? 'page' : undefined}>
-            {t.admin.title}
-          </NavItem>
-        )}
       </NavItems>
 
       <Actions>
@@ -225,6 +220,11 @@ export function TopBar() {
                   <MenuItem to="/profile" role="menuitem" $active={isActive('/profile')} onClick={() => setOpen(false)}>
                     {t.nav.profile}
                   </MenuItem>
+                  {isOperator(currentUser) && (
+                    <MenuItem to="/admin/server" role="menuitem" $active={isActive('/admin')} onClick={() => setOpen(false)}>
+                      {t.admin.title}
+                    </MenuItem>
+                  )}
                   {chooseLocale && (
                     <MenuLang>
                       <span>{t.nav.language}</span>

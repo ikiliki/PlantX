@@ -7,7 +7,6 @@ import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButto
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
-import { isOperator } from '../../theme/operator'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { theme } from '../../theme/tokens'
 import { TopBar } from '../TopBar/TopBar'
@@ -82,9 +81,6 @@ export function AppShell() {
     return !id || isPlacementEnabled(db.system, id)
   })
 
-  if (isOperator(currentUser)) {
-    bottom.push({ to: '/admin/server', label: t.admin.title, icon: 'admin' })
-  }
 
   return (
     <Shell>
