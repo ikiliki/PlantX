@@ -79,7 +79,7 @@ export const Open = styled.button`
 export const Meta = styled.div`
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 8px 12px;
 `
 
@@ -94,10 +94,10 @@ export const Kind = styled.span<{ $kind: FeedUpdateKind }>`
   color: ${({ $kind }) => kindInk($kind)};
 `
 
-export const Grower = styled.span`
+export const Grower = styled.span<{ $verified?: boolean }>`
   font-size: 12px;
   font-weight: 600;
-  color: ${theme.colors.muted};
+  color: ${({ $verified }) => ($verified ? theme.colors.info : theme.colors.muted)};
 `
 
 export const Line = styled.p`

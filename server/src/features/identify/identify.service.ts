@@ -1,4 +1,4 @@
-import { defaultIdentifySettings } from '../../../../src/mock/identifySettings.ts'
+import { defaultIdentifySettings, stageSettings } from '../../../../src/mock/identifySettings.ts'
 import type {
   Catalog,
   CatalogSuggestion,
@@ -10,7 +10,9 @@ import type {
   IdentifyProviderStatus,
   IdentifyRequestRecord,
   IdentifySource,
+  IdentifyStageRun,
   IdentifyStep,
+  IdentifyStepId,
   IdentifyTarget,
   IdentifyTried,
   SizeBand,
@@ -39,6 +41,8 @@ export type IdentifyRun = {
   scenario?: IdentifyMockScenario
   /** Add Plant skips providers the admin switched off. The playground leaves this unset. */
   honorEnabled?: boolean
+  /** Playground pipeline: Ready or Mock for each stage, instead of one mode for the whole run. */
+  stages?: Partial<Record<IdentifyStepId, IdentifyStageRun>>
 }
 
 export type IdentifyRequester = {
@@ -171,12 +175,23 @@ type DiagnoseCtx = {
 }
 
 function wantsMock(run: IdentifyRun, settings: IdentifyProviderSettings) {
-  return run.honorEnabled ? settings.response === 'mock' : run.mode === 'mock'
+  if (run.stages || run.honorEnabled) return settings.response === 'mock'
+  return run.mode === 'mock'
 }
 
 function scenarioOf(run: IdentifyRun, settings: IdentifyProviderSettings, useMock: boolean): IdentifyMockScenario {
   if (!useMock) return 'match'
-  return run.honorEnabled ? settings.scenario : (run.scenario ?? 'match')
+  if (run.stages || run.honorEnabled) return settings.scenario
+  return run.scenario ?? 'match'
+}
+
+/** Saved stage settings, or the playground override for this run. */
+function pipelineSettings(ctx: DiagnoseCtx, step: IdentifyStepId): IdentifyProviderSettings {
+  const override = ctx.run.stages?.[step]
+  if (override) return { ...defaultIdentifySettings(true), response: override.response, scenario: override.scenario }
+  if (step === 'species') return settingsFor(ctx.flags, 'plantnet')
+  const gemini = settingsFor(ctx.flags, 'gemini')
+  return stageSettings(gemini, step)
 }
 
 function failedTry(provider: IdentifyProvider, err: unknown): IdentifyTried {
@@ -276,16 +291,16 @@ async function diagnosePipeline(ctx: DiagnoseCtx): Promise<{ diagnosis: Diagnosi
   const tried: IdentifyTried[] = []
   const steps: IdentifyStep[] = []
   let sawLive = false
-  const geminiSettings = settingsFor(ctx.flags, 'gemini')
-  const geminiMock = wantsMock(ctx.run, geminiSettings)
-  const geminiScenario = scenarioOf(ctx.run, geminiSettings, geminiMock)
+  const gateSettings = pipelineSettings(ctx, 'gate')
+  const gateMock = wantsMock(ctx.run, gateSettings)
+  const gateScenario = scenarioOf(ctx.run, gateSettings, gateMock)
 
-  if (ctx.run.honorEnabled && !geminiSettings.enabled) {
+  if (ctx.run.honorEnabled && !gateSettings.enabled) {
     tried.push(toTried(geminiProvider, 'disabled'))
     steps.push({ id: 'gate', provider: 'gemini', ok: false, detail: 'disabled' })
     throw new IdentifyUnavailableError(tried, steps)
   }
-  if (!geminiMock) {
+  if (!gateMock) {
     const skip = await liveSkip(geminiProvider)
     if (skip) {
       tried.push(skip)
@@ -296,8 +311,8 @@ async function diagnosePipeline(ctx: DiagnoseCtx): Promise<{ diagnosis: Diagnosi
 
   let gatePlantAnswer = true
   try {
-    if (geminiMock) {
-      const gated = await mockIdentify('gemini', ctx.catalog, geminiScenario)
+    if (gateMock) {
+      const gated = await mockIdentify('gemini', ctx.catalog, gateScenario)
       gatePlantAnswer = gated.isPlant
     } else {
       sawLive = true
@@ -320,10 +335,10 @@ async function diagnosePipeline(ctx: DiagnoseCtx): Promise<{ diagnosis: Diagnosi
       probability: 0,
       isPlant: false,
     }
-    return settle(raw, ctx, tried, geminiMock ? 'mock' : 'live', geminiMock, geminiScenario, geminiSettings, steps)
+    return settle(raw, ctx, tried, gateMock ? 'mock' : 'live', gateMock, gateScenario, gateSettings, steps)
   }
 
-  const plantnetSettings = settingsFor(ctx.flags, 'plantnet')
+  const plantnetSettings = pipelineSettings(ctx, 'species')
   const plantnetMock = wantsMock(ctx.run, plantnetSettings)
   const plantnetScenario = scenarioOf(ctx.run, plantnetSettings, plantnetMock)
   let species: RawSuggestion | null = null
@@ -375,19 +390,36 @@ async function diagnosePipeline(ctx: DiagnoseCtx): Promise<{ diagnosis: Diagnosi
     })
   }
 
+  const draftSettings = pipelineSettings(ctx, 'draft')
+  const draftMock = wantsMock(ctx.run, draftSettings)
+  const draftScenario = scenarioOf(ctx.run, draftSettings, draftMock)
+  if (ctx.run.honorEnabled && !draftSettings.enabled) {
+    tried.push(toTried(geminiProvider, 'disabled'))
+    steps.push({ id: 'draft', provider: 'gemini', ok: false, detail: 'disabled' })
+    throw new IdentifyUnavailableError(tried, steps)
+  }
+  if (!draftMock) {
+    const skip = await liveSkip(geminiProvider)
+    if (skip) {
+      tried.push(skip)
+      steps.push({ id: 'draft', provider: 'gemini', ok: false, detail: skip.detail ?? skip.reason })
+      throw new IdentifyUnavailableError(tried, steps)
+    }
+  }
+
   try {
     const plan: MockPlan | undefined =
-      geminiMock && ctx.run.honorEnabled
+      draftMock && ctx.run.honorEnabled
         ? {
-            match: geminiScenario === 'match' ? geminiSettings.match : undefined,
+            match: draftScenario === 'match' ? draftSettings.match : undefined,
             suggestion:
-              geminiScenario === 'notInCatalog' ? await ctx.suggestionById(geminiSettings.suggestionId) : undefined,
+              draftScenario === 'notInCatalog' ? await ctx.suggestionById(draftSettings.suggestionId) : undefined,
           }
         : undefined
-    const raw = geminiMock
-      ? await mockIdentify('gemini', ctx.catalog, geminiScenario, plan)
+    const raw = draftMock
+      ? await mockIdentify('gemini', ctx.catalog, draftScenario, plan)
       : await draftPlantClass(ctx.image, ctx.catalog, species && species.isPlant ? speciesOf(species) : null)
-    if (!geminiMock) sawLive = true
+    if (!draftMock) sawLive = true
     steps.push({
       id: 'draft',
       provider: 'gemini',
@@ -398,7 +430,7 @@ async function diagnosePipeline(ctx: DiagnoseCtx): Promise<{ diagnosis: Diagnosi
       probability: raw.probability,
     })
     const mode: IdentifyMode = sawLive ? 'live' : 'mock'
-    return settle(raw, ctx, tried, mode, geminiMock, geminiScenario, geminiSettings, steps)
+    return settle(raw, ctx, tried, mode, draftMock, draftScenario, draftSettings, steps)
   } catch (err) {
     const fail = failedTry(geminiProvider, err)
     tried.push(fail)

@@ -50,7 +50,20 @@ export function parseIdentifySettings(enabled: boolean, config: unknown): Identi
   }
   if (typeof row.suggestionId === 'string') settings.suggestionId = row.suggestionId
   if (row.match) settings.match = matchOf(row.match)
+  if (row.gate && typeof row.gate === 'object') settings.gate = parseIdentifySettings(settings.enabled, row.gate)
+  if (row.draft && typeof row.draft === 'object') settings.draft = parseIdentifySettings(settings.enabled, row.draft)
+  const gateRow = row.gate as Record<string, unknown> | undefined
+  const draftRow = row.draft as Record<string, unknown> | undefined
+  if (settings.gate && gateRow && typeof gateRow.enabled === 'boolean') settings.gate.enabled = gateRow.enabled
+  if (settings.draft && draftRow && typeof draftRow.enabled === 'boolean') settings.draft.enabled = draftRow.enabled
   return settings
+}
+
+/** A nested stage, or the provider settings when that stage was never saved on its own. */
+export function stageSettings(settings: IdentifyProviderSettings, stage: 'gate' | 'draft'): IdentifyProviderSettings {
+  const nested = settings[stage]
+  if (!nested) return settings
+  return { ...settings, ...nested, match: nested.match, gate: undefined, draft: undefined }
 }
 
 export function mergeIdentifySettings(
@@ -61,13 +74,18 @@ export function mergeIdentifySettings(
     patch.response === 'ready' || patch.response === 'mock' ? patch.response : current.response
   const scenario =
     patch.scenario && SCENARIOS.includes(patch.scenario) ? patch.scenario : current.scenario
-  return {
+  const next: IdentifyProviderSettings = {
     enabled: typeof patch.enabled === 'boolean' ? patch.enabled : current.enabled,
     response,
     scenario,
     suggestionId: typeof patch.suggestionId === 'string' ? patch.suggestionId : current.suggestionId,
     match: patch.match ? matchOf(patch.match) : current.match,
   }
+  if (patch.gate) next.gate = mergeIdentifySettings(stageSettings(current, 'gate'), patch.gate)
+  else if (current.gate) next.gate = current.gate
+  if (patch.draft) next.draft = mergeIdentifySettings(stageSettings(current, 'draft'), patch.draft)
+  else if (current.draft) next.draft = current.draft
+  return next
 }
 
 /** Body for `PUT /api/identify/providers/:id`. Null when nothing valid was sent. */
@@ -80,5 +98,13 @@ export function identifySettingsPatch(body: Record<string, unknown>): Partial<Id
   }
   if (typeof body.suggestionId === 'string') patch.suggestionId = body.suggestionId.trim().slice(0, 80)
   if (body.match && typeof body.match === 'object') patch.match = matchOf(body.match)
+  if (body.gate && typeof body.gate === 'object') {
+    const gate = identifySettingsPatch(body.gate as Record<string, unknown>)
+    if (gate) patch.gate = gate as IdentifyProviderSettings
+  }
+  if (body.draft && typeof body.draft === 'object') {
+    const draft = identifySettingsPatch(body.draft as Record<string, unknown>)
+    if (draft) patch.draft = draft as IdentifyProviderSettings
+  }
   return Object.keys(patch).length ? patch : null
 }

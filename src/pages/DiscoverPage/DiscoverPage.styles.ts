@@ -43,7 +43,7 @@ export const Layout = styled.div`
   }
 `
 
-/** Left-rail lure only; phones use HomeMobileFloats. */
+/** Left-rail lure. Phones do not show it until there is room. */
 export const RailLure = styled.div`
   @container (max-width: 899px) {
     display: none;

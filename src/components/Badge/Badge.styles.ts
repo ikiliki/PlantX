@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { theme } from '../../theme/tokens'
 
-export const Badge = styled.span<{ $tone?: 'lime' | 'forest' | 'warn' | 'danger' | 'muted' }>`
+export const Badge = styled.span<{ $tone?: 'lime' | 'forest' | 'warn' | 'danger' | 'muted' | 'info' }>`
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -20,6 +20,8 @@ export const Badge = styled.span<{ $tone?: 'lime' | 'forest' | 'warn' | 'danger'
         return `background: #F6DED4; color: ${theme.colors.danger};`
       case 'muted':
         return `background: ${theme.colors.chipNeutral}; color: ${theme.colors.muted};`
+      case 'info':
+        return `background: #e8f1f7; color: ${theme.colors.info};`
       default:
         return `background: ${theme.colors.forest}; color: white;`
     }

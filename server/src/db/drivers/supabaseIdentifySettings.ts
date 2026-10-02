@@ -21,12 +21,19 @@ function isCode(err: unknown, code: string) {
 }
 
 function configOf(settings: IdentifyProviderSettings) {
-  return {
+  const config: Record<string, unknown> = {
     response: settings.response,
     scenario: settings.scenario,
     match: settings.match,
     suggestionId: settings.suggestionId,
   }
+  if (settings.gate) {
+    config.gate = { ...configOf(settings.gate), enabled: settings.gate.enabled }
+  }
+  if (settings.draft) {
+    config.draft = { ...configOf(settings.draft), enabled: settings.draft.enabled }
+  }
+  return config
 }
 
 /** A missing table reads as all enabled and ready. Saving needs the table. */

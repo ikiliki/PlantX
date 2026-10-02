@@ -26,6 +26,12 @@ export const Page = styled.div<{ $fill?: boolean }>`
   `}
 `
 
+export const HeadBlock = styled.div`
+  display: grid;
+  gap: ${theme.space.md};
+  min-width: 0;
+`
+
 export const Heading = styled.header`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

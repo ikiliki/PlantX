@@ -6,6 +6,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { personaScenarioId } from '../../../../mock/personas'
 import { useStore } from '../../../../mock/store'
 import type { FeedUpdate as FeedUpdateData } from '../../../../mock/types'
+import { VerifiedStamp } from '../../../greenhouse/components/VerifiedStamp/VerifiedStamp'
 import { activityKindLabel } from '../../activityMoment'
 import { ActivityMoment, MomentGlyph, MomentPlay } from '../ActivityMoment/ActivityMoment'
 import { Card, Grower, Kind, Line, Meta, Open, ProfileButton, When } from './FeedUpdate.styles'
@@ -20,6 +21,7 @@ export function FeedUpdate({ update }: { update: FeedUpdateData }) {
   const scenarioLabel = t.demo.personaScenarios[scenario]
   const user = db.users.find((item) => item.id === update.userId && item.role !== 'guest')
   const name = user ? tr(user.name, user.nameHe) : ''
+  const verified = Boolean(user && (db.verifiedGreenhouseIds ?? []).includes(user.id))
 
   const openProfile = () => {
     navigate(
@@ -43,7 +45,8 @@ export function FeedUpdate({ update }: { update: FeedUpdateData }) {
               <MomentGlyph kind={update.kind} />
               {activityKindLabel(update.kind, t.feed)}
             </Kind>
-            <Grower>{scenarioLabel}</Grower>
+            {verified ? <VerifiedStamp place="inline" /> : null}
+            <Grower $verified={verified}>{verified ? t.greenhouse.verifiedGreenhouse : scenarioLabel}</Grower>
           </Meta>
           <Line>{tr(update.body, update.bodyHe)}</Line>
           <When dateTime={update.createdAt}>{formatFeedTime(update.createdAt, locale, t.feed)}</When>

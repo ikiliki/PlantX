@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react'
 import { FloatChip } from '../../../../components/FloatChip/FloatChip'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
-import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isFeatureEnabled } from '../../../../theme/release'
 import type { Todo } from '../../../../mock/types'
-import { GreenhouseLure } from '../GreenhouseLure/GreenhouseLure'
 import { TodoTable } from '../../../todo/components/TodoTable/TodoTable'
 import { TodoCareDialog } from '../../../todo/components/TodoCareDialog/TodoCareDialog'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { canFillTodo, dueTodos } from '../../../todo/todoSchedule'
-import { FaceAdd, FaceStack, FaceTile, TodoCount, TodoFace } from './HomeMobileFloats.styles'
+import { TodoCount, TodoFace } from './HomeMobileFloats.styles'
 
 const MOBILE_MQ = '(max-width: 899px)'
 
@@ -29,7 +27,7 @@ function useMobileViewport() {
   return mobile
 }
 
-/** Fixed, draggable greenhouse + Needs today chips for the home feed on phones. */
+/** Needs today chip for the home feed on phones. The greenhouse lure stays on the desktop rail. */
 export function HomeMobileFloats() {
   const mobile = useMobileViewport()
   const { t } = useI18n()
@@ -38,42 +36,14 @@ export function HomeMobileFloats() {
 
   if (!mobile) return null
 
-  const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
-  const mine = db.plants.filter((plant) => plant.ownerId === ownerId && plant.photos[0]).slice(0, 3)
-  const emptySlots = 3 - mine.length
   const todoOn = isFeatureEnabled(db.system, 'todo') && signedIn && currentUser
   const todos = todoOn ? db.todos.filter((todo) => todo.ownerId === currentUser.id) : []
   const plants = todoOn ? db.plants.filter((plant) => plant.ownerId === currentUser.id) : []
   const due = dueTodos(todos).filter((todo) => canFillTodo(todo, todos))
   const carePlant = careTodo ? plants.find((plant) => plant.id === careTodo.plantId) : undefined
 
-  const greenhouseFace = (
-    <FaceStack>
-      {mine.map((plant, index) => (
-        <FaceTile key={plant.id} $i={index}>
-          <PlantImage src={plant.photos[0]} alt="" />
-        </FaceTile>
-      ))}
-      {Array.from({ length: emptySlots }, (_, index) => (
-        <FaceAdd key={`add-${index}`} $i={mine.length + index}>
-          +
-        </FaceAdd>
-      ))}
-    </FaceStack>
-  )
-
   return (
     <>
-      <FloatChip
-        id="home-greenhouse"
-        label={t.discover.lureEyebrow}
-        sheetTitle=""
-        defaultPoint={{ x: typeof window !== 'undefined' ? Math.max(16, window.innerWidth - 96) : 280, y: typeof window !== 'undefined' ? window.innerHeight - 200 : 480 }}
-        face={greenhouseFace}
-      >
-        <GreenhouseLure />
-      </FloatChip>
-
       {todoOn && due.length > 0 ? (
         <FeatureGate placement="home.todo" title={t.todo.title}>
           <FloatChip

@@ -144,13 +144,26 @@ export function TopBar() {
           </NavItem>
         )}
         {show('greenhouse') && (
-          <NavItem
+          <NavMenu
+            label={t.nav.greenhouse}
             to="/greenhouse"
-            $active={isActive('/greenhouse')}
-            aria-current={isActive('/greenhouse') ? 'page' : undefined}
-          >
-            {t.nav.greenhouse}
-          </NavItem>
+            open={openNav === 'greenhouse'}
+            onOpen={() => setOpenNav('greenhouse')}
+            onClose={() => setOpenNav((current) => (current === 'greenhouse' ? null : current))}
+            items={[
+              {
+                to: '/greenhouse',
+                label: t.greenhouse.scopeMine,
+                active: (here) => here.pathname === '/greenhouse' && !new URLSearchParams(here.search).has('scope'),
+              },
+              {
+                to: '/greenhouse?scope=global',
+                label: t.greenhouse.scopeGlobal,
+                active: (here) =>
+                  here.pathname === '/greenhouse' && new URLSearchParams(here.search).get('scope') === 'global',
+              },
+            ]}
+          />
         )}
         {show('todo') && (
           <NavItem to="/tasks" $active={isActive('/tasks')} aria-current={isActive('/tasks') ? 'page' : undefined}>

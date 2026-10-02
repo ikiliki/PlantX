@@ -74,16 +74,6 @@ export const Root = styled.button<{ $hero?: boolean }>`
         aspect-ratio: 1;
         grid-template-rows: 1fr;
         padding: 8px;
-
-        &:hover,
-        &:focus-visible {
-          transform: none;
-          box-shadow: none;
-        }
-
-        &:active:not(:disabled) {
-          transform: scale(0.97);
-        }
       }
     `}
 
@@ -131,6 +121,7 @@ export const Stage = styled.span`
   @container (max-width: 559px) {
     aspect-ratio: auto;
     height: 100%;
+    padding-bottom: 36px;
   }
 `
 
@@ -164,7 +155,21 @@ export const Copy = styled.span`
   }
 
   @container (max-width: 559px) {
-    display: none;
+    position: absolute;
+    inset-inline: 8px;
+    bottom: 8px;
+    width: auto;
+    padding: 0;
+    gap: 0;
+
+    strong {
+      font-size: 12px;
+      -webkit-line-clamp: 2;
+    }
+
+    > span {
+      display: none;
+    }
   }
 `
 
@@ -210,10 +215,6 @@ export const Spark = styled.span`
   animation: ${orbit} 1.8s ${theme.motion.ease} infinite both;
 
   @media (prefers-reduced-motion: reduce) {
-    display: none;
-  }
-
-  @container (max-width: 559px) {
     display: none;
   }
 `

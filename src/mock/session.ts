@@ -240,6 +240,11 @@ export function ensureSession(db: MockDb) {
   if (!Array.isArray(db.updates)) db.updates = seedUpdates()
   if (!Array.isArray(db.todos)) db.todos = []
   if (!Array.isArray(db.topGreenhouses)) db.topGreenhouses = seedTopGreenhouses()
+  const legacy = db as MockDb & { pinnedGreenhouseIds?: string[] | null }
+  if (!Array.isArray(db.verifiedGreenhouseIds) && Array.isArray(legacy.pinnedGreenhouseIds)) {
+    db.verifiedGreenhouseIds = legacy.pinnedGreenhouseIds
+  }
+  delete legacy.pinnedGreenhouseIds
   if (!Array.isArray(db.pendingUsers)) db.pendingUsers = createSeed().pendingUsers
   if (!Array.isArray(db.pendingTransactions)) db.pendingTransactions = createSeed().pendingTransactions
   delete (db as MockDb & { posts?: unknown }).posts

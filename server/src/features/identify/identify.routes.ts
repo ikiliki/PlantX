@@ -4,6 +4,8 @@ import type {
   IdentifyMockScenario,
   IdentifyMode,
   IdentifyProviderId,
+  IdentifyStageRun,
+  IdentifyStepId,
   IdentifyTarget,
 } from '../../../../src/mock/types.ts'
 import { scanActivityText } from '../../../../src/features/greenhouse/identification.ts'
@@ -18,6 +20,7 @@ const MODES: IdentifyMode[] = ['mock', 'live']
 const PROVIDERS: IdentifyProviderId[] = ['gemini', 'plantnet']
 const TARGETS: IdentifyTarget[] = ['chain', ...PROVIDERS]
 const SCENARIOS: IdentifyMockScenario[] = ['match', 'notInCatalog', 'notPlant', 'error']
+const STAGES: IdentifyStepId[] = ['gate', 'species', 'draft']
 const HISTORY_DEFAULT_LIMIT = 50
 const HISTORY_MAX_LIMIT = 200
 
@@ -42,6 +45,21 @@ function readImage(body: Body) {
 
 function readThumb(body: Body) {
   return typeof body.thumb === 'string' ? body.thumb : undefined
+}
+
+function readStages(body: Body): Partial<Record<IdentifyStepId, IdentifyStageRun>> | undefined {
+  const raw = body.stages
+  if (!raw || typeof raw !== 'object') return undefined
+  const stages: Partial<Record<IdentifyStepId, IdentifyStageRun>> = {}
+  for (const id of STAGES) {
+    const item = (raw as Record<string, unknown>)[id]
+    if (!item || typeof item !== 'object') continue
+    const row = item as Record<string, unknown>
+    if (row.response !== 'ready' && row.response !== 'mock') continue
+    const scenario = typeof row.scenario === 'string' && oneOf(row.scenario, SCENARIOS) ? row.scenario : 'match'
+    stages[id] = { response: row.response, scenario }
+  }
+  return Object.keys(stages).length ? stages : undefined
 }
 
 function respond(c: Context, outcome: IdentifyOutcome, activity?: Activity) {
@@ -90,7 +108,7 @@ identifyRoutes.post('/test', async (c) => {
   }
   const outcome = await identifyService.identify(
     image,
-    { mode, target, scenario: scenario ?? undefined },
+    { mode, target, scenario: scenario ?? undefined, stages: target === 'chain' ? readStages(body) : undefined },
     { userId: user.id, source: 'playground', thumb: readThumb(body) },
   )
   return respond(c, outcome)

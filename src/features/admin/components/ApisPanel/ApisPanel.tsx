@@ -2,13 +2,12 @@ import { useState, type ReactNode } from 'react'
 import { Badge } from '../../../../components/Badge/Badge'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { Button } from '../../../../components/Button/Button'
-import { Field, Select } from '../../../../components/Form/Form'
 import { Segmented } from '../../../../components/Segmented/Segmented'
 import { Switch } from '../../../../components/Switch/Switch'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { catalogName, optionLabel, propertiesForPlant } from '../../../catalog/catalog'
 import { CatalogSelect } from '../../../greenhouse/components/CatalogSelect/CatalogSelect'
-import { parseIdentifySettings } from '../../../../mock/identifySettings'
+import { parseIdentifySettings, stageSettings } from '../../../../mock/identifySettings'
 import { useStore } from '../../../../mock/store'
 import type {
   CatalogSuggestion,
@@ -18,9 +17,10 @@ import type {
   IdentifyProviderSettings,
   IdentifyProviderStatus,
   IdentifyProviderStatusKind,
-  IdentifyResponseMode,
+  IdentifyStepId,
 } from '../../../../mock/types'
-import { identifyScenarios, formatWhen, providerNameKey, scenarioLabelKey } from '../../identifyLabels'
+import { identifyScenarios, formatWhen, providerNameKey, stepLabelKey } from '../../identifyLabels'
+import { IdentifyStageFields } from '../IdentifyStageFields/IdentifyStageFields'
 import { AdminSection } from '../AdminSection/AdminSection'
 import { AdminDetailGrid } from '../AdminTable/AdminTable'
 import {
@@ -36,7 +36,18 @@ import {
   Toolbar,
 } from './ApisPanel.styles'
 
-const PROVIDERS: IdentifyProviderId[] = ['gemini', 'plantnet']
+const STAGES: IdentifyStepId[] = ['gate', 'species', 'draft']
+const STAGE_PROVIDER: Record<IdentifyStepId, IdentifyProviderId> = {
+  gate: 'gemini',
+  species: 'plantnet',
+  draft: 'gemini',
+}
+const GATE_SCENARIOS: IdentifyMockScenario[] = ['match', 'notPlant', 'error']
+const stageLeadKey = {
+  gate: 'apisStageGateLead',
+  species: 'apisStageSpeciesLead',
+  draft: 'apisStageDraftLead',
+} as const satisfies Record<IdentifyStepId, string>
 const SKIP_PROPERTIES = new Set(['area'])
 
 const statusLabelKey = {
@@ -97,11 +108,9 @@ export function ApisPanel({
   catalogLoading?: boolean
 }) {
   const { t } = useI18n()
-  const [tab, setTab] = useState<IdentifyProviderId>('gemini')
-  const sorted = [...providers].sort((a, b) => a.order - b.order)
-  const tabs = sorted.length ? sorted.map((provider) => provider.id) : PROVIDERS
-  const activeId = tabs.includes(tab) ? tab : tabs[0]
-  const active = sorted.find((provider) => provider.id === activeId)
+  const [stage, setStage] = useState<IdentifyStepId>('gate')
+  const providerId = STAGE_PROVIDER[stage]
+  const active = providers.find((provider) => provider.id === providerId)
   const pending = Boolean(loading && !active)
 
   return (
@@ -114,32 +123,42 @@ export function ApisPanel({
           </Button>
         )}
       </Toolbar>
-      {!loading && sorted.length === 0 ? (
+      {!loading && providers.length === 0 ? (
         <Empty>{t.admin.apisEmpty}</Empty>
       ) : (
         <>
           <Segmented
             ariaLabel={t.admin.apis}
-            value={activeId}
-            onChange={setTab}
-            options={tabs.map((id) => ({ id, label: t.admin[providerNameKey[id]] }))}
+            value={stage}
+            onChange={setStage}
+            options={STAGES.map((id) => ({ id, label: t.admin[stepLabelKey[id]] }))}
           />
-          <AdminSection title={t.admin[providerNameKey[activeId]]}>
+          <AdminSection title={t.admin[stepLabelKey[stage]]} lead={t.admin[stageLeadKey[stage]]}>
             <StatusLine>
               <Badge $tone={pending ? 'muted' : 'lime'}>
-                {pending ? t.common.loading : t.admin.apisLoaded}
+                {pending ? t.common.loading : active ? t.admin[providerNameKey[active.id]] : t.admin.apisLoaded}
               </Badge>
             </StatusLine>
-            {pending || !active ? (
+            {pending ? (
               <LoaderShell />
+            ) : !active ? (
+              <Empty>{t.admin.apisEmpty}</Empty>
             ) : (
               <ProviderBody
+                stage={stage}
                 provider={active}
                 suggestions={suggestions}
                 catalogLoading={catalogLoading}
                 locked={!onChange || Boolean(saving?.has(active.id))}
                 busy={Boolean(saving?.has(active.id))}
-                onChange={(patch) => onChange?.(active.id, patch)}
+                onChange={(patch) => {
+                  if (stage === 'species') {
+                    onChange?.(active.id, patch)
+                    return
+                  }
+                  const current = stageSettings(parseIdentifySettings(active.enabled, active), stage)
+                  onChange?.(active.id, { [stage]: { ...current, ...patch, match: patch.match ?? current.match } })
+                }}
               />
             )}
           </AdminSection>
@@ -150,6 +169,7 @@ export function ApisPanel({
 }
 
 function ProviderBody({
+  stage,
   provider,
   suggestions,
   catalogLoading,
@@ -157,6 +177,7 @@ function ProviderBody({
   busy,
   onChange,
 }: {
+  stage: IdentifyStepId
   provider: IdentifyProviderStatus
   suggestions: CatalogSuggestion[]
   catalogLoading?: boolean
@@ -167,13 +188,13 @@ function ProviderBody({
   const { t, locale } = useI18n()
   const { db } = useStore()
   const catalog = db.catalog
-  const settings = parseIdentifySettings(provider.enabled, provider)
+  const stored = parseIdentifySettings(provider.enabled, provider)
+  const settings = stage === 'species' ? stored : stageSettings(stored, stage)
+  const scenarios = stage === 'gate' ? GATE_SCENARIOS : identifyScenarios
   const name = t.admin[providerNameKey[provider.id]]
   const credits = formatCredits(provider.id, provider.credits, t)
   const lastUsed = formatWhen(provider.lastUsedAt, locale)
   const items: { label: string; value: ReactNode }[] = [
-    { label: t.admin.apisOrder, value: String(provider.order) },
-    { label: t.admin.apisReturns, value: provider.returns },
     {
       label: t.admin.apisDocs,
       value: (
@@ -248,38 +269,18 @@ function ProviderBody({
           onChange={(enabled) => onChange({ enabled })}
           label={settings.enabled ? t.admin.systemEnabled : t.admin.systemDisabled}
         />
-        <Field>
-          {t.admin.apisResponse}
-          <Select
-            aria-label={t.admin.apisResponse}
-            value={settings.response}
-            disabled={locked}
-            onChange={(event) => onChange({ response: event.target.value as IdentifyResponseMode })}
-          >
-            <option value="ready">{t.admin.apisResponseReady}</option>
-            <option value="mock">{t.admin.apisResponseMock}</option>
-          </Select>
-        </Field>
-        {settings.response === 'mock' && (
-          <Field>
-            {t.admin.apisScenario}
-            <Select
-              aria-label={t.admin.apisScenario}
-              value={settings.scenario}
-              disabled={locked}
-              onChange={(event) => onChange({ scenario: event.target.value as IdentifyMockScenario })}
-            >
-              {identifyScenarios.map((id) => (
-                <option key={id} value={id}>
-                  {t.admin[scenarioLabelKey[id]]}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        )}
+        <IdentifyStageFields
+          stage={stage}
+          response={settings.response}
+          scenario={settings.scenario}
+          scenarios={scenarios}
+          disabled={locked}
+          onResponse={(response) => onChange({ response })}
+          onScenario={(scenario) => onChange({ scenario })}
+        />
       </Controls>
 
-      {settings.response === 'mock' && settings.scenario === 'match' && (catalogLoading ? (
+      {stage === 'draft' && settings.response === 'mock' && settings.scenario === 'match' && (catalogLoading ? (
         <LoaderShell busy />
       ) : (
         <MatchBlock>
@@ -363,7 +364,7 @@ function ProviderBody({
         </MatchBlock>
       ))}
 
-      {settings.response === 'mock' && settings.scenario === 'notInCatalog' && (
+      {stage !== 'gate' && settings.response === 'mock' && settings.scenario === 'notInCatalog' && (
         <Fields>
           <CatalogSelect
             label={t.admin.apisSuggestion}

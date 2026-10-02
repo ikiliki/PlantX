@@ -1,6 +1,31 @@
 import styled from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
+export const Stages = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+`
+
+export const Stage = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid ${theme.colors.border};
+
+  &:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  strong {
+    font-size: 13px;
+    color: ${theme.colors.forest};
+  }
+`
+
 export const Form = styled.form`
   display: grid;
   grid-template-columns: minmax(0, 1fr);

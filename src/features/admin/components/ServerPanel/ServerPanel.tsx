@@ -489,6 +489,7 @@ export function ServerPanel() {
     disableUser,
     enableUser,
     setPreapproved,
+    setVerifiedGreenhouses,
     liveMeta,
     resolveModeration,
   } = useStore()
@@ -792,6 +793,9 @@ export function ServerPanel() {
                       {disabled ? t.admin.statusDisabled : t.admin.statusActive}
                     </Badge>
                     {row.preapproved ? <Badge $tone="warn">{t.admin.preapproved}</Badge> : null}
+                    {(db.verifiedGreenhouseIds ?? []).includes(row.id) ? (
+                      <Badge $tone="info">{t.admin.verifiedHome}</Badge>
+                    ) : null}
                   </>
                 )
               },
@@ -814,6 +818,23 @@ export function ServerPanel() {
               ]}
             />
           )}
+          actions={(row) => {
+            if (row.role === 'guest' || row.role === 'admin') return []
+            const verifiedIds = db.verifiedGreenhouseIds ?? []
+            const verified = verifiedIds.includes(row.id)
+            return [
+              {
+                id: 'verify',
+                label: verified ? t.admin.unverifyGreenhouse : t.admin.verifyGreenhouse,
+                variant: verified ? 'growth' : 'ghost',
+                disabled: !verified && verifiedIds.length >= 3,
+                onClick: () =>
+                  setVerifiedGreenhouses(
+                    verified ? verifiedIds.filter((id) => id !== row.id) : [...verifiedIds, row.id].slice(0, 3),
+                  ),
+              },
+            ]
+          }}
           bulkActions={[
             {
               id: 'disable',

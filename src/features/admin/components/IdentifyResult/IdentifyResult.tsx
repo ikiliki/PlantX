@@ -133,6 +133,27 @@ export function IdentifyResult({
         )}
       </Badges>
 
+      {steps.length > 0 && (
+        <Block>
+          <Subhead>{t.admin.apisSteps}</Subhead>
+          <TriedList>
+            {steps.map((step) => (
+              <li key={step.id}>
+                <strong>{t.admin[stepLabelKey[step.id]]}</strong>
+                <Badge $tone={step.ok ? 'lime' : 'warn'}>{step.ok ? t.admin.apisStatusOk : t.admin.apisSkipError}</Badge>
+                {step.label ? <small>{step.label}</small> : null}
+                {step.scientificName && step.scientificName !== step.label ? <small>{step.scientificName}</small> : null}
+                {step.probability != null && step.probability > 0 ? (
+                  <small>{`${Math.round(step.probability * 100)}%`}</small>
+                ) : null}
+                {step.isPlant != null ? <small>{step.isPlant ? t.admin.apisYes : t.admin.apisNo}</small> : null}
+                {step.detail ? <small>{step.detail}</small> : null}
+              </li>
+            ))}
+          </TriedList>
+        </Block>
+      )}
+
       {diagnosis?.label && (
         <Answer>
           <strong>{diagnosis.label}</strong>
@@ -156,27 +177,6 @@ export function IdentifyResult({
               {record.mode === 'live' ? <Note>{t.admin.apisSuggestedCategory}</Note> : null}
             </Badges>
           )}
-        </Block>
-      )}
-
-      {steps.length > 0 && (
-        <Block>
-          <Subhead>{t.admin.apisSteps}</Subhead>
-          <TriedList>
-            {steps.map((step) => (
-              <li key={step.id}>
-                <strong>{t.admin[stepLabelKey[step.id]]}</strong>
-                <Badge $tone={step.ok ? 'lime' : 'warn'}>{step.ok ? t.admin.apisStatusOk : t.admin.apisSkipError}</Badge>
-                {step.label ? <small>{step.label}</small> : null}
-                {step.scientificName && step.scientificName !== step.label ? <small>{step.scientificName}</small> : null}
-                {step.probability != null && step.probability > 0 ? (
-                  <small>{`${Math.round(step.probability * 100)}%`}</small>
-                ) : null}
-                {step.isPlant != null ? <small>{step.isPlant ? t.admin.apisYes : t.admin.apisNo}</small> : null}
-                {step.detail ? <small>{step.detail}</small> : null}
-              </li>
-            ))}
-          </TriedList>
         </Block>
       )}
 

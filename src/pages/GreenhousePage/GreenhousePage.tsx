@@ -5,7 +5,9 @@ import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
 import { CollectionBoard, greenhouseFilter } from '../../features/greenhouse/components/CollectionBoard/CollectionBoard'
+import { GreenhouseDirectory } from '../../features/greenhouse/components/GreenhouseDirectory/GreenhouseDirectory'
 import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
+import { GreenhouseScope, useHeaderNav, type GreenhouseScopeId } from '../../features/greenhouse/components/GreenhouseScope/GreenhouseScope'
 import { GreenhouseWallet } from '../../features/greenhouse/components/GreenhouseWallet/GreenhouseWallet'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -15,7 +17,7 @@ import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
 import { isPlacementReady } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
-import { GuestAuth, Heading, HeadingCopy, Page, PublicHeading, PublicPage } from './GreenhousePage.styles'
+import { GuestAuth, HeadBlock, Heading, HeadingCopy, Page, PublicHeading, PublicPage } from './GreenhousePage.styles'
 
 const WIDGET_PLANTS = 2
 
@@ -64,8 +66,10 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   const navigate = useNavigate()
   const [adding, setAdding] = useState(false)
   const [freshId, setFreshId] = useState<string>()
+  const headerNav = useHeaderNav()
   const [params, setParams] = useSearchParams()
   const filter = greenhouseFilter(params.get('tab'))
+  const scope: GreenhouseScopeId = view === 'page' && params.get('scope') === 'global' ? 'global' : 'mine'
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
 
   const mine = db.plants.filter((p) => p.ownerId === ownerId)
@@ -86,13 +90,22 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     setParams(nextParams, { replace: true })
   }
 
+  const setScope = (next: GreenhouseScopeId) => {
+    const nextParams = new URLSearchParams(params)
+    if (next === 'mine') nextParams.delete('scope')
+    else nextParams.set('scope', next)
+    setParams(nextParams, { replace: true })
+  }
+
   const board = (
-    <Page $fill={view === 'page'}>
-      <Heading>
+    <Page $fill={view === 'page' && scope === 'mine'}>
+      <HeadBlock>
+        {view === 'page' && !headerNav && <GreenhouseScope value={scope} onChange={setScope} />}
+        <Heading>
         <HeadingCopy>
           <h1>{t.greenhouse.title}</h1>
         </HeadingCopy>
-        {view === 'page' && (
+        {view === 'page' && scope === 'mine' && (
           <GreenhouseWallet
             title={t.greenhouse.wallet}
             value={formatMoney(portfolioValue)}
@@ -101,10 +114,13 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
             collectionLabel={t.greenhouse.collectionCount}
           />
         )}
-      </Heading>
+        </Heading>
+      </HeadBlock>
 
       {fetching ? (
         <LoaderShell busy compact={view === 'widget'} />
+      ) : scope === 'global' ? (
+        <GreenhouseDirectory />
       ) : (
         <CollectionBoard
           plants={view === 'widget' ? living.slice(0, WIDGET_PLANTS) : living}

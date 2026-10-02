@@ -10,6 +10,7 @@ export type NavMenuLink = {
   dividerBefore?: boolean
   matchPrefix?: boolean
   children?: NavMenuLink[]
+  active?: (loc: { pathname: string; search: string }) => boolean
 }
 
 export function NavMenu({
@@ -54,9 +55,11 @@ export function NavMenu({
   }, [open, onClose])
 
   const isOn = (item: NavMenuLink) =>
-    item.matchPrefix
-      ? loc.pathname === item.to || loc.pathname.startsWith(`${item.to}/`)
-      : here === item.to
+    item.active
+      ? item.active(loc)
+      : item.matchPrefix
+        ? loc.pathname === item.to || loc.pathname.startsWith(`${item.to}/`)
+        : here === item.to
 
   return (
     <Drop

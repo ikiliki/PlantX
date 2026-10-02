@@ -26,10 +26,10 @@ Gemini off, missing a key, or failing the gate stops the pipeline before Pl@ntNe
 
 ## Mode
 
-- Add Plant (`POST /api/identify`) runs the pipeline. Each provider is `ready` (live) or `mock` from admin config. `ready` calls the real API. `mock` uses the saved scenario and spends nothing.
-- Settings live in `identify_provider_settings` (`enabled`, `config` jsonb). No row means enabled and ready. `PUT /api/identify/providers/:id` saves a partial patch. Gemini disabled stops Add Plant with reason `disabled`. Pl@ntNet disabled skips species and still drafts.
+- Add Plant (`POST /api/identify`) runs the pipeline. Each stage is `ready` (live) or `mock` on its own. Gemini stores `gate` and `draft` inside its config; Pl@ntNet is the species stage. `mock` uses that stage's scenario and spends nothing.
+- Settings live in `identify_provider_settings` (`enabled`, `config` jsonb). No row means enabled and ready. `PUT /api/identify/providers/:id` saves a partial patch, including `gate` or `draft`. A disabled plant check stops Add Plant. A disabled species step is skipped and the draft still runs.
 - Mock `match` fills the category, the subcategory when that switch is on, and any properties set (grade, size, stage, traits, more properties). Unset properties stay empty. Mock `notInCatalog` uses the chosen suggestion's names and maps to no category. `notPlant` and `error` stay the canned answers.
-- Admin playground (`POST /api/identify/test`) picks mode, target, and scenario per run, and ignores `enabled` and `response`. `mock` builds a body in the provider's real response shape and runs the same parser and mapper (no network, no credits). `live` calls the real API with the real key.
+- Admin playground (`POST /api/identify/test`) can target one provider, or `chain` with `stages` (gate, species, draft), each ready or mock plus a scenario. It ignores the saved switches. Mock uses the canned body. Ready calls the real API.
 - UI-mock mode has no server: `src/mock/identifyMock.ts` answers on the client. Never run `live` or `POST /api/identify` in automated checks.
 
 ## History

@@ -263,6 +263,7 @@ interface StoreApi {
   reserveListing: (listingId: string) => string
   sendMessage: (threadId: string, body: string, bodyHe: string) => void
   setFeedFriendsOnly: (value: boolean) => void
+  setVerifiedGreenhouses: (ids: string[]) => void
 }
 
 const StoreContext = createContext<StoreApi | null>(null)
@@ -325,6 +326,7 @@ export function StoreProvider({
           listings: example.listings.filter((listing) => plantIds.has(listing.plantId) && userIds.has(listing.sellerId)),
           locale: d.locale,
           visitorId: d.visitorId,
+          verifiedGreenhouseIds: d.verifiedGreenhouseIds ?? null,
         }
       }
       const emptyCatalog = { categories: [], subcategories: [], properties: [] }
@@ -1267,6 +1269,7 @@ export function StoreProvider({
       return orderId
     },
     setFeedFriendsOnly: (value) => update((d) => ({ ...d, feedFriendsOnly: value })),
+    setVerifiedGreenhouses: (ids) => update((d) => ({ ...d, verifiedGreenhouseIds: ids.slice(0, 3) })),
     sendMessage: (threadId, body, bodyHe) =>
       update((d) => {
         if (!d.currentUserId) return d

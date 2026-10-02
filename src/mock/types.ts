@@ -530,6 +530,10 @@ export type IdentifyProviderSettings = {
   scenario: IdentifyMockScenario
   match: IdentifyMockMatch
   suggestionId: string
+  /** Gemini plant-check. Missing means this provider's own response and scenario. */
+  gate?: IdentifyProviderSettings
+  /** Gemini catalog draft. Missing means this provider's own response and scenario. */
+  draft?: IdentifyProviderSettings
 }
 
 export type IdentifySource = 'addPlant' | 'playground'
@@ -559,12 +563,20 @@ export type IdentifyRequestRecord = {
   fields?: IdentifyFieldChecks
 }
 
+/** One pipeline stage for a playground run. Ready calls the real API. Mock spends nothing. */
+export type IdentifyStageRun = {
+  response: IdentifyResponseMode
+  scenario: IdentifyMockScenario
+}
+
 export type IdentifyTestRequest = {
   image: string
   thumb?: string
   mode: IdentifyMode
   target: IdentifyTarget
   scenario?: IdentifyMockScenario
+  /** Pipeline only. Each stage is Ready or Mock on its own. */
+  stages?: Partial<Record<IdentifyStepId, IdentifyStageRun>>
 }
 
 export type IdentifyProviderStatusKind = 'ready' | 'missingKey' | 'exhausted' | 'unreachable'
@@ -647,8 +659,8 @@ export interface MockDb {
   updates: FeedUpdate[]
   todos: Todo[]
   topGreenhouses: TopGreenhouse[]
-  /** Viewer pins, at most three greenhouse owners. Absent until they pin. */
-  pinnedGreenhouseIds?: string[] | null
+  /** Admin-verified greenhouse owners, at most three. Absent until an admin verifies one. */
+  verifiedGreenhouseIds?: string[] | null
   pendingUsers: PendingUser[]
   pendingTransactions: PendingTransaction[]
   currentUserId: string | null
