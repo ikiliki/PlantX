@@ -17,7 +17,7 @@ export const Feature = styled.div`
   padding: 24px;
 
   @media (min-width: ${theme.breakpoints.md}) {
-    grid-template-columns: 0.9fr 1.1fr;
+    grid-template-columns: 0.82fr 1.18fr;
     gap: 36px;
     padding: 34px;
   }
@@ -71,10 +71,57 @@ export const Check = styled.div`
   }
 `
 
-export const Still = styled.div`
-  border-radius: 24px;
+export const Devices = styled.div`
+  display: grid;
+  gap: 14px;
+  align-items: end;
+  min-width: 0;
+
+  @media (min-width: 720px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+  }
+`
+
+export const Desk = styled.div`
+  border-radius: 22px;
   overflow: hidden;
   border: 1px solid ${theme.colors.border};
   background: ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.card};
+  min-height: 220px;
+  aspect-ratio: 16 / 10;
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 32%;
+  }
+`
+
+export const Phones = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+`
+
+export const Phone = styled.div`
+  width: min(124px, 38vw);
+  aspect-ratio: 390 / 844;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid ${theme.colors.border};
+  background: ${theme.colors.creamCard};
+  box-shadow: ${theme.shadow.card};
+  flex: none;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
 `

@@ -86,7 +86,7 @@ export const Step = styled.article`
 `
 
 export const Photo = styled.div`
-  height: 160px;
+  height: 188px;
   border-radius: 16px;
   overflow: hidden;
 

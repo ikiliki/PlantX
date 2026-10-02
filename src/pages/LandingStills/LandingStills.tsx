@@ -1,84 +1,22 @@
-import { Badge } from '../../components/Badge/Badge'
-import { GradeChip } from '../../components/GradeChip/GradeChip'
-import { PlantImage } from '../../components/PlantImage/PlantImage'
-import { classPhotos } from '../../mock/images'
-import {
-  Frame,
-  Meta,
-  Page,
-  PlantCopy,
-  Row,
-  Shelf,
-  ShelfHead,
-  Shot,
-  StillGrid,
-  Title,
-} from './LandingStills.styles'
-
-/** Static landing pictures. Not admin config and not the live database. */
-const stills = {
-  greenhouse: [
-    { name: 'Office golden pothos', nameHe: 'פוטוס זהוב למשרד', meta: 'Watered today', metaHe: 'הושקה היום', photo: classPhotos.potGoldL, pill: 'Growing', pillHe: 'בגידול' },
-    { name: "Desk N'Joy", nameHe: "אן ג'וי לשולחן", meta: 'Updated 2 days ago', metaHe: 'עודכן לפני יומיים', photo: classPhotos.potNjoy, pill: 'Growing', pillHe: 'בגידול' },
-    { name: 'Window monstera', nameHe: 'מונסטרה לחלון', meta: 'Ready for market', metaHe: 'מוכנה לשוק', photo: classPhotos.monStdL, pill: 'Ready', pillHe: 'מוכנה' },
-  ],
-} as const
+import { Frame, Page, Shot, StillGrid, Title } from './LandingStills.styles'
 
 export type LandingStillId = 'greenhouse' | 'plant' | 'track' | 'list' | 'buy'
 
-export function LandingStill({
-  id,
-  locale = 'en',
-}: {
-  id: LandingStillId
-  locale?: 'en' | 'he'
-}) {
-  if (id === 'greenhouse') {
-    return (
-      <Shelf inert aria-hidden="true">
-        <ShelfHead>
-          <strong>{locale === 'he' ? 'החממה שלי' : 'My greenhouse'}</strong>
-          <Badge>{locale === 'he' ? '3 צמחים' : '3 plants'}</Badge>
-        </ShelfHead>
-        {stills.greenhouse.map((plant) => (
-          <Row key={plant.name}>
-            <PlantImage src={plant.photo} alt="" />
-            <PlantCopy>
-              <strong>{locale === 'he' ? plant.nameHe : plant.name}</strong>
-              <span>{locale === 'he' ? plant.metaHe : plant.meta}</span>
-            </PlantCopy>
-            <Badge $tone={plant.pill === 'Ready' ? 'lime' : 'muted'}>
-              {locale === 'he' ? plant.pillHe : plant.pill}
-            </Badge>
-          </Row>
-        ))}
-      </Shelf>
-    )
-  }
+const shots: Record<LandingStillId, { src: string; position: string }> = {
+  greenhouse: { src: '/landing/greenhouse-desk.png', position: 'center 34%' },
+  plant: { src: '/landing/greenhouse-desk.png', position: '20% 52%' },
+  track: { src: '/landing/tasks-phone.png', position: 'center 48%' },
+  list: { src: '/landing/home-phone.png', position: 'center 18%' },
+  buy: { src: '/landing/greenhouse-phone.png', position: 'center 18%' },
+}
 
-  const shot =
-    id === 'plant'
-      ? classPhotos.potGoldS
-      : id === 'track'
-        ? classPhotos.monStdL
-        : id === 'list'
-          ? classPhotos.potNjoy
-          : classPhotos.monStdXl
+/** Static app stills. Not admin config and not the live database. */
+export function LandingStill({ id }: { id: LandingStillId; locale?: 'en' | 'he' }) {
+  const shot = shots[id]
 
   return (
     <Shot inert aria-hidden="true">
-      <PlantImage src={shot} alt="" />
-      {id === 'list' && (
-        <Meta>
-          <GradeChip grade="A" />
-          <span>₪45</span>
-        </Meta>
-      )}
-      {id === 'buy' && (
-        <Meta>
-          <GradeChip grade="S" />
-        </Meta>
-      )}
+      <img src={shot.src} alt="" style={{ objectPosition: shot.position }} />
     </Shot>
   )
 }
@@ -89,21 +27,11 @@ export function LandingStillsPage() {
     <Page>
       <Title>Landing stills</Title>
       <StillGrid>
-        <Frame>
-          <LandingStill id="greenhouse" />
-        </Frame>
-        <Frame>
-          <LandingStill id="plant" />
-        </Frame>
-        <Frame>
-          <LandingStill id="track" />
-        </Frame>
-        <Frame>
-          <LandingStill id="list" />
-        </Frame>
-        <Frame>
-          <LandingStill id="buy" />
-        </Frame>
+        {(Object.keys(shots) as LandingStillId[]).map((id) => (
+          <Frame key={id}>
+            <LandingStill id={id} />
+          </Frame>
+        ))}
       </StillGrid>
     </Page>
   )

@@ -10,7 +10,9 @@ import { theme } from '../../../../theme/tokens'
 
 export const Panel = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: ${theme.space.xl};
+  min-width: 0;
 `
 
 export const StatusCard = styled.section`
@@ -92,6 +94,7 @@ export const DocsLink = styled.a`
 
 export const Section = styled.section<{ $demo?: boolean }>`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   order: ${({ $demo }) => ($demo ? 1 : 0)};
   min-width: 0;

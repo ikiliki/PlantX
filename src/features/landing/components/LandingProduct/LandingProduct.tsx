@@ -1,9 +1,8 @@
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { LandingStill } from '../../../../pages/LandingStills/LandingStills'
-import { Body, Check, Checks, Feature, Kicker, Section, Still, Title } from './LandingProduct.styles'
+import { Body, Check, Checks, Desk, Devices, Feature, Kicker, Phone, Phones, Section, Title } from './LandingProduct.styles'
 
 export function LandingProduct() {
-  const { t, locale } = useI18n()
+  const { t } = useI18n()
   const checks = [t.landing.check1, t.landing.check2, t.landing.check3]
 
   return (
@@ -22,9 +21,19 @@ export function LandingProduct() {
             ))}
           </Checks>
         </div>
-        <Still>
-          <LandingStill id="greenhouse" locale={locale} />
-        </Still>
+        <Devices>
+          <Desk>
+            <img src="/landing/greenhouse-desk.png" alt="" />
+          </Desk>
+          <Phones>
+            <Phone>
+              <img src="/landing/greenhouse-phone.png" alt="" />
+            </Phone>
+            <Phone>
+              <img src="/landing/home-phone.png" alt="" />
+            </Phone>
+          </Phones>
+        </Devices>
       </Feature>
     </Section>
   )

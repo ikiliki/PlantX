@@ -3,11 +3,15 @@ import { theme } from '../../../../theme/tokens'
 
 export const Shell = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 36px;
 `
 
 export const Section = styled.section`
+  container-type: inline-size;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   padding: 20px;
   border-radius: ${theme.radii.lg};
@@ -23,6 +27,8 @@ export const Section = styled.section`
 
 export const Block = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 18px;
 `
 
@@ -84,16 +90,24 @@ export const Lead = styled.p`
 
 export const Groups = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 18px;
 `
 
 export const Group = styled.section`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 16px;
   padding: 18px;
   border-radius: ${theme.radii.md};
   border: 1px solid ${theme.colors.border};
   background: ${theme.colors.cream};
+
+  @container (max-width: 480px) {
+    padding: 12px;
+  }
 `
 
 export const GroupToggle = styled.button<{ $open?: boolean }>`
@@ -138,16 +152,22 @@ export const Count = styled.span`
 
 export const Items = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 22px;
 `
 
 export const Nest = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 16px;
 `
 
 export const Item = styled.article`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 14px;
 `
 
@@ -161,11 +181,17 @@ export const ItemHead = styled.div`
 
 export const PreviewWell = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 14px;
   padding: 20px;
   border-radius: ${theme.radii.md};
   border: 1px dashed ${theme.colors.border};
   background: ${theme.colors.creamCard};
+
+  @container (max-width: 480px) {
+    padding: 12px;
+  }
 `
 
 export const PageHead = styled.div`
@@ -199,14 +225,23 @@ export const PageToggle = styled(GroupToggle)`
 
 export const FeatureBody = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 22px;
   margin-inline-start: 8px;
   padding-inline-start: 18px;
   border-inline-start: 2px solid ${theme.colors.border};
+
+  @container (max-width: 480px) {
+    margin-inline-start: 0;
+    padding-inline-start: 10px;
+  }
 `
 
 export const PageBand = styled.section`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 12px;
 `
 
@@ -221,16 +256,29 @@ export const PageMark = styled.h3`
 
 export const ComponentStack = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 18px;
   margin-inline-start: 14px;
   padding-inline-start: 14px;
   border-inline-start: 2px solid ${theme.colors.chipGreen};
+
+  @container (max-width: 480px) {
+    margin-inline-start: 0;
+    padding-inline-start: 10px;
+  }
 `
 
 export const Folder = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 14px;
   margin-inline-start: 14px;
+
+  @container (max-width: 480px) {
+    margin-inline-start: 0;
+  }
 `
 
 export const FolderToggle = styled(GroupToggle)`
@@ -324,7 +372,8 @@ export const Ok = styled.span`
 
 export const Select = styled.select`
   appearance: none;
-  min-width: 160px;
+  min-width: min(160px, 100%);
+  max-width: 100%;
   min-height: 36px;
   padding: 6px 28px 6px 12px;
   border-radius: ${theme.radii.sm};

@@ -20,8 +20,8 @@ export const Board = styled.div<{ $split?: boolean }>`
     }
 
     @container (max-width: 960px) {
-      grid-template-columns: 1fr;
-      grid-template-rows: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr);
+      height: auto;
     }
   `}
 `
@@ -37,6 +37,11 @@ export const Shelf = styled.div`
 
   @container (min-width: 961px) {
     padding-inline-end: ${theme.space.lg};
+  }
+
+  @container (max-width: 960px) {
+    height: auto;
+    overflow: visible;
   }
 `
 

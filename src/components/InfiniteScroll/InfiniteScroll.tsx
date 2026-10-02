@@ -55,13 +55,15 @@ export function InfiniteSentinel({
     const node = ref.current
     if (!node || !hasMore) return
     let fired = false
+    const parent = root?.current
+    const scrolls = parent ? getComputedStyle(parent).overflowY !== 'visible' : false
     const observer = new IntersectionObserver(
       (entries) => {
         if (fired || !entries.some((entry) => entry.isIntersecting)) return
         fired = true
         loadRef.current()
       },
-      { root: root?.current ?? null, rootMargin: '160px' },
+      { root: scrolls ? parent : null, rootMargin: '160px' },
     )
     observer.observe(node)
     return () => observer.disconnect()

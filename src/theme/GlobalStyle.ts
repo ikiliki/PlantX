@@ -17,6 +17,8 @@ export const GlobalStyle = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
+    overflow-wrap: break-word;
+    overflow-x: clip;
   }
   button, input, select, textarea {
     font: inherit;

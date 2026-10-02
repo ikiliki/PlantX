@@ -1,6 +1,9 @@
 import styled from 'styled-components'
 import { theme } from '../../theme/tokens'
 
+/** Viewport where `CollectionBoard` puts shelf and rail side by side (961px board + main padding). */
+const SPLIT_VIEWPORT = 961 + 2 * parseInt(theme.space.xl, 10)
+
 export const Page = styled.div<{ $fill?: boolean }>`
   display: grid;
   gap: ${theme.space.lg};
@@ -11,12 +14,10 @@ export const Page = styled.div<{ $fill?: boolean }>`
   ${({ $fill }) =>
     $fill &&
     `
-    grid-template-rows: auto minmax(0, 1fr);
-    height: calc(100svh - ${theme.layout.topBar} - 56px - 72px);
-    overflow: hidden;
-
-    @media (max-width: ${theme.breakpoints.md}) {
-      height: calc(100svh - ${theme.layout.topBar} - ${theme.space.md} - ${theme.layout.bottomNav} - ${theme.space.xl});
+    @media (min-width: ${SPLIT_VIEWPORT}px) {
+      grid-template-rows: auto minmax(0, 1fr);
+      height: calc(100svh - ${theme.layout.topBar} - 56px - 72px);
+      overflow: hidden;
     }
   `}
 `
