@@ -1,7 +1,7 @@
 import type { Catalog, CatalogSuggestionDraft } from '../../../../../src/mock/types.ts'
 import { fallbackDraft, normalizeDraft, type CatalogDraftHint } from '../../catalog/catalogDraft.ts'
-import { fetchWithTimeout, stripDataUrl } from '../http.ts'
-import type { IdentifyProvider, ProviderHealth, RawSuggestion } from '../types.ts'
+import { fetchWithTimeout, IdentifyTimeoutError, stripDataUrl } from '../http.ts'
+import { IDENTIFY_TIMEOUT_MS, type IdentifyProvider, type ProviderHealth, type RawSuggestion } from '../types.ts'
 
 const DOCS_URL = 'https://ai.google.dev/gemini-api/docs'
 /**
@@ -11,6 +11,13 @@ const DOCS_URL = 'https://ai.google.dev/gemini-api/docs'
 const MODEL_FALLBACKS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite']
 /** Overloaded, retired, or out of quota: try the next model. Anything else is a real failure. */
 const RETRYABLE_STATUS = new Set([404, 429, 503])
+/**
+ * One Gemini step (plant check, draft, size) across all its model attempts. A slow model
+ * falls through to the next one inside this budget instead of failing the whole scan.
+ */
+const CALL_BUDGET_MS = 20_000
+/** Not worth starting another model with less time than this left. */
+const MIN_ATTEMPT_MS = 4_000
 
 let lastError: string | undefined
 let lastUsedAt: string | undefined
@@ -186,14 +193,23 @@ async function generate(image: string, prompt: string, schema: unknown): Promise
     },
   })
   let lastFailure = 'Gemini failed'
+  let timedOut = false
+  const deadline = Date.now() + CALL_BUDGET_MS
   for (const model of modelsToTry()) {
+    const left = deadline - Date.now()
+    if (left < MIN_ATTEMPT_MS) break
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
     try {
-      const res = await fetchWithTimeout(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: requestBody,
-      })
+      const res = await fetchWithTimeout(
+        url,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody,
+        },
+        Math.min(IDENTIFY_TIMEOUT_MS, left),
+      )
+      timedOut = false
       if (!res.ok) {
         const text = await res.text().catch(() => '')
         lastFailure = `Gemini HTTP ${res.status}${text ? `: ${text.slice(0, 180)}` : ''}`
@@ -210,12 +226,19 @@ async function generate(image: string, prompt: string, schema: unknown): Promise
       lastError = undefined
       return text
     } catch (err) {
-      if (err instanceof Error && err.name === 'IdentifyTimeoutError') throw err
+      if (err instanceof IdentifyTimeoutError) {
+        // Slow or overloaded model: same as a 503, try the next one while the budget lasts.
+        timedOut = true
+        lastFailure = `Gemini ${model} timed out`
+        continue
+      }
       lastFailure = err instanceof Error ? err.message : 'Gemini failed'
       break
     }
   }
   lastError = lastFailure
+  // Keep the timeout reason when the last attempt was a timeout, so history shows it as one.
+  if (timedOut) throw new IdentifyTimeoutError()
   throw new Error(lastFailure)
 }
 

@@ -319,7 +319,8 @@ export function postTodoComplete(todoId: string, completedOn?: string) {
   })
 }
 
-const IDENTIFY_TIMEOUT_MS = 30_000
+/** The server runs up to three AI steps, each allowed 20s across model fallbacks. */
+const IDENTIFY_TIMEOUT_MS = 60_000
 
 type IdentifyResult =
   | { ok: true; diagnosis: Diagnosis; record?: IdentifyRequestRecord; activity?: FeedUpdate }
