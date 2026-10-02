@@ -65,4 +65,9 @@ export const Note = styled.p`
   font-size: 14px;
   line-height: 1.45;
   color: ${theme.colors.muted};
+
+  /* Phone width: the title and stepper are enough. */
+  @container (max-width: 419px) {
+    display: none;
+  }
 `

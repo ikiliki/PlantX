@@ -40,7 +40,12 @@ export const Group = styled.fieldset`
 
 export const Empty = styled.span`
   flex: 1 1 140px;
+  display: flex;
+  align-items: center;
   min-height: 40px;
+  padding: 0 16px;
+  font-size: 13px;
+  color: ${theme.colors.muted};
   border-radius: ${theme.radii.md};
   background: ${theme.colors.creamCard};
   box-shadow: inset 0 0 0 1px ${theme.colors.border};
@@ -151,6 +156,27 @@ export const ChipPhoto = styled.span`
   aspect-ratio: 4 / 3;
   background: ${theme.colors.chipGreen};
   overflow: hidden;
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`
+
+/** Small round photo at the start of a chip (chips layout). */
+export const ChipThumb = styled.span`
+  position: relative;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-inline-start: -10px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: ${theme.colors.chipGreen};
+  box-shadow: 0 0 0 2px ${theme.colors.creamCard};
 
   img {
     position: absolute;

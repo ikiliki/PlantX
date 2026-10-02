@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { FloatChip } from '../../../../components/FloatChip/FloatChip'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { useStore } from '../../../../mock/store'
 import { isFeatureEnabled } from '../../../../theme/release'
 import type { Todo } from '../../../../mock/types'
@@ -13,23 +14,9 @@ import { TodoCount, TodoFace } from './HomeMobileFloats.styles'
 
 const MOBILE_MQ = '(max-width: 899px)'
 
-function useMobileViewport() {
-  const [mobile, setMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(MOBILE_MQ).matches : false,
-  )
-  useEffect(() => {
-    const mq = window.matchMedia(MOBILE_MQ)
-    const onChange = () => setMobile(mq.matches)
-    onChange()
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
-  return mobile
-}
-
 /** Needs today chip for the home feed on phones. The greenhouse lure stays on the desktop rail. */
 export function HomeMobileFloats() {
-  const mobile = useMobileViewport()
+  const mobile = useMediaQuery(MOBILE_MQ)
   const { t } = useI18n()
   const { db, signedIn, currentUser, completeTodo } = useStore()
   const [careTodo, setCareTodo] = useState<Todo | undefined>()

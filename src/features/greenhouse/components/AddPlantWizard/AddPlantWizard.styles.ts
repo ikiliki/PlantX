@@ -56,9 +56,14 @@ export const StepBody = styled.div<{ $direction: 1 | -1 }>`
   }
 `
 
+/** Phone width: the stepper already names the step, so the heading and lead give the room to the form. */
 export const StepHead = styled.header`
   display: grid;
   gap: 6px;
+
+  @container (max-width: 419px) {
+    display: none;
+  }
 `
 
 export const StepTitle = styled.h3`
@@ -97,6 +102,15 @@ export const Banner = styled.div<{ $tone: 'ai' | 'warn' | 'manual' }>`
   font-weight: 700;
   line-height: 1.4;
   animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
+
+  /* Phone width: info banners drop; a warning keeps its restore action. */
+  ${({ $tone }) =>
+    $tone !== 'warn' &&
+    css`
+      @container (max-width: 419px) {
+        display: none;
+      }
+    `}
 
   ${({ $tone }) =>
     $tone === 'ai'
@@ -183,56 +197,6 @@ export const PhotoActions = styled.div`
   margin-inline-start: auto;
 `
 
-export const IdentityCard = styled.article`
-  display: inline-grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  gap: 8px;
-  align-items: center;
-  width: max-content;
-  max-width: 100%;
-  padding: 4px 12px 4px 4px;
-  border-radius: ${theme.radii.md};
-  background: ${theme.colors.creamCard};
-  border: 1px solid ${theme.colors.border};
-`
-
-export const IdentityPhoto = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: ${theme.radii.sm};
-  overflow: hidden;
-  background: ${theme.colors.creamCard};
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-`
-
-export const IdentityCopy = styled.div`
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-
-  strong,
-  span {
-    overflow-wrap: anywhere;
-  }
-
-  strong {
-    font-size: 16px;
-    line-height: 1.25;
-    color: ${theme.colors.ink};
-  }
-
-  span {
-    font-size: 13px;
-    line-height: 1.4;
-    color: ${theme.colors.muted};
-  }
-`
-
 export const Review = styled.article`
   display: grid;
   gap: ${theme.space.md};
@@ -285,6 +249,16 @@ export const CategoryMark = styled.span`
     height: 100%;
     object-fit: cover;
   }
+`
+
+/** The AI badge stamped on the review photo, like the passport gallery's stamp. */
+export const PhotoBadge = styled.div`
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  inset-inline-start: 10px;
+  max-width: calc(100% - 20px);
+  filter: drop-shadow(0 6px 14px rgba(12, 32, 24, 0.28));
 `
 
 export const ReviewBody = styled.div`

@@ -9,7 +9,9 @@ import { catalogPhotos, catalogSpecies } from '../../catalogSpecies'
 import { wikiHref } from '../GuideLink/GuideLink'
 import {
   Backdrop,
+  Choose,
   Close,
+  Code,
   Dialog,
   Facts,
   More,
@@ -20,11 +22,27 @@ import {
   Scroll,
 } from './CatalogPreview.styles'
 
-export function CatalogPreview({ speciesId, onClose }: { speciesId: string; onClose: () => void }) {
+/**
+ * Catalog card for a species, as a popup (a sheet on a phone).
+ * `subcategoryId` leads with that variety's photo, name, and code.
+ * `action` adds a primary button (Add Plant's Choose) in place of the link to the catalog page.
+ */
+export function CatalogPreview({
+  speciesId,
+  subcategoryId,
+  action,
+  onClose,
+}: {
+  speciesId: string
+  subcategoryId?: string
+  action?: { label: string; onClick: () => void }
+  onClose: () => void
+}) {
   const { db } = useStore()
   const { t, tr } = useI18n()
   const species = catalogSpecies(db, speciesId)
-  const photos = catalogPhotos(db, speciesId)
+  const variety = subcategoryId ? db.catalog.subcategories.find((item) => item.id === subcategoryId) : undefined
+  const photos = [...new Set([variety?.photo, ...catalogPhotos(db, speciesId)].filter((src): src is string => Boolean(src)))]
   const season = seasonalCareFor(speciesId)?.[seasonFor(new Date())]
   const sheet = useSheetDrag(onClose)
 
@@ -67,7 +85,11 @@ export function CatalogPreview({ speciesId, onClose }: { speciesId: string; onCl
             </Photos>
           )}
           <div>
-            <Name id="catalog-preview-title">{tr(species.commonName, species.commonNameHe)}</Name>
+            <Name id="catalog-preview-title">
+              {tr(species.commonName, species.commonNameHe)}
+              {variety ? ` · ${tr(variety.name, variety.nameHe)}` : ''}
+            </Name>
+            {variety?.code ? <Code>{variety.code}</Code> : null}
             {species.scientificName ? (
               <Scientific>
                 <em>{species.scientificName}</em>
@@ -96,9 +118,15 @@ export function CatalogPreview({ speciesId, onClose }: { speciesId: string; onCl
               </div>
             ) : null}
           </Facts>
-          <More to={wikiHref(species.id)} onClick={onClose}>
-            {t.guide.openPage}
-          </More>
+          {action ? (
+            <Choose type="button" onClick={action.onClick}>
+              {action.label}
+            </Choose>
+          ) : (
+            <More to={wikiHref(species.id)} onClick={onClose}>
+              {t.guide.openPage}
+            </More>
+          )}
         </Scroll>
       </Dialog>
     </Backdrop>,

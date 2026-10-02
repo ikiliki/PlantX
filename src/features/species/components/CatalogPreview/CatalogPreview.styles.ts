@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { backdropEnter, closeButton, dialogEnter, media, sheetBackdrop, sheetSurface, sheetUp } from '../../../../theme/motion'
+import { backdropEnter, closeButton, dialogEnter, media, pressable, sheetBackdrop, sheetSurface, sheetUp } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 export const Backdrop = styled.div`
@@ -130,4 +130,30 @@ export const More = styled(Link)`
   color: ${theme.colors.forest};
   text-decoration: underline;
   text-underline-offset: 3px;
+`
+
+export const Code = styled.p`
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: ${theme.colors.moss};
+`
+
+/** Primary action when the preview is used to pick a class (Add Plant). */
+export const Choose = styled.button`
+  ${pressable}
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.forest};
+  color: ${theme.colors.cream};
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: ${theme.shadow.card};
 `

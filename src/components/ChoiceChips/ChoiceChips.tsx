@@ -1,5 +1,5 @@
 import { PlantImage } from '../PlantImage/PlantImage'
-import { Chip, ChipHint, ChipPhoto, ChipText, Empty, Group, Legend, MoreChip, Required, Suggested } from './ChoiceChips.styles'
+import { Chip, ChipHint, ChipPhoto, ChipText, ChipThumb, Empty, Group, Legend, MoreChip, Required, Suggested } from './ChoiceChips.styles'
 
 export type ChoiceChipOption = {
   id: string
@@ -20,6 +20,8 @@ export function ChoiceChips({
   suggestedLabel,
   layout = 'chips',
   more,
+  emptyLabel,
+  onPick,
 }: {
   label: string
   options: ChoiceChipOption[]
@@ -32,6 +34,10 @@ export function ChoiceChips({
   layout?: 'chips' | 'tiles'
   /** Sits in the chip row. Used for Show more / Show less. */
   more?: { label: string; onMore: () => void }
+  /** Shown in the empty row, e.g. why there are no options yet. */
+  emptyLabel?: string
+  /** When set, a tap hands the option here (e.g. to open a preview) instead of selecting it. */
+  onPick?: (id: string) => void
 }) {
   return (
     <Group disabled={disabled}>
@@ -40,7 +46,7 @@ export function ChoiceChips({
         {required ? <Required aria-hidden>*</Required> : null}
       </Legend>
       <div role="radiogroup" aria-label={label} aria-required={required} data-layout={layout}>
-        {options.length === 0 ? <Empty /> : null}
+        {options.length === 0 ? <Empty>{emptyLabel}</Empty> : null}
         {options.map((option, index) => {
           const on = option.id === value
           const suggested = Boolean(suggestedId) && option.id === suggestedId
@@ -54,10 +60,14 @@ export function ChoiceChips({
               $tile={layout === 'tiles'}
               $suggested={suggested}
               style={{ animationDelay: `${Math.min(index, 12) * 28}ms` }}
-              onClick={() => onChange(on && !required ? '' : option.id)}
+              onClick={() => (onPick ? onPick(option.id) : onChange(on && !required ? '' : option.id))}
             >
               {layout === 'tiles' ? (
                 <ChipPhoto>{option.photo ? <PlantImage src={option.photo} alt="" /> : null}</ChipPhoto>
+              ) : option.photo ? (
+                <ChipThumb>
+                  <PlantImage src={option.photo} alt="" />
+                </ChipThumb>
               ) : null}
               <ChipText>
                 {option.label}
