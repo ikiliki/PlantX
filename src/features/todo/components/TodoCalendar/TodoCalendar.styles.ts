@@ -28,18 +28,67 @@ export const Board = styled.div`
   }
 `
 
-/** Chips and the plant picker above the calendar card; the picker drops under the chips when narrow. */
+/** Phone filters and the Days chip share this pill. Filled when that filter is on. */
+export const DaysChip = styled.button<{ $on?: boolean }>`
+  ${pressable}
+  appearance: none;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: ${theme.radii.pill};
+  background: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.chipNeutral)};
+  color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.ink)};
+  box-shadow: ${({ $on }) => ($on ? 'none' : theme.shadow.soft)};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+`
+
+/** Kind chips sit beside Days and share its gap. */
+export const KindRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+`
+
+/** One column with the task list: chips on a row, the plant picker the width of the list. */
+export const ChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+`
+
 export const Toolbar = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 12px;
+  gap: 8px;
+  width: 100%;
   min-width: 0;
-  margin-bottom: 14px;
 
   > select {
     flex: 0 1 220px;
     min-width: 0;
+  }
+
+  @container (max-width: 899px) {
+    align-items: stretch;
+
+    > select {
+      flex: 1 1 100%;
+      max-width: none;
+    }
   }
 `
 

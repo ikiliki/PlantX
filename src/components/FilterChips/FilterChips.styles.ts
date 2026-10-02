@@ -27,14 +27,15 @@ export const Bar = styled.div`
     padding-inline-end: 2px;
   }
 
+  /* Same pill row as the Tasks phone filters: full size, wrapping, lined up with the cards. */
   @container (max-width: 559px) {
-    flex-wrap: nowrap;
-    gap: 4px;
-    overflow-x: auto;
-    box-sizing: border-box;
-    width: calc(100% + 2 * ${theme.space.md});
-    margin-inline: calc(-1 * ${theme.space.md});
-    padding-inline: 6px;
+    flex-wrap: wrap;
+    gap: 8px;
+    overflow: visible;
+    scroll-snap-type: none;
+    width: auto;
+    margin-inline: 0;
+    padding-inline: 0;
   }
 `
 
@@ -66,18 +67,19 @@ export const Chip = styled.button<{ $on?: boolean }>`
     scroll-snap-stop: always;
     min-height: 34px;
     padding: 0 12px;
-    border-color: transparent;
+    border-width: 0;
     background: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.chipNeutral)};
     box-shadow: ${({ $on }) => ($on ? 'none' : theme.shadow.soft)};
   }
 
   @container (max-width: 559px) {
     flex: 0 0 auto;
-    justify-content: center;
-    min-height: 32px;
-    padding: 0 6px;
-    font-size: 11px;
-    gap: 4px;
+    width: max-content;
+    scroll-snap-align: none;
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+    gap: 6px;
   }
 `
 

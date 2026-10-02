@@ -73,7 +73,7 @@ export const Primary = styled(Link)`
   font-weight: 800;
 `
 
-export const Secondary = styled.a`
+export const Secondary = styled(Link)`
   ${pressable}
   border: 1px solid ${theme.colors.border};
   background: rgba(255, 253, 248, 0.75);

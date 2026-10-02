@@ -24,7 +24,7 @@ export type LiveMeta = {
 
 export type LivePayload = {
   system: SystemConfig
-  /** Signed-in account only. The directory is GET /api/users. */
+  /** Signed-in account only. The directory is GET /api/users/directory. */
   currentUser: User | null
   currentUserId: string | null
   meta: LiveMeta

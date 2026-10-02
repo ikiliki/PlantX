@@ -24,7 +24,7 @@ type AreaId = 'home' | 'greenhouse' | 'passport' | 'tasks' | 'catalog'
 /** Stills per area. An area without a phone still stays on desktop. */
 const AREAS: { id: AreaId; desk: string; phone?: string }[] = [
   { id: 'greenhouse', desk: landingShots.greenhouseDesk, phone: landingShots.greenhousePhone },
-  { id: 'passport', desk: landingShots.passportDesk },
+  { id: 'passport', desk: landingShots.passportDesk, phone: landingShots.passportPhone },
   { id: 'tasks', desk: landingShots.tasksDesk, phone: landingShots.tasksPhone },
   { id: 'home', desk: landingShots.homeDesk, phone: landingShots.homePhone },
   { id: 'catalog', desk: landingShots.wikiDesk },

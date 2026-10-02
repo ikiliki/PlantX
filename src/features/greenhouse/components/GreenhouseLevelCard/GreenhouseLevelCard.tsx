@@ -1,7 +1,10 @@
 import { useEffect, useId, useState } from 'react'
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { publicGrowerName } from '../../../profile/avatarIcons'
 import { fetchGreenhouseLevel } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { clientEnv } from '../../../../theme/plantxEnv'
 import { isPlacementEnabled } from '../../../../theme/release'
 import { CARE_XP, PLANT_XP, greenhouseLevel, type GreenhouseLevel } from '../../greenhouseLevel'
@@ -12,11 +15,11 @@ import {
   How,
   HowList,
   Inner,
-  Label,
   Next,
   Progress,
   Rank,
   Root,
+  Side,
   Tally,
   TallyRow,
   Top,
@@ -55,7 +58,7 @@ export function GreenhouseLevelView({
   celebrate = false,
 }: {
   summary: GreenhouseLevel
-  owner?: { name: string; color: string }
+  owner?: { name: string; color: string; icon?: string }
   celebrate?: boolean
 }) {
   const { t } = useI18n()
@@ -71,24 +74,23 @@ export function GreenhouseLevelView({
       <Top>
         <LevelBadge level={summary.level} progress={summary.progress} owner={owner} />
         <TopCopy>
-          <Label>{t.greenhouse.levelLabel}</Label>
           <Rank>{rankName}</Rank>
           <Xp>
             {t.greenhouse.levelN.replace('{n}', String(summary.level))} ·{' '}
             {t.greenhouse.levelXp.replace('{xp}', summary.xp.toLocaleString())}
+            <How
+              type="button"
+              aria-label={t.greenhouse.levelHow}
+              title={t.greenhouse.levelHow}
+              aria-expanded={howOpen}
+              aria-controls={howId}
+              $on={howOpen}
+              onClick={() => setHowOpen((open) => !open)}
+            >
+              ?
+            </How>
           </Xp>
         </TopCopy>
-        <How
-          type="button"
-          aria-label={t.greenhouse.levelHow}
-          title={t.greenhouse.levelHow}
-          aria-expanded={howOpen}
-          aria-controls={howId}
-          $on={howOpen}
-          onClick={() => setHowOpen((open) => !open)}
-        >
-          ?
-        </How>
       </Top>
 
       <Progress>
@@ -102,6 +104,7 @@ export function GreenhouseLevelView({
         </Next>
       </Progress>
 
+      <Side>
       <TallyRow>
         <Tally $tone="plant">
           <span aria-hidden>🌱</span>
@@ -112,6 +115,7 @@ export function GreenhouseLevelView({
           {summary.care === 1 ? t.greenhouse.levelCareOne : t.greenhouse.levelCare.replace('{n}', String(summary.care))}
         </Tally>
       </TallyRow>
+      </Side>
 
       {howOpen ? (
         <HowList id={howId}>
@@ -134,17 +138,23 @@ export function GreenhouseLevelView({
  */
 export function GreenhouseLevelCard({ ownerId, publicView = false }: { ownerId: string; publicView?: boolean }) {
   const { db } = useStore()
+  const { locale } = useI18n()
   const local = !publicView || clientEnv() === 'mock'
+  const fetching = useSectionFetch(local, ['plants', 'todos'])
   const summary = greenhouseLevel(ownerId, db.plants, db.todos)
   const [remote, setRemote] = useState<GreenhouseLevel | null>(null)
+  const [remoteSettled, setRemoteSettled] = useState(false)
   const [celebrate, setCelebrate] = useState(false)
 
   useEffect(() => {
     if (local) return
     let cancelled = false
     setRemote(null)
+    setRemoteSettled(false)
     void fetchGreenhouseLevel(ownerId).then((res) => {
-      if (!cancelled && res) setRemote(res.level)
+      if (cancelled) return
+      if (res) setRemote(res.level)
+      setRemoteSettled(true)
     })
     return () => {
       cancelled = true
@@ -152,7 +162,7 @@ export function GreenhouseLevelCard({ ownerId, publicView = false }: { ownerId: 
   }, [local, ownerId])
 
   useEffect(() => {
-    if (publicView) return undefined
+    if (publicView || fetching) return undefined
     const seen = readSeen(ownerId)
     if (seen != null && summary.level > seen) {
       setCelebrate(true)
@@ -162,12 +172,22 @@ export function GreenhouseLevelCard({ ownerId, publicView = false }: { ownerId: 
     }
     if (seen == null || summary.level !== seen) writeSeen(ownerId, summary.level)
     return undefined
-  }, [ownerId, publicView, summary.level])
+  }, [ownerId, publicView, fetching, summary.level])
 
   if (!isPlacementEnabled(db.system, 'greenhouse.level')) return null
+  const waiting = local ? fetching : !remoteSettled
+  if (waiting) {
+    return (
+      <Root aria-busy="true" $celebrate={false}>
+        <LoaderShell busy compact />
+      </Root>
+    )
+  }
   const shown = local ? summary : remote
   if (!shown) return null
   const user = db.users.find((item) => item.id === ownerId)
-  const owner = user ? { name: user.name, color: user.avatarColor } : undefined
+  const owner = user
+    ? { name: publicGrowerName(user, locale === 'he'), color: user.avatarColor, icon: user.avatarIcon }
+    : undefined
   return <GreenhouseLevelView summary={shown} owner={owner} celebrate={celebrate} />
 }

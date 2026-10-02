@@ -6,6 +6,7 @@ import { Card } from '../../components/Card/Card'
 import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
 import { GreenhousePlace } from '../../features/greenhouse/components/GreenhousePlace/GreenhousePlace'
+import { publicGrowerName } from '../../features/profile/avatarIcons'
 import { useStore } from '../../mock/store'
 import { theme } from '../../theme/tokens'
 
@@ -23,9 +24,9 @@ export function SettingsPage() {
       <Card style={{ marginBottom: 16 }}>
         {currentUser ? (
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            <Avatar name={currentUser.name} color={currentUser.avatarColor} size={56} />
+            <Avatar name={publicGrowerName(currentUser, locale === 'he')} color={currentUser.avatarColor} icon={currentUser.avatarIcon} size={56} />
             <div style={{ minWidth: 0, flex: 1 }}>
-              <strong>{locale === 'he' ? currentUser.nameHe : currentUser.name}</strong>
+              <strong>{publicGrowerName(currentUser, locale === 'he')}</strong>
               <div style={{ color: theme.colors.muted, fontSize: 14 }}>
                 {t.settings.role}: {t.roles[currentUser.role]}
               </div>

@@ -1,4 +1,5 @@
 import { UNKNOWN_AREA } from '../../../../src/mock/locations.ts'
+import type { User } from '../../../../src/mock/types.ts'
 import { greenhouseLevel } from '../../../../src/features/greenhouse/greenhouseLevel.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
@@ -8,6 +9,12 @@ import {
   type PendingUser,
   withAccountStatus,
 } from './users.types.ts'
+
+/** Directory card. The account email and approval flag stay on the admin members list. */
+function publicCard(user: User): User {
+  const { email: _email, preapproved: _preapproved, ...rest } = user
+  return rest
+}
 
 function avatarColor(seed: string) {
   const palette = ['#1FA85A', '#5D7C4E', '#C4A35A', '#3C6B8F', '#B4553D']
@@ -144,6 +151,20 @@ export const usersService = {
     if (!user) throw Errors.missing(`User ${userId} not found`)
     const [plants, todos] = await Promise.all([store.plants.list(), store.todos.list()])
     return greenhouseLevel(userId, plants, todos)
+  },
+
+  /**
+   * Growers for the Global directory. Email stays off this payload.
+   * A non-admin does not see the admin. The admin sees every greenhouse, including his own.
+   */
+  async directory(viewer: User | null) {
+    const users = await getStore().users.list()
+    const adminView = viewer?.role === 'admin'
+    return users
+      .filter((user) => user.role !== 'guest')
+      .filter((user) => (user.accountStatus ?? 'active') !== 'disabled')
+      .filter((user) => adminView || user.role !== 'admin')
+      .map(publicCard)
   },
 
   /** Every member's public level, keyed by user id. One read of plants and tasks for the whole directory. */

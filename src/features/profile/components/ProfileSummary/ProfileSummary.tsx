@@ -1,5 +1,6 @@
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { publicGrowerName } from '../../avatarIcons'
 import { useStore } from '../../../../mock/store'
 import { isPlacementReady } from '../../../../theme/release'
 import {
@@ -34,7 +35,7 @@ export function ProfileSummary({
   const user = db.users.find((item) => item.id === userId && item.role !== 'guest')
   if (!user) return <Missing id={titleId}>{t.seller.notFound}</Missing>
 
-  const name = tr(user.name, user.nameHe)
+  const name = publicGrowerName(user, locale === 'he')
   const business = locale === 'he' ? user.businessNameHe : user.businessName
   const specialties = locale === 'he' ? user.specialtiesHe : user.specialties
   const showMarketStats = isPlacementReady(db.system, 'profile.market.stats')
@@ -43,7 +44,7 @@ export function ProfileSummary({
     <Root $compact={compact} aria-label={name}>
       <Identity>
         <AvatarRing>
-          <Avatar name={user.name} color={user.avatarColor} size={76} />
+          <Avatar name={name} color={user.avatarColor} icon={user.avatarIcon} size={76} />
         </AvatarRing>
         <NameBlock>
           <Name id={titleId}>{name}</Name>

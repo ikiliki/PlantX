@@ -23,9 +23,9 @@ import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
 import { RefreshButton } from '../../components/RefreshButton/RefreshButton'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
 import { useMediaQuery } from '../../lib/useMediaQuery'
-import { theme } from '../../theme/tokens'
 import { useSearchParams } from 'react-router-dom'
 import { FilterChips } from '../../components/FilterChips/FilterChips'
+import { IconToggle } from '../../components/IconToggle/IconToggle'
 import { Empty, Feed, FeedTools, Layout, Rail, RailLure, Shell, Widget } from './DiscoverPage.styles'
 
 const WIDGET_ITEMS = 2
@@ -58,8 +58,9 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
     else nextParams.set('feed', next)
     setParams(nextParams, { replace: true })
   }
-  // Refresh: pull down on a phone, or the icon at the end of the filter row.
-  const phone = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`)
+  // Under 900px the three feed chips leave the top and float as icons above the bottom nav.
+  // Refresh is a pull on that shell, and the icon at the end of the chip row when it is wider.
+  const mobile = useMediaQuery('(max-width: 899px)')
   const { reloadSlice } = useStore()
   const [refreshing, setRefreshing] = useState(false)
   const refresh = useCallback(() => {
@@ -123,20 +124,34 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
         </Rail>
         <Feed>
           <FeatureGate placement="home.feed" title={t.nav.home}>
-            <PullToRefresh enabled={phone} busy={refreshing} label={t.feed.refreshing} onRefresh={refresh} />
-            <FeedTools>
-              <FilterChips
+            <PullToRefresh enabled={mobile} busy={refreshing} label={t.feed.refreshing} onRefresh={refresh} />
+            {mobile ? (
+              <IconToggle
+                floating
                 label={t.feed.filterLabel}
                 value={filter}
                 onChange={setFilter}
                 options={[
-                  { id: 'all', label: t.feed.filterAll, count: allItems.length, icon: 'home' },
-                  { id: 'activities', label: t.feed.filterActivities, count: activityItems.length, icon: 'greenhouse' },
-                  { id: 'tasks', label: t.feed.filterTasks, count: taskItems.length, icon: 'drop' },
+                  { id: 'all', label: t.feed.filterAll, icon: 'home' },
+                  { id: 'activities', label: t.feed.filterActivities, icon: 'greenhouse' },
+                  { id: 'tasks', label: t.feed.filterTasks, icon: 'drop' },
                 ]}
               />
-              {phone ? null : <RefreshButton label={t.feed.refresh} busy={refreshing} onClick={refresh} />}
-            </FeedTools>
+            ) : (
+              <FeedTools>
+                <FilterChips
+                  label={t.feed.filterLabel}
+                  value={filter}
+                  onChange={setFilter}
+                  options={[
+                    { id: 'all', label: t.feed.filterAll, count: allItems.length, icon: 'home' },
+                    { id: 'activities', label: t.feed.filterActivities, count: activityItems.length, icon: 'greenhouse' },
+                    { id: 'tasks', label: t.feed.filterTasks, count: taskItems.length, icon: 'drop' },
+                  ]}
+                />
+                <RefreshButton label={t.feed.refresh} busy={refreshing} onClick={refresh} />
+              </FeedTools>
+            )}
             {feed.total === 0 && <Empty>{empty}</Empty>}
             {shown.map((item, index) => (
               <Reveal key={item.id} index={index}>

@@ -83,6 +83,14 @@ export const StepLead = styled.p`
   overflow-wrap: anywhere;
 `
 
+export const PhotoNote = styled.p`
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: ${theme.colors.muted};
+  overflow-wrap: anywhere;
+`
+
 export const Section = styled.div`
   display: grid;
   gap: 12px;

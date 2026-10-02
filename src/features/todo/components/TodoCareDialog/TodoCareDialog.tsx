@@ -46,6 +46,10 @@ export function TodoCareDialog({
   }, [onClose])
 
   const finish = (careMark: TodoSubcategory) => {
+    if (careMark === 'water') {
+      onClose()
+      return
+    }
     setPassport({ plantId: plant.id, careMark })
   }
 

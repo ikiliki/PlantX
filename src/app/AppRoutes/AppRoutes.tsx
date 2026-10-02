@@ -18,7 +18,6 @@ import { LandingStillsPage } from '../../pages/LandingStills/LandingStills'
 import { LoginPage } from '../../pages/LoginPage/LoginPage'
 import { MarketClassPage } from '../../pages/MarketClassPage/MarketClassPage'
 import { MarketPage } from '../../pages/MarketPage/MarketPage'
-import { ProfilePage } from '../../pages/ProfilePage/ProfilePage'
 import { RankPage } from '../../pages/RankPage/RankPage'
 import { SellerProfilePage } from '../../pages/SellerProfilePage/SellerProfilePage'
 import { ApisPage } from '../../pages/ApisPage/ApisPage'
@@ -104,7 +103,7 @@ export function AppRoutes() {
         <Route element={<ProductShell />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="home" element={<DiscoverPage />} />
-          <Route path="dashboard" element={<Navigate to="/home" replace />} />
+          <Route path="dashboard" element={<Navigate to="/greenhouse" replace />} />
           <Route path="market" element={<MarketPage />} />
           <Route path="market/categories" element={<CategoriesPage />} />
           <Route path="market/categories/:speciesId" element={<CategoryPage />} />
@@ -119,7 +118,7 @@ export function AppRoutes() {
           <Route path="wiki" element={<WikiPage />} />
           <Route path="wiki/:speciesId" element={<WikiPage />} />
           <Route path="sellers/:id" element={<SellerProfilePage />} />
-          <Route path="profile" element={<ProfilePage />} />
+          <Route path="profile" element={<Navigate to="/greenhouse" replace />} />
           <Route path="profile/:id" element={<ProfileRedirect />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>

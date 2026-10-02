@@ -27,7 +27,7 @@ export function LandingHero() {
         <Sub>{t.landing.heroSub}</Sub>
         <Actions>
           <Primary to="/login?mode=signup">{t.landing.signUp}</Primary>
-          <Secondary href="#tour">{t.landing.seeTour}</Secondary>
+          <Secondary to="/greenhouse">{t.landing.goToApp}</Secondary>
         </Actions>
         <LoginLine>
           {t.landing.haveAccount}{' '}

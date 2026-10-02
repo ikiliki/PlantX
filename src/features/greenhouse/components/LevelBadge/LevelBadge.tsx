@@ -16,7 +16,7 @@ export function LevelBadge({
   level: number
   /** 0..1 through the current level. */
   progress: number
-  owner?: { name: string; color: string }
+  owner?: { name: string; color: string; icon?: string }
   size?: 'sm' | 'md'
 }) {
   const { t } = useI18n()
@@ -32,7 +32,7 @@ export function LevelBadge({
       </Ring>
       {owner ? (
         <OwnerBadge $size={size} title={owner.name}>
-          <Avatar name={owner.name} color={owner.color} size={size === 'sm' ? 20 : 28} />
+          <Avatar name={owner.name} color={owner.color} icon={owner.icon} size={size === 'sm' ? 20 : 28} />
         </OwnerBadge>
       ) : null}
     </Root>

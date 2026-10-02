@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { canChooseLocale } from '../../../../i18n/locales'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
-import { Actions, Bar, Brand, BrandMark, Enter, Jump, Lang, LangBtn, Links, Login } from './LandingNav.styles'
+import { Actions, Bar, Brand, BrandMark, Enter, Jump, Lang, LangBtn, Links } from './LandingNav.styles'
 
 export function LandingNav() {
   const { t, locale } = useI18n()
@@ -49,8 +49,7 @@ export function LandingNav() {
             </LangBtn>
           </Lang>
         )}
-        <Login to="/login">{t.landing.navLogin}</Login>
-        <Enter to="/login?mode=signup">{t.landing.navSignup}</Enter>
+        <Enter to="/greenhouse">{t.landing.goToApp}</Enter>
       </Actions>
     </Bar>
   )

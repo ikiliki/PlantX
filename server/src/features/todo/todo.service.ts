@@ -22,6 +22,11 @@ function addMonths(iso: string, months: number) {
   return date.toISOString().slice(0, 10)
 }
 
+function careFillWindow(subcategory: string, now = today()) {
+  const min = subcategory === 'photo' ? addMonths(now, -PHOTO_GAP_MONTHS) : addDays(now, -WATER_GAP_DAYS)
+  return { min, max: now }
+}
+
 function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
@@ -174,6 +179,8 @@ export const todoService = {
     const firstWater = isFirstWaterTodo(todo, rows)
     const at = completedOn ?? today()
     if (!/^\d{4}-\d{2}-\d{2}$/.test(at)) throw Errors.invalid('completedOn must be YYYY-MM-DD')
+    const window = careFillWindow(todo.subcategory)
+    if (at < window.min || at > window.max) throw Errors.invalid('Care day is outside this category’s window')
     if (firstWater && !completedOn) throw Errors.invalid('First watering needs a calendar day')
     if (firstWater && completedOn > today()) throw Errors.invalid('First watering cannot be in the future')
     if (!firstWater && (todo.dueOn == null || todo.dueOn > today())) {

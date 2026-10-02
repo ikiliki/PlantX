@@ -1,7 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { landingShots } from '../../landingShots'
-import { Band, Head, Kicker, Lead, Shot, Stage, Step, StepBody, StepIndex, Steps, Title } from './LandingAi.styles'
+import {
+  Band,
+  Frame,
+  Head,
+  Kicker,
+  Lead,
+  Shot,
+  Stage,
+  Step,
+  StepBody,
+  StepIndex,
+  StepSummary,
+  Steps,
+  Title,
+} from './LandingAi.styles'
 
 const SHOTS = [landingShots.aiPhoto, landingShots.aiScan, landingShots.aiIdentity, landingShots.aiReview]
 const ADVANCE_MS = 4200
@@ -41,7 +55,8 @@ export function LandingAi() {
         <Lead>{t.landing.aiLead}</Lead>
       </Head>
       <Stage>
-        <Steps role="tablist" aria-orientation="vertical" aria-label={t.landing.aiKicker}>
+        <Frame>
+        <Steps role="tablist" aria-label={t.landing.aiKicker}>
           {steps.map((step, index) => (
             <Step
               key={step.title}
@@ -60,6 +75,10 @@ export function LandingAi() {
             </Step>
           ))}
         </Steps>
+        <StepSummary>
+          <strong>{steps[active].title}</strong>
+          <span>{steps[active].body}</span>
+        </StepSummary>
         <Shot id="ai-step-shot" role="tabpanel" aria-labelledby={`ai-step-${active}`}>
           {SHOTS.map((src, index) => (
             <img
@@ -74,6 +93,7 @@ export function LandingAi() {
             />
           ))}
         </Shot>
+        </Frame>
       </Stage>
     </Band>
   )

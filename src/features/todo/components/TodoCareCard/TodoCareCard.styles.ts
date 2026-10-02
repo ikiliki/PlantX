@@ -1,11 +1,11 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const water = '#3B7CC9'
 const metal = '#8B929A'
 
-export const Card = styled.div<{ $tone: 'water' | 'photo' }>`
+const cardFace = css<{ $tone: 'water' | 'photo' }>`
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px;
@@ -18,6 +18,19 @@ export const Card = styled.div<{ $tone: 'water' | 'photo' }>`
   box-shadow: ${theme.shadow.lift};
   color: ${theme.colors.ink};
   text-align: start;
+`
+
+export const Card = styled.div<{ $tone: 'water' | 'photo' }>`
+  ${cardFace}
+`
+
+/** Phone task: the whole card opens the day sheet. */
+export const CardHit = styled.button<{ $tone: 'water' | 'photo' }>`
+  ${cardFace}
+  ${pressable}
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
 `
 
 export const Photo = styled.div`

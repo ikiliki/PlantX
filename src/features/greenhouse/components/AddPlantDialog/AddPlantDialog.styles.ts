@@ -27,7 +27,7 @@ export const Dialog = styled.div`
   width: min(480px, 100%);
   height: min(640px, 86vh);
   overflow: hidden;
-  padding: 22px 20px 16px;
+  padding: 52px 20px 16px;
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.cream};
   container-type: inline-size;
@@ -38,7 +38,7 @@ export const Dialog = styled.div`
   @media (max-width: ${theme.breakpoints.md}) {
     width: 100%;
     height: min(640px, 82svh);
-    padding: 20px ${theme.space.md} ${theme.space.md};
+    padding: 52px ${theme.space.md} ${theme.space.md};
     border-radius: ${theme.radii.lg} ${theme.radii.lg} 0 0;
   }
 `
@@ -50,24 +50,3 @@ export const Close = styled.button`
   inset-inline-end: 12px;
 `
 
-export const Title = styled.h2`
-  margin: 0;
-  margin-bottom: 6px;
-  margin-inline-end: 36px;
-  font-family: ${theme.fonts.display};
-  font-weight: 400;
-  font-size: 24px;
-  color: ${theme.colors.forest};
-`
-
-export const Note = styled.p`
-  margin: 0 0 12px;
-  font-size: 14px;
-  line-height: 1.45;
-  color: ${theme.colors.muted};
-
-  /* Phone width: the title and stepper are enough. */
-  @container (max-width: 419px) {
-    display: none;
-  }
-`

@@ -5,7 +5,7 @@ import { theme } from '../../../../theme/tokens'
 export const Backdrop = styled.div`
   position: fixed;
   inset: 0;
-  z-index: ${theme.z.dialogTop};
+  z-index: 80;
   display: grid;
   place-items: center;
   padding: ${theme.space.md};

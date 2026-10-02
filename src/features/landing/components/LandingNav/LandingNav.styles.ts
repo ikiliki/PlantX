@@ -111,23 +111,6 @@ export const LangBtn = styled.button<{ $on: boolean; $solid: boolean }>`
     $on ? ($solid ? theme.colors.creamCard : theme.colors.forest) : 'inherit'};
 `
 
-export const Login = styled(Link)`
-  display: none;
-  font-size: 14px;
-  font-weight: 600;
-  color: inherit;
-  padding: 8px 6px;
-
-  &:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  @media (min-width: ${theme.breakpoints.sm}) {
-    display: inline-flex;
-  }
-`
-
 export const Enter = styled(Link)`
   ${pressable}
   display: inline-flex;

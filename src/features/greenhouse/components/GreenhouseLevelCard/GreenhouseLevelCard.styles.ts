@@ -42,13 +42,38 @@ export const Root = styled.aside<{ $celebrate: boolean }>`
 
 export const Inner = styled.div`
   display: grid;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'top'
+    'bar'
+    'tally'
+    'rules';
+  gap: 12px 14px;
+  align-items: center;
   min-width: 0;
 
   @container (min-width: 640px) {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto;
-    align-items: center;
+    grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
+    grid-template-areas:
+      'top side'
+      'bar side'
+      'rules rules';
     column-gap: 28px;
+    row-gap: 8px;
+  }
+`
+
+/** On desktop the counts sit to the right of the level block. */
+export const Side = styled.div`
+  display: contents;
+
+  @container (min-width: 640px) {
+    display: flex;
+    grid-area: side;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 18px;
+    padding-inline-start: 48px;
   }
 `
 
@@ -58,24 +83,18 @@ export const Top = styled.div`
   align-items: center;
   gap: 14px;
   min-width: 0;
+  grid-area: top;
 `
 
 export const Progress = styled.div`
   min-width: 0;
+  grid-area: bar;
 `
 
 export const TopCopy = styled.div`
   display: grid;
   gap: 2px;
   min-width: 0;
-`
-
-export const Label = styled.span`
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: ${theme.colors.moss};
 `
 
 export const Rank = styled.strong`
@@ -88,6 +107,9 @@ export const Rank = styled.strong`
 `
 
 export const Xp = styled.span`
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   font-size: 13px;
   font-weight: 600;
   color: ${theme.colors.muted};
@@ -139,6 +161,12 @@ export const TallyRow = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  grid-area: tally;
+
+  @container (min-width: 640px) {
+    align-self: center;
+    justify-self: end;
+  }
 `
 
 export const Tally = styled.span<{ $tone: 'plant' | 'care' }>`
@@ -153,29 +181,24 @@ export const Tally = styled.span<{ $tone: 'plant' | 'care' }>`
   color: ${({ $tone }) => ($tone === 'plant' ? theme.colors.forest : theme.colors.info)};
 `
 
-/** Small "?" in the top row; opens the rules under the counts. */
+/** "?" at the end of the level line, same size and gray as that line. Padding only grows the tap area. */
 export const How = styled.button<{ $on: boolean }>`
   ${pressable}
   flex: none;
-  align-self: flex-start;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  margin-inline-start: auto;
-  padding: 0;
-  border: 1px solid ${({ $on }) => ($on ? theme.colors.forest : theme.colors.border)};
-  border-radius: 50%;
-  background: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.creamCard)};
-  color: ${({ $on }) => ($on ? theme.colors.cream : theme.colors.forest)};
+  margin: -8px -10px -8px -2px;
+  padding: 8px 10px 8px 2px;
+  border: 0;
+  background: none;
+  color: ${({ $on }) => ($on ? theme.colors.ink : theme.colors.muted)};
   font: inherit;
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
   cursor: pointer;
 `
 
 export const HowList = styled.ul`
-  grid-column: 1 / -1;
+  grid-area: rules;
   display: grid;
   gap: 4px;
   margin: 0;

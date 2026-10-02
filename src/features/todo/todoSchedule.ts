@@ -45,7 +45,22 @@ export function isFirstWaterTodo(todo: Todo, todos: Todo[]) {
   )
 }
 
-/** First watering anytime; scheduled tasks only on or after their due day (not early). */
+/**
+ * Days a care task may be logged on: today, and back through one category gap.
+ * Water’s next task is a week later, so only the past week counts.
+ * A photo’s next task is a month later, so only the past month counts.
+ */
+export function careFillWindow(subcategory: TodoSubcategory, now = todayIso()) {
+  const min = subcategory === 'photo' ? addMonths(now, -PHOTO_GAP_MONTHS) : addDays(now, -WATER_GAP_DAYS)
+  return { min, max: now }
+}
+
+export function inCareFillWindow(day: string, subcategory: TodoSubcategory, now = todayIso()) {
+  const { min, max } = careFillWindow(subcategory, now)
+  return day >= min && day <= max
+}
+
+/** First watering anytime inside the window; scheduled tasks only on or after their due day (not early). */
 export function canFillTodo(todo: Todo, todos: Todo[], now = todayIso()) {
   if (!isOpenTodo(todo)) return false
   if (isFirstWaterTodo(todo, todos)) return true

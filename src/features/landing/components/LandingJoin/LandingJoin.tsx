@@ -20,14 +20,14 @@ export function LandingJoin() {
         </div>
         <Card>
           {signedIn ? (
-            <Open to="/home">{t.landing.openApp}</Open>
+            <Open to="/greenhouse">{t.landing.openApp}</Open>
           ) : (
             <AuthPanel
               reason="buy"
               start="register"
               dialog
               titleId="landing-join-title"
-              onSuccess={() => navigate('/home')}
+              onSuccess={() => navigate('/greenhouse')}
             />
           )}
         </Card>

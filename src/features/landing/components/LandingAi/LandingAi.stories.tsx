@@ -20,3 +20,9 @@ export default {
 }
 
 export const Steps = () => <LandingAi />
+
+export const Phone = () => (
+  <div style={{ width: 390, containerType: 'inline-size', containerName: 'landing' }}>
+    <LandingAi />
+  </div>
+)

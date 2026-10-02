@@ -192,10 +192,9 @@ export const AvatarBubble = styled.button<{ $open?: boolean }>`
   padding: 0;
   border: 0;
   border-radius: ${theme.radii.pill};
-  background: ${theme.colors.chipGreen};
+  background: transparent;
   color: ${theme.colors.forest};
-  font-size: 12px;
-  font-weight: 700;
+  overflow: hidden;
   cursor: pointer;
   text-decoration: none;
   box-shadow: ${({ $open }) => ($open ? `0 0 0 3px ${theme.colors.chipGreen}` : 'none')};

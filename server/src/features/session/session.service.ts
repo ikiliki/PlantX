@@ -1,3 +1,9 @@
+import { greenhouseLevel } from '../../../../src/features/greenhouse/greenhouseLevel.ts'
+import {
+  avatarUnlocked,
+  cleanNickname,
+  isAvatarIconId,
+} from '../../../../src/features/profile/avatarIcons.ts'
 import type { User } from '../../../../src/mock/types.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
@@ -91,6 +97,31 @@ export const sessionService = {
     }
     if (!isActive(user)) throw Errors.declined('Account disabled')
     if (profile.name && !user.name) user.name = profile.name
+    await store.users.saveAll(users)
+    return user
+  },
+
+  /** The signed-in account only. The nickname is what others see. The icon must already be unlocked. */
+  async updateAccount(userId: string, input: { nickname?: string; avatarIcon?: string }) {
+    const store = getStore()
+    const users = await store.users.list()
+    const user = users.find((item) => item.id === userId && item.role !== 'guest')
+    if (!user || !isActive(user)) throw Errors.auth()
+
+    if (input.nickname !== undefined) {
+      const nickname = cleanNickname(input.nickname)
+      if (nickname) user.nickname = nickname
+      else delete user.nickname
+    }
+
+    if (input.avatarIcon !== undefined) {
+      if (!isAvatarIconId(input.avatarIcon)) throw Errors.invalid('Unknown icon')
+      const [plants, todos] = await Promise.all([store.plants.list(), store.todos.list()])
+      const level = greenhouseLevel(userId, plants, todos).level
+      if (!avatarUnlocked(input.avatarIcon, level)) throw Errors.forbidden('Icon is still locked')
+      user.avatarIcon = input.avatarIcon
+    }
+
     await store.users.saveAll(users)
     return user
   },

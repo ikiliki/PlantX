@@ -187,11 +187,15 @@ export function createSupabaseStore(): PlantxStore {
       const businessName = optional(row, 'business_name')
       const businessNameHe = optional(row, 'business_name_he')
       const email = optional(row, 'email')
+      const nickname = optional(row, 'nickname')
+      const avatarIcon = optional(row, 'avatar_icon')
       const lat = optionalNum(row, 'lat')
       const lng = optionalNum(row, 'lng')
       if (businessName) user.businessName = businessName
       if (businessNameHe) user.businessNameHe = businessNameHe
       if (email) user.email = email
+      if (nickname) user.nickname = nickname
+      if (avatarIcon) user.avatarIcon = avatarIcon
       if (lat != null) user.lat = lat
       if (lng != null) user.lng = lng
       return user
@@ -215,9 +219,10 @@ export function createSupabaseStore(): PlantxStore {
         `insert into users (
           id, position, name, name_he, role, business_name, business_name_he,
           region, region_he, lat, lng, bio, bio_he, rating, completed_orders,
-          verification_rate, cancellations, avatar_color, email, account_status, preapproved
+          verification_rate, cancellations, avatar_color, email, account_status, preapproved,
+          nickname, avatar_icon
         ) values (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23
         )
         on conflict (id) do update set
           position = excluded.position,
@@ -239,7 +244,9 @@ export function createSupabaseStore(): PlantxStore {
           avatar_color = excluded.avatar_color,
           email = excluded.email,
           account_status = excluded.account_status,
-          preapproved = excluded.preapproved`,
+          preapproved = excluded.preapproved,
+          nickname = excluded.nickname,
+          avatar_icon = excluded.avatar_icon`,
         [
           user.id,
           position,
@@ -262,6 +269,8 @@ export function createSupabaseStore(): PlantxStore {
           user.email?.trim() ? user.email.trim() : null,
           user.accountStatus ?? 'active',
           Boolean(user.preapproved),
+          user.nickname?.trim() ? user.nickname.trim() : null,
+          user.avatarIcon?.trim() ? user.avatarIcon.trim() : 'seed',
         ],
       )
     }

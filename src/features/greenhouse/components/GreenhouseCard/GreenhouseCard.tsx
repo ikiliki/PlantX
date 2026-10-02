@@ -3,6 +3,7 @@ import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Icon } from '../../../../components/Icon/Icon'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { publicGrowerName } from '../../../profile/avatarIcons'
 import type { Plant, User } from '../../../../mock/types'
 import type { GreenhouseLevel } from '../../greenhouseLevel'
 import { LevelBadge } from '../LevelBadge/LevelBadge'
@@ -46,8 +47,10 @@ export function GreenhouseCard({
   /** Greenhouse level: the avatar sits on the level ring, and the rank shows under the name. */
   level?: GreenhouseLevel
 }) {
-  const { t, tr } = useI18n()
-  const name = user.businessName ? tr(user.businessName, user.businessNameHe ?? user.businessName) : tr(user.name, user.nameHe)
+  const { t, tr, locale } = useI18n()
+  const name = user.businessName
+    ? tr(user.businessName, user.businessNameHe ?? user.businessName)
+    : publicGrowerName(user, locale === 'he')
   const region = tr(user.region, user.regionHe)
   const meta = detail ?? `${region} · ${(plantCount === 1 ? t.greenhouse.directoryPlantsOne : t.greenhouse.directoryPlants.replace('{n}', String(plantCount)))}`
   const bio = tr(user.bio, user.bioHe)
@@ -61,11 +64,11 @@ export function GreenhouseCard({
         <LevelBadge
           level={level.level}
           progress={level.progress}
-          owner={{ name: user.name, color: user.avatarColor }}
+          owner={{ name, color: user.avatarColor, icon: user.avatarIcon }}
           size="sm"
         />
       ) : (
-        <Avatar name={user.name} color={user.avatarColor} size={compact ? 28 : 36} />
+        <Avatar name={name} color={user.avatarColor} icon={user.avatarIcon} size={compact ? 28 : 36} />
       )}
       <Copy $stamp={verified && !compact}>
         <NameRow>

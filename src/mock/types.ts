@@ -65,7 +65,11 @@ export interface User {
   specialties: string[]
   specialtiesHe: string[]
   avatarColor: string
+  /** Public face. Missing means the seed. */
+  avatarIcon?: string
   email?: string
+  /** Public name. Replaces the account name wherever other people see this grower. */
+  nickname?: string
   friendIds: string[]
   /** Absent means active. Disabled accounts cannot sign in. */
   accountStatus?: 'active' | 'disabled'

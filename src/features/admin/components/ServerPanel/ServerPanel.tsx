@@ -122,7 +122,7 @@ function UserNameLink({ user, onOpen }: { user: User; onOpen: (userId: string) =
       {pos &&
         createPortal(
           <UserHover data-user-card style={{ top: pos.top, left: pos.left }}>
-            <Avatar name={user.name} color={user.avatarColor} size={40} />
+            <Avatar name={user.name} color={user.avatarColor} icon={user.avatarIcon} size={40} />
             <div>
               <strong>{name}</strong>
               <span>
@@ -243,7 +243,7 @@ function UserPreview({
     >
       <PreviewCard>
         <PreviewIdentity>
-          <Avatar name={row.name} color={row.avatarColor} size={64} />
+          <Avatar name={row.name} color={row.avatarColor} icon={row.avatarIcon} size={64} />
           <PreviewName>
             <strong>{tr(row.name, row.nameHe)}</strong>
             <span>

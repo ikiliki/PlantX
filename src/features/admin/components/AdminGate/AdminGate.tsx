@@ -14,6 +14,6 @@ export function AdminGate() {
 
   if (liveStatus === 'loading') return <LoaderShell fill />
   if (isOperator(currentUser)) return <AppShell />
-  if (currentUser) return <Navigate to="/home" replace />
+  if (currentUser) return <Navigate to="/greenhouse" replace />
   return <Navigate to={`/login?next=${encodeURIComponent(pathname)}`} replace />
 }

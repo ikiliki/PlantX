@@ -7,10 +7,14 @@ import { useGreenhouseLevels } from '../../useGreenhouseLevels'
 import { GreenhouseCard, greenhouseHref, greenhouseShelf } from '../GreenhouseCard/GreenhouseCard'
 import { Empty, List, Root, Search } from './GreenhouseDirectory.styles'
 
-/** Anyone with a greenhouse. The operator is listed once they grow something too. */
-function isGrower(user: User, plants: Plant[]) {
+/**
+ * A public greenhouse. Every grower is listed for everyone.
+ * The admin is left out of that list, and sees every greenhouse including his own.
+ */
+export function isPublicGreenhouse(user: User, viewer: User | null) {
   if (user.role === 'guest') return false
-  if (user.role === 'admin') return plants.some((plant) => plant.ownerId === user.id)
+  if ((user.accountStatus ?? 'active') === 'disabled') return false
+  if (user.role === 'admin') return viewer?.role === 'admin'
   return true
 }
 
@@ -20,7 +24,14 @@ function livingCount(plants: Plant[], ownerId: string) {
 
 function matches(user: User, needle: string) {
   if (!needle) return true
-  const blob = [user.name, user.nameHe, user.businessName, user.businessNameHe, user.bio, user.bioHe]
+  const blob = [
+    user.nickname?.trim() ? user.nickname : user.name,
+    user.nickname?.trim() ? '' : user.nameHe,
+    user.businessName,
+    user.businessNameHe,
+    user.bio,
+    user.bioHe,
+  ]
     .filter(Boolean)
     .join(' ')
     .toLowerCase()
@@ -33,7 +44,10 @@ export function GreenhouseDirectory() {
   const [query, setQuery] = useState('')
 
   const levels = useGreenhouseLevels()
-  const growers = useMemo(() => db.users.filter((user) => isGrower(user, db.plants)), [db.users, db.plants])
+  const growers = useMemo(
+    () => db.users.filter((user) => isPublicGreenhouse(user, currentUser)),
+    [db.users, currentUser],
+  )
   // Highest level first; XP breaks ties inside a level, then the name keeps the order stable.
   const byLevel = (a: User, b: User) =>
     (levels[b.id]?.level ?? 0) - (levels[a.id]?.level ?? 0) ||

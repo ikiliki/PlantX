@@ -17,7 +17,7 @@ Every surface declares what a signed-out visitor gets. Personas own their mock s
 
 - Adding a route or a primary screen means adding an `AppSurface` and a `GuestAccess` (`browse`, `prompt`, or `hidden`). `SURFACE_GUEST` is a `Record`, so a missing entry fails typecheck.
 - Render both branches with `forAudience`. The `guest` branch is required. Do not reuse the signed-in empty state as the guest view.
-- `browse`: the public screen. No personal greenhouse, sell, grade, or admin action.
+- `browse`: the public screen. Guests can open the greenhouse shelf and fill Add Plant. Scan and save open the sign-in popup and do not call the server. Sell, grade, and admin stay signed-in.
 - `prompt`: replace the screen with `GuestView` and a sign-in action.
 - `hidden`: not available until signed in (admin).
 
@@ -34,7 +34,7 @@ Five greenhouse accounts, plus admin. Guest is signed out (`currentUserId` null)
 
 | Persona | Id | World |
 | --- | --- | --- |
-| Guest | signed out | Browse market, news, and the catalog. Greenhouse and rank prompt sign-in. |
+| Guest | signed out | Greenhouse is the default tab: an empty shelf and Add Plant. Scan and save ask them to sign in. Rank still prompts sign-in. Market, news, and the catalog stay open. |
 | New grower | `u-ari` | Empty account. No plants, nothing in the market. |
 | Unverified | `u-noa` | Owns plants. `publishRequirement` is `verified`, so listing is blocked. |
 | Rich | `u-maya`, `u-daniel`, `u-gal` | Their own plants and the full market. |

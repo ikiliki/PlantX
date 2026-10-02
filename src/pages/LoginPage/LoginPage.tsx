@@ -8,7 +8,7 @@ import { Note, Popup, Stack } from './LoginPage.styles'
 
 /** Only same-site paths, so a crafted link cannot send a signed-in user elsewhere. */
 function safeNext(next: string | null) {
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/home'
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/greenhouse'
 }
 
 /** Log in and sign up (`?mode=signup`). The product header is absent, including when the API is down. */

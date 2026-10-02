@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
 import { catalogSpecies } from '../../features/species/catalogSpecies'
 import { groupByRarity, wikiRarityTitle } from '../../features/species/wikiGroups'
 import { useStore } from '../../mock/store'
-import { isOperator } from '../../theme/operator'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
+import { Avatar } from '../../components/Avatar/Avatar'
 import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/ActivityBell'
+import { publicGrowerName } from '../../features/profile/avatarIcons'
+import { AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { NavMenu } from './NavMenu/NavMenu'
 import {
@@ -20,33 +22,19 @@ import {
   Lang,
   LangBtn,
   LoginButton,
-  Menu,
   MobileOnly,
-  MenuButton,
-  MenuItem,
-  MenuLang,
   NavItem,
   NavItems,
 } from './TopBar.styles'
 
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-}
-
 export function TopBar() {
   const { t, locale } = useI18n()
-  const { currentUser, db, signedIn, loginAs, setLocale } = useStore()
+  const { currentUser, db, signedIn, setLocale } = useStore()
   const tasks = useTaskTabCount()
   const loc = useLocation()
-  const [open, setOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [openNav, setOpenNav] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
-  const accountRef = useRef<HTMLDivElement>(null)
   const chooseLocale = canChooseLocale()
 
   useEffect(() => {
@@ -83,26 +71,9 @@ export function TopBar() {
     loc.pathname === to || (to !== '/' && loc.pathname.startsWith(to))
 
   useEffect(() => {
-    setOpen(false)
+    setAccountOpen(false)
     setOpenNav(null)
   }, [loc.pathname, loc.search])
-
-  useEffect(() => {
-    if (!open) return
-    setOpenNav(null)
-    const onPointer = (event: PointerEvent) => {
-      if (!accountRef.current?.contains(event.target as Node)) setOpen(false)
-    }
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('pointerdown', onPointer)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('pointerdown', onPointer)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
 
   const langToggle = (
     <Lang role="group" aria-label={t.nav.language}>
@@ -127,7 +98,7 @@ export function TopBar() {
 
   return (
     <Bar $scrolled={scrolled}>
-      <Brand to="/home">
+      <Brand to="/greenhouse">
         <BrandMark src="/icons/brand-mark.svg" alt="" width={30} height={30} />
         {t.appName}
       </Brand>
@@ -166,25 +137,9 @@ export function TopBar() {
           />
         )}
         {show('todo') && (
-          <NavMenu
-            label={tasks.today > 0 ? `${t.nav.todo} (${tasks.today})` : t.nav.todo}
-            to="/tasks"
-            open={openNav === 'todo'}
-            onOpen={() => setOpenNav('todo')}
-            onClose={() => setOpenNav((current) => (current === 'todo' ? null : current))}
-            items={[
-              {
-                to: '/tasks',
-                label: `${t.todo.navToday} (${tasks.today})`,
-                active: (here) => here.pathname.startsWith('/tasks') && new URLSearchParams(here.search).get('view') !== 'planned',
-              },
-              {
-                to: '/tasks?view=planned',
-                label: `${t.todo.navPlanned} (${tasks.planned})`,
-                active: (here) => here.pathname.startsWith('/tasks') && new URLSearchParams(here.search).get('view') === 'planned',
-              },
-            ]}
-          />
+          <NavItem to="/tasks" $active={isActive('/tasks')} aria-current={isActive('/tasks') ? 'page' : undefined}>
+            {tasks.today > 0 ? `${t.nav.todo} (${tasks.today})` : t.nav.todo}
+          </NavItem>
         )}
         {show('rank') && (
           <NavItem to="/rank" $active={isActive('/rank')} aria-current={isActive('/rank') ? 'page' : undefined}>
@@ -220,47 +175,24 @@ export function TopBar() {
             <MobileOnly>
               <ActivityBell />
             </MobileOnly>
-            <Account ref={accountRef}>
+            <Account>
               <AvatarBubble
                 type="button"
-                $open={open}
-                aria-label={locale === 'he' ? currentUser.nameHe : currentUser.name}
-                aria-expanded={open}
-                aria-haspopup="menu"
-                onClick={() => setOpen((value) => !value)}
+                $open={accountOpen}
+                aria-label={publicGrowerName(currentUser, locale === 'he')}
+                aria-expanded={accountOpen}
+                aria-haspopup="dialog"
+                onClick={() => setAccountOpen((value) => !value)}
               >
-                {initials(locale === 'he' ? currentUser.nameHe : currentUser.name)}
+                <Avatar
+                  name={publicGrowerName(currentUser, locale === 'he')}
+                  color={currentUser.avatarColor}
+                  icon={currentUser.avatarIcon}
+                  size={38}
+                />
               </AvatarBubble>
-              {open && (
-                <Menu role="menu">
-                  <MenuItem to="/profile" role="menuitem" $active={isActive('/profile')} onClick={() => setOpen(false)}>
-                    {t.nav.profile}
-                  </MenuItem>
-                  {isOperator(currentUser) && (
-                    <MenuItem to="/admin/server" role="menuitem" $active={isActive('/admin')} onClick={() => setOpen(false)}>
-                      {t.admin.title}
-                    </MenuItem>
-                  )}
-                  {chooseLocale && (
-                    <MenuLang>
-                      <span>{t.nav.language}</span>
-                      {langToggle}
-                    </MenuLang>
-                  )}
-                  <MenuButton
-                    type="button"
-                    role="menuitem"
-                    $split
-                    onClick={() => {
-                      setOpen(false)
-                      loginAs(null)
-                    }}
-                  >
-                    {t.profile.signOut}
-                  </MenuButton>
-                </Menu>
-              )}
             </Account>
+            {accountOpen && <AccountDialog onClose={() => setAccountOpen(false)} />}
           </>
         ) : (
           <>

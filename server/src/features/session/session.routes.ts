@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { Errors } from '../../lib/errors.ts'
 import { googleAuthEnabled, googleClientId, verifyGoogleIdToken } from '../../lib/googleAuth.ts'
-import { setSession } from '../../lib/session.ts'
+import { requireUser, setSession } from '../../lib/session.ts'
 import { liveService } from '../live/live.service.ts'
 import { usersService } from '../users/users.service.ts'
 import { sessionService } from './session.service.ts'
@@ -29,6 +29,17 @@ sessionRoutes.post('/', async (c) => {
 
   setSession(c, user.id)
   return c.json(await liveService.payload(user.id))
+})
+
+/** Owner-only. The nickname is the public name. The icon has to be unlocked for this greenhouse. */
+sessionRoutes.patch('/account', async (c) => {
+  const user = await requireUser(c)
+  const body = (await c.req.json().catch(() => ({}))) as { nickname?: unknown; avatarIcon?: unknown }
+  const next = await sessionService.updateAccount(user.id, {
+    nickname: typeof body.nickname === 'string' ? body.nickname : undefined,
+    avatarIcon: typeof body.avatarIcon === 'string' ? body.avatarIcon : undefined,
+  })
+  return c.json({ user: next })
 })
 
 sessionRoutes.post('/google', async (c) => {

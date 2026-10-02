@@ -1,6 +1,7 @@
 import { OTHER_CATEGORY_ID } from '../../plantClass'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
 import { HealthChip } from '../../../../components/HealthChip/HealthChip'
@@ -17,6 +18,7 @@ import {
 } from '../../../catalog/catalog'
 import { speciesHref } from '../../../species/components/GuideLink/GuideLink'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { publicGrowerName } from '../../../profile/avatarIcons'
 import { useStore } from '../../../../mock/store'
 import { isPlacementEnabled } from '../../../../theme/release'
 import type { StageBand, TodoSubcategory } from '../../../../mock/types'
@@ -42,12 +44,10 @@ import {
   AsideStatButton,
   GradeRow,
   IdentityHead,
-  IdBadgeSlot,
   Main,
   Missing,
   Muted,
   NameBlock,
-  OwnerAvatar,
   OwnerLink,
   OwnerMeta,
   OwnerName,
@@ -80,15 +80,6 @@ type TabId = 'grading' | 'todo' | 'activity' | 'market'
 /** Drop trailing ×N (or xN) quantity suffixes baked into listing titles. */
 function titleWithoutQuantity(text: string) {
   return text.replace(/\s*[×x]\s*[\d,.]+$/iu, '').trim()
-}
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0] ?? '')
-    .join('')
-    .toUpperCase()
 }
 
 function stageName(stage: StageBand | undefined, labels: { mature: string; established: string; rooted: string; cutting: string }) {
@@ -244,7 +235,7 @@ export function PlantPassport({
 
   const photos = plant.photos.filter(Boolean)
   const safeIndex = photos.length === 0 ? 0 : Math.min(photoIndex, photos.length - 1)
-  const ownerName = owner ? (locale === 'he' ? owner.nameHe : owner.name) : ''
+  const ownerName = owner ? publicGrowerName(owner, locale === 'he') : ''
 
   const title = titleWithoutQuantity(tr(plant.title, plant.titleHe))
 
@@ -307,9 +298,6 @@ export function PlantPassport({
             <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
               {title}
             </Title>
-            <IdBadgeSlot>
-              <IdentifyBadge identification={plant.identification} notInCatalog={plant.speciesId === OTHER_CATEGORY_ID} />
-            </IdBadgeSlot>
           </NameBlock>
         </IdentityHead>
 
@@ -383,7 +371,7 @@ export function PlantPassport({
           <>
             <AsideLabel>{t.passport.owner}</AsideLabel>
             <OwnerLink to={`/sellers/${owner.id}`} aria-label={`${t.passport.owner}: ${ownerName}`}>
-              <OwnerAvatar aria-hidden>{initials(ownerName)}</OwnerAvatar>
+              <Avatar name={ownerName} color={owner.avatarColor} icon={owner.avatarIcon} size={38} />
               <OwnerMeta>
                 <OwnerName>{ownerName}</OwnerName>
                 <Rating>★ {owner.rating}</Rating>

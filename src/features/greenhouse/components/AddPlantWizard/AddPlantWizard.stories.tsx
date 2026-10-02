@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AuthProvider } from '../../../auth/AuthProvider'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { StoreProvider } from '../../../../mock/store'
 import { AddPlantWizard } from './AddPlantWizard'
@@ -6,9 +7,11 @@ import { AddPlantWizard } from './AddPlantWizard'
 const withApp = (Story: () => ReactNode) => (
   <StoreProvider source="example">
     <I18nProvider>
-      <div style={{ padding: 24, maxWidth: 720, background: '#F4F1E8' }}>
-        <Story />
-      </div>
+      <AuthProvider>
+        <div style={{ padding: 24, maxWidth: 720, background: '#F4F1E8' }}>
+          <Story />
+        </div>
+      </AuthProvider>
     </I18nProvider>
   </StoreProvider>
 )

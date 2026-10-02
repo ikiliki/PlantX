@@ -4,6 +4,7 @@ import { ChoiceChips } from '../../../../components/ChoiceChips/ChoiceChips'
 import { Field, Input, TextArea } from '../../../../components/Form/Form'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { Stepper } from '../../../../components/Stepper/Stepper'
+import { useAuth } from '../../../auth/AuthProvider'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { createCatalog } from '../../../../mock/catalog'
 import { ownerGreenhousePlace } from '../../../../mock/locations'
@@ -52,6 +53,7 @@ import {
   Footer,
   FooterHint,
   PhotoActions,
+  PhotoNote,
   Leaf,
   Review,
   ReviewBody,
@@ -134,6 +136,7 @@ const PHONE_MQ = `(max-width: ${theme.breakpoints.sm})`
 
 export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: string) => void; onClose?: () => void }) {
   const { db, currentUser, signedIn, addGreenhousePlant } = useStore()
+  const { openAuth } = useAuth()
   const { t, locale } = useI18n()
   const catalog = db.catalog ?? createCatalog()
   const topRef = useRef<HTMLDivElement>(null)
@@ -289,6 +292,10 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const place = ownerGreenhousePlace(signedIn ? currentUser : null)
 
   const save = () => {
+    if (!signedIn) {
+      openAuth('buy')
+      return
+    }
     if (!matched || !description.trim()) {
       setSaveFailed(true)
       return
@@ -464,16 +471,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const body = (() => {
     switch (stepId) {
       case 'photo':
-        return (
-          <>
-            <StepHead>
-              <StepTitle>{t.addPlant.photoTitle}</StepTitle>
-              <StepLead>
-                {ADD_PLANT_UPLOAD_LIMIT > 1 ? t.addPlant.photoLead : t.addPlant.photoLeadOne}
-              </StepLead>
-            </StepHead>
-          </>
-        )
+        return null
       case 'identity': {
         const searching = Boolean(categoryQuery.trim())
         const categoryOptions = [
@@ -840,6 +838,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             analyze={withAi}
             showAnswer={false}
           />
+          <PhotoNote>
+            {ADD_PLANT_UPLOAD_LIMIT > 1 ? t.addPlant.photoLead : t.addPlant.photoLeadOne}
+          </PhotoNote>
         </div>
       </Scroll>
       <Footer $static>
@@ -875,7 +876,13 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               type="button"
               variant="info"
               disabled={scans.length === 0 || scanning}
-              onClick={() => setWithAi(true)}
+              onClick={() => {
+                if (!signedIn) {
+                  openAuth('buy')
+                  return
+                }
+                setWithAi(true)
+              }}
             >
               {scanning ? t.addPlant.aiWorking : t.addPlant.continueWithAi}
             </Button>

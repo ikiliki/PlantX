@@ -1,4 +1,5 @@
 import { GreenhouseCard, greenhouseHref, greenhouseShelf } from '../../../greenhouse/components/GreenhouseCard/GreenhouseCard'
+import { isPublicGreenhouse } from '../../../greenhouse/components/GreenhouseDirectory/GreenhouseDirectory'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { Plant } from '../../../../mock/types'
@@ -23,7 +24,7 @@ export function TopGreenhouses() {
       {rows.length === 0 && <Empty>{t.feed.topEmpty}</Empty>}
       <List>
         {rows.map((row) => {
-          const user = db.users.find((item) => item.id === row.userId && item.role !== 'guest')
+          const user = db.users.find((item) => item.id === row.userId && isPublicGreenhouse(item, currentUser))
           if (!user) return null
           return (
             <GreenhouseCard

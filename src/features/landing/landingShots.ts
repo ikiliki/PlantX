@@ -8,6 +8,7 @@ export const landingShots = {
   greenhouseDesk: '/landing/greenhouse-desk.jpg',
   greenhousePhone: '/landing/greenhouse-phone.jpg',
   passportDesk: '/landing/passport-desk.jpg',
+  passportPhone: '/landing/passport-phone.jpg',
   tasksDesk: '/landing/tasks-desk.jpg',
   tasksPhone: '/landing/tasks-phone.jpg',
   wikiDesk: '/landing/wiki-desk.jpg',

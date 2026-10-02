@@ -1,17 +1,23 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { FilterChips } from '../../../../components/FilterChips/FilterChips'
+import { Icon } from '../../../../components/Icon/Icon'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { AddPlantCard } from '../../../greenhouse/components/AddPlantCard/AddPlantCard'
 import { PassportDialog } from '../../../greenhouse/components/PassportDialog/PassportDialog'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { Plant, Todo, TodoSubcategory } from '../../../../mock/types'
-import { canFillTodo, isOpenTodo, todayIso } from '../../todoSchedule'
+import { canFillTodo, inCareFillWindow, isOpenTodo, todayIso } from '../../todoSchedule'
 import { TodoCareCard } from '../TodoCareCard/TodoCareCard'
+import { TodoDayPicker } from '../TodoDayPicker/TodoDayPicker'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
 import {
   Board,
   Cell,
+  ChipRow,
   Day,
+  KindRow,
+  DaysChip,
   DayList,
   DayNum,
   DayPanel,
@@ -84,15 +90,6 @@ function DayMarks({ items, plants }: { items: Todo[]; plants: Plant[] }) {
   )
 }
 
-export type TodoWhen = 'today' | 'planned'
-
-/** Overdue tasks belong to both views, so nothing past due is ever hidden. */
-function matchesWhen(todo: Todo, when: TodoWhen, today: string) {
-  if (todo.dueOn != null && todo.dueOn < today) return true
-  if (when === 'today') return todo.dueOn == null || todo.dueOn === today
-  return todo.dueOn != null && todo.dueOn > today
-}
-
 export function TodoCalendar({
   year,
   month,
@@ -101,8 +98,6 @@ export function TodoCalendar({
   focusTodoId,
   firstPlant = false,
   showFilters = true,
-  when = 'today',
-  onWhen,
   onAddFirstPlant,
   onMonthChange,
   onComplete,
@@ -118,18 +113,13 @@ export function TodoCalendar({
   firstPlant?: boolean
   /** Hide filters while the plant list is still loading. */
   showFilters?: boolean
-  /**
-   * Today: due today or undated. Planned: due after today. Overdue tasks show under both.
-   * Switching selects today, or every planned day.
-   */
-  when?: TodoWhen
-  onWhen?: (when: TodoWhen) => void
   onAddFirstPlant?: () => void
   onMonthChange: (year: number, month: number) => void
   onComplete: (todo: Todo) => void
   onPickFirstWater: (todo: Todo, day: string) => void
 }) {
   const { t, tr, locale } = useI18n()
+  const mobile = useMediaQuery('(max-width: 899px)')
   const open = todos.filter(isOpenTodo)
   const living = plants.filter((plant) => plant.status === 'owned' || plant.status === 'listed')
   const kinds = useMemo(() => {
@@ -139,9 +129,16 @@ export function TodoCalendar({
 
   const [plantFilter, setPlantFilter] = useState<string | 'all'>('all')
   const [kindFilter, setKindFilter] = useState<TodoSubcategory | 'all'>('all')
-  const [selectedDays, setSelectedDays] = useState<string[]>(() => [todayIso()])
+  const [selectedDays, setSelectedDays] = useState<string[]>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 899px)').matches ? [] : [todayIso()],
+  )
+  const [appliedDays, setAppliedDays] = useState<string[]>([])
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [drop, setDrop] = useState<{ day: string; kind: TodoSubcategory; key: number } | undefined>()
   const [passport, setPassport] = useState<{ plantId: string; careMark: TodoSubcategory } | undefined>()
+  const [fill, setFill] = useState<Todo | null>(null)
+  const [fillYear, setFillYear] = useState(() => new Date().getUTCFullYear())
+  const [fillMonth, setFillMonth] = useState(() => new Date().getUTCMonth())
   const [openDay, setOpenDay] = useState<string | null>(null)
   const dropTimer = useRef<number | undefined>(undefined)
   const focusedRef = useRef<string | undefined>(undefined)
@@ -162,37 +159,21 @@ export function TodoCalendar({
       }),
     [open, plantFilter, kindFilter],
   )
-  const whenCounts = useMemo(
-    () => ({
-      today: scoped.filter((todo) => matchesWhen(todo, 'today', today)).length,
-      planned: scoped.filter((todo) => matchesWhen(todo, 'planned', today)).length,
-    }),
-    [scoped, today],
-  )
-  const filtered = useMemo(() => scoped.filter((todo) => matchesWhen(todo, when, today)), [scoped, when, today])
-
-  // Switching Today / Planned selects today, or every planned day.
-  useEffect(() => {
-    if (focusTodoId) return
-    if (when === 'today') {
-      setSelectedDays([today])
-      return
-    }
-    const days = [...new Set(filtered.filter((todo) => todo.dueOn && todo.dueOn > today).map((todo) => todo.dueOn as string))].sort()
-    setSelectedDays(days.length ? days : [today])
-    // Only on a switch, not on every task change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [when])
+  const filtered = scoped
 
   useEffect(() => {
     if (!focusTodoId || focusedRef.current === focusTodoId) return
     const todo = todos.find((row) => row.id === focusTodoId)
     if (!todo) return
     focusedRef.current = focusTodoId
-    setPlantFilter(todo.plantId)
     const day = todo.dueOn ?? todayIso()
+    if (mobile) {
+      setAppliedDays([day])
+      return
+    }
+    setPlantFilter(todo.plantId)
     setSelectedDays([day])
-  }, [focusTodoId, todos])
+  }, [focusTodoId, todos, mobile])
 
   useEffect(() => {
     return () => {
@@ -297,20 +278,49 @@ export function TodoCalendar({
           })
         : t.todo.selectedDays.replace('{n}', String(selectedDays.length))
 
+  const mobileTodos = filtered
+    .filter((todo) => appliedDays.length === 0 || appliedDays.includes(todo.dueOn ?? today))
+    .sort((a, b) => (a.dueOn ?? '').localeCompare(b.dueOn ?? '') || a.subcategory.localeCompare(b.subcategory))
+  const shownTodos = mobile ? mobileTodos : selectedTodos
+  const taskMarks = new Set(open.map((todo) => todo.dueOn ?? today))
+  const chipLabel =
+    appliedDays.length === 0
+      ? t.todo.calendarChip
+      : appliedDays.length === 1
+        ? new Date(`${appliedDays[0]}T12:00:00.000Z`).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'UTC',
+          })
+        : t.todo.selectedDays.replace('{n}', String(appliedDays.length))
+
   function toggleDay(day: string) {
     setSelectedDays((prev) => (prev.includes(day) ? prev.filter((item) => item !== day) : [...prev, day].sort()))
   }
 
   function runComplete(todo: Todo, completedOn?: string) {
-    if (!completedOn && !canFillTodo(todo, todos)) return
+    if (completedOn) {
+      if (!inCareFillWindow(completedOn, todo.subcategory) || !canFillTodo(todo, todos)) return
+    } else if (!canFillTodo(todo, todos)) return
+
+    const finish = () => {
+      if (completedOn) onPickFirstWater(todo, completedOn)
+      else onComplete(todo)
+      if (todo.subcategory !== 'water') setPassport({ plantId: todo.plantId, careMark: todo.subcategory })
+    }
+
+    if (mobile) {
+      finish()
+      return
+    }
+
     const day = todo.dueOn ?? completedOn ?? todayIso()
     setDrop({ day, kind: todo.subcategory, key: Date.now() })
     if (dropTimer.current) window.clearTimeout(dropTimer.current)
     dropTimer.current = window.setTimeout(() => {
       setDrop(undefined)
-      if (completedOn) onPickFirstWater(todo, completedOn)
-      else onComplete(todo)
-      setPassport({ plantId: todo.plantId, careMark: todo.subcategory })
+      finish()
     }, 760)
   }
 
@@ -321,19 +331,40 @@ export function TodoCalendar({
 
   return (
     <Root>
-      {/* Filters sit above the calendar card, as chips like the greenhouse. */}
       {!firstPlant && showFilters ? (
         <Toolbar>
-          <FilterChips
-            label={t.todo.filterWhen}
-            value={when}
-            onChange={(next) => onWhen?.(next)}
-            options={[
-              { id: 'today', label: t.todo.navToday, count: whenCounts.today, icon: 'drop' },
-              { id: 'planned', label: t.todo.navPlanned, count: whenCounts.planned, icon: 'chart' },
-            ]}
-          />
-          <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
+          {mobile ? (
+            <ChipRow>
+              <DaysChip
+                type="button"
+                $on={appliedDays.length > 0}
+                aria-pressed={appliedDays.length > 0}
+                aria-haspopup="dialog"
+                aria-expanded={pickerOpen}
+                onClick={() => setPickerOpen(true)}
+              >
+                <Icon name="calendar" size={14} />
+                {chipLabel}
+              </DaysChip>
+              <KindRow role="radiogroup" aria-label={t.todo.filterKinds}>
+                {kindOptions.map((option) => (
+                  <DaysChip
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    $on={kindFilter === option.id}
+                    aria-checked={kindFilter === option.id}
+                    onClick={() => setKindFilter(option.id)}
+                  >
+                    {'iconNode' in option ? option.iconNode : null}
+                    {option.label}
+                  </DaysChip>
+                ))}
+              </KindRow>
+            </ChipRow>
+          ) : (
+            <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
+          )}
           <FilterSelect
             aria-label={t.todo.filterPlants}
             value={plantFilter}
@@ -351,6 +382,8 @@ export function TodoCalendar({
           </FilterSelect>
         </Toolbar>
       ) : null}
+      {mobile && firstPlant ? <AddPlantCard hero onClick={() => onAddFirstPlant?.()} /> : null}
+      {mobile ? null : (
       <Board>
         {firstPlant ? (
           <AddPlantCard hero onClick={() => onAddFirstPlant?.()} />
@@ -455,17 +488,19 @@ export function TodoCalendar({
           })}
         </Grid>
       </Board>
+      )}
 
+      {mobile && firstPlant ? null : (
       <DayPanel>
         <DayPanelHead>
-          <h3>{t.todo.dayTitle}</h3>
-          <p>{selectedLabel}</p>
+          <h3>{mobile ? t.todo.title : t.todo.dayTitle}</h3>
+          {mobile ? null : <p>{selectedLabel}</p>}
         </DayPanelHead>
-        {selectedTodos.length === 0 ? (
-          <EmptyDay>{t.todo.emptyDay}</EmptyDay>
+        {shownTodos.length === 0 ? (
+          <EmptyDay>{mobile ? t.todo.emptyTasks : t.todo.emptyDay}</EmptyDay>
         ) : (
           <DayList>
-            {selectedTodos.map((todo) => {
+            {shownTodos.map((todo) => {
               const plant = plants.find((item) => item.id === todo.plantId)
               if (!plant) return null
               return (
@@ -476,12 +511,71 @@ export function TodoCalendar({
                   todos={todos}
                   onComplete={(row) => runComplete(row)}
                   onPickFirstWater={(row, picked) => runComplete(row, picked)}
+                  onOpen={
+                    mobile
+                      ? () => {
+                          const date = new Date(`${today}T12:00:00.000Z`)
+                          setFillYear(date.getUTCFullYear())
+                          setFillMonth(date.getUTCMonth())
+                          setPickerOpen(false)
+                          setFill(todo)
+                        }
+                      : undefined
+                  }
                 />
               )
             })}
           </DayList>
         )}
       </DayPanel>
+      )}
+
+      {pickerOpen ? (
+        <TodoDayPicker
+          year={year}
+          month={month}
+          today={today}
+          selected={appliedDays}
+          marks={taskMarks}
+          onMonthChange={onMonthChange}
+          onOk={(days) => {
+            setAppliedDays(days)
+            setPickerOpen(false)
+          }}
+          onClose={() => setPickerOpen(false)}
+        />
+      ) : null}
+
+      {fill ? (
+        <TodoDayPicker
+          year={fillYear}
+          month={fillMonth}
+          today={today}
+          selected={canFillTodo(fill, todos) && inCareFillWindow(today, fill.subcategory, today) ? [today] : []}
+          marks={new Set()}
+          single
+          note={
+            canFillTodo(fill, todos)
+              ? fill.subcategory === 'photo'
+                ? t.todo.fillWindowPhoto
+                : t.todo.fillWindowWater
+              : t.todo.fillNotDue.replace('{day}', fill.dueOn ?? '—')
+          }
+          allow={(day) => canFillTodo(fill, todos) && inCareFillWindow(day, fill.subcategory, today)}
+          onMonthChange={(nextYear, nextMonth) => {
+            setFillYear(nextYear)
+            setFillMonth(nextMonth)
+          }}
+          onOk={(days) => {
+            const day = days[0]
+            const todo = fill
+            setFill(null)
+            if (!day || !todo) return
+            runComplete(todo, day)
+          }}
+          onClose={() => setFill(null)}
+        />
+      ) : null}
 
       {passport ? (
         <PassportDialog

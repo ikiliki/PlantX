@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { requireAdmin } from '../../lib/session.ts'
+import { requireAdmin, userFromSession } from '../../lib/session.ts'
 import { usersService } from './users.service.ts'
 
 export const usersRoutes = new Hono()
@@ -17,6 +17,12 @@ usersRoutes.post('/pending', async (c) => {
 
 /** Public: every greenhouse's level, for the Global directory. Counts and XP only. */
 usersRoutes.get('/levels', async (c) => c.json({ levels: await usersService.levels() }))
+
+/** Public greenhouses. Other people do not receive the admin. The admin receives everyone, including himself. */
+usersRoutes.get('/directory', async (c) => {
+  const viewer = await userFromSession(c)
+  return c.json({ users: await usersService.directory(viewer) })
+})
 
 /** Public: a greenhouse's level for its public page. Counts and XP only. */
 usersRoutes.get('/:id/level', async (c) => c.json({ level: await usersService.level(c.req.param('id')) }))

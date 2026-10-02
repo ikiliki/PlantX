@@ -86,11 +86,14 @@ export const Label = styled.span<{ $state: StepState }>`
   max-width: 100%;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
   text-align: center;
+  overflow-wrap: anywhere;
   color: ${({ $state }) => ($state === 'next' ? theme.colors.muted : theme.colors.forest)};
 
   @container (max-width: 420px) {
-    display: ${({ $state }) => ($state === 'current' ? 'block' : 'none')};
+    font-size: 10px;
+    letter-spacing: 0;
   }
 `

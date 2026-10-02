@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { formatFeedTime } from '../../formatFeedTime'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { publicGrowerName } from '../../../profile/avatarIcons'
 import { personaScenarioId } from '../../../../mock/personas'
 import { useStore } from '../../../../mock/store'
 import type { FeedUpdate as FeedUpdateData } from '../../../../mock/types'
@@ -19,7 +20,7 @@ export function FeedUpdate({ update }: { update: FeedUpdateData }) {
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const user = db.users.find((item) => item.id === update.userId && item.role !== 'guest')
-  const name = user ? tr(user.name, user.nameHe) : ''
+  const name = user ? publicGrowerName(user, locale === 'he') : ''
   // Persona labels ("Rich — full living collection") describe demo accounts; real accounts show their name.
   const growerLabel = clientEnv() === 'mock' ? t.demo.personaScenarios[personaScenarioId(update.userId)] : name
   const verified = Boolean(user && (db.verifiedGreenhouseIds ?? []).includes(user.id))
@@ -37,7 +38,7 @@ export function FeedUpdate({ update }: { update: FeedUpdateData }) {
         <MomentPlay kind={update.kind} />
         {user ? (
           <ProfileButton type="button" aria-label={name} onClick={openProfile}>
-            <Avatar name={user.name} color={user.avatarColor} size={36} />
+            <Avatar name={name} color={user.avatarColor} icon={user.avatarIcon} size={36} />
           </ProfileButton>
         ) : null}
         <Open type="button" onClick={() => setOpen(true)} aria-haspopup="dialog">

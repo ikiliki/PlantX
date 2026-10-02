@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
-import { useAuth } from '../../../auth/AuthProvider'
 import { AddPlantDialog } from '../../../greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
@@ -41,7 +40,6 @@ function LureCopy({ hasPlants }: { hasPlants: boolean }) {
 
 export function GreenhouseLure({ compact = false }: { compact?: boolean }) {
   const { db, currentUser, signedIn } = useStore()
-  const { openAuth } = useAuth()
   const { t } = useI18n()
   const fetching = useSectionFetch(true, ['plants'])
   const [adding, setAdding] = useState(false)
@@ -60,10 +58,7 @@ export function GreenhouseLure({ compact = false }: { compact?: boolean }) {
     return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
-  const onAdd = () => {
-    if (signedIn) setAdding(true)
-    else openAuth('buy')
-  }
+  const onAdd = () => setAdding(true)
 
   const photoStack = (mode: 'links' | 'tiles' | 'compact') => (
     <Photos>

@@ -57,10 +57,13 @@ scripts/ad/out/
 public/plantx-ad.webm
 public/plantx-ad.mp4
 
-# Local scratch / screenshot harnesses
+# Local scratch / screenshot harnesses. Keep on disk for a later backup.
 _ticker-check.mjs
 scripts/_*/
 scripts/_*.mjs
+scripts/tmp-*
+*.png
+!public/class-photos/*.png
 base44/
 
 .vercel

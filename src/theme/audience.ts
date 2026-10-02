@@ -12,7 +12,6 @@ export const APP_SURFACES = [
   'rank',
   'wiki',
   'todo',
-  'profile',
   'passport',
   'admin',
 ] as const
@@ -24,11 +23,10 @@ export type GuestAccess = 'browse' | 'prompt' | 'hidden'
 export const SURFACE_GUEST: Record<AppSurface, GuestAccess> = {
   home: 'browse',
   market: 'browse',
-  greenhouse: 'prompt',
+  greenhouse: 'browse',
   rank: 'prompt',
   wiki: 'browse',
   todo: 'prompt',
-  profile: 'prompt',
   passport: 'browse',
   admin: 'hidden',
 }

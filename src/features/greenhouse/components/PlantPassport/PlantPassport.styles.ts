@@ -199,23 +199,6 @@ export const NameBlock = styled.div`
   padding-top: 2px;
 `
 
-/** Full AI badge on desktop; compact one-line chip on the stacked sheet. */
-export const IdBadgeSlot = styled.div`
-  min-width: 0;
-  max-width: 100%;
-
-  ${stacked} {
-    > span {
-      padding: 4px 9px 4px 5px;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    small {
-      display: none;
-    }
-  }
-`
 
 export const TaxonomyRow = styled.div`
   display: flex;
@@ -444,20 +427,6 @@ export const OwnerLink = styled(Link)`
   &:hover {
     background: ${theme.colors.creamCard};
   }
-`
-
-export const OwnerAvatar = styled.span`
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
 `
 
 export const OwnerMeta = styled.span`

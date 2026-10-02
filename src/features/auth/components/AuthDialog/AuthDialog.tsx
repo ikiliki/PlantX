@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { AuthReason } from '../../AuthProvider'
 import { AuthPanel } from '../AuthPanel/AuthPanel'
@@ -21,16 +22,18 @@ export function AuthDialog({
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key !== 'Escape') return
+      event.stopImmediatePropagation()
+      onClose()
     }
-    window.addEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, true)
     return () => {
       document.body.style.overflow = previous
-      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', onKey, true)
     }
   }, [onClose])
 
-  return (
+  return createPortal(
     <Backdrop onClick={onClose}>
       <Frame
         role="dialog"
@@ -43,6 +46,7 @@ export function AuthDialog({
         </Close>
         <AuthPanel reason={reason} start={mode} dialog onSuccess={onSuccess} />
       </Frame>
-    </Backdrop>
+    </Backdrop>,
+    document.body,
   )
 }

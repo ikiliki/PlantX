@@ -1,5 +1,5 @@
+import { ProfileSummary } from '../../../profile/components/ProfileSummary/ProfileSummary'
 import { GreenhousePage } from '../../../../pages/GreenhousePage/GreenhousePage'
-import { ProfilePage } from '../../../../pages/ProfilePage/ProfilePage'
 import { Root } from './SellerProfile.styles'
 
 export function SellerProfile({
@@ -15,7 +15,7 @@ export function SellerProfile({
   const view = dialog ? 'widget' : 'page'
   return (
     <Root $dialog={dialog}>
-      <ProfilePage view={view} userId={userId} titleId={titleId} compact={dialog} />
+      <ProfileSummary userId={userId} titleId={titleId} compact={dialog || view === 'widget'} />
       <GreenhousePage view={view} ownerId={userId} compact={dialog} />
     </Root>
   )

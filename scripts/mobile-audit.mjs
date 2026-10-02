@@ -25,7 +25,6 @@ const USER_ROUTES = [
   '/market/categories',
   '/rank',
   '/wiki',
-  '/profile',
   '/settings',
   '/login',
 ]

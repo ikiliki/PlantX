@@ -39,6 +39,7 @@ import {
   fetchCatalogOutcome,
   fetchLiveOutcome,
   fetchGoogleAuth,
+  fetchDirectoryOutcome,
   fetchMembersOutcome,
   fetchPendingTransactions,
   fetchPendingTransactionsOutcome,
@@ -50,6 +51,7 @@ import {
   postEnableUser,
   postPreapproved,
   postGoogleSessionResult,
+  patchAccount,
   postPlant,
   postTodoComplete,
   postRegister,
@@ -67,6 +69,7 @@ import { normalizeSystem } from '../theme/release'
 import { projectDb } from './projectDb'
 import { ensureSession, normalizeScenarios } from './session'
 import { clientEnv, clientEnvLabel, type ClientEnv } from '../theme/plantxEnv'
+import { cleanNickname } from '../features/profile/avatarIcons'
 import { OPERATOR_EMAIL } from '../theme/operator'
 import {
   addDays,
@@ -75,6 +78,7 @@ import {
   isFirstWaterTodo,
   openTodo,
   PHOTO_GAP_MONTHS,
+  careFillWindow,
   schedulePhotoTodo,
   todayIso,
   WATER_GAP_DAYS,
@@ -166,6 +170,8 @@ interface StoreApi {
   setLocale: (locale: Locale) => void
   /** Owner greenhouse place. New plants copy it. Unknown until they choose. */
   setGreenhousePlace: (areaId: string) => void
+  /** Private nickname and the public avatar icon. */
+  setAccount: (patch: { nickname?: string; avatarIcon?: string }) => Promise<boolean>
   setDemoScenarios: (patch: Partial<DemoScenarios>) => void
   /** Which system control is waiting on the server. Null when idle. */
   systemPending: string | null
@@ -412,17 +418,31 @@ export function StoreProvider({
     if (existing) return existing
     const job = (async (): Promise<boolean> => {
       if (part === 'users') {
-        const res = await fetchMembersOutcome()
-        if (!res.ok) {
-          noteSlice(part, res.failure)
-          return false
+        const members = await fetchMembersOutcome()
+        if (members.ok) {
+          noteSlice(part, null)
+          update((d) => {
+            d.users = members.data.users
+            return d
+          })
+          return true
         }
-        noteSlice(part, null)
-        update((d) => {
-          d.users = res.data.users
-          return d
-        })
-        return true
+        // Growers and guests cannot read the admin members list. The public directory is theirs.
+        if (members.failure.status === 401 || members.failure.status === 403) {
+          const directory = await fetchDirectoryOutcome()
+          if (!directory.ok) {
+            noteSlice(part, directory.failure)
+            return false
+          }
+          noteSlice(part, null)
+          update((d) => {
+            d.users = directory.data.users
+            return d
+          })
+          return true
+        }
+        noteSlice(part, members.failure)
+        return false
       }
       if (part === 'plants') {
         const res = await fetchPlantsOutcome()
@@ -568,6 +588,44 @@ export function StoreProvider({
         user.lng = area.lng
         return d
       })
+    },
+    setAccount: async (patch) => {
+      const ownerId = db.currentUserId
+      const before = db.users.find((item) => item.id === ownerId && item.role !== 'guest')
+      if (!before) return false
+      const prevNickname = before.nickname
+      const prevIcon = before.avatarIcon
+      update((d) => {
+        const user = d.users.find((item) => item.id === ownerId && item.role !== 'guest')
+        if (!user) return d
+        if (patch.nickname !== undefined) {
+          const nickname = cleanNickname(patch.nickname)
+          if (nickname) user.nickname = nickname
+          else delete user.nickname
+        }
+        if (patch.avatarIcon) user.avatarIcon = patch.avatarIcon
+        return d
+      })
+      if (!liveWritable) return true
+      const saved = await patchAccount(patch)
+      if (!saved) {
+        update((d) => {
+          const user = d.users.find((item) => item.id === ownerId)
+          if (!user) return d
+          if (prevNickname) user.nickname = prevNickname
+          else delete user.nickname
+          if (prevIcon) user.avatarIcon = prevIcon
+          else delete user.avatarIcon
+          return d
+        })
+        return false
+      }
+      update((d) => {
+        const index = d.users.findIndex((item) => item.id === saved.user.id)
+        if (index >= 0) d.users[index] = { ...d.users[index], ...saved.user }
+        return d
+      })
+      return true
     },
     setDemoScenarios: (patch) =>
       update((d) => ({
@@ -911,6 +969,8 @@ export function StoreProvider({
         if (!plant) return d
         const firstWater = isFirstWaterTodo(todo, todos)
         const at = completedOn ?? todayIso()
+        const window = careFillWindow(todo.subcategory, todayIso())
+        if (at < window.min || at > window.max) return d
         if (firstWater && !completedOn) return d
         if (firstWater && completedOn && completedOn > todayIso()) return d
         if (!firstWater && (todo.dueOn == null || todo.dueOn > todayIso())) return d
@@ -981,6 +1041,8 @@ export function StoreProvider({
       })
     },
     addGreenhousePlant: (input) => {
+      const signedNow = db.users.find((user) => user.id === db.currentUserId && user.role !== 'guest')
+      if (!signedNow) return ''
       const area = resolveArea(input.location.region)
       if (!area || !Number.isFinite(input.location.lat) || !Number.isFinite(input.location.lng)) return ''
       const id = `pl-${Date.now()}`

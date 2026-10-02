@@ -1,23 +1,21 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { PageGate } from '../../components/PageGate/PageGate'
-import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
 import { CollectionBoard, greenhouseFilter } from '../../features/greenhouse/components/CollectionBoard/CollectionBoard'
-import { GreenhouseDirectory } from '../../features/greenhouse/components/GreenhouseDirectory/GreenhouseDirectory'
+import { GreenhouseDirectory, isPublicGreenhouse } from '../../features/greenhouse/components/GreenhouseDirectory/GreenhouseDirectory'
 import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
 import { GreenhouseBack, GreenhouseScope, useHeaderNav, type GreenhouseScopeId } from '../../features/greenhouse/components/GreenhouseScope/GreenhouseScope'
 import { GreenhouseLevelCard } from '../../features/greenhouse/components/GreenhouseLevelCard/GreenhouseLevelCard'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
+import { publicGrowerName } from '../../features/profile/avatarIcons'
 import { ownerActivity } from '../../features/greenhouse/ownerActivity'
 import { useStore } from '../../mock/store'
 import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
-import { forAudience } from '../../theme/audience'
-import { isPlacementReady } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
-import { GuestAuth, HeadBlock, Heading, HeadingCopy, Page, PublicHeading, PublicPage } from './GreenhousePage.styles'
+import { HeadBlock, Heading, HeadingCopy, Page, PublicHeading, PublicPage } from './GreenhousePage.styles'
 
 const WIDGET_PLANTS = 2
 
@@ -39,13 +37,17 @@ export function GreenhousePage({
 }
 
 function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: boolean }) {
-  const { db } = useStore()
-  const { t, tr } = useI18n()
+  const { db, currentUser } = useStore()
+  const { t, locale } = useI18n()
+  const usersLoading = useSectionFetch(!compact, ['users'])
   const user = db.users.find((item) => item.id === ownerId && item.role !== 'guest')
-  const name = user ? tr(user.name, user.nameHe) : t.nav.greenhouse
+  const name = user ? publicGrowerName(user, locale === 'he') : t.nav.greenhouse
   const headerNav = useHeaderNav()
   const plants = <GreenhousePublic ownerId={ownerId} compact={compact} />
   if (compact) return plants
+  if (!usersLoading && (!user || !isPublicGreenhouse(user, currentUser))) {
+    return <Navigate to="/greenhouse?scope=global" replace />
+  }
   return (
     <PageGate pageId="greenhouse" title={name}>
       <FeatureGate placement="greenhouse.board" title={name}>
@@ -66,7 +68,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   const fetching = useSectionFetch(true, ['plants', 'updates', 'todos'])
   const { db, fullDb, currentUser, signedIn } = useStore()
   const { t, tr } = useI18n()
-  const navigate = useNavigate()
   const [adding, setAdding] = useState(false)
   const [freshId, setFreshId] = useState<string>()
   const headerNav = useHeaderNav()
@@ -103,7 +104,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
         <HeadingCopy>
           <h1>{t.greenhouse.title}</h1>
         </HeadingCopy>
-        {view === 'page' && scope === 'mine' && signedIn ? <GreenhouseLevelCard ownerId={ownerId} /> : null}
+        {view === 'page' && scope === 'mine' ? <GreenhouseLevelCard ownerId={ownerId} /> : null}
         </Heading>
       </HeadBlock>
 
@@ -139,23 +140,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   return (
     <PageGate pageId="greenhouse" title={t.greenhouse.title}>
       <FeatureGate placement="greenhouse.board" title={t.greenhouse.title}>
-        {!isPlacementReady(db.system, 'greenhouse.board')
-          ? board
-          : forAudience(signedIn, {
-              guest: (
-                <Page>
-                  <GuestAuth>
-                    <AuthPanel
-                      reason="buy"
-                      dialog
-                      titleId="greenhouse-auth-title"
-                      onSuccess={() => navigate('/greenhouse', { replace: true })}
-                    />
-                  </GuestAuth>
-                </Page>
-              ),
-              signedIn: board,
-            })}
+        {board}
       </FeatureGate>
     </PageGate>
   )

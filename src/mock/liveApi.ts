@@ -160,6 +160,14 @@ export function fetchPlantActivities(plantId: string) {
   )
 }
 
+/** Signed-in account only. Nickname is private; the icon must already be unlocked. */
+export function patchAccount(body: { nickname?: string; avatarIcon?: string }) {
+  return request<{ user: User }>('/api/session/account', {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+}
+
 export function postSession(body: { email?: string; userId?: string | null }) {
   return request<LivePayload>('/api/session', { method: 'POST', body: JSON.stringify(body) })
 }
@@ -242,6 +250,11 @@ export function fetchMembers() {
 
 export function fetchMembersOutcome() {
   return requestOutcome<{ users: import('./types').User[] }>('/api/users')
+}
+
+/** Public greenhouses. Omits the admin unless the signed-in viewer is the admin. */
+export function fetchDirectoryOutcome() {
+  return requestOutcome<{ users: import('./types').User[] }>('/api/users/directory')
 }
 
 export function postDisableUser(id: string) {
