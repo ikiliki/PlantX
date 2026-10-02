@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from '../../plantClass'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../../../components/Button/Button'
@@ -307,7 +308,7 @@ export function PlantPassport({
               {title}
             </Title>
             <IdBadgeSlot>
-              <IdentifyBadge identification={plant.identification} />
+              <IdentifyBadge identification={plant.identification} notInCatalog={plant.speciesId === OTHER_CATEGORY_ID} />
             </IdBadgeSlot>
           </NameBlock>
         </IdentityHead>
@@ -465,7 +466,7 @@ export function PlantPassport({
                               {scanCheck ? <PhotoCheckSticker check={scanCheck} /> : null}
                               {item.kind === 'added' ? (
                                 <>
-                                  <IdentifyBadge identification={plant.identification} compact />
+                                  <IdentifyBadge identification={plant.identification} notInCatalog={plant.speciesId === OTHER_CATEGORY_ID} compact />
                                   {checks?.length ? <PhotoChecks photos={photos} checks={checks} size="sm" /> : null}
                                 </>
                               ) : null}

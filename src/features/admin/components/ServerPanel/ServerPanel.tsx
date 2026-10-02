@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from '../../../greenhouse/plantClass'
 import { type ReactNode, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
@@ -383,7 +384,7 @@ function ActivityVerification({ row, plant }: { row: FeedUpdate; plant?: Plant }
   return (
     <PreviewVerify aria-label={t.admin.previewVerification}>
       <h3>{t.admin.previewVerification}</h3>
-      <IdentifyBadge identification={plant.identification} />
+      <IdentifyBadge identification={plant.identification} notInCatalog={plant.speciesId === OTHER_CATEGORY_ID} />
       <PhotoChecks
         photos={scanned ? [photos[scanned.position] ?? ''] : photos}
         checks={scanned ? [{ ...scanned, position: 0 }] : checks}

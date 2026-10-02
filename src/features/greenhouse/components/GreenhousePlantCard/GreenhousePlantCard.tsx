@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from '../../plantClass'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
@@ -175,7 +176,7 @@ export function GreenhousePlantCard({
           </CareActions>
         ) : (
           <Tags>
-            <IdentifyBadge identification={plant.identification} compact />
+            <IdentifyBadge identification={plant.identification} notInCatalog={plant.speciesId === OTHER_CATEGORY_ID} compact />
             {verified ? <PassportMark>✓ {t.greenhouse.passportOk}</PassportMark> : null}
           </Tags>
         )}

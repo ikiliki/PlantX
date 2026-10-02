@@ -77,7 +77,10 @@ export function buildMarketDisplay(parts: {
 }) {
   const stage = STAGE_LABEL[parts.stage][parts.locale]
   const grade = parts.quality ? `${parts.quality} · ` : ''
-  return `${parts.species} ${parts.variety} · ${grade}${parts.size} · ${stage}`
+  // An Other plant uses the AI's name for both; say it once.
+  const sameName = !parts.variety.trim() || parts.variety.trim().toLowerCase() === parts.species.trim().toLowerCase()
+  const name = sameName ? parts.species : `${parts.species} ${parts.variety}`
+  return `${name} · ${grade}${parts.size} · ${stage}`
 }
 
 export function varietyCode(variety: string) {

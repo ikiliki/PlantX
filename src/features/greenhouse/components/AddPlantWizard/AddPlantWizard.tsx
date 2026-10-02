@@ -349,7 +349,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
           </Burst>
           <DoneTitle>{t.addPlant.doneTitle}</DoneTitle>
           <StepLead>{t.addPlant.doneBody.replace('{name}', name)}</StepLead>
-          <IdentifyBadge identification={identification} />
+          <IdentifyBadge identification={identification} notInCatalog={isOther} />
           <Footer $static>
             <Button type="button" variant="secondary" onClick={reset}>
               {t.addPlant.addAnother}
@@ -368,6 +368,18 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       return (
         <Banner $tone="ai">
           <span>{t.addPlant.bannerAi}</span>
+        </Banner>
+      )
+    }
+    // AI recognized a plant the catalog does not have: Other keeps it AI verified.
+    if (!ai && missingCatalog) {
+      return isOther ? (
+        <Banner $tone="ai">
+          <span>{t.addPlant.bannerAiOther.replace('{label}', otherName)}</span>
+        </Banner>
+      ) : (
+        <Banner $tone="warn">
+          <span>{t.addPlant.bannerEdited}</span>
         </Banner>
       )
     }
@@ -451,13 +463,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <StepTitle>{t.addPlant.identityTitle}</StepTitle>
               <StepLead>{ai ? t.addPlant.identityLeadAi : t.addPlant.identityLeadManual}</StepLead>
             </StepHead>
-            {isOther && missingCatalog ? (
-              <Banner $tone="warn">
-                <span>{t.addPlant.identityOther}</span>
-              </Banner>
-            ) : (
-              banner
-            )}
+            {banner}
             <Section>
               {catalog.categories.length >= CATEGORY_SEARCH_MIN ? (
                 <Input
@@ -696,7 +702,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 ) : null}
               </ReviewPhoto>
               <ReviewBody>
-                <IdentifyBadge identification={identification} />
+                <IdentifyBadge identification={identification} notInCatalog={isOther} />
                 {photos.length > 1 ? <PhotoChecks photos={photos} checks={identification.photos} size="sm" /> : null}
                 <ReviewName>{matched ? (locale === 'he' ? matched.nameHe : matched.name) : ''}</ReviewName>
                 {matched ? <ClassCode>{matched.code}</ClassCode> : null}

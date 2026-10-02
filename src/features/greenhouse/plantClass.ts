@@ -1,3 +1,4 @@
+import { OTHER_SPECIES_ID } from './identification'
 import { classDictionary, type DictClass, type DictPlant } from '../../mock/classDictionary'
 import { isHealth, isSize, isStage } from '../../mock/catalog'
 import { buildMarketCode, buildMarketDisplay } from '../../mock/marketNaming'
@@ -22,7 +23,7 @@ import {
 export type { PlantClassDraft }
 
 /** Identity choice when the plant is not a catalog category. */
-export const OTHER_CATEGORY_ID = 'other'
+export const OTHER_CATEGORY_ID = OTHER_SPECIES_ID
 
 /** Subcategory choice when the variety is not in the catalog. Not stored on the plant. */
 export const OTHER_SUBCATEGORY_ID = 'other-sub'

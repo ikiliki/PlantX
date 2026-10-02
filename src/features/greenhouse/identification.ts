@@ -45,10 +45,14 @@ export function draftMatchesDiagnosis(draft: PlantClassDraft, diagnosis: Diagnos
 }
 
 export function savedClassFromDraft(draft: PlantClassDraft, catalog: Catalog): SavedClass | null {
-  const category = catalog.categories.find((item) => item.id === draft.categoryId)
-  if (!category) return null
+  // Other is not a catalog category, but it is a class the plant is saved with (speciesId `other`).
+  const speciesId =
+    draft.categoryId === OTHER_SPECIES_ID
+      ? OTHER_SPECIES_ID
+      : catalog.categories.find((item) => item.id === draft.categoryId)?.speciesId
+  if (!speciesId) return null
   return {
-    speciesId: category.speciesId,
+    speciesId,
     subcategoryId: draft.subcategoryId || undefined,
     quality: draft.quality || undefined,
     sizeBand: draft.size || undefined,
@@ -56,9 +60,21 @@ export function savedClassFromDraft(draft: PlantClassDraft, catalog: Catalog): S
   }
 }
 
-/** The provider saw the saved category and, when it named one, the saved subcategory. */
+/** Species id of a plant saved as Other: a plant the catalog does not know yet. */
+export const OTHER_SPECIES_ID = 'other'
+
+/** The AI recognized a plant but no catalog category fits it. */
+export function isNotInCatalogAnswer(diagnosis: Diagnosis | null | undefined) {
+  return Boolean(diagnosis?.isPlant && !diagnosis.draft.categoryId)
+}
+
+/**
+ * The provider saw the saved category and, when it named one, the saved subcategory.
+ * A plant the AI recognized but the catalog lacks matches when it is saved as Other.
+ */
 export function classMatchesDiagnosis(saved: SavedClass, diagnosis: Diagnosis | null | undefined, catalog: Catalog) {
   if (!diagnosis?.isPlant) return false
+  if (isNotInCatalogAnswer(diagnosis)) return saved.speciesId === OTHER_SPECIES_ID
   const category = catalog.categories.find((item) => item.id === diagnosis.draft.categoryId)
   if (!category || category.speciesId !== saved.speciesId) return false
   return !diagnosis.draft.subcategoryId || diagnosis.draft.subcategoryId === saved.subcategoryId
@@ -96,7 +112,15 @@ export function fieldChecksFor(saved: SavedClass, diagnosis: Diagnosis, catalog:
   const { draft } = diagnosis
   const category = catalog.categories.find((item) => item.id === draft.categoryId)
   return {
-    category: draft.categoryId ? (category?.speciesId === saved.speciesId ? 'kept' : 'changed') : 'manual',
+    category: draft.categoryId
+      ? category?.speciesId === saved.speciesId
+        ? 'kept'
+        : 'changed'
+      : isNotInCatalogAnswer(diagnosis)
+        ? saved.speciesId === OTHER_SPECIES_ID
+          ? 'kept'
+          : 'changed'
+        : 'manual',
     subcategory: fieldCheck(draft.subcategoryId, saved.subcategoryId),
     quality: fieldCheck(draft.quality, saved.quality),
     size: fieldCheck(draft.size, saved.sizeBand),
