@@ -170,14 +170,7 @@ function dropRetiredFeatures(db: MockDb) {
   db.orders = (db.orders ?? []).filter((order) => order.id !== 'or-event-hall')
 }
 
-const RETIRED_SPECIES_IDS = new Set([
-  'sp-maple',
-  'sp-philodendron',
-  'sp-palm',
-  'sp-fiddle',
-  'sp-olive',
-  'sp-mix',
-])
+const RETIRED_SPECIES_IDS = new Set(['sp-maple', 'sp-philodendron', 'sp-palm', 'sp-olive', 'sp-mix'])
 
 function stalePhoto(photo: string) {
   return (
@@ -310,6 +303,15 @@ export function ensureSession(db: MockDb) {
   ensureCatalog(db)
   db.flags = personaFlags(db.currentUserId)
   db.system = normalizeSystem(db.system)
+  const marked = db as MockDb & { catalogOpened?: boolean }
+  if (!marked.catalogOpened) {
+    const wiki = db.system.features.wiki
+    if (db.system.pages.wiki === 'maintenance' && !wiki.enabled && wiki.status === 'comingSoon') {
+      db.system.pages.wiki = 'live'
+      db.system.features.wiki = { enabled: true, status: 'ready' }
+    }
+    marked.catalogOpened = true
+  }
   writeCookie(VISITOR_COOKIE, db.visitorId)
   const account = db.users.find((u) => u.id === db.currentUserId && u.role !== 'guest')
   writeCookie(ACCOUNT_COOKIE, account?.email ?? account?.id ?? null)

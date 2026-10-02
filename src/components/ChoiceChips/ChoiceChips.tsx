@@ -1,5 +1,5 @@
 import { PlantImage } from '../PlantImage/PlantImage'
-import { Chip, ChipHint, ChipPhoto, ChipText, Group, Legend, Required, Suggested } from './ChoiceChips.styles'
+import { Chip, ChipHint, ChipPhoto, ChipText, Empty, Group, Legend, MoreChip, Required, Suggested } from './ChoiceChips.styles'
 
 export type ChoiceChipOption = {
   id: string
@@ -19,6 +19,7 @@ export function ChoiceChips({
   suggestedId,
   suggestedLabel,
   layout = 'chips',
+  more,
 }: {
   label: string
   options: ChoiceChipOption[]
@@ -29,6 +30,8 @@ export function ChoiceChips({
   suggestedId?: string
   suggestedLabel?: string
   layout?: 'chips' | 'tiles'
+  /** Sits in the chip row. Used for Show more / Show less. */
+  more?: { label: string; onMore: () => void }
 }) {
   return (
     <Group disabled={disabled}>
@@ -37,6 +40,7 @@ export function ChoiceChips({
         {required ? <Required aria-hidden>*</Required> : null}
       </Legend>
       <div role="radiogroup" aria-label={label} aria-required={required} data-layout={layout}>
+        {options.length === 0 ? <Empty /> : null}
         {options.map((option, index) => {
           const on = option.id === value
           const suggested = Boolean(suggestedId) && option.id === suggestedId
@@ -63,6 +67,11 @@ export function ChoiceChips({
             </Chip>
           )
         })}
+        {more ? (
+          <MoreChip type="button" onClick={more.onMore}>
+            {more.label}
+          </MoreChip>
+        ) : null}
       </div>
     </Group>
   )

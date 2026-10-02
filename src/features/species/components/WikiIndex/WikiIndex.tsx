@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { ComponentView } from '../../../../theme/view'
+import { catalogSpeciesList } from '../../catalogSpecies'
 import { speciesName } from '../../../market/categoryData'
 import { groupByRarity, wikiRarityTitle } from '../../wikiGroups'
 import { wikiHref } from '../GuideLink/GuideLink'
@@ -15,14 +16,13 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
   const { db } = useStore()
   const { t, locale } = useI18n()
   const loc = useLocation()
-  const rows = speciesIds ? db.species.filter((item) => speciesIds.includes(item.id)) : db.species
+  const listed = catalogSpeciesList(db)
+  const rows = speciesIds ? listed.filter((item) => speciesIds.includes(item.id)) : listed
   const groups = groupByRarity(rows).map((group) => ({
     ...group,
     title: wikiRarityTitle(group.rarity, t.plant),
   }))
-  const [open, setOpen] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(groups.map((group) => [group.rarity, true])),
-  )
+  const [open, setOpen] = useState<Record<string, boolean>>({ common: true })
 
   useEffect(() => {
     const hash = loc.hash.replace('#', '')
@@ -38,14 +38,13 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
   }
 
   return (
-    <Layout>
-      {view === 'page' && (
+    <Layout data-view={view}>
+      {view === 'page' ? (
         <TocWrap>
           <WikiToc
             items={groups.map((group) => ({
               id: group.rarity,
               title: group.title,
-              href: `/wiki#${group.rarity}`,
               children: group.items.map((species) => ({
                 id: species.id,
                 title: speciesName(species, locale),
@@ -54,7 +53,7 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
             }))}
           />
         </TocWrap>
-      )}
+      ) : null}
       <Body>
         {groups.map((group) => (
           <WikiSection

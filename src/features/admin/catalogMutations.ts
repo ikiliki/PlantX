@@ -10,7 +10,7 @@ import type {
   Species,
 } from '../../mock/types'
 
-export const SYSTEM_PROPERTY_IDS = new Set(['grade', 'size', 'stage'])
+export const SYSTEM_PROPERTY_IDS = new Set(['health', 'size', 'stage'])
 
 function uniqueId(base: string, taken: string[]) {
   if (!taken.includes(base)) return base

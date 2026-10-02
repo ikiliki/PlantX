@@ -77,7 +77,7 @@ export function seedUpdates(): FeedUpdate[] {
       userId: 'u-maya',
       plantId: 'pl-maya-mother',
       body: 'Golden pothos moved from B to A.',
-      bodyHe: 'פוטוס זהוב עלה מדרגה B ל־A.',
+      bodyHe: 'פוטוס זהוב עלה מ־B ל־A.',
       createdAt: ago(14),
     },
     {

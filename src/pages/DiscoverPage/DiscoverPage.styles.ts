@@ -65,6 +65,12 @@ export const Rail = styled.aside`
       display: none;
     }
   }
+
+  @container (max-width: 899px) {
+    > [data-wiki-rail] {
+      display: none;
+    }
+  }
 `
 
 export const Feed = styled.div`

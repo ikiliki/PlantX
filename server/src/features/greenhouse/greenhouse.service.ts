@@ -1,3 +1,4 @@
+import { resolveArea, UNKNOWN_AREA } from '../../../../src/mock/locations.ts'
 import type { IdentifyRequestRecord, Plant } from '../../../../src/mock/types.ts'
 import {
   MAX_PLANT_PHOTOS,
@@ -15,6 +16,22 @@ import { todoService } from '../todo/todo.service.ts'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
+}
+
+/** Missing or unrecognized region is Unknown. The area trait is not stored. */
+function withLocation(plant: Plant): Plant {
+  const area = resolveArea(plant.locationZone) ?? UNKNOWN_AREA
+  const known = Boolean(resolveArea(plant.locationZone))
+  const traits = plant.traits ? { ...plant.traits } : undefined
+  if (traits) delete traits.area
+  return {
+    ...plant,
+    traits,
+    locationZone: area.region,
+    locationZoneHe: known && plant.locationZoneHe?.trim() ? plant.locationZoneHe : area.regionHe,
+    lat: known && Number.isFinite(plant.lat) ? plant.lat : area.lat,
+    lng: known && Number.isFinite(plant.lng) ? plant.lng : area.lng,
+  }
 }
 
 function savedClassOf(plant: Plant): SavedClass {
@@ -105,7 +122,7 @@ export const greenhouseService = {
     )
     const plants = await store.plants.list()
     const { wateredAt: _w, photoAt: _p, ...rest } = plant as Plant & { wateredAt?: string; photoAt?: string }
-    const row: Plant = { ...rest, photos, ownerId, identification }
+    const row: Plant = { ...withLocation({ ...rest, photos, ownerId }), identification }
     plants.unshift(row)
     await store.plants.saveAll(plants)
     try {

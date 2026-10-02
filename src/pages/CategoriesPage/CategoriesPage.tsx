@@ -5,12 +5,12 @@ import { PageGate } from '../../components/PageGate/PageGate'
 import {
   categoryGroups,
   categoryRow,
-  filterByGrade,
-  gradeOptions,
+  filterByHealth,
+  healthOptions,
   tradesFor,
 } from '../../features/market/categoryData'
 import { ChartPanel } from '../../features/market/components/ChartPanel/ChartPanel'
-import { GradeFilter } from '../../features/market/components/GradeFilter/GradeFilter'
+import { HealthFilter } from '../../features/market/components/HealthFilter/HealthFilter'
 import { PriceRanges } from '../../features/market/components/PriceRanges/PriceRanges'
 import { TradeChart } from '../../features/market/components/TradeChart/TradeChart'
 import { TradeTable } from '../../features/market/components/TradeTable/TradeTable'
@@ -22,16 +22,16 @@ import { Back, Header, Page, Summary, SummaryItem, Toolbar } from './CategoriesP
 function CategoriesReady() {
   const { db } = useStore()
   const { t, locale, formatMoney } = useI18n()
-  const [grade, setGrade] = useState('all')
+  const [health, setHealth] = useState('all')
 
   const groups = useMemo(() => categoryGroups(db), [db])
-  const options = useMemo(() => gradeOptions(groups.flatMap((group) => group.classes)), [groups])
+  const options = useMemo(() => healthOptions(groups.flatMap((group) => group.classes)), [groups])
   const visible = useMemo(
     () =>
       groups
-        .map((group) => ({ ...group, classes: filterByGrade(group.classes, grade) }))
+        .map((group) => ({ ...group, classes: filterByHealth(group.classes, health) }))
         .filter((group) => group.classes.length > 0),
-    [groups, grade],
+    [groups, health],
   )
   const classes = useMemo(() => visible.flatMap((group) => group.classes), [visible])
   const trades = useMemo(() => tradesFor(classes), [classes])
@@ -73,14 +73,14 @@ function CategoriesReady() {
           </Summary>
 
           <Toolbar>
-            <GradeFilter options={options} value={grade} onChange={setGrade} />
+            <HealthFilter options={options} value={health} onChange={setHealth} />
           </Toolbar>
 
           <PriceRanges
             title={t.charts.categories}
             hint={t.charts.categoryLadderHint}
             rows={rows}
-            grades={options.map((option) => option.grade)}
+            grades={options.map((option) => option.health)}
           />
 
           <ChartPanel title={t.charts.transactions} hint={t.charts.transactionsHint}>

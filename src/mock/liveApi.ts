@@ -379,16 +379,16 @@ export function fetchIdentifyProvidersOutcome() {
   return requestOutcome<{ providers: IdentifyProviderStatus[] }>('/api/identify/providers')
 }
 
-/** Admin switch for Add Plant. Resolves to the updated status, or null on failure. */
-export async function setIdentifyProviderSettings(
+/** Admin switch for Add Plant. The failure keeps the server message for the stage panel. */
+export function setIdentifyProviderSettings(
   id: IdentifyProviderId,
   patch: Partial<IdentifyProviderSettings>,
 ) {
-  const res = await request<{ provider: IdentifyProviderStatus }>(
+  return requestOutcome<{ provider: IdentifyProviderStatus }>(
     `/api/identify/providers/${encodeURIComponent(id)}`,
     { method: 'PUT', body: JSON.stringify(patch) },
+    45000,
   )
-  return res?.provider ?? null
 }
 
 export function fetchIdentifyHistory(query?: { mode?: IdentifyMode; limit?: number }) {

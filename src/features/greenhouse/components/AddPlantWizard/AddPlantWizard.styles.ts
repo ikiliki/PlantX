@@ -25,16 +25,25 @@ const halo = keyframes`
 `
 
 export const Root = styled.div`
-  display: grid;
-  gap: ${theme.space.lg};
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
   min-width: 0;
+  min-height: 0;
   container-type: inline-size;
-  scroll-margin-top: 80px;
+`
+
+export const Scroll = styled.div`
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
 `
 
 export const StepBody = styled.div<{ $direction: 1 | -1 }>`
   display: grid;
-  gap: ${theme.space.lg};
+  gap: 12px;
   min-width: 0;
   animation: ${({ $direction }) => slideIn($direction * 28)} ${theme.motion.slow} ${theme.motion.ease} both;
 
@@ -175,24 +184,24 @@ export const PhotoActions = styled.div`
 `
 
 export const IdentityCard = styled.article`
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: 12px;
+  display: inline-grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 8px;
   align-items: center;
-  min-width: 0;
-  padding: 10px;
-  border-radius: ${theme.radii.lg};
+  width: max-content;
+  max-width: 100%;
+  padding: 4px 12px 4px 4px;
+  border-radius: ${theme.radii.md};
   background: ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};
-  box-shadow: ${theme.shadow.card};
-  animation: ${popIn} ${theme.motion.slow} ${theme.motion.ease} both;
 `
 
 export const IdentityPhoto = styled.div`
-  aspect-ratio: 1;
-  border-radius: ${theme.radii.md};
+  width: 40px;
+  height: 40px;
+  border-radius: ${theme.radii.sm};
   overflow: hidden;
-  background: ${theme.colors.chipGreen};
+  background: ${theme.colors.creamCard};
 
   img {
     width: 100%;

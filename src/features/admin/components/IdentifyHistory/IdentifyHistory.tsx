@@ -34,7 +34,7 @@ const fieldOrder: IdentifyFieldId[] = ['category', 'subcategory', 'quality', 'si
 const fieldLabelKey = {
   category: 'category',
   subcategory: 'subcategory',
-  quality: 'grade',
+  quality: 'health',
   size: 'size',
   stage: 'stage',
 } as const satisfies Record<IdentifyFieldId, string>

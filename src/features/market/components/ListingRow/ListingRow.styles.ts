@@ -99,7 +99,7 @@ export const Pending = styled.span`
   line-height: 1;
 `
 
-export const Grade = styled.span<{ $grade: string }>`
+export const Health = styled.span<{ $health: string }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -110,10 +110,26 @@ export const Grade = styled.span<{ $grade: string }>`
   border-radius: ${theme.radii.pill};
   font-size: 12px;
   font-weight: 800;
-  background: ${({ $grade }) =>
-    $grade === 'A' ? theme.colors.chipGreen : $grade === 'B' ? theme.colors.chipWarm : '#F6DED4'};
-  color: ${({ $grade }) =>
-    $grade === 'A' ? theme.colors.forest : $grade === 'B' ? theme.colors.warn : theme.colors.danger};
+  background: ${({ $health }) =>
+    $health === 'S'
+      ? theme.colors.forest
+      : $health === 'A'
+        ? theme.colors.chipGreen
+        : $health === 'B'
+          ? theme.colors.chipWarm
+          : $health === 'D'
+            ? '#E8DDD6'
+            : '#F6DED4'};
+  color: ${({ $health }) =>
+    $health === 'S'
+      ? theme.colors.cream
+      : $health === 'A'
+        ? theme.colors.forest
+        : $health === 'B'
+          ? theme.colors.warn
+          : $health === 'D'
+            ? theme.colors.muted
+            : theme.colors.danger};
 
   svg {
     width: 13px;

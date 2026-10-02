@@ -69,7 +69,7 @@ export function createSupabaseStore(): PlantxStore {
     .query(`
       alter table plants drop constraint if exists plants_quality_check;
       alter table plants alter column quality drop not null;
-      alter table plants add constraint plants_quality_check check (quality is null or quality in ('A', 'B', 'C'));
+      alter table plants add constraint plants_quality_check check (quality is null or quality in ('S', 'A', 'B', 'C', 'D'));
     `)
     .catch(() => undefined)
 

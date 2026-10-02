@@ -1,3 +1,4 @@
+import { UNKNOWN_AREA } from '../../../../src/mock/locations.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import {
@@ -83,8 +84,10 @@ export const usersService = {
       nameHe: row.name,
       email: row.email,
       role: 'grower',
-      region: 'Central Israel',
-      regionHe: 'מרכז',
+      region: UNKNOWN_AREA.region,
+      regionHe: UNKNOWN_AREA.regionHe,
+      lat: UNKNOWN_AREA.lat,
+      lng: UNKNOWN_AREA.lng,
       bio: 'Approved community grower.',
       bioHe: 'מגדל קהילה מאושר.',
       rating: 0,

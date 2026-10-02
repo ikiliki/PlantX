@@ -1,5 +1,5 @@
 import { classDictionary, type DictClass, type DictPlant } from '../../mock/classDictionary'
-import { isGrade, isSize, isStage } from '../../mock/catalog'
+import { isHealth, isSize, isStage } from '../../mock/catalog'
 import { buildMarketCode, buildMarketDisplay } from '../../mock/marketNaming'
 import type {
   Catalog,
@@ -50,7 +50,7 @@ function uniqueBy<T>(items: T[], key: (item: T) => string) {
   })
 }
 
-export function classesFor(draft: PlantClassDraft, facet: 'variety' | 'grade' | 'size' | 'stage') {
+export function classesFor(draft: PlantClassDraft, facet: 'variety' | 'health' | 'size' | 'stage') {
   const plant = dictCategory(draft.categoryId)
   if (!plant) return []
   const sub = plant.classes.find((item) => `${plant.id}-${item.varietyCode.toLowerCase()}` === draft.subcategoryId)
@@ -58,7 +58,7 @@ export function classesFor(draft: PlantClassDraft, facet: 'variety' | 'grade' | 
   return plant.classes.filter((item) => {
     if (facet === 'variety') return true
     if (varietyCode && item.varietyCode !== varietyCode) return false
-    if (facet === 'grade') return true
+    if (facet === 'health') return true
     if (draft.quality && item.quality !== draft.quality) return false
     if (facet === 'size') return true
     if (draft.size && item.size !== draft.size) return false
@@ -70,10 +70,10 @@ export function subcategoryChoices(catalog: Catalog, draft: PlantClassDraft): Ca
   return subcategoriesFor(catalog, draft.categoryId)
 }
 
-export function gradeChoices(catalog: Catalog, draft: PlantClassDraft) {
-  const fromClasses = uniqueBy(classesFor(draft, 'grade'), (item) => item.quality).map((item) => item.quality)
+export function healthChoices(catalog: Catalog, draft: PlantClassDraft) {
+  const fromClasses = uniqueBy(classesFor(draft, 'health'), (item) => item.quality).map((item) => item.quality)
   if (fromClasses.length > 0) return fromClasses
-  return propertyById(catalog, 'grade')?.options.map((item) => item.id).filter(isGrade) ?? []
+  return propertyById(catalog, 'health')?.options.map((item) => item.id).filter(isHealth) ?? []
 }
 
 const FALLBACK_SIZES: SizeBand[] = ['S', 'M', 'L', 'XL']

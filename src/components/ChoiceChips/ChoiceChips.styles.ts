@@ -38,6 +38,31 @@ export const Group = styled.fieldset`
   }
 `
 
+export const Empty = styled.span`
+  flex: 1 1 140px;
+  min-height: 40px;
+  border-radius: ${theme.radii.md};
+  background: ${theme.colors.creamCard};
+  box-shadow: inset 0 0 0 1px ${theme.colors.border};
+`
+
+export const MoreChip = styled.button`
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px dashed ${theme.colors.moss};
+  border-radius: ${theme.radii.pill};
+  background: transparent;
+  color: ${theme.colors.forest};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover {
+    background: ${theme.colors.chipGreen};
+  }
+`
+
 export const Legend = styled.legend`
   padding: 0;
   margin-bottom: 10px;

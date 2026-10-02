@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Badge } from '../../../../components/Badge/Badge'
 import { Card, CardBody, CardMedia } from '../../../../components/Card/Card'
-import { GradeChip } from '../../../../components/GradeChip/GradeChip'
+import { HealthChip } from '../../../../components/HealthChip/HealthChip'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
@@ -71,7 +71,7 @@ export function ListingCard({ listing, compact = false }: { listing: Listing; co
           </strong>
           <Meta>
             <span>{plant.code}</span>
-            {plant.quality ? <GradeChip grade={plant.quality} /> : null}
+            {plant.quality ? <HealthChip health={plant.quality} /> : null}
             <span>
               {plant.rooting === 'rooted'
                 ? t.market.rooted

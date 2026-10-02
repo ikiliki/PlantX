@@ -49,15 +49,21 @@
   ],
   "properties": [
     {
-      "id": "grade",
-      "name": "Grade",
-      "nameHe": "דרגה",
+      "id": "health",
+      "name": "Health",
+      "nameHe": "בריאות",
       "required": true,
       "inMarketName": true,
-      "sign": "GRD",
+      "sign": "HLT",
       "categoryIds": [],
       "subcategoryIds": [],
       "options": [
+        {
+          "id": "S",
+          "label": "S",
+          "labelHe": "S",
+          "sign": "S"
+        },
         {
           "id": "A",
           "label": "A",
@@ -75,6 +81,12 @@
           "label": "C",
           "labelHe": "C",
           "sign": "C"
+        },
+        {
+          "id": "D",
+          "label": "D",
+          "labelHe": "D",
+          "sign": "D"
         }
       ]
     },
@@ -154,7 +166,7 @@
       "id": "area",
       "name": "Area",
       "nameHe": "אזור",
-      "required": true,
+      "required": false,
       "inMarketName": false,
       "sign": "",
       "categoryIds": [],

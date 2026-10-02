@@ -14,7 +14,11 @@ export const SIZE_LABEL: Record<SizeBand, { en: string; he: string }> = {
   XL: { en: 'XL', he: 'ענק' },
 }
 
-export const GRADE_MEANING: Record<QualityGrade, { en: string; he: string }> = {
+export const HEALTH_MEANING: Record<QualityGrade, { en: string; he: string }> = {
+  S: {
+    en: 'Best condition',
+    he: 'מצב מיטבי',
+  },
   A: {
     en: 'Healthy foliage, no pests/damage, strong roots, good symmetry',
     he: 'עלים בריאים, ללא מזיקים/נזק, שורשים חזקים, סימטריה טובה',
@@ -24,8 +28,12 @@ export const GRADE_MEANING: Record<QualityGrade, { en: string; he: string }> = {
     he: 'נזק קוסמטי קל מותר; אחרת בריא',
   },
   C: {
-    en: 'Rehabilitation / project-grade',
-    he: 'שיקום / דרגת פרויקט',
+    en: 'Needs rehabilitation',
+    he: 'צריך שיקום',
+  },
+  D: {
+    en: 'Low condition',
+    he: 'מצב נמוך',
   },
 }
 

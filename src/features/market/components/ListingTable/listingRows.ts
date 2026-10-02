@@ -1,3 +1,4 @@
+import { HEALTH_RANK } from '../../../../mock/catalog'
 import type { Listing, MarketClass, Plant, Species } from '../../../../mock/types'
 import { isPhotoStale } from '../../../greenhouse/plantCare'
 
@@ -6,7 +7,7 @@ export type ListingRowModel = {
   href: string
   photo?: string
   name: string
-  grade: string
+  health: string
   size: string
   stage: string
   area: string
@@ -16,13 +17,12 @@ export type ListingRowModel = {
   change: number | null
   classId?: string
   speciesId?: string
-  gradeRank: number
+  healthRank: number
   sizeRank: number
   stageRank: number
   photoStale: boolean
 }
 
-const gradeRank: Record<string, number> = { A: 0, B: 1, C: 2 }
 const sizeRank: Record<string, number> = { S: 0, M: 1, L: 2, XL: 3 }
 const stageRank: Record<string, number> = { CUT: 0, ROOTED: 1, EST: 2, MATURE: 3 }
 const rootingRank: Record<string, number> = { unrooted: 0, rooted: 1, established: 2 }
@@ -45,7 +45,7 @@ export function toListingRow(
       ? plant.titleHe
       : plant.title
   const name = fullName.split(' · ')[0] || fullName
-  const grade = marketClass?.quality ?? plant.quality
+  const health = marketClass?.quality ?? plant.quality
   const size = marketClass?.size ?? plant.sizeBand ?? '—'
   const stage = stageLabel(marketClass?.stage, plant.rooting)
   const price = marketClass?.lastPrice ?? listing.price
@@ -55,7 +55,7 @@ export function toListingRow(
     href: marketClass ? `/market/${marketClass.id}` : `/plants/${plant.id}`,
     photo: plant.photos[0],
     name,
-    grade,
+    health,
     size,
     stage,
     area: locale === 'he' ? listing.regionHe : listing.region,
@@ -65,7 +65,7 @@ export function toListingRow(
     change: marketClass ? marketClass.changePct : null,
     classId: marketClass?.id,
     speciesId: plant.speciesId,
-    gradeRank: gradeRank[grade] ?? 9,
+    healthRank: health ? (HEALTH_RANK[health] ?? 9) : 9,
     sizeRank: size === '—' ? 9 : (sizeRank[size] ?? 9),
     stageRank: marketClass ? (stageRank[marketClass.stage] ?? 9) : (rootingRank[plant.rooting] ?? 9),
     photoStale: isPhotoStale(plant),

@@ -93,7 +93,7 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     greenhouse: 'live',
     todo: 'live',
     rank: 'maintenance',
-    wiki: 'maintenance',
+    wiki: 'live',
   },
   features: {
     news: { enabled: true, status: 'ready' },
@@ -101,7 +101,7 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     greenhouse: { enabled: true, status: 'ready' },
     todo: { enabled: true, status: 'ready' },
     rank: { enabled: false, status: 'comingSoon' },
-    wiki: { enabled: false, status: 'comingSoon' },
+    wiki: { enabled: true, status: 'ready' },
   },
   placements: {
     'home.feed': { enabled: true },

@@ -3,7 +3,7 @@ import { MarketNameTable } from './MarketNameTable'
 const columns = [
   { id: 'category', label: 'Category' },
   { id: 'subcategory', label: 'Subcategory' },
-  { id: 'grade', label: 'Grade' },
+  { id: 'health', label: 'Health' },
   { id: 'variegation', label: 'Variegation' },
   { id: 'name', label: 'Market name' },
 ]
@@ -17,8 +17,8 @@ const rows = [
     subcategory: 'Golden',
     name: 'Pothos Golden · A · High',
     code: 'POT-GOLD-A-HIGH',
-    values: { grade: 'A', variegation: 'high' },
-    labels: { grade: 'A', variegation: 'High' },
+    values: { health: 'A', variegation: 'high' },
+    labels: { health: 'A', variegation: 'High' },
   },
 ]
 

@@ -7,8 +7,8 @@ export type UserRole =
   | 'admin'
   | 'guest'
 
-export type QualityGrade = 'A' | 'B' | 'C'
-/** Community swipe grade. Kept off catalog quality so market class codes stay A/B/C. */
+export type QualityGrade = 'S' | 'A' | 'B' | 'C' | 'D'
+/** Community swipe on Rank. Separate from catalog health. */
 export type CommunityGradeLetter = 'S' | 'A' | 'B' | 'C'
 
 export interface CommunityGrade {
@@ -121,7 +121,7 @@ export interface Plant {
   variety?: string
   varietyHe?: string
   subcategoryId?: string
-  /** Extra catalog properties. Grade, size, and stage stay on the plant fields. */
+  /** Extra catalog properties. Health, size, and stage stay on the plant fields. */
   traits?: Record<string, string>
   title: string
   titleHe: string
@@ -131,7 +131,7 @@ export interface Plant {
   quantity: number
   sizeGrade: string
   sizeBand?: SizeBand
-  /** Empty until the grade feature assigns a letter. */
+  /** Empty until health is chosen. */
   quality: QualityGrade | ''
   rooting: RootingStatus
   stage?: StageBand
@@ -520,7 +520,7 @@ export type IdentifyMockMatch = {
   /** When true, the match includes `subcategoryId`. */
   subcategory: boolean
   subcategoryId: string
-  /** Property id → option id, including grade, size, stage, and other traits. */
+  /** Property id → option id, including health, size, stage, and other traits. */
   properties: Record<string, string>
 }
 
@@ -609,6 +609,10 @@ export type IdentifyProviderStatus = {
   model?: string
   lastError?: string
   lastUsedAt?: string
+  /** Gemini plant check. Absent means this provider's own response. */
+  gate?: IdentifyProviderSettings
+  /** Gemini catalog draft. Absent means this provider's own response. */
+  draft?: IdentifyProviderSettings
 }
 
 export type UpdateScenario = 'empty' | 'one' | 'multiple' | 'mixed'

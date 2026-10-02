@@ -2,11 +2,14 @@ import { useState, type ReactNode } from 'react'
 import { Badge } from '../../../../components/Badge/Badge'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { Button } from '../../../../components/Button/Button'
+import { ChoiceChips } from '../../../../components/ChoiceChips/ChoiceChips'
 import { Segmented } from '../../../../components/Segmented/Segmented'
 import { Switch } from '../../../../components/Switch/Switch'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { catalogName, optionLabel, propertiesForPlant } from '../../../catalog/catalog'
+import { catalogName, optionLabel } from '../../../catalog/catalog'
+import { sizeChoices, stageChoices } from '../../../greenhouse/plantClass'
 import { CatalogSelect } from '../../../greenhouse/components/CatalogSelect/CatalogSelect'
+import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { parseIdentifySettings, stageSettings } from '../../../../mock/identifySettings'
 import { useStore } from '../../../../mock/store'
 import type {
@@ -18,6 +21,9 @@ import type {
   IdentifyProviderStatus,
   IdentifyProviderStatusKind,
   IdentifyStepId,
+  PlantClassDraft,
+  SizeBand,
+  StageBand,
 } from '../../../../mock/types'
 import { identifyScenarios, formatWhen, providerNameKey, stepLabelKey } from '../../identifyLabels'
 import { IdentifyStageFields } from '../IdentifyStageFields/IdentifyStageFields'
@@ -29,10 +35,10 @@ import {
   DocsLink,
   Empty,
   Fields,
+  SaveError,
   MatchBlock,
   Panel,
   StatusLine,
-  Subhead,
   Toolbar,
 } from './ApisPanel.styles'
 
@@ -48,7 +54,7 @@ const stageLeadKey = {
   species: 'apisStageSpeciesLead',
   draft: 'apisStageDraftLead',
 } as const satisfies Record<IdentifyStepId, string>
-const SKIP_PROPERTIES = new Set(['area'])
+const SKIP_PROPERTIES = new Set(['health', 'size', 'stage', 'area'])
 
 const statusLabelKey = {
   ready: 'apisStatusReady',
@@ -93,6 +99,7 @@ export function ApisPanel({
   onRefresh,
   onChange,
   saving,
+  saveError,
   loading,
   catalogLoading,
 }: {
@@ -103,6 +110,8 @@ export function ApisPanel({
   onChange?: (id: IdentifyProviderId, patch: Partial<IdentifyProviderSettings>) => void
   /** Providers whose controls are being saved. */
   saving?: ReadonlySet<IdentifyProviderId>
+  /** Last save failure for a provider, shown on the stages that use it. */
+  saveError?: Partial<Record<IdentifyProviderId, string>>
   loading?: boolean
   /** Catalog rows are still arriving, so match fields wait. */
   catalogLoading?: boolean
@@ -149,15 +158,24 @@ export function ApisPanel({
                 provider={active}
                 suggestions={suggestions}
                 catalogLoading={catalogLoading}
-                locked={!onChange || Boolean(saving?.has(active.id))}
+                locked={!onChange}
                 busy={Boolean(saving?.has(active.id))}
+                saveError={saveError?.[active.id]}
                 onChange={(patch) => {
                   if (stage === 'species') {
                     onChange?.(active.id, patch)
                     return
                   }
                   const current = stageSettings(parseIdentifySettings(active.enabled, active), stage)
-                  onChange?.(active.id, { [stage]: { ...current, ...patch, match: patch.match ?? current.match } })
+                  onChange?.(active.id, {
+                    [stage]: {
+                      enabled: patch.enabled ?? current.enabled,
+                      response: patch.response ?? current.response,
+                      scenario: patch.scenario ?? current.scenario,
+                      suggestionId: patch.suggestionId ?? current.suggestionId,
+                      match: patch.match ?? current.match,
+                    },
+                  })
                 }}
               />
             )}
@@ -175,6 +193,7 @@ function ProviderBody({
   catalogLoading,
   locked,
   busy,
+  saveError,
   onChange,
 }: {
   stage: IdentifyStepId
@@ -183,6 +202,7 @@ function ProviderBody({
   catalogLoading?: boolean
   locked: boolean
   busy: boolean
+  saveError?: string
   onChange: (patch: Partial<IdentifyProviderSettings>) => void
 }) {
   const { t, locale } = useI18n()
@@ -214,8 +234,12 @@ function ProviderBody({
     {
       label: t.admin.apisStatus,
       value: (
-        <Badge $tone={statusTone(provider.status)}>
-          {t.admin[statusLabelKey[provider.status]]}
+        <Badge $tone={provider.status === 'ready' ? (settings.response === 'mock' ? 'muted' : 'lime') : statusTone(provider.status)}>
+          {provider.status === 'ready'
+            ? settings.response === 'mock'
+              ? t.admin.apisResponseMock
+              : t.admin.apisResponseReady
+            : t.admin[statusLabelKey[provider.status]]}
         </Badge>
       ),
     },
@@ -225,36 +249,42 @@ function ProviderBody({
   if (provider.lastError) items.push({ label: t.admin.apisLastError, value: provider.lastError })
   if (lastUsed) items.push({ label: t.admin.apisLastUsed, value: lastUsed })
 
+  const match = settings.match
   const categories = catalog.categories
-  const categoryId = categories.some((item) => item.id === settings.match.categoryId)
-    ? settings.match.categoryId
-    : (categories[0]?.id ?? '')
+  const categoryId = categories.some((item) => item.id === match.categoryId) ? match.categoryId : ''
   const subs = catalog.subcategories.filter((item) => item.categoryId === categoryId)
-  const subcategoryId = subs.some((item) => item.id === settings.match.subcategoryId)
-    ? settings.match.subcategoryId
-    : (subs[0]?.id ?? '')
-  const matchBase = (): IdentifyMockMatch => ({
+  const subcategoryId =
+    match.subcategory && subs.some((item) => item.id === match.subcategoryId) ? match.subcategoryId : ''
+  const sizeId = match.properties.size ?? ''
+  const stageId = match.properties.stage ?? ''
+  const classDraft: PlantClassDraft = {
     categoryId,
-    subcategory: settings.match.subcategory,
     subcategoryId,
-    properties: settings.match.properties,
-  })
-  const subForProps = settings.match.subcategory ? subcategoryId : ''
-  const requiredProps = propertiesForPlant(catalog, categoryId, subForProps, true).filter(
-    (item) => !SKIP_PROPERTIES.has(item.id),
-  )
-  const moreProps = propertiesForPlant(catalog, categoryId, subForProps, false).filter(
-    (item) => !SKIP_PROPERTIES.has(item.id),
-  )
+    quality: '',
+    size: sizeId as SizeBand | '',
+    stage: stageId as StageBand | '',
+    traits: match.properties,
+  }
+  const sizes = categoryId ? sizeChoices(catalog, classDraft) : []
+  const stages = sizeId ? stageChoices(catalog, classDraft) : []
+  const specTraits = categoryId
+    ? catalog.properties.filter((item) => {
+        if (SKIP_PROPERTIES.has(item.id)) return false
+        if (item.categoryIds.includes(categoryId)) return true
+        return item.subcategoryIds.some((id) => subs.some((sub) => sub.id === id))
+      })
+    : []
   const suggestionChoices = suggestions.filter(
     (item) => item.status === 'open' || item.id === settings.suggestionId,
   )
 
+  const writeMatch = (match: IdentifyMockMatch) => onChange({ match })
   const setProperty = (propertyId: string, optionId: string) => {
-    const properties = { ...settings.match.properties }
+    const properties = { ...match.properties }
     if (optionId) properties[propertyId] = optionId
     else delete properties[propertyId]
-    onChange({ match: { ...matchBase(), properties } })
+    if (propertyId === 'size') delete properties.stage
+    writeMatch({ categoryId, subcategory: Boolean(subcategoryId), subcategoryId, properties })
   }
 
   return (
@@ -279,88 +309,72 @@ function ProviderBody({
           onScenario={(scenario) => onChange({ scenario })}
         />
       </Controls>
+      {saveError ? <SaveError role="alert">{saveError}</SaveError> : null}
 
       {stage === 'draft' && settings.response === 'mock' && settings.scenario === 'match' && (catalogLoading ? (
         <LoaderShell busy />
       ) : (
         <MatchBlock>
-          <Fields>
-            <CatalogSelect
-              label={t.admin.category}
-              value={categoryId}
-              disabled={locked}
-              chooseLabel={t.admin.apisPropertyNone}
-              options={categories.map((item) => ({ id: item.id, label: catalogName(item, locale) }))}
-              onChange={(next) =>
-                onChange({
-                  match: { categoryId: next, subcategory: settings.match.subcategory, subcategoryId: '', properties: {} },
-                })
-              }
-            />
-          </Fields>
-          {subs.length > 0 && (
-            <Switch
-              checked={settings.match.subcategory}
-              disabled={locked}
-              ariaLabel={t.admin.subcategory}
-              onChange={(subcategory) => onChange({ match: { ...matchBase(), subcategory } })}
-              label={settings.match.subcategory ? t.admin.apisSubcategoryOn : t.admin.apisSubcategoryOff}
-            />
-          )}
-          {settings.match.subcategory && subs.length > 0 && (
-            <Fields>
-              <CatalogSelect
-                label={t.admin.subcategory}
-                value={subcategoryId}
-                disabled={locked}
-                chooseLabel={t.admin.apisPropertyNone}
-                options={subs.map((item) => ({ id: item.id, label: catalogName(item, locale) }))}
-                onChange={(next) => onChange({ match: { ...matchBase(), subcategoryId: next } })}
+          <ChoiceChips
+            label={t.admin.category}
+            required
+            disabled={locked}
+            value={categoryId}
+            options={categories.map((item) => ({ id: item.id, label: catalogName(item, locale) }))}
+            onChange={(next) =>
+              writeMatch({ categoryId: next, subcategory: false, subcategoryId: '', properties: {} })
+            }
+          />
+          <ChoiceChips
+            label={t.admin.subcategory}
+            required
+            disabled={locked || !categoryId}
+            value={subcategoryId}
+            options={
+              categoryId ? subs.map((item) => ({ id: item.id, label: catalogName(item, locale), hint: item.code })) : []
+            }
+            onChange={(next) =>
+              writeMatch({ categoryId, subcategory: true, subcategoryId: next, properties: {} })
+            }
+          />
+          <ChoiceChips
+            label={t.admin.size}
+            required
+            disabled={locked || !categoryId}
+            value={sizes.includes(sizeId as SizeBand) ? sizeId : ''}
+            options={sizes.map((id) => ({ id, label: id }))}
+            onChange={(next) => setProperty('size', next)}
+          />
+          <ChoiceChips
+            label={t.admin.stage}
+            required
+            disabled={locked || !sizeId}
+            value={sizeId && stages.includes(stageId as StageBand) ? stageId : ''}
+            options={stages.map((id) => ({ id, label: STAGE_LABEL[id]?.[locale] ?? id }))}
+            onChange={(next) => setProperty('stage', next)}
+          />
+          {specTraits.map((property) => {
+            const open = Boolean(stageId) && (
+              property.subcategoryIds.length > 0
+                ? property.subcategoryIds.includes(subcategoryId)
+                : property.categoryIds.length === 0 || property.categoryIds.includes(categoryId)
+            )
+            return (
+              <ChoiceChips
+                key={property.id}
+                label={catalogName(property, locale)}
+                required={property.required}
+                disabled={locked || !open}
+                value={open ? (match.properties[property.id] ?? '') : ''}
+                options={
+                  open
+                    ? property.options.map((option) => ({ id: option.id, label: optionLabel(option, locale) }))
+                    : []
+                }
+                onChange={(next) => setProperty(property.id, next)}
               />
-            </Fields>
-          )}
-          {requiredProps.length > 0 && (
-            <>
-              <Subhead>{t.admin.properties}</Subhead>
-              <Fields>
-                {requiredProps.map((property) => (
-                  <CatalogSelect
-                    key={property.id}
-                    label={catalogName(property, locale)}
-                    value={settings.match.properties[property.id] ?? ''}
-                    disabled={locked}
-                    chooseLabel={t.admin.apisPropertyNone}
-                    options={property.options.map((option) => ({
-                      id: option.id,
-                      label: optionLabel(option, locale),
-                    }))}
-                    onChange={(next) => setProperty(property.id, next)}
-                  />
-                ))}
-              </Fields>
-            </>
-          )}
-          {moreProps.length > 0 && (
-            <>
-              <Subhead>{t.greenhouse.moreProperties}</Subhead>
-              <Fields>
-                {moreProps.map((property) => (
-                  <CatalogSelect
-                    key={property.id}
-                    label={catalogName(property, locale)}
-                    value={settings.match.properties[property.id] ?? ''}
-                    disabled={locked}
-                    chooseLabel={t.admin.apisPropertyNone}
-                    options={property.options.map((option) => ({
-                      id: option.id,
-                      label: optionLabel(option, locale),
-                    }))}
-                    onChange={(next) => setProperty(property.id, next)}
-                  />
-                ))}
-              </Fields>
-            </>
-          )}
+            )
+          })}
         </MatchBlock>
       ))}
 

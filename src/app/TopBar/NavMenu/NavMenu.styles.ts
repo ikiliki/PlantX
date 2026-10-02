@@ -80,14 +80,30 @@ export const Group = styled.div`
   padding: 2px 0 4px;
 `
 
-export const GroupLabel = styled(Link)`
-  display: block;
+export const GroupLabel = styled.button<{ $open?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
   padding: 8px 12px 4px;
+  border: 0;
+  background: transparent;
+  font: inherit;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  text-align: start;
   color: ${theme.colors.muted};
+  cursor: pointer;
+
+  svg {
+    flex: none;
+    transform: rotate(${({ $open }) => ($open ? 180 : 0)}deg);
+    transition: transform ${theme.motion.base} ${theme.motion.ease};
+  }
+
   &:hover {
     color: ${theme.colors.forest};
   }

@@ -2,7 +2,7 @@ import type { Catalog, CatalogProperty, Locale, QualityGrade } from '../../mock/
 import type { MarketFilterState } from '../market/marketFilters'
 import { catalogName, optionLabel, propertyRelevant, subcategoriesFor } from './catalog'
 
-const PROPERTY_ORDER = ['grade', 'size', 'stage', 'area']
+const PROPERTY_ORDER = ['health', 'size', 'stage', 'area']
 
 export type MarketNameColumn = {
   id: string
@@ -110,7 +110,7 @@ export function filterMarketNames(rows: MarketNameRow[], filters: MarketFilterSt
   return rows.filter((row) => {
     if (filters.speciesId && row.speciesId !== filters.speciesId) return false
     if (filters.subcategoryIds.length > 0 && !filters.subcategoryIds.includes(row.subcategoryId)) return false
-    if (filters.grades.length > 0 && !filters.grades.includes(row.values.grade as QualityGrade)) return false
+    if (filters.grades.length > 0 && !filters.grades.includes(row.values.health as QualityGrade)) return false
     for (const [propertyId, selected] of Object.entries(filters.traits)) {
       if (selected.length === 0) continue
       if (!selected.includes(row.values[propertyId] ?? '')) return false

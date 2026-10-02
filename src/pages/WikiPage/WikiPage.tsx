@@ -1,11 +1,11 @@
 import { useParams } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { PageGate } from '../../components/PageGate/PageGate'
+import { catalogSpecies } from '../../features/species/catalogSpecies'
 import { wikiHref } from '../../features/species/components/GuideLink/GuideLink'
 import { WikiArticle } from '../../features/species/components/WikiArticle/WikiArticle'
 import { WikiIndex } from '../../features/species/components/WikiIndex/WikiIndex'
 import { useI18n } from '../../i18n/I18nProvider'
-import { configuredSpeciesIds } from '../../mock/classDictionary'
 import { useStore } from '../../mock/store'
 import { useServerSlices } from '../../mock/useServerSlices'
 import type { ComponentView } from '../../theme/view'
@@ -15,15 +15,12 @@ function WikiReady({ view }: { view: ComponentView }) {
   const { speciesId } = useParams()
   const { db } = useStore()
   const { t } = useI18n()
-  const species = speciesId ? db.species.find((item) => item.id === speciesId) : undefined
+  const species = speciesId ? catalogSpecies(db, speciesId) : undefined
 
   if (view === 'widget') {
     return (
       <Page>
-        <Header>
-          <h1>{t.guide.title}</h1>
-        </Header>
-        <WikiIndex speciesIds={configuredSpeciesIds} view="widget" />
+        <WikiIndex view="widget" />
       </Page>
     )
   }
@@ -51,12 +48,7 @@ function WikiReady({ view }: { view: ComponentView }) {
 
   return (
     <Page>
-      <Header>
-        <p>{t.guide.eyebrow}</p>
-        <h1>{t.guide.title}</h1>
-        <p>{t.guide.subtitle}</p>
-      </Header>
-      <WikiIndex speciesIds={configuredSpeciesIds} />
+      <WikiIndex />
     </Page>
   )
 }

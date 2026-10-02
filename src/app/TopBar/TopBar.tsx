@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
+import { catalogSpecies } from '../../features/species/catalogSpecies'
 import { groupByRarity, wikiRarityTitle } from '../../features/species/wikiGroups'
-import { categoryName, classDictionary } from '../../mock/classDictionary'
 import { useStore } from '../../mock/store'
 import { isOperator } from '../../theme/operator'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
@@ -56,11 +56,11 @@ export function TopBar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const wikiPlants = classDictionary.map((plant) => {
-    const species = db.species.find((item) => item.id === plant.speciesId)
+  const wikiPlants = db.catalog.categories.map((category) => {
+    const species = catalogSpecies(db, category.speciesId)
     return {
-      id: plant.speciesId,
-      label: categoryName(plant, locale),
+      id: category.speciesId,
+      label: locale === 'he' ? category.nameHe : category.name,
       rarity: species?.rarity ?? 'common',
     }
   })

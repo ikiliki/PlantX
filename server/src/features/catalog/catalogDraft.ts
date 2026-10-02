@@ -64,7 +64,7 @@ function parseProperty(value: unknown, taken: Set<string>): SuggestedProperty | 
   if (!value || typeof value !== 'object') return undefined
   const row = value as Record<string, unknown>
   const name = text(row.name)
-  if (!name || /^(grade|size|stage)$/i.test(name)) return undefined
+  if (!name || /^(health|grade|size|stage)$/i.test(name)) return undefined
   const scope = row.scope === 'subcategory' ? 'subcategory' : 'category'
   let inMarketName = row.inMarketName === true
   let sign = inMarketName ? letters(text(row.sign), 3) : ''

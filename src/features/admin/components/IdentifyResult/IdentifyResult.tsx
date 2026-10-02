@@ -33,7 +33,7 @@ const fieldOrder: IdentifyFieldId[] = ['category', 'subcategory', 'quality', 'si
 const fieldLabelKey = {
   category: 'category',
   subcategory: 'subcategory',
-  quality: 'grade',
+  quality: 'health',
   size: 'size',
   stage: 'stage',
 } as const satisfies Record<IdentifyFieldId, string>
@@ -66,7 +66,7 @@ function mappedItems(
   const items: DetailItem[] = [{ label: t.admin.category, value: catalogName(category, locale) }]
   if (sub) items.push({ label: t.admin.subcategory, value: catalogName(sub, locale) })
   if (draft.quality) {
-    items.push({ label: t.admin.grade, value: optionText(catalog, 'grade', draft.quality, locale) })
+    items.push({ label: t.admin.health, value: optionText(catalog, 'health', draft.quality, locale) })
   }
   if (draft.size) {
     items.push({ label: t.admin.size, value: optionText(catalog, 'size', draft.size, locale) })

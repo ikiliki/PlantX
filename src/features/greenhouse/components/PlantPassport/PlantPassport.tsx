@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../../../components/Button/Button'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
-import { GradeChip } from '../../../../components/GradeChip/GradeChip'
+import { HealthChip } from '../../../../components/HealthChip/HealthChip'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useAuth } from '../../../auth/AuthProvider'
 import {
@@ -420,7 +420,7 @@ export function PlantPassport({
                     <TimelineRow key={`${grade.at}-${index}`}>
                       <time dateTime={grade.at}>{formatGradeWhen(grade.at, locale)}</time>
                       <GradeRow>
-                        <GradeChip grade={grade.letter} />
+                        <HealthChip health={grade.letter} />
                         <span>{t.grade.anonymousEntry}</span>
                       </GradeRow>
                     </TimelineRow>

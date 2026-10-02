@@ -13,7 +13,8 @@ description: >-
 
 - Put UI in `src/components`, `src/features/<feature>/components`, or `src/pages`.
 - Each component has a sibling `*.styles.ts` (styled-components) and a story.
-- A landing mock, rail, or card uses the same component as the route. Do not draw a second fake version of a table, deck, feed, or wiki.
+- A landing mock, rail, or card uses the same component as the route. Do not draw a second fake version of a table, deck, feed, or catalog.
+- The catalog is the wiki route (`/wiki`, feature id `wiki`). The tab label is Catalog. Its menu lists All, then rarity headings collapsed until clicked. The catalog page has no title block. The contents table starts collapsed. Under it, Common starts open and the other rarities stay closed until clicked. Home `WikiRail` stays off the phone (hidden under 900px of the home shell) and on the wider rails. Its rows open `CatalogPreview` (photos, this season’s light and water); the full seasons stay on the article. On a phone that preview is a 75svh sheet with `SheetGrip`.
 
 ## View
 
@@ -34,7 +35,7 @@ Shared type: `ComponentView` in `src/theme/view.ts` — `'page' | 'widget'`.
 - Check phones with `scripts/mobile-audit.mjs` (mock dev server on 5174; 280–1000px, routes and dialogs); it lists anything poking past the viewport or its own card.
 - Do not `transform: scale()` a full page into a frame. The landing used to render a viewport-wide tree and scale it; that clipped type and made container queries read the wrong ancestor.
 - Viewport `@media` is only for the app shell (top bar, bottom nav). Embedded components use `@container`.
-- Listing rows: the table scroller is the container. At `max-width: 720px` the row keeps photo, name, grade, price, and change.
+- Listing rows: the table scroller is the container. At `max-width: 720px` the row keeps photo, name, health, price, and change.
 - Home columns follow `DiscoverPage` `Shell`. Below 900px the left rail hides; phones get a fixed, draggable `HomeMobileFloats` (`FloatChip`) for Needs you today — drag to move, tap opens a sheet popup (no dismiss). The greenhouse lure float is off the phone for now. Pinned greenhouses stay on the desktop home rail only. No inline MobileLure / MobileTodo / friends-world filter on the feed. `GreenhouseLure` always shows 3 shelf slots (plants, then empty + cards: 0→3, 1→2, 2→1, 3→0) and a compact `LoaderShell` while the plants slice is in flight.
 - A grower popup (`GreenhousePublic` compact, from the news avatar or `/sellers/:id`) keeps the name header and lists that greenhouse in a vertical scroller. The window shows one fewer plant than they have, unless there are 0 or 1, and never more than 3. Go to greenhouse stays under the list on every width and opens `/greenhouse/:ownerId` — the public greenhouse page, not a profile. The name in the popup does not navigate. A plant in that list or on the public greenhouse opens `PassportDialog`.
 - Market list and map follow `MarketPage` `Board` at 960px. Greenhouse and Tasks page headings are the name only; each hides under 720px of `Page` (the greenhouse wallet card stays when that placement is on).

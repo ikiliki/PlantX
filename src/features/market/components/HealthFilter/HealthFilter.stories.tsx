@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { StoreProvider } from '../../../../mock/store'
-import { GradeFilter } from './GradeFilter'
+import { HealthFilter } from './HealthFilter'
 
 const withApp = (Story: () => ReactNode) => (
   <StoreProvider source="example">
@@ -14,21 +14,23 @@ const withApp = (Story: () => ReactNode) => (
 )
 
 export default {
-  title: 'Features/Market/GradeFilter',
-  component: GradeFilter,
+  title: 'Features/Market/HealthFilter',
+  component: HealthFilter,
   decorators: [withApp],
 }
 
 export const Interactive = () => {
   const [value, setValue] = useState('all')
   return (
-    <GradeFilter
+    <HealthFilter
       value={value}
       onChange={setValue}
       options={[
-        { grade: 'A', count: 12 },
-        { grade: 'B', count: 4 },
-        { grade: 'C', count: 1 },
+        { health: 'S', count: 2 },
+        { health: 'A', count: 12 },
+        { health: 'B', count: 4 },
+        { health: 'C', count: 1 },
+        { health: 'D', count: 1 },
       ]}
     />
   )

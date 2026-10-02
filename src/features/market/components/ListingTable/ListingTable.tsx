@@ -7,9 +7,9 @@ import { ListingRow } from '../ListingRow/ListingRow'
 import { HeadCell, Header, Scroll, Sheet } from './ListingTable.styles'
 import { toListingRow, type ListingRowModel } from './listingRows'
 
-type SortKey = 'name' | 'grade' | 'size' | 'stage' | 'area' | 'qty' | 'price' | 'change'
+type SortKey = 'name' | 'health' | 'size' | 'stage' | 'area' | 'qty' | 'price' | 'change'
 
-const textKeys: SortKey[] = ['name', 'area', 'stage', 'grade', 'size']
+const textKeys: SortKey[] = ['name', 'area', 'stage', 'health', 'size']
 
 function compare(a: ListingRowModel, b: ListingRowModel, key: SortKey, dir: 1 | -1, locale: string) {
   const sign = dir
@@ -18,7 +18,7 @@ function compare(a: ListingRowModel, b: ListingRowModel, key: SortKey, dir: 1 | 
     const right = key === 'name' ? b.name : b.area
     return left.localeCompare(right, locale) * sign
   }
-  if (key === 'grade') return (a.gradeRank - b.gradeRank) * sign
+  if (key === 'health') return (a.healthRank - b.healthRank) * sign
   if (key === 'size') return (a.sizeRank - b.sizeRank) * sign
   if (key === 'stage') return (a.stageRank - b.stageRank) * sign
   if (key === 'qty') return (a.qty - b.qty) * sign
@@ -116,7 +116,7 @@ export function ListingTable({
 
   const columns: { key: SortKey; label: string }[] = [
     { key: 'name', label: t.market.filterCategories },
-    { key: 'grade', label: t.market.filterGrade },
+    { key: 'health', label: t.market.filterGrade },
     { key: 'size', label: t.market.size },
     { key: 'stage', label: t.market.stage },
     { key: 'area', label: t.market.filterArea },

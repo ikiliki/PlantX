@@ -1,3 +1,4 @@
+import { isSize, isStage } from '../../../../src/mock/catalog.ts'
 import type { Catalog, PlantClassDraft, QualityGrade, SizeBand, StageBand } from '../../../../src/mock/types.ts'
 import type { RawSuggestion } from './types.ts'
 
@@ -75,20 +76,20 @@ export function mapDiagnosis(raw: RawSuggestion, catalog: Catalog): Partial<Plan
     if (subcategoryId) draft.subcategoryId = subcategoryId
   }
 
-  if (raw.quality && hasOption(catalog, 'grade', raw.quality)) {
+  if (raw.quality && hasOption(catalog, 'health', raw.quality)) {
     draft.quality = raw.quality as QualityGrade
   }
-  if (raw.size && hasOption(catalog, 'size', raw.size)) {
+  if (raw.size && (isSize(raw.size) || hasOption(catalog, 'size', raw.size))) {
     draft.size = raw.size as SizeBand
   }
-  if (raw.stage && hasOption(catalog, 'stage', raw.stage)) {
+  if (raw.stage && (isStage(raw.stage) || hasOption(catalog, 'stage', raw.stage))) {
     draft.stage = raw.stage as StageBand
   }
 
   if (raw.traits) {
     const traits: Record<string, string> = {}
     for (const [propertyId, optionId] of Object.entries(raw.traits)) {
-      if (['grade', 'size', 'stage', 'area'].includes(propertyId)) continue
+      if (['health', 'size', 'stage', 'area'].includes(propertyId)) continue
       if (!optionId) continue
       if (!hasOption(catalog, propertyId, optionId)) continue
       traits[propertyId] = optionId

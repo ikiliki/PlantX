@@ -2,7 +2,8 @@ import { classTrades } from '../../mock/marketHistory'
 import type { Locale, MarketClass, MockDb, Species } from '../../mock/types'
 import type { RangeRow } from './components/PriceRanges/PriceRanges'
 import type { ChartTrade } from './components/TradeChart/TradeChart'
-import type { GradeOption } from './components/GradeFilter/GradeFilter'
+import { HEALTH_RANK } from '../../mock/catalog'
+import type { HealthOption } from './components/HealthFilter/HealthFilter'
 
 export type CategoryGroup = { species: Species; classes: MarketClass[] }
 
@@ -12,14 +13,16 @@ export function categoryGroups(db: MockDb): CategoryGroup[] {
     .filter((group) => group.classes.length > 0)
 }
 
-export function filterByGrade(classes: MarketClass[], grade: string) {
-  return grade === 'all' ? classes : classes.filter((mc) => mc.quality === grade)
+export function filterByHealth(classes: MarketClass[], health: string) {
+  return health === 'all' ? classes : classes.filter((mc) => mc.quality === health)
 }
 
-export function gradeOptions(classes: MarketClass[]): GradeOption[] {
+export function healthOptions(classes: MarketClass[]): HealthOption[] {
   const counts = new Map<string, number>()
   for (const mc of classes) counts.set(mc.quality, (counts.get(mc.quality) ?? 0) + 1)
-  return [...counts.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([grade, count]) => ({ grade, count }))
+  return [...counts.entries()]
+    .sort(([a], [b]) => (HEALTH_RANK[a as keyof typeof HEALTH_RANK] ?? 9) - (HEALTH_RANK[b as keyof typeof HEALTH_RANK] ?? 9))
+    .map(([health, count]) => ({ health, count }))
 }
 
 export function className(mc: MarketClass, locale: Locale) {
@@ -47,7 +50,9 @@ export function classRow(mc: MarketClass, locale: Locale, highlightId?: string):
 }
 
 export function categoryRow(group: CategoryGroup, locale: Locale, classesLabel: string): RangeRow {
-  const grades = [...new Set(group.classes.map((mc) => mc.quality))].sort().join(' · ')
+  const grades = [...new Set(group.classes.map((mc) => mc.quality))]
+    .sort((a, b) => HEALTH_RANK[a] - HEALTH_RANK[b])
+    .join(' · ')
   return {
     id: group.species.id,
     label: speciesName(group.species, locale),

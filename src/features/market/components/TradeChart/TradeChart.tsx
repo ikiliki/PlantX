@@ -3,7 +3,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import type { MarketTrade } from '../../../../mock/marketHistory'
 import { theme } from '../../../../theme/tokens'
 import { evenIndices, formatDay, priceScale, scaleExtent, useElementWidth } from '../../chartScale'
-import { gradeTone } from '../../gradeTone'
+import { healthTone } from '../../healthTone'
 import { Empty, Plot, Svg, Tooltip } from './TradeChart.styles'
 
 const PAD = { top: 12, right: 62, bottom: 26, left: 6 }
@@ -109,7 +109,7 @@ export function TradeChart({ trades, height = 280 }: { trades: ChartTrade[]; hei
           ))}
           <line x1={PAD.left} x2={PAD.left + plotW} y1={PAD.top + plotH} y2={PAD.top + plotH} stroke={theme.colors.border} />
           {ordered.map((trade, i) => {
-            const tone = gradeTone(trade.quality)
+            const tone = healthTone(trade.quality)
             const on = trade.id === hoverId
             return (
               <circle

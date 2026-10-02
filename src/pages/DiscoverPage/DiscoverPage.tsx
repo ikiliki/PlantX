@@ -98,7 +98,9 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
           <TopGreenhouses />
           <MarketRail />
           <RankRail />
-          <WikiRail />
+          <div data-wiki-rail>
+            <WikiRail />
+          </div>
         </Rail>
       </Layout>
       <HomeMobileFloats />

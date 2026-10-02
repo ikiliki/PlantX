@@ -11,7 +11,17 @@ export interface Area extends Place {
   id: string
 }
 
+/** Default greenhouse place. Not a shopper filter. */
+export const UNKNOWN_AREA: Area = {
+  id: 'unknown',
+  region: 'Unknown',
+  regionHe: 'לא ידוע',
+  lat: 31.411,
+  lng: 35.082,
+}
+
 export const AREAS: Area[] = [
+  UNKNOWN_AREA,
   { id: 'tel-aviv', region: 'Tel Aviv', regionHe: 'תל אביב', lat: 32.0853, lng: 34.7818 },
   { id: 'central', region: 'Central Israel', regionHe: 'מרכז', lat: 31.973, lng: 34.807 },
   { id: 'sharon', region: 'Sharon', regionHe: 'שרון', lat: 32.3215, lng: 34.8532 },
@@ -19,8 +29,8 @@ export const AREAS: Area[] = [
   { id: 'israel', region: 'Israel', regionHe: 'ישראל', lat: 31.411, lng: 35.082 },
 ]
 
-/** Areas a shopper can pick. The country-wide label is not a specific place. */
-export const MARKET_AREAS = AREAS.filter((area) => area.id !== 'israel')
+/** Areas a shopper can pick. Unknown and the country-wide label are not specific places. */
+export const MARKET_AREAS = AREAS.filter((area) => area.id !== 'israel' && area.id !== UNKNOWN_AREA.id)
 
 export const RADIUS_KM = [20, 50, 100] as const
 
@@ -36,6 +46,8 @@ const ALIASES: Record<string, string> = {
   חיפה: 'haifa',
   israel: 'israel',
   ישראל: 'israel',
+  unknown: 'unknown',
+  'לא ידוע': 'unknown',
 }
 
 export function resolveArea(value: string | undefined | null): Area | undefined {
@@ -48,6 +60,22 @@ export function resolveArea(value: string | undefined | null): Area | undefined 
 
 export function areaById(id: string): Area | undefined {
   return AREAS.find((area) => area.id === id)
+}
+
+/** Greenhouse place for an owner. Empty or unrecognized regions are Unknown. */
+export function ownerGreenhousePlace(user: User | null | undefined): Place {
+  const area = resolveArea(user?.region) ?? UNKNOWN_AREA
+  const known = Boolean(resolveArea(user?.region))
+  return {
+    region: area.region,
+    regionHe: area.regionHe,
+    lat: known && user?.lat != null ? user.lat : area.lat,
+    lng: known && user?.lng != null ? user.lng : area.lng,
+  }
+}
+
+export function greenhouseAreaId(region: string | undefined | null) {
+  return (resolveArea(region) ?? UNKNOWN_AREA).id
 }
 
 export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
@@ -127,6 +155,7 @@ export function placeMatches(
   const active = Boolean(filter.areaId) || filter.radiusKm != null
   if (!active) return true
   if (!place) return false
+  if (resolveArea(place.region)?.id === UNKNOWN_AREA.id) return false
   if (filter.areaId) {
     const area = areaById(filter.areaId)
     if (!area || place.region !== area.region) return false
@@ -158,8 +187,7 @@ export function hydrateLocations(db: MockDb) {
   }
   for (const plant of db.plants) {
     const owner = db.users.find((user) => user.id === plant.ownerId)
-    const area = resolveArea(plant.locationZone) ?? resolveArea(owner?.region)
-    if (!area) continue
+    const area = resolveArea(plant.locationZone) ?? resolveArea(owner?.region) ?? UNKNOWN_AREA
     plant.locationZone = area.region
     if (!plant.locationZoneHe) plant.locationZoneHe = area.regionHe
     if (plant.lat == null) plant.lat = area.lat

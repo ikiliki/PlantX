@@ -1,17 +1,17 @@
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { gradeTone } from '../../gradeTone'
-import { Group, Pill } from './GradeFilter.styles'
+import { healthTone } from '../../healthTone'
+import { Group, Pill } from './HealthFilter.styles'
 
-export type GradeOption = { grade: string; count: number }
+export type HealthOption = { health: string; count: number }
 
-export function GradeFilter({
+export function HealthFilter({
   options,
   value,
   onChange,
 }: {
-  options: GradeOption[]
+  options: HealthOption[]
   value: string
-  onChange: (grade: string) => void
+  onChange: (health: string) => void
 }) {
   const { t } = useI18n()
   const total = options.reduce((sum, option) => sum + option.count, 0)
@@ -23,14 +23,14 @@ export function GradeFilter({
       </Pill>
       {options.map((option) => (
         <Pill
-          key={option.grade}
+          key={option.health}
           type="button"
-          $on={value === option.grade}
-          aria-pressed={value === option.grade}
-          onClick={() => onChange(option.grade)}
+          $on={value === option.health}
+          aria-pressed={value === option.health}
+          onClick={() => onChange(option.health)}
         >
-          <i style={{ background: gradeTone(option.grade).strong }} />
-          {t.market.filterGrade} {option.grade} <small>{option.count}</small>
+          <i style={{ background: healthTone(option.health).strong }} />
+          {t.market.filterGrade} {option.health} <small>{option.count}</small>
         </Pill>
       ))}
     </Group>

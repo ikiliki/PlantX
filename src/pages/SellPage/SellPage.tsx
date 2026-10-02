@@ -23,7 +23,7 @@ import {
   rootingToStage,
   varietyCode,
 } from '../../mock/marketNaming'
-import { AREAS, areaById, userPlace } from '../../mock/locations'
+import { AREAS, UNKNOWN_AREA, areaById, userPlace } from '../../mock/locations'
 import { useStore } from '../../mock/store'
 import type { QualityGrade, SizeBand } from '../../mock/types'
 import {
@@ -104,7 +104,7 @@ export function SellPage({
   const [sizeBand, setSizeBand] = useState<SizeBand>(preset?.sizeBand ?? 'M')
   const home = userPlace(currentUser)
   const [areaId, setAreaId] = useState(
-    AREAS.find((area) => area.region === home?.region)?.id ?? '',
+    AREAS.find((area) => area.id !== UNKNOWN_AREA.id && area.region === home?.region)?.id ?? '',
   )
 
   if (!currentUser || currentUser.role === 'guest') {
@@ -311,9 +311,11 @@ export function SellPage({
                     value={quality}
                     onChange={(e) => setQuality(e.target.value as QualityGrade)}
                   >
+                    <option value="S">S</option>
                     <option value="A">A</option>
                     <option value="B">B</option>
                     <option value="C">C</option>
+                    <option value="D">D</option>
                   </Select>
                 </FieldBox>
                 <FieldBox>
@@ -341,7 +343,7 @@ export function SellPage({
                     onChange={(e) => setAreaId(e.target.value)}
                   >
                     <option value="">{t.greenhouse.locationPlaceholder}</option>
-                    {AREAS.map((area) => (
+                    {AREAS.filter((area) => area.id !== UNKNOWN_AREA.id).map((area) => (
                       <option key={area.id} value={area.id}>
                         {locale === 'he' ? area.regionHe : area.region}
                       </option>

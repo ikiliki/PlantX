@@ -80,6 +80,9 @@ export const Facts = styled.dl`
   display: grid;
   gap: 8px;
   margin: 0;
+  padding: 12px 14px;
+  border-radius: ${theme.radii.md};
+  background: ${theme.colors.chipGreen};
 `
 
 export const Fact = styled.div`
@@ -94,23 +97,6 @@ export const Fact = styled.div`
   }
   dd {
     margin: 0;
-  }
-`
-
-export const Note = styled.p`
-  display: grid;
-  gap: 4px;
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: ${theme.radii.md};
-  background: ${theme.colors.chipGreen};
-  font-size: 14px;
-  line-height: 1.5;
-  color: ${theme.colors.forest};
-  strong {
-    font-size: 12px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
   }
 `
 

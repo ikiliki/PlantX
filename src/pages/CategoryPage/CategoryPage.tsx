@@ -3,15 +3,16 @@ import { useParams } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { PlantImage } from '../../components/PlantImage/PlantImage'
-import { classRow, filterByGrade, gradeOptions, speciesName, tradesFor } from '../../features/market/categoryData'
+import { classRow, filterByHealth, healthOptions, speciesName, tradesFor } from '../../features/market/categoryData'
 import { ChartPanel } from '../../features/market/components/ChartPanel/ChartPanel'
-import { GradeFilter } from '../../features/market/components/GradeFilter/GradeFilter'
+import { HealthFilter } from '../../features/market/components/HealthFilter/HealthFilter'
 import { PriceRanges } from '../../features/market/components/PriceRanges/PriceRanges'
 import { StockChart } from '../../features/market/components/StockChart/StockChart'
 import { TradeChart } from '../../features/market/components/TradeChart/TradeChart'
 import { TradeTable } from '../../features/market/components/TradeTable/TradeTable'
 import { WikiArticle } from '../../features/species/components/WikiArticle/WikiArticle'
 import { useI18n } from '../../i18n/I18nProvider'
+import { HEALTH_RANK } from '../../mock/catalog'
 import { averageHistory } from '../../mock/marketHistory'
 import { useStore } from '../../mock/store'
 import { useServerSlices } from '../../mock/useServerSlices'
@@ -22,17 +23,17 @@ function CategoryReady({ speciesId: speciesIdProp }: { speciesId?: string }) {
   const speciesId = speciesIdProp ?? routeId
   const { db } = useStore()
   const { t, tr, locale, formatMoney } = useI18n()
-  const [grade, setGrade] = useState('all')
+  const [health, setHealth] = useState('all')
 
   const species = db.species.find((item) => item.id === speciesId)
   const classes = useMemo(
     () => db.marketClasses.filter((mc) => mc.speciesId === speciesId),
     [db.marketClasses, speciesId],
   )
-  const visible = useMemo(() => filterByGrade(classes, grade), [classes, grade])
+  const visible = useMemo(() => filterByHealth(classes, health), [classes, health])
   const history = useMemo(() => averageHistory(visible), [visible])
   const trades = useMemo(() => tradesFor(visible), [visible])
-  const options = useMemo(() => gradeOptions(classes), [classes])
+  const options = useMemo(() => healthOptions(classes), [classes])
 
   if (!species) {
     return (
@@ -97,11 +98,11 @@ function CategoryReady({ speciesId: speciesIdProp }: { speciesId?: string }) {
         <WikiArticle species={species} />
       ) : (
         <>
-          <GradeFilter options={options} value={grade} onChange={setGrade} />
+          <HealthFilter options={options} value={health} onChange={setHealth} />
 
           <ChartPanel>
             <StockChart
-              key={grade}
+              key={health}
               label={t.charts.categoryAverage}
               points={history}
               defaultRange="3M"
@@ -117,7 +118,7 @@ function CategoryReady({ speciesId: speciesIdProp }: { speciesId?: string }) {
             title={t.charts.ladderTitle}
             hint={t.charts.ladderHint}
             rows={visible.map((mc) => classRow(mc, locale))}
-            grades={[...new Set(visible.map((mc) => mc.quality))].sort()}
+            grades={[...new Set(visible.map((mc) => mc.quality))].sort((a, b) => HEALTH_RANK[a] - HEALTH_RANK[b])}
           />
 
           <ChartPanel title={t.charts.transactions} hint={t.charts.transactionsHint}>

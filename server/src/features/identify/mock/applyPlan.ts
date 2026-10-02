@@ -11,13 +11,11 @@ function applyMatch(raw: RawSuggestion, catalog: Catalog, match: IdentifyMockMat
     catalog.categories.find((item) => item.id === match.categoryId) ?? catalog.categories[0]
   if (!category) return raw
   const subs = catalog.subcategories.filter((item) => item.categoryId === category.id)
-  const sub = match.subcategory
-    ? (subs.find((item) => item.id === match.subcategoryId) ?? subs[0])
-    : undefined
+  const sub = match.subcategory ? subs.find((item) => item.id === match.subcategoryId) : undefined
   const props = match.properties ?? {}
   const traits: Record<string, string> = {}
   for (const [key, optionId] of Object.entries(props)) {
-    if (!optionId || key === 'grade' || key === 'size' || key === 'stage' || key === 'area') continue
+    if (!optionId || key === 'health' || key === 'size' || key === 'stage' || key === 'area') continue
     traits[key] = optionId
   }
   const name = category.name.trim()
@@ -31,7 +29,7 @@ function applyMatch(raw: RawSuggestion, catalog: Catalog, match: IdentifyMockMat
     commonNames: [sub?.name ?? name],
     genus: name.split(/\s+/)[0] || name,
     label: sub ? `${name} '${sub.name}'` : name,
-    quality: props.grade || undefined,
+    quality: props.health || undefined,
     size: props.size || undefined,
     stage: props.stage || undefined,
     traits: Object.keys(traits).length ? traits : undefined,

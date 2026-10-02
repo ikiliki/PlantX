@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react'
-import { GradeChip } from '../../../../components/GradeChip/GradeChip'
+import { HealthChip } from '../../../../components/HealthChip/HealthChip'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { priceScale, scaleExtent } from '../../chartScale'
-import { gradeTone } from '../../gradeTone'
+import { healthTone } from '../../healthTone'
 import {
   AxisRow,
   AxisTrack,
@@ -67,7 +67,7 @@ export function PriceRanges({
   const ticks = scale.ticks.length > 7 ? scale.ticks.filter((_, i) => i % 2 === 0) : scale.ticks
 
   const renderRow = (row: RangeRow, index: number): ReactNode => {
-    const tone = gradeTone(row.grade)
+    const tone = healthTone(row.grade)
     const start = scale.at(row.low)
     const end = scale.at(row.high)
     const body = (
@@ -75,7 +75,7 @@ export function PriceRanges({
         <Name>
           <strong>{row.label}</strong>
           <Sub>
-            {row.grade && <GradeChip grade={row.grade} />}
+            {row.grade && <HealthChip health={row.grade} />}
             {row.sub}
           </Sub>
         </Name>
@@ -98,7 +98,7 @@ export function PriceRanges({
               key={mark.id}
               $index={index}
               $size={9}
-              style={{ left: pct(mark.value), background: gradeTone(mark.grade).strong }}
+              style={{ left: pct(mark.value), background: healthTone(mark.grade).strong }}
               title={`${mark.label} · ${formatMoney(mark.value)}`}
             />
           ))}
@@ -166,7 +166,7 @@ export function PriceRanges({
         <Legend>
           {grades.map((grade) => (
             <LegendItem key={grade}>
-              <i style={{ background: gradeTone(grade).strong }} />
+              <i style={{ background: healthTone(grade).strong }} />
               {t.market.filterGrade} {grade}
             </LegendItem>
           ))}

@@ -62,8 +62,14 @@ export function parseIdentifySettings(enabled: boolean, config: unknown): Identi
 /** A nested stage, or the provider settings when that stage was never saved on its own. */
 export function stageSettings(settings: IdentifyProviderSettings, stage: 'gate' | 'draft'): IdentifyProviderSettings {
   const nested = settings[stage]
-  if (!nested) return settings
-  return { ...settings, ...nested, match: nested.match, gate: undefined, draft: undefined }
+  if (!nested || (nested.response !== 'ready' && nested.response !== 'mock')) return settings
+  return {
+    enabled: typeof nested.enabled === 'boolean' ? nested.enabled : settings.enabled,
+    response: nested.response,
+    scenario: nested.scenario || settings.scenario,
+    suggestionId: nested.suggestionId ?? settings.suggestionId,
+    match: nested.match ?? settings.match,
+  }
 }
 
 export function mergeIdentifySettings(

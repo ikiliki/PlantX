@@ -1,7 +1,16 @@
 import styled from 'styled-components'
 import { theme } from '../../theme/tokens'
 
-export const Chip = styled.span<{ $grade: string }>`
+function tone(health: string) {
+  if (health === 'S') return { bg: theme.colors.forest, fg: theme.colors.cream }
+  if (health === 'A') return { bg: theme.colors.chipGreen, fg: theme.colors.forest }
+  if (health === 'B') return { bg: theme.colors.chipWarm, fg: theme.colors.warn }
+  if (health === 'C') return { bg: '#F6DED4', fg: theme.colors.danger }
+  if (health === 'D') return { bg: '#E8DDD6', fg: theme.colors.muted }
+  return { bg: theme.colors.chipNeutral, fg: theme.colors.muted }
+}
+
+export const Chip = styled.span<{ $health: string }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -11,22 +20,8 @@ export const Chip = styled.span<{ $grade: string }>`
   border-radius: ${theme.radii.sm};
   font-weight: 800;
   font-size: 13px;
-  background: ${({ $grade }) =>
-    $grade === 'A'
-      ? theme.colors.chipGreen
-      : $grade === 'B'
-        ? theme.colors.chipWarm
-        : $grade === 'C'
-          ? '#F6DED4'
-          : theme.colors.chipNeutral};
-  color: ${({ $grade }) =>
-    $grade === 'A'
-      ? theme.colors.forest
-      : $grade === 'B'
-        ? theme.colors.warn
-        : $grade === 'C'
-          ? theme.colors.danger
-          : theme.colors.muted};
+  background: ${({ $health }) => tone($health).bg};
+  color: ${({ $health }) => tone($health).fg};
 `
 
 export const Wrap = styled.span`

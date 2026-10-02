@@ -39,10 +39,13 @@ function configOf(settings: IdentifyProviderSettings) {
 /** A missing table reads as all enabled and ready. Saving needs the table. */
 export function supabaseIdentifySettings(pool: pg.Pool): PlantxStore['identifySettings'] {
   let warnedMissing = false
+  let configReady = false
 
   async function ensureConfig() {
+    if (configReady) return
     try {
       await pool.query(ENSURE_CONFIG)
+      configReady = true
     } catch (err) {
       if (!isCode(err, UNDEFINED_TABLE)) throw err
     }

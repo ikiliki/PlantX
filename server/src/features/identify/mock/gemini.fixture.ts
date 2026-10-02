@@ -15,7 +15,7 @@ function envelope(json: GeminiJson): GeminiBody {
 function firstTraits(catalog: Catalog): Record<string, string> {
   const traits: Record<string, string> = {}
   for (const prop of catalog.properties) {
-    if (['grade', 'size', 'stage', 'area'].includes(prop.id)) continue
+    if (['health', 'size', 'stage', 'area'].includes(prop.id)) continue
     const option = prop.options[0]?.id
     if (option) traits[prop.id] = option
   }

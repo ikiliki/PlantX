@@ -1,10 +1,18 @@
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { ListingRowModel } from '../ListingTable/listingRows'
-import { Cell, Change, Grade, Name, NameCell, Pending, Price, Row, Thumb } from './ListingRow.styles'
+import { Cell, Change, Health, Name, NameCell, Pending, Price, Row, Thumb } from './ListingRow.styles'
 
-function GradeIcon({ grade }: { grade: string }) {
-  if (grade === 'B') {
+function HealthIcon({ health }: { health: string }) {
+  if (health === 'D') {
+    return (
+      <svg viewBox="0 0 16 16" aria-hidden>
+        <circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M5.5 8h5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    )
+  }
+  if (health === 'B') {
     return (
       <svg viewBox="0 0 16 16" aria-hidden>
         <circle cx="8" cy="8" r="3.2" fill="currentColor" />
@@ -18,7 +26,7 @@ function GradeIcon({ grade }: { grade: string }) {
       </svg>
     )
   }
-  if (grade === 'C') {
+  if (health === 'C') {
     return (
       <svg viewBox="0 0 16 16" aria-hidden>
         <path
@@ -81,10 +89,10 @@ export function ListingRow({
           </Pending>
         )}
       </NameCell>
-      <Grade $grade={row.grade}>
-        <GradeIcon grade={row.grade} />
-        {row.grade}
-      </Grade>
+      <Health $health={row.health}>
+        <HealthIcon health={row.health} />
+        {row.health}
+      </Health>
       <Cell>{row.size}</Cell>
       <Cell>{row.stage}</Cell>
       <Cell>{row.area}</Cell>

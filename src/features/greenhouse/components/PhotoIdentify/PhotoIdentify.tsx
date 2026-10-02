@@ -85,7 +85,7 @@ function diagnosisFacts(
       : null,
     category ? { id: 'category', label: t.admin.category, value: catalogName(category, locale) } : null,
     sub ? { id: 'subcategory', label: t.admin.subcategory, value: catalogName(sub, locale) } : null,
-    draft.quality ? { id: 'grade', label: t.admin.grade, value: draft.quality } : null,
+    draft.quality ? { id: 'health', label: t.admin.health, value: draft.quality } : null,
     draft.size ? { id: 'size', label: t.admin.size, value: draft.size } : null,
     draft.stage
       ? { id: 'stage', label: t.admin.stage, value: STAGE_LABEL[draft.stage]?.[locale] ?? draft.stage }

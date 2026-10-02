@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Icon } from '../../../components/Icon/Icon'
 import { NavItem, NavMark } from '../TopBar.styles'
@@ -33,10 +33,15 @@ export function NavMenu({
   const loc = useLocation()
   const ref = useRef<HTMLDivElement>(null)
   const hide = useRef(0)
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const active = loc.pathname === to || (to !== '/' && loc.pathname.startsWith(to))
   const here = `${loc.pathname}${loc.search}${loc.hash}`
 
   useEffect(() => () => window.clearTimeout(hide.current), [])
+
+  useEffect(() => {
+    if (!open) setExpanded({})
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -94,20 +99,28 @@ export function NavMenu({
             item.children?.length ? (
               <Group key={item.to}>
                 {item.dividerBefore && <Rule />}
-                <GroupLabel to={item.to} onClick={onClose}>
+                <GroupLabel
+                  type="button"
+                  aria-expanded={Boolean(expanded[item.to])}
+                  $open={Boolean(expanded[item.to])}
+                  onClick={() => setExpanded((current) => ({ ...current, [item.to]: !current[item.to] }))}
+                >
                   {item.label}
+                  <Icon name="chevron" size={12} />
                 </GroupLabel>
-                {item.children.map((child) => (
-                  <Nested
-                    key={child.to}
-                    to={child.to}
-                    role="menuitem"
-                    $active={isOn(child)}
-                    onClick={onClose}
-                  >
-                    {child.label}
-                  </Nested>
-                ))}
+                {expanded[item.to]
+                  ? item.children.map((child) => (
+                      <Nested
+                        key={child.to}
+                        to={child.to}
+                        role="menuitem"
+                        $active={isOn(child)}
+                        onClick={onClose}
+                      >
+                        {child.label}
+                      </Nested>
+                    ))
+                  : null}
               </Group>
             ) : (
               <Fragment key={item.to}>

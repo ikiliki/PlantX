@@ -30,6 +30,13 @@ export const ChainLead = styled.p`
   color: ${theme.colors.muted};
 `
 
+export const SaveError = styled.p`
+  margin: 0;
+  color: ${theme.colors.danger};
+  font-size: 13px;
+  line-height: 1.45;
+`
+
 export const Empty = styled.p`
   margin: 0;
   padding: 18px 20px;

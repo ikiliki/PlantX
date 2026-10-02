@@ -36,7 +36,7 @@ function filterPatch(
   optionId: string,
   filters: MarketFilterState,
 ): Partial<MarketFilterState> {
-  if (propertyId === 'grade') return { grades: [optionId as QualityGrade] }
+  if (propertyId === 'health') return { grades: [optionId as QualityGrade] }
   if (propertyId === 'size') return { sizes: [optionId as SizeBand] }
   if (propertyId === 'stage') return { stages: [optionId as StageBand] }
   return { traits: { ...filters.traits, [propertyId]: [optionId] } }

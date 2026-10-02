@@ -58,6 +58,9 @@ export const Item = styled.li`
 
 export const Jump = styled.button`
   appearance: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -68,6 +71,12 @@ export const Jump = styled.button`
   &:hover {
     text-decoration: underline;
   }
+`
+
+export const Hint = styled.span`
+  font-size: 13px;
+  color: ${theme.colors.muted};
+  text-decoration: none;
 `
 
 export const JumpLink = styled(Link)`

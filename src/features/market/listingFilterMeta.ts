@@ -107,7 +107,7 @@ export function listingFilterMeta(input: {
   const required = requiredProperties(catalog).map((property) => {
     const options = property.options.flatMap((option) => {
       const patch =
-        property.id === 'grade'
+        property.id === 'health'
           ? { grades: [option.id as QualityGrade] }
           : property.id === 'size'
             ? { sizes: [option.id as SizeBand] }
@@ -127,7 +127,7 @@ export function listingFilterMeta(input: {
     }
   })
 
-  const gradeMeta = required.find((item) => item.id === 'grade')
+  const gradeMeta = required.find((item) => item.id === 'health')
   const sizeMeta = required.find((item) => item.id === 'size')
   const stageMeta = required.find((item) => item.id === 'stage')
 

@@ -36,16 +36,22 @@ export const Expand = styled(Link)`
   }
 `
 
-export const Row = styled(Link)`
+export const Row = styled.button`
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr);
   gap: 2px 10px;
   align-items: center;
+  width: 100%;
   min-width: 0;
+  margin: 0;
   padding: 8px;
+  border: 0;
   border-radius: ${theme.radii.md};
+  background: transparent;
   color: ${theme.colors.ink};
-  text-decoration: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
   &:hover {
     background: ${theme.colors.cream};
   }

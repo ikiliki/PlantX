@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { GradeChip } from '../../../../components/GradeChip/GradeChip'
+import { HealthChip } from '../../../../components/HealthChip/HealthChip'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { formatDay } from '../../chartScale'
 import type { ChartTrade } from '../TradeChart/TradeChart'
@@ -38,7 +38,7 @@ export function TradeTable({ trades, pageSize = 10 }: { trades: ChartTrade[]; pa
         <Row key={trade.id}>
           <Muted data-col="date">{formatDay(trade.at, locale, 'full')}</Muted>
           <ClassCell>
-            <GradeChip grade={trade.quality} />
+            <HealthChip health={trade.quality} />
             <ClassLink to={`/market/${trade.classId}`}>{trade.label}</ClassLink>
           </ClassCell>
           <span data-col="qty">×{trade.qty}</span>

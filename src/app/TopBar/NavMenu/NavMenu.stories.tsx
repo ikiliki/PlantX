@@ -24,7 +24,7 @@ export default {
 
 export const Grouped = () => (
   <NavMenu
-    label="Wiki"
+    label="Catalog"
     to="/wiki"
     open
     onOpen={() => undefined}

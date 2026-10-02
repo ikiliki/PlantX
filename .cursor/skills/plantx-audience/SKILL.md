@@ -34,7 +34,7 @@ Five greenhouse accounts, plus admin. Guest is signed out (`currentUserId` null)
 
 | Persona | Id | World |
 | --- | --- | --- |
-| Guest | signed out | Browse market, news, and wiki. Greenhouse and rank prompt sign-in. |
+| Guest | signed out | Browse market, news, and the catalog. Greenhouse and rank prompt sign-in. |
 | New grower | `u-ari` | Empty account. No plants, nothing in the market. |
 | Unverified | `u-noa` | Owns plants. `publishRequirement` is `verified`, so listing is blocked. |
 | Rich | `u-maya`, `u-daniel`, `u-gal` | Their own plants and the full market. |

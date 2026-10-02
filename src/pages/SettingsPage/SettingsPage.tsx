@@ -5,6 +5,7 @@ import { Button } from '../../components/Button/Button'
 import { Card } from '../../components/Card/Card'
 import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
+import { GreenhousePlace } from '../../features/greenhouse/components/GreenhousePlace/GreenhousePlace'
 import { useStore } from '../../mock/store'
 import { theme } from '../../theme/tokens'
 
@@ -21,17 +22,14 @@ export function SettingsPage() {
 
       <Card style={{ marginBottom: 16 }}>
         {currentUser ? (
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
             <Avatar name={currentUser.name} color={currentUser.avatarColor} size={56} />
-            <div>
+            <div style={{ minWidth: 0, flex: 1 }}>
               <strong>{locale === 'he' ? currentUser.nameHe : currentUser.name}</strong>
               <div style={{ color: theme.colors.muted, fontSize: 14 }}>
                 {t.settings.role}: {t.roles[currentUser.role]}
               </div>
-              <div style={{ color: theme.colors.muted, fontSize: 14 }}>
-                {t.settings.region}:{' '}
-                {locale === 'he' ? currentUser.regionHe : currentUser.region}
-              </div>
+              <GreenhousePlace />
             </div>
           </div>
         ) : (

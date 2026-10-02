@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { createCatalog } from './catalog'
 import { saveCatalogFile } from './catalogFile'
-import { fieldsFromPlace, resolveArea } from './locations'
+import { areaById, fieldsFromPlace, resolveArea, UNKNOWN_AREA } from './locations'
 import { createSeed } from './seed'
 import type {
   Catalog,
@@ -164,6 +164,8 @@ interface StoreApi {
   plantxSeed: 'empty' | 'demo'
   retryLive: () => Promise<void>
   setLocale: (locale: Locale) => void
+  /** Owner greenhouse place. New plants copy it. Unknown until they choose. */
+  setGreenhousePlace: (areaId: string) => void
   setDemoScenarios: (patch: Partial<DemoScenarios>) => void
   /** Which system control is waiting on the server. Null when idle. */
   systemPending: string | null
@@ -542,6 +544,19 @@ export function StoreProvider({
       if (!supportedLocales().includes(locale)) return
       update((d) => ({ ...d, locale }))
     },
+    setGreenhousePlace: (areaId) => {
+      const area = areaById(areaId)
+      if (!area) return
+      update((d) => {
+        const user = d.users.find((item) => item.id === d.currentUserId && item.role !== 'guest')
+        if (!user) return d
+        user.region = area.region
+        user.regionHe = area.regionHe
+        user.lat = area.lat
+        user.lng = area.lng
+        return d
+      })
+    },
     setDemoScenarios: (patch) =>
       update((d) => ({
         ...d,
@@ -685,8 +700,10 @@ export function StoreProvider({
           nameHe: row.name,
           email: row.email,
           role: 'grower',
-          region: 'Central Israel',
-          regionHe: 'מרכז',
+          region: UNKNOWN_AREA.region,
+          regionHe: UNKNOWN_AREA.regionHe,
+          lat: UNKNOWN_AREA.lat,
+          lng: UNKNOWN_AREA.lng,
           bio: 'Approved community grower.',
           bioHe: 'מגדל קהילה מאושר.',
           rating: 0,
@@ -952,7 +969,6 @@ export function StoreProvider({
       })
     },
     addGreenhousePlant: (input) => {
-      if (!liveWritable) return ''
       const area = resolveArea(input.location.region)
       if (!area || !Number.isFinite(input.location.lat) || !Number.isFinite(input.location.lng)) return ''
       const id = `pl-${Date.now()}`
@@ -1015,7 +1031,7 @@ export function StoreProvider({
         if (created.photos.length > 0) d.todos = schedulePhotoTodo(d.todos, created)
         return d
       })
-      if (created) {
+      if (created && liveWritable) {
         void postPlant(created, input.identifyRequestIds).then((res) => {
           if (!res) return
           update((d) => {

@@ -1,3 +1,4 @@
+import { CATALOG_PLANTS } from './catalogGuide'
 import { classDictionary } from './classDictionary'
 import { defaultPlantPhoto } from './images'
 import { MARKET_AREAS } from './locations'
@@ -14,11 +15,16 @@ import type {
   StageBand,
 } from './types'
 
-const GRADE_OPTIONS: CatalogPropertyOption[] = [
+const HEALTH_OPTIONS: CatalogPropertyOption[] = [
+  { id: 'S', label: 'S', labelHe: 'S', sign: 'S' },
   { id: 'A', label: 'A', labelHe: 'A', sign: 'A' },
   { id: 'B', label: 'B', labelHe: 'B', sign: 'B' },
   { id: 'C', label: 'C', labelHe: 'C', sign: 'C' },
+  { id: 'D', label: 'D', labelHe: 'D', sign: 'D' },
 ]
+
+/** Best to worst. Lower rank sorts first. */
+export const HEALTH_RANK: Record<QualityGrade, number> = { S: 0, A: 1, B: 2, C: 3, D: 4 }
 
 const SIZE_OPTIONS: CatalogPropertyOption[] = [
   { id: 'S', label: 'S', labelHe: 'S', sign: 'S' },
@@ -99,13 +105,13 @@ export function createCatalog(): Catalog {
 
   const properties: CatalogProperty[] = [
     property({
-      id: 'grade',
-      name: 'Grade',
-      nameHe: 'דרגה',
+      id: 'health',
+      name: 'Health',
+      nameHe: 'בריאות',
       required: true,
       inMarketName: true,
-      sign: 'GRD',
-      options: GRADE_OPTIONS,
+      sign: 'HLT',
+      options: HEALTH_OPTIONS,
     }),
     property({
       id: 'size',
@@ -127,7 +133,7 @@ export function createCatalog(): Catalog {
       id: 'area',
       name: 'Area',
       nameHe: 'אזור',
-      required: true,
+      required: false,
       options: MARKET_AREAS.map((area) => opt(area.id, area.region, area.regionHe)),
     }),
     property({
@@ -177,18 +183,39 @@ export function createCatalog(): Catalog {
     }),
   ]
 
+  for (const plant of CATALOG_PLANTS) {
+    if (!categories.some((item) => item.id === plant.id)) {
+      categories.push({
+        id: plant.id,
+        speciesId: plant.speciesId,
+        name: plant.name,
+        nameHe: plant.nameHe,
+        ticker: plant.ticker,
+        photo: plant.photo,
+      })
+    }
+    for (const sub of plant.subs) {
+      const existing = subcategories.find((item) => item.id === sub.id)
+      if (!existing) {
+        subcategories.push({
+          id: sub.id,
+          categoryId: plant.id,
+          name: sub.name,
+          nameHe: sub.nameHe,
+          code: sub.code,
+          photo: sub.photo,
+        })
+      } else if (!existing.photo) {
+        existing.photo = sub.photo
+      }
+    }
+  }
+
   return { categories, subcategories, properties }
 }
 
-const RETIRED_CATEGORY_IDS = new Set(['maple', 'philodendron', 'palm', 'fiddle', 'olive'])
-const RETIRED_SPECIES_IDS = new Set([
-  'sp-maple',
-  'sp-philodendron',
-  'sp-palm',
-  'sp-fiddle',
-  'sp-olive',
-  'sp-mix',
-])
+const RETIRED_CATEGORY_IDS = new Set(['maple', 'philodendron', 'palm', 'olive'])
+const RETIRED_SPECIES_IDS = new Set(['sp-maple', 'sp-philodendron', 'sp-palm', 'sp-olive', 'sp-mix'])
 
 function mergeById<T extends { id: string }>(current: T[] | undefined, seed: T[]) {
   const rows = [...(current ?? [])]
@@ -273,8 +300,8 @@ export function emptyCatalog(): Catalog {
   return { categories: [], subcategories: [], properties: [] }
 }
 
-export function isGrade(value: string): value is QualityGrade {
-  return value === 'A' || value === 'B' || value === 'C'
+export function isHealth(value: string): value is QualityGrade {
+  return value === 'S' || value === 'A' || value === 'B' || value === 'C' || value === 'D'
 }
 
 export function isSize(value: string): value is SizeBand {

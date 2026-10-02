@@ -26,7 +26,7 @@ export type RawSuggestion = {
 /** What a provider reports about itself. Admin settings are added by the service. */
 export type ProviderHealth = Omit<
   IdentifyProviderStatus,
-  'enabled' | 'response' | 'scenario' | 'match' | 'suggestionId'
+  'enabled' | 'response' | 'scenario' | 'match' | 'suggestionId' | 'gate' | 'draft'
 >
 
 export type IdentifyProvider = {

@@ -12,7 +12,7 @@ import {
   PillWrap,
 } from '../../../market/components/MarketSearch/MarketSearch.styles'
 
-type MenuId = 'species' | 'subcategory' | 'grade' | 'size' | 'stage' | 'area' | 'radius' | 'price' | string
+type MenuId = 'species' | 'subcategory' | 'health' | 'size' | 'stage' | 'area' | 'radius' | 'price' | string
 
 function Chevron({ open }: { open: boolean }) {
   return (
@@ -179,14 +179,14 @@ export function CatalogFilterPills({
       <PillWrap>
         <Pill
           type="button"
-          $on={filters.grades.length > 0 || menu === 'grade'}
-          aria-expanded={menu === 'grade'}
-          onClick={() => toggleMenu('grade')}
+          $on={filters.grades.length > 0 || menu === 'health'}
+          aria-expanded={menu === 'health'}
+          onClick={() => toggleMenu('health')}
         >
           <span>{filters.grades.length > 0 ? filters.grades.join(', ') : t.market.filterGrade}</span>
-          <Chevron open={menu === 'grade'} />
+          <Chevron open={menu === 'health'} />
         </Pill>
-        {menu === 'grade' && (
+        {menu === 'health' && (
           <Menu>
             <ChoiceRow>
               <Choice type="button" $on={filters.grades.length === 0} onClick={() => patch({ grades: [] })}>

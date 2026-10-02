@@ -7,7 +7,7 @@ import type {
   Plant,
 } from '../../mock/types'
 
-export const CORE_PROPERTY_IDS = ['grade', 'size', 'stage', 'area'] as const
+export const CORE_PROPERTY_IDS = ['health', 'size', 'stage', 'area'] as const
 
 export function catalogName(
   item: { name: string; nameHe: string },
@@ -99,7 +99,7 @@ export function propertiesForPlant(
 }
 
 export function plantPropertyValue(plant: Plant, propertyId: string) {
-  if (propertyId === 'grade') return plant.quality
+  if (propertyId === 'health') return plant.quality
   if (propertyId === 'size') return plant.sizeBand
   if (propertyId === 'stage') return plant.stage
   if (propertyId === 'area') return plant.traits?.area

@@ -148,8 +148,8 @@ export const classDictionary: DictPlant[] = [
         license: 'CC BY-SA 3.0',
         licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0',
         source: file("Money Plant (Epipremnum aureum 'N' Joy') 1.jpg"),
-        observed: "Bushy N'Joy with cream edges. A scratch and a small brown speck, so grade B.",
-        observedHe: "N'Joy שיחי עם שולי קרם. שריטה ונקודה חומה קטנה, לכן דרגה B.",
+        observed: "Bushy N'Joy with cream edges. A scratch and a small brown speck, so health B.",
+        observedHe: "N'Joy שיחי עם שולי קרם. שריטה ונקודה חומה קטנה, לכן בריאות B.",
       }),
     ],
   },
@@ -219,7 +219,7 @@ export const classDictionary: DictPlant[] = [
   },
 ]
 
-export const classCodeLegend = ['Species', 'Variety', 'Grade', 'Size', 'Stage'] as const
+export const classCodeLegend = ['Species', 'Variety', 'Health', 'Size', 'Stage'] as const
 
 export const configuredSpeciesIds = classDictionary.map((plant) => plant.speciesId)
 

@@ -41,7 +41,7 @@ function nullableEnum(ids: string[], description?: string) {
 
 function traitPropertyIds(catalog: Catalog): string[] {
   return catalog.properties
-    .filter((prop) => !['grade', 'size', 'stage', 'area'].includes(prop.id))
+    .filter((prop) => !['health', 'size', 'stage', 'area'].includes(prop.id))
     .map((prop) => prop.id)
 }
 
@@ -262,7 +262,7 @@ export async function draftPlantClass(image: string, catalog: Catalog, species: 
     speciesBlock,
     'Compare that result with the catalog. Use only the allowed ids.',
     'Fill categoryId, subcategoryId, size, stage, and trait option ids when you can.',
-    'Leave a field null when you are not sure. Do not assign a grade.',
+    'Leave a field null when you are not sure. Do not assign health.',
     'Set isPlant true unless the photo is clearly not a plant.',
     '',
     catalogBrief(catalog),
@@ -353,7 +353,7 @@ export const geminiProvider: IdentifyProvider = {
     const prompt = [
       'Identify the plant in the image for a greenhouse marketplace catalog.',
       'Pick the best matching catalog category and subcategory ids when possible.',
-      'Estimate size, stage, and trait option ids only from the allowed enums. Do not assign a grade.',
+      'Estimate size, stage, and trait option ids only from the allowed enums. Do not assign health.',
       'If unsure about a field, use null.',
       'Set isPlant false when the image is not a plant.',
       '',
@@ -433,7 +433,7 @@ export async function draftCatalogEntry(image: string, hint: CatalogDraftHint): 
     'Write English and Hebrew names. Ticker and subcategory code are short capital letters.',
     'Each property has 2 to 4 options. Option signs are 1–3 capital letters and unique within that property.',
     `Property signs are 1–3 capital letters, unique, and must not be any of: ${avoided}.`,
-    'Do not propose grade, size, or stage. Those already exist.',
+    'Do not propose health, size, or stage. Those already exist.',
     'scope is "category" when every subcategory shares the property, otherwise "subcategory".',
     'Name the plant shown in the photo. The photo itself is stored separately.',
     '',

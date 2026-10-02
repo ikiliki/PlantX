@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { parseIdentifySettings, stageSettings } from '../../mock/identifySettings'
 import { AdminPage } from '../../features/admin/components/AdminPage/AdminPage'
 import { ApiDown } from '../../features/admin/components/ApiDown/ApiDown'
 import { ApisPanel } from '../../features/admin/components/ApisPanel/ApisPanel'
@@ -31,6 +32,27 @@ import { Stack } from './ApisPage.styles'
 
 const HISTORY_LIMIT = 50
 
+function applyProviderPatch(row: IdentifyProviderStatus, patch: Partial<IdentifyProviderSettings>): IdentifyProviderStatus {
+  const next: IdentifyProviderStatus = {
+    ...row,
+    ...patch,
+    match: patch.match ? { ...row.match, ...patch.match } : row.match,
+  }
+  const stagePatch = (stage: 'gate' | 'draft', incoming: Partial<IdentifyProviderSettings>) => {
+    const current = stageSettings(parseIdentifySettings(row.enabled, row), stage)
+    return {
+      enabled: incoming.enabled ?? current.enabled,
+      response: incoming.response ?? current.response,
+      scenario: incoming.scenario ?? current.scenario,
+      suggestionId: incoming.suggestionId ?? current.suggestionId,
+      match: incoming.match ?? current.match,
+    }
+  }
+  if (patch.gate) next.gate = stagePatch('gate', patch.gate)
+  if (patch.draft) next.draft = stagePatch('draft', patch.draft)
+  return next
+}
+
 export function ApisPage() {
   const { t } = useI18n()
   const { currentUser } = useStore()
@@ -39,6 +61,7 @@ export function ApisPage() {
   const [providers, setProviders] = useState<IdentifyProviderStatus[]>([])
   const [providersError, setProvidersError] = useState<ApiFailure | null>(null)
   const [saving, setSaving] = useState<ReadonlySet<IdentifyProviderId>>(new Set())
+  const [saveError, setSaveError] = useState<Partial<Record<IdentifyProviderId, string>>>({})
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<IdentifyHistoryFilter>('all')
   const [history, setHistory] = useState<IdentifyRequestRecord[]>([])
@@ -63,28 +86,45 @@ export function ApisPage() {
     setLoading(false)
   }, [])
 
-  const patchProvider = (id: IdentifyProviderId, patch: Partial<IdentifyProviderStatus>) =>
-    setProviders((rows) => rows.map((row) => (row.id === id ? { ...row, ...patch } : row)))
+  const saveTail = useRef(new Map<IdentifyProviderId, Promise<void>>())
 
-  const saveSettings = async (id: IdentifyProviderId, patch: Partial<IdentifyProviderSettings>) => {
-    if (saving.has(id)) return
-    const previous = providers.find((row) => row.id === id)
-    setSaving((ids) => new Set(ids).add(id))
-    setProviders((rows) =>
-      rows.map((row) =>
-        row.id === id
-          ? { ...row, ...patch, match: patch.match ? { ...row.match, ...patch.match } : row.match }
-          : row,
-      ),
-    )
-    const updated = await setIdentifyProviderSettings(id, patch)
-    if (updated) patchProvider(id, updated)
-    else if (previous) patchProvider(id, previous)
-    setSaving((ids) => {
-      const next = new Set(ids)
-      next.delete(id)
-      return next
-    })
+  const saveSettings = (id: IdentifyProviderId, patch: Partial<IdentifyProviderSettings>) => {
+    setProviders((rows) => rows.map((row) => (row.id === id ? applyProviderPatch(row, patch) : row)))
+    const run = async () => {
+      setSaving((ids) => new Set(ids).add(id))
+      try {
+        const outcome = await setIdentifyProviderSettings(id, patch)
+        if (outcome.ok && outcome.data.provider) {
+          const updated = outcome.data.provider
+          setSaveError((current) => ({ ...current, [id]: '' }))
+          setProviders((rows) =>
+            rows.map((row) =>
+              row.id === id
+                ? { ...row, ...updated, gate: updated.gate ?? row.gate, draft: updated.draft ?? row.draft }
+                : row,
+            ),
+          )
+        } else {
+          const failure = outcome.ok ? { status: 500, error: 'http', message: '' } : outcome.failure
+          setSaveError((current) => ({ ...current, [id]: formatApiFailure(failure, t.admin) }))
+          const res = await fetchIdentifyProvidersOutcome()
+          if (res.ok) setProviders(res.data.providers)
+        }
+      } catch (err) {
+        const failure = err instanceof Error ? { status: 0, error: 'offline', message: err.message } : { status: 0, error: 'offline' }
+        setSaveError((current) => ({ ...current, [id]: formatApiFailure(failure, t.admin) }))
+        const res = await fetchIdentifyProvidersOutcome()
+        if (res.ok) setProviders(res.data.providers)
+      }
+      setSaving((ids) => {
+        const next = new Set(ids)
+        next.delete(id)
+        return next
+      })
+    }
+    const previous = saveTail.current.get(id) ?? Promise.resolve()
+    const next = previous.then(run, run)
+    saveTail.current.set(id, next)
   }
 
   const loadHistory = useCallback(async () => {
@@ -160,6 +200,7 @@ export function ApisPage() {
             onRefresh={() => void loadProviders()}
             onChange={(id, patch) => void saveSettings(id, patch)}
             saving={saving}
+            saveError={saveError}
             loading={loading}
             catalogLoading={catalogLoading}
           />
