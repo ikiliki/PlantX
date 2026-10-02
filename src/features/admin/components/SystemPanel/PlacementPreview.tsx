@@ -3,7 +3,7 @@ import { MarketRail } from '../../../feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../../feed/components/RankRail/RankRail'
 import { WikiRail } from '../../../feed/components/WikiRail/WikiRail'
 import { GreenhousePlantCard } from '../../../greenhouse/components/GreenhousePlantCard/GreenhousePlantCard'
-import { GreenhouseWallet } from '../../../greenhouse/components/GreenhouseWallet/GreenhouseWallet'
+import { GreenhouseLevelCard } from '../../../greenhouse/components/GreenhouseLevelCard/GreenhouseLevelCard'
 import { PlantPassport } from '../../../greenhouse/components/PlantPassport/PlantPassport'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
@@ -24,25 +24,9 @@ function ownerIdOf(signedIn: boolean, userId: string | undefined, visitorId: str
   return signedIn && userId ? userId : visitorId
 }
 
-function WalletPreview() {
+function LevelPreview() {
   const { db, currentUser, signedIn } = useStore()
-  const { t, formatMoney } = useI18n()
-  const mine = db.plants.filter((plant) => plant.ownerId === ownerIdOf(signedIn, currentUser?.id, db.visitorId))
-  const living = mine.filter((plant) => plant.status === 'owned' || plant.status === 'listed')
-  const portfolioValue = mine.reduce((sum, plant) => {
-    const marketClass = db.marketClasses.find((item) => item.id === plant.marketClassId)
-    return sum + (marketClass ? marketClass.lastPrice * plant.quantity : 0)
-  }, 0)
-
-  return (
-    <GreenhouseWallet
-      title={t.greenhouse.wallet}
-      value={formatMoney(portfolioValue)}
-      valueLabel={t.exchange.portfolio}
-      collection={String(living.length)}
-      collectionLabel={t.greenhouse.collectionCount}
-    />
-  )
+  return <GreenhouseLevelCard ownerId={ownerIdOf(signedIn, currentUser?.id, db.visitorId)} />
 }
 
 function featureName(id: FeatureId, t: ReturnType<typeof useI18n>['t']) {
@@ -135,13 +119,13 @@ function previewFor(id: PlacementId): ReactNode {
       return <GreenhousePage />
     case 'todo.board':
       return <TodoPage />
-    case 'greenhouse.market.wallet':
-      return <WalletPreview />
     case 'profile.market.stats':
     case 'profile.market.trust':
       return <GreenhousePage />
     case 'greenhouse.card':
       return <CardPreview />
+    case 'greenhouse.level':
+      return <LevelPreview />
     case 'passport.market':
       return <PassportPreview />
     case 'passport.rank':

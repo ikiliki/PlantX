@@ -1,4 +1,5 @@
 import { UNKNOWN_AREA } from '../../../../src/mock/locations.ts'
+import { greenhouseLevel } from '../../../../src/features/greenhouse/greenhouseLevel.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import {
@@ -130,6 +131,19 @@ export const usersService = {
     row.rejectedAt = new Date().toISOString()
     await store.pendingUsers.saveAll(pending)
     return row
+  },
+
+  /**
+   * Public greenhouse level: counts and XP only. Care tasks stay private; only how many were done is shared.
+   * Same rules as the client (`greenhouseLevel`), so the owner's own card and the public one agree.
+   */
+  async level(userId: string) {
+    const store = getStore()
+    const users = await store.users.list()
+    const user = users.find((item) => item.id === userId && item.role !== 'guest')
+    if (!user) throw Errors.missing(`User ${userId} not found`)
+    const [plants, todos] = await Promise.all([store.plants.list(), store.todos.list()])
+    return greenhouseLevel(userId, plants, todos)
   },
 
   async listMembers() {

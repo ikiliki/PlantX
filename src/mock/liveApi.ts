@@ -121,6 +121,13 @@ export function fetchTodos(query?: { open?: boolean }) {
   return request<{ todos: Todo[] }>(`/api/todos${qs ? `?${qs}` : ''}`)
 }
 
+/** Public greenhouse level for another grower: counts and XP only (their tasks stay private). */
+export function fetchGreenhouseLevel(ownerId: string) {
+  return request<{ level: import('../features/greenhouse/greenhouseLevel').GreenhouseLevel }>(
+    `/api/users/${encodeURIComponent(ownerId)}/level`,
+  )
+}
+
 export function fetchTodosOutcome() {
   return requestOutcome<{ todos: Todo[] }>('/api/todos')
 }

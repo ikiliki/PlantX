@@ -8,7 +8,7 @@ import { CollectionBoard, greenhouseFilter } from '../../features/greenhouse/com
 import { GreenhouseDirectory } from '../../features/greenhouse/components/GreenhouseDirectory/GreenhouseDirectory'
 import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
 import { GreenhouseScope, useHeaderNav, type GreenhouseScopeId } from '../../features/greenhouse/components/GreenhouseScope/GreenhouseScope'
-import { GreenhouseWallet } from '../../features/greenhouse/components/GreenhouseWallet/GreenhouseWallet'
+import { GreenhouseLevelCard } from '../../features/greenhouse/components/GreenhouseLevelCard/GreenhouseLevelCard'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
 import { ownerActivity } from '../../features/greenhouse/ownerActivity'
@@ -51,6 +51,7 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
         <PublicPage>
           <PublicHeading>
             <h1>{name}</h1>
+            <GreenhouseLevelCard ownerId={ownerId} publicView />
           </PublicHeading>
           {plants}
         </PublicPage>
@@ -62,7 +63,7 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
 function GreenhouseOwner({ view }: { view: ComponentView }) {
   const fetching = useSectionFetch(true, ['plants', 'updates', 'todos'])
   const { db, fullDb, currentUser, signedIn } = useStore()
-  const { t, tr, formatMoney } = useI18n()
+  const { t, tr } = useI18n()
   const navigate = useNavigate()
   const [adding, setAdding] = useState(false)
   const [freshId, setFreshId] = useState<string>()
@@ -75,11 +76,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   const mine = db.plants.filter((p) => p.ownerId === ownerId)
   const living = mine.filter((p) => p.status === 'owned' || p.status === 'listed')
   const sold = mine.filter((p) => p.status === 'sold')
-
-  const portfolioValue = mine.reduce((sum, p) => {
-    const mc = db.marketClasses.find((m) => m.id === p.marketClassId)
-    return sum + (mc ? mc.lastPrice * p.quantity : 0)
-  }, 0)
 
   const activity = ownerActivity(fullDb, ownerId, mine, tr, t)
 
@@ -105,15 +101,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
         <HeadingCopy>
           <h1>{t.greenhouse.title}</h1>
         </HeadingCopy>
-        {view === 'page' && scope === 'mine' && (
-          <GreenhouseWallet
-            title={t.greenhouse.wallet}
-            value={formatMoney(portfolioValue)}
-            valueLabel={t.exchange.portfolio}
-            collection={String(living.length)}
-            collectionLabel={t.greenhouse.collectionCount}
-          />
-        )}
+        {view === 'page' && scope === 'mine' && signedIn ? <GreenhouseLevelCard ownerId={ownerId} /> : null}
         </Heading>
       </HeadBlock>
 

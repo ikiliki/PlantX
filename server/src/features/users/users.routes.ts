@@ -15,6 +15,9 @@ usersRoutes.post('/pending', async (c) => {
   return c.json({ pending }, 201)
 })
 
+/** Public: a greenhouse's level for its public page. Counts and XP only. */
+usersRoutes.get('/:id/level', async (c) => c.json({ level: await usersService.level(c.req.param('id')) }))
+
 usersRoutes.get('/pending', async (c) => {
   await requireAdmin(c)
   const raw = c.req.query('status')

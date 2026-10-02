@@ -32,6 +32,8 @@ export default defineConfig(({ mode }) => {
   server: {
     // Cloudflare quick tunnels, so Google sign-in can be tested from a phone.
     allowedHosts: ['.trycloudflare.com'],
+    // build:prod deletes and rewrites .vercel/output; watching it crashes a running dev server.
+    watch: { ignored: ['**/.vercel/**', '**/dist/**'] },
     proxy: apiPort
       ? {
           '/api': {

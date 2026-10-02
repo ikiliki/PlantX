@@ -38,11 +38,11 @@ export const PLACEMENTS = [
   { id: 'market.class', pageId: 'market', featureId: 'market', required: true },
   { id: 'market.categories', pageId: 'market', featureId: 'market', required: true },
   { id: 'market.category', pageId: 'market', featureId: 'market', required: true },
-  { id: 'greenhouse.market.wallet', pageId: 'greenhouse', featureId: 'market', required: false },
   { id: 'profile.market.stats', pageId: 'market', featureId: 'market', required: true },
   { id: 'profile.market.trust', pageId: 'market', featureId: 'market', required: true },
   { id: 'greenhouse.board', pageId: 'greenhouse', featureId: 'greenhouse', required: true },
   { id: 'greenhouse.card', pageId: 'greenhouse', featureId: 'greenhouse', required: true },
+  { id: 'greenhouse.level', pageId: 'greenhouse', featureId: 'greenhouse', required: false },
   { id: 'todo.board', pageId: 'todo', featureId: 'todo', required: true },
   { id: 'passport.market', pageId: 'greenhouse', featureId: 'market', required: false },
   { id: 'passport.rank', pageId: 'greenhouse', featureId: 'rank', required: false },
@@ -113,11 +113,11 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     'market.class': { enabled: true },
     'market.categories': { enabled: true },
     'market.category': { enabled: true },
-    'greenhouse.market.wallet': { enabled: true },
     'profile.market.stats': { enabled: true },
     'profile.market.trust': { enabled: true },
     'greenhouse.board': { enabled: true },
     'greenhouse.card': { enabled: true },
+    'greenhouse.level': { enabled: true },
     'todo.board': { enabled: true },
     'passport.market': { enabled: true },
     'passport.rank': { enabled: true },
@@ -175,8 +175,7 @@ export function normalizeSystem(
     features[id] = readPlacement(raw?.features?.[id], DEFAULT_SYSTEM.features[id])
   }
   for (const item of PLACEMENTS) {
-    const legacy = item.id === 'greenhouse.market.wallet' ? raw?.placements?.['greenhouse.wallet'] : undefined
-    const saved = raw?.placements?.[item.id] ?? legacy
+    const saved = raw?.placements?.[item.id]
     placements[item.id] = { enabled: readEnabled(saved, DEFAULT_SYSTEM.placements[item.id].enabled) }
   }
   return { launched, pages, features, placements }

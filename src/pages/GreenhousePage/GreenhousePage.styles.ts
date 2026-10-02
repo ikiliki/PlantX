@@ -32,52 +32,47 @@ export const HeadBlock = styled.div`
   min-width: 0;
 `
 
+/** Hidden title: the level card is the visible header, the h1 stays for screen readers. */
+const visuallyHidden = `
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+`
+
 export const Heading = styled.header`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: ${theme.space.xl};
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
 
-  @container (max-width: 720px) {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-    row-gap: ${theme.space.md};
-
-    &:not(:has(aside)) {
-      display: none;
-    }
+  &:not(:has(aside)) {
+    display: none;
   }
 `
 
 export const HeadingCopy = styled.div`
-  min-width: 0;
-  max-width: 460px;
-  h1 {
-    font-size: clamp(28px, 7vw, 44px);
-    color: ${theme.colors.ink};
-    overflow-wrap: anywhere;
-  }
-
-  @container (max-width: 720px) {
-    display: none;
-  }
+  ${visuallyHidden}
 `
 
 export const PublicPage = styled.div`
   display: grid;
   gap: ${theme.space.lg};
   min-width: 0;
+  container-type: inline-size;
 `
 
+/** Same header as your own greenhouse: the grower's level card; their name stays for screen readers. */
 export const PublicHeading = styled.header`
+  display: grid;
   min-width: 0;
+
   h1 {
-    margin: 0;
-    font-family: ${theme.fonts.display};
-    font-size: clamp(28px, 7vw, 44px);
-    font-weight: 400;
-    color: ${theme.colors.ink};
-    overflow-wrap: anywhere;
+    ${visuallyHidden}
   }
 `
 
