@@ -72,6 +72,26 @@ function push(rows: Todo[], input: TodoInput): Todo {
   return row
 }
 
+/** Keep a single open todo. The current row must already be completed. */
+function placeOpen(
+  rows: Todo[],
+  input: { ownerId: string; plantId: string; subcategory: TodoSubcategory; dueOn: string },
+) {
+  const open = openOf(rows, input.plantId, input.subcategory)
+  if (open) {
+    open.dueOn = input.dueOn
+    return open
+  }
+  return push(rows, {
+    ownerId: input.ownerId,
+    plantId: input.plantId,
+    category: 'plant',
+    subcategory: input.subcategory,
+    dueOn: input.dueOn,
+    completedOn: null,
+  })
+}
+
 /**
  * Care todos for water and photo. Completing a water or photo todo also
  * writes the matching news activity and plant history.
@@ -163,48 +183,46 @@ export const todoService = {
     todo.completedOn = at
     if (todo.dueOn == null) todo.dueOn = at
 
-    let activity = null as Awaited<ReturnType<typeof activityService.record>> | null
+    let activityInput: Parameters<typeof activityService.record>[0] | null = null
 
     if (todo.subcategory === 'water') {
       plant.history = [{ at, label: 'Watered', labelHe: 'הושקה' }, ...plant.history]
-      activity = await activityService.record({
+      activityInput = {
         kind: 'water',
         userId,
         plantId: plant.id,
         body: `Water confirmed on ${plant.title}.`,
         bodyHe: `השקיה אושרה ל־${plant.titleHe}.`,
-      })
-      push(rows, {
+      }
+      placeOpen(rows, {
         ownerId: userId,
         plantId: plant.id,
-        category: 'plant',
         subcategory: 'water',
         dueOn: addDays(at, WATER_GAP_DAYS),
-        completedOn: null,
       })
     }
 
     if (todo.subcategory === 'photo') {
       plant.history = [{ at, label: 'Photo refreshed', labelHe: 'התמונה רועננה' }, ...plant.history]
-      activity = await activityService.record({
+      activityInput = {
         kind: 'photo',
         userId,
         plantId: plant.id,
         body: `${plant.title} photo refreshed.`,
         bodyHe: `תמונת ${plant.titleHe} רועננה.`,
-      })
-      push(rows, {
+      }
+      placeOpen(rows, {
         ownerId: userId,
         plantId: plant.id,
-        category: 'plant',
         subcategory: 'photo',
         dueOn: addMonths(at, PHOTO_GAP_MONTHS),
-        completedOn: null,
       })
     }
 
-    await store.plants.saveAll(plants)
+    // Todos first. A unique-index failure must not leave a watering that never completed.
     await save(rows)
+    await store.plants.saveAll(plants)
+    const activity = activityInput ? await activityService.record(activityInput) : null
     return {
       todo,
       todos: await todoService.list({ ownerId: userId }),

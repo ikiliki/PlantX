@@ -663,7 +663,11 @@ export function createSupabaseStore(): PlantxStore {
       await client.query('delete from todos')
       return
     }
-    for (const [position, item] of kept.entries()) {
+    // Close finished rows before inserting the next open one. todos_open_unique
+    // allows one open row per plant and kind, and Postgres checks it on each insert.
+    const pending = kept.map((item, position) => ({ item, position }))
+    pending.sort((a, b) => Number(a.item.completedOn == null) - Number(b.item.completedOn == null))
+    for (const { item, position } of pending) {
       await client.query(
         `insert into todos (id, position, owner_id, plant_id, category, subcategory, due_on, completed_on, created_at)
          values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
