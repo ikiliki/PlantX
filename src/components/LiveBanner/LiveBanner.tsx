@@ -1,18 +1,17 @@
 import { useI18n } from '../../i18n/I18nProvider'
-import { formatApiFailure } from '../../lib/apiFailure'
 import { useStore } from '../../mock/store'
 import { Bar, Retry, Text } from './LiveBanner.styles'
 
-/** Shown on admin when the live API is unreachable. The text is why the last check failed. */
+/** Product shell only. The HTTP status and server text stay on the admin screens. */
 export function LiveBanner() {
   const { t } = useI18n()
-  const { liveStatus, liveFailure, retryLive } = useStore()
+  const { liveStatus, retryLive } = useStore()
 
   if (liveStatus !== 'down') return null
 
   return (
     <Bar role="status">
-      <Text>{formatApiFailure(liveFailure, t.admin)}</Text>
+      <Text>{t.http.fail}</Text>
       <Retry type="button" onClick={() => void retryLive()}>
         {t.common.retry}
       </Retry>

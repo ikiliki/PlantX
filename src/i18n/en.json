@@ -581,7 +581,7 @@
     "needIdentity": "Pick a category and subcategory",
     "needSpecs": "Pick size, stage, and the required traits",
     "needDetails": "Add a description",
-    "saveFailed": "Couldn't save. The greenhouse server is offline in this mode; try again when it's connected.",
+    "saveFailed": "Couldn't save. Try again.",
     "doneTitle": "Planted!",
     "doneBody": "{name} is growing in your greenhouse.",
     "addAnother": "Add another",
