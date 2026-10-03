@@ -11,6 +11,7 @@ import type {
 import { scanActivityText } from '../../../../src/features/greenhouse/identification.ts'
 import { Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
+import { preprodEnabled } from '../../lib/preprod.ts'
 import { requireAdmin, requireUser } from '../../lib/session.ts'
 import { activityService } from '../activity/activity.service.ts'
 import type { Activity } from '../activity/activity.types.ts'
@@ -90,7 +91,8 @@ identifyRoutes.post('/', async (c) => {
   const image = readImage(body)
   const outcome = await identifyService.identify(
     image,
-    { mode: 'live', target: 'chain', honorEnabled: true },
+    // Preprod testers never reach Gemini or Pl@ntNet: every stage mocked, admin stage settings ignored.
+    preprodEnabled() ? { mode: 'mock', target: 'chain' } : { mode: 'live', target: 'chain', honorEnabled: true },
     { userId: user.id, source: 'addPlant', thumb: readThumb(body) },
   )
   return respond(c, outcome, await recordScan(user.id, outcome))

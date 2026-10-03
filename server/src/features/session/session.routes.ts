@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { plantxEnv } from '../../lib/env.ts'
 import { Errors } from '../../lib/errors.ts'
 import { googleAuthEnabled, googleClientId, verifyGoogleIdToken } from '../../lib/googleAuth.ts'
+import { checkTestToken, preprodEnabled } from '../../lib/preprod.ts'
 import { requireUser, setSession } from '../../lib/session.ts'
 import { liveService } from '../live/live.service.ts'
 import { sessionService } from './session.service.ts'
@@ -45,6 +46,26 @@ sessionRoutes.patch('/account', async (c) => {
     avatarIcon: typeof body.avatarIcon === 'string' ? body.avatarIcon : undefined,
   })
   return c.json({ user: next })
+})
+
+/** Preprod only: sign in as a seeded user with the test token. Scripts use POST + header. */
+sessionRoutes.post('/test-login', async (c) => {
+  if (!preprodEnabled()) throw Errors.missing()
+  if (!checkTestToken(c.req.header('x-test-token'))) throw Errors.auth('Bad test token')
+  const body = (await c.req.json().catch(() => ({}))) as { userId?: string }
+  if (!body.userId) throw Errors.invalid('userId required')
+  const user = await sessionService.requireById(body.userId)
+  await setSession(c, user.id)
+  return c.json(await liveService.payload(user.id))
+})
+
+/** Preprod only: one link for browser AI agents that cannot set headers. Rotate the token after a run. */
+sessionRoutes.get('/test-login', async (c) => {
+  if (!preprodEnabled()) throw Errors.missing()
+  if (!checkTestToken(c.req.query('token'))) throw Errors.auth('Bad test token')
+  const user = await sessionService.requireById(c.req.query('user') ?? '')
+  await setSession(c, user.id)
+  return c.redirect('/greenhouse', 302)
 })
 
 sessionRoutes.post('/google', async (c) => {
