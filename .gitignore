@@ -71,3 +71,7 @@ base44/
 
 # Local server bundle. Do not ignore api/ — Vercel drops a gitignored function,
 # and /api then returns the static app instead of the API.
+
+# Playwright output
+playwright-report/
+test-results/

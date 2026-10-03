@@ -1,0 +1,33 @@
+# Moves the status label on the issues a PR references ("Refs #n", "Fixes #n").
+# Merged into preprod/ai-testers → status: in PP. Merged into master → status: in prod
+# (production is promoted by hand; the issue is closed after it is approved there).
+name: Issue status
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [preprod/ai-testers, master]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  label:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BODY: ${{ github.event.pull_request.body }}
+      TITLE: ${{ github.event.pull_request.title }}
+      BASE: ${{ github.event.pull_request.base.ref }}
+    steps:
+      - run: |
+          if [ "$BASE" = "master" ]; then next="status: in prod"; else next="status: in PP"; fi
+          issues=$(printf '%s\n%s\n' "$TITLE" "$BODY" | grep -iE '(refs|fixes|closes|resolves)[^#]*#[0-9]+|\(#[0-9]+' | grep -oE '#[0-9]+' | tr -d '#' | sort -u)
+          for n in $issues; do
+            gh issue edit "$n" -R "$GITHUB_REPOSITORY" \
+              --remove-label "status: in progress" --remove-label "status: in QA" \
+              --remove-label "status: in PP" --remove-label "status: in prod" >/dev/null 2>&1 || true
+            gh issue edit "$n" -R "$GITHUB_REPOSITORY" --add-label "$next" && echo "#$n → $next"
+          done
