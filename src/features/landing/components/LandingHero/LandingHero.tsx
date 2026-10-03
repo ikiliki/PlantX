@@ -1,21 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { appHref } from '../../../../lib/siteUrls'
-import { landingShots } from '../../landingShots'
-import { DeviceFrame } from '../DeviceFrame/DeviceFrame'
-import {
-  Actions,
-  Desk,
-  Hero,
-  Kicker,
-  LoginLine,
-  Mobile,
-  Primary,
-  Secondary,
-  Sub,
-  Title,
-  Visual,
-} from './LandingHero.styles'
+import { LandingShowcase } from '../LandingShowcase/LandingShowcase'
+import { Actions, Hero, Kicker, LoginLine, Primary, Secondary, Sub, Title, Visual } from './LandingHero.styles'
 
 export function LandingHero() {
   const { t } = useI18n()
@@ -36,12 +23,7 @@ export function LandingHero() {
         </LoginLine>
       </div>
       <Visual>
-        <Desk>
-          <DeviceFrame device="desk" src={landingShots.greenhouseDesk} alt={t.landing.tourGreenhouseTitle} eager />
-        </Desk>
-        <Mobile>
-          <DeviceFrame device="phone" src={landingShots.homePhone} alt={t.landing.tourHomeTitle} eager />
-        </Mobile>
+        <LandingShowcase />
       </Visual>
     </Hero>
   )

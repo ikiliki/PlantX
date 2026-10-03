@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { pressable, riseIn } from '../../../../theme/motion'
+import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 export const Hero = styled.section`
@@ -99,26 +99,6 @@ export const LoginLine = styled.p`
 export const Visual = styled.div`
   position: relative;
   min-width: 0;
-  padding-bottom: 36px;
-  padding-inline-end: 0;
-  animation: ${riseIn} 600ms ${theme.motion.ease} both;
-
-  @container landing (min-width: 640px) {
-    padding-inline-end: 72px;
-  }
-`
-
-export const Desk = styled.div`
-  min-width: 0;
-`
-
-export const Mobile = styled.div`
-  position: absolute;
-  inset-inline-end: 0;
-  bottom: 0;
-  width: min(34%, 190px);
-
-  @container landing (max-width: 639px) {
-    width: 30%;
-  }
+  width: min(640px, 100%);
+  justify-self: center;
 `
