@@ -6,6 +6,8 @@
  *
  * Identify runs in mock mode on preprod (the server forces it), so no provider is called.
  */
+import { readFileSync } from 'node:fs'
+
 const args = process.argv.slice(2)
 const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`)
@@ -23,6 +25,9 @@ if (!token) {
 const PIXEL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 const testerId = (n) => `test-user-${String(n).padStart(3, '0')}`
+const TEMPLATE = JSON.parse(
+  readFileSync(new URL('../server/fixtures/demo/plants.json', import.meta.url), 'utf8'),
+)[0]
 
 const timings = new Map()
 const failures = new Map()
@@ -72,16 +77,15 @@ async function tester(n) {
   const { plants } = await (await call('plants', '/api/plants', { cookie })).json()
   await call('identify (mock)', '/api/identify', { cookie, method: 'POST', body: { image: PIXEL } })
 
-  const mine = plants.find((plant) => plant.ownerId === id)
-  if (mine) {
-    const plantId = `pl-load-${id}-${Date.now()}`
-    await call('add plant', '/api/plants', {
-      cookie,
-      method: 'POST',
-      body: { ...mine, id: plantId, title: `${mine.title} (load)`, status: 'owned' },
-    })
-    created.push(plantId)
-  }
+  // Empty testers have nothing to copy, so fall back to a demo plant shape.
+  const mine = plants.find((plant) => plant.ownerId === id) ?? TEMPLATE
+  const plantId = `pl-load-${id}-${Date.now()}`
+  await call('add plant', '/api/plants', {
+    cookie,
+    method: 'POST',
+    body: { ...mine, id: plantId, ownerId: id, title: `${mine.title} (load)`, status: 'owned', parentId: undefined },
+  })
+  created.push(plantId)
 
   const { todos } = await (await call('todos', '/api/todos?open=1', { cookie })).json()
   if (todos[0]) {
