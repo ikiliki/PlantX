@@ -6,6 +6,7 @@ import {
 } from '../../../../src/features/profile/avatarIcons.ts'
 import type { User } from '../../../../src/mock/types.ts'
 import { getStore } from '../../db/index.ts'
+import { changedSince, snapshot } from '../../lib/changedRows.ts'
 import { Errors } from '../../lib/errors.ts'
 import { BOOTSTRAP_ADMIN } from '../../lib/ensureData.ts'
 import type { GoogleProfile } from '../../lib/googleAuth.ts'
@@ -76,6 +77,7 @@ export const sessionService = {
     const email = profile.email.toLowerCase()
     const store = getStore()
     const users = await store.users.list()
+    const before = snapshot(users)
     const adminMail = bootstrapEmail()
     let user = users.find((item) => item.role !== 'guest' && item.email?.toLowerCase() === email)
 
@@ -91,7 +93,7 @@ export const sessionService = {
         if (profile.name) user.name = profile.name
       }
       ensureSoleAdmin(users, user.id)
-      await store.users.saveAll(users)
+      await store.users.upsert(changedSince(before, users))
       return user
     }
 
@@ -102,7 +104,7 @@ export const sessionService = {
     }
     if (!isActive(user)) throw Errors.declined('Account disabled')
     if (profile.name && !user.name) user.name = profile.name
-    await store.users.saveAll(users)
+    await store.users.upsert(changedSince(before, users))
     return user
   },
 
@@ -127,7 +129,7 @@ export const sessionService = {
       user.avatarIcon = input.avatarIcon
     }
 
-    await store.users.saveAll(users)
+    await store.users.upsert([user])
     return user
   },
 }

@@ -33,9 +33,7 @@ export const activityService = {
 
   async record(input: ActivityInput): Promise<Activity> {
     const activity = activityFrom(input)
-    const rows = await getStore().activities.list()
-    rows.unshift(activity)
-    await getStore().activities.saveAll(rows)
+    await getStore().activities.upsert([activity])
     return activity
   },
 
@@ -44,13 +42,11 @@ export const activityService = {
     const activity = activityFrom(input)
     const linked = new Set(scanRequestIds)
     const rows = await getStore().activities.list()
-    for (const row of rows) {
-      if (row.kind === 'scan' && row.userId === input.userId && row.identifyRequestId && linked.has(row.identifyRequestId)) {
-        row.plantId = input.plantId
-      }
-    }
-    rows.unshift(activity)
-    await getStore().activities.saveAll(rows)
+    const scans = rows.filter(
+      (row) => row.kind === 'scan' && row.userId === input.userId && row.identifyRequestId && linked.has(row.identifyRequestId),
+    )
+    for (const row of scans) row.plantId = input.plantId
+    await getStore().activities.upsert([activity, ...scans])
     return activity
   },
 
@@ -65,10 +61,10 @@ export const activityService = {
       store.plants.list(),
       store.identifyRequests.list({ limit: 500 }),
     ])
-    let changed = false
+    const added: Activity[] = []
     for (const request of requests) {
       if (activities.some((row) => row.kind === 'scan' && row.identifyRequestId === request.id)) continue
-      activities.unshift({
+      added.unshift({
         id: `act-scan-${request.id}`,
         kind: 'scan',
         userId: request.userId,
@@ -77,12 +73,11 @@ export const activityService = {
         createdAt: request.createdAt,
         ...scanActivityText(request.diagnosis),
       })
-      changed = true
     }
     for (const plant of plants) {
       if (activities.some((row) => row.kind === 'added' && row.plantId === plant.id)) continue
       const identification = plant.identification ?? { source: 'manual' as const, at: plant.createdAt }
-      activities.unshift({
+      added.unshift({
         id: `act-added-${plant.id}`,
         kind: 'added',
         userId: plant.ownerId,
@@ -91,11 +86,10 @@ export const activityService = {
         createdAt: plant.createdAt,
         ...addedActivityText(plant.title, plant.titleHe, identification),
       })
-      changed = true
     }
-    if (!changed) return
-    await store.activities.saveAll(activities)
-    logger.info(`Backfilled ${activities.length} activity rows from identify requests and plants`)
+    if (added.length === 0) return
+    await store.activities.upsert(added)
+    logger.info(`Backfilled ${added.length} activity rows from identify requests and plants`)
   },
 }
 

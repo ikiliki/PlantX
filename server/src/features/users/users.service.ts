@@ -69,8 +69,7 @@ export const usersService = {
       createdAt: new Date().toISOString(),
       status: 'pending',
     }
-    pending.unshift(row)
-    await store.pendingUsers.saveAll(pending)
+    await store.pendingUsers.upsert([row])
     return row
   },
 
@@ -118,13 +117,12 @@ export const usersService = {
       accountStatus: 'active',
       preapproved: true,
     }
-    users.push(user)
-    await store.users.saveAll(users)
+    await store.users.upsert([user])
 
     row.status = 'approved'
     row.approvedAt = new Date().toISOString()
     row.userId = user.id
-    await store.pendingUsers.saveAll(pending)
+    await store.pendingUsers.upsert([row])
     return { pending: row, user }
   },
 
@@ -136,7 +134,7 @@ export const usersService = {
     if (row.status !== 'pending') throw Errors.invalid('Application is not pending')
     row.status = 'rejected'
     row.rejectedAt = new Date().toISOString()
-    await store.pendingUsers.saveAll(pending)
+    await store.pendingUsers.upsert([row])
     return row
   },
 
@@ -208,7 +206,7 @@ export const usersService = {
       throw Errors.forbidden('Admin accounts cannot be disabled')
     }
     ;(user as ManagedUser).accountStatus = accountStatus
-    await store.users.saveAll(users)
+    await store.users.upsert([user])
     return withAccountStatus(user)
   },
 
@@ -221,7 +219,7 @@ export const usersService = {
       throw Errors.invalid('A disabled account cannot be pre-approved')
     }
     user.preapproved = preapproved
-    await store.users.saveAll(users)
+    await store.users.upsert([user])
     return withAccountStatus(user)
   },
 
