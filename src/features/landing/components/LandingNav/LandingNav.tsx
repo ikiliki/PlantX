@@ -18,7 +18,7 @@ export function LandingNav() {
 
   return (
     <Bar $solid={solid} data-solid={solid ? 'true' : 'false'}>
-      <Brand to="/">
+      <Brand to="/landing">
         <BrandMark src="/icons/brand-mark.svg" alt="" width={30} height={30} $solid={solid} />
         {t.appName}
       </Brand>

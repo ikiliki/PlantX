@@ -50,7 +50,7 @@ export function HoldStage({
           {t.release.backToLanding}
         </Back>
       ) : (
-        <Back as={Link} to="/">
+        <Back as={Link} to="/landing">
           <span aria-hidden="true">←</span>
           {t.release.backToLanding}
         </Back>

@@ -15,7 +15,7 @@ const LANG = process.env.LANG_UI || 'EN'
 mkdirSync(OUT, { recursive: true })
 
 const USER_ROUTES = [
-  '/',
+  '/landing',
   '/home',
   '/greenhouse',
   '/greenhouse?tab=needs',
