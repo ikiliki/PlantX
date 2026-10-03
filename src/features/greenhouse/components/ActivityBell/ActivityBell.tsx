@@ -5,7 +5,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { ownerActivity } from '../../ownerActivity'
 import { ActivityThread } from '../ActivityThread/ActivityThread'
-import { Bell, Panel, Root } from './ActivityBell.styles'
+import { Bell, Close, Panel, Root } from './ActivityBell.styles'
 
 export function ActivityBell({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const { fullDb, db, currentUser } = useStore()
@@ -56,6 +56,10 @@ export function ActivityBell({ defaultOpen = false }: { defaultOpen?: boolean })
       </Bell>
       {open && (
         <Panel role="dialog" aria-label={t.greenhouse.activityTitle}>
+          {/* A visible way out on a phone, besides the bell, Escape and tapping outside. */}
+          <Close type="button" aria-label={t.http.dismiss} onClick={() => setOpen(false)}>
+            ×
+          </Close>
           <ActivityThread activity={activity} />
         </Panel>
       )}

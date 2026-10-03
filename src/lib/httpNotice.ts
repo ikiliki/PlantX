@@ -1,12 +1,14 @@
 import { sanitizeContext, type IssueContext, type IssueKind } from './issueReport'
 
-export type NoticeTone = 'fail'
+export type NoticeTone = 'fail' | 'done'
 
-export type HttpNotice = {
-  id: number
-  tone: NoticeTone
-  context: IssueContext
-}
+export type HttpNotice =
+  | { id: number; tone: 'fail'; context: IssueContext }
+  /** A care task was completed: short success note with the XP earned. */
+  | { id: number; tone: 'done'; care: 'water' | 'photo'; xp: number }
+
+/** At most this many notices on screen; the newest stays. */
+const MAX_NOTICES = 2
 
 type Listener = (items: readonly HttpNotice[]) => void
 
@@ -61,9 +63,19 @@ function push(context: IssueContext) {
   const clean = sanitizeContext(context)
   if (!clean) return
   const key = noticeKey(clean)
-  if (items.some((item) => noticeKey(item.context) === key)) return
+  if (items.some((item) => item.tone === 'fail' && noticeKey(item.context) === key)) return
   const notice: HttpNotice = { id: ++seq, tone: 'fail', context: clean }
-  items = [notice, ...items].slice(0, 4)
+  items = [notice, ...items].slice(0, MAX_NOTICES)
+  emit()
+}
+
+const notifiedDone = new Set<string>()
+
+/** Success note for a completed care task. Once per task, so a re-run of the store update can't repeat it. */
+export function notifyCareDone(taskId: string, care: 'water' | 'photo', xp: number) {
+  if (notifiedDone.has(taskId)) return
+  notifiedDone.add(taskId)
+  items = [{ id: ++seq, tone: 'done' as const, care, xp }, ...items].slice(0, MAX_NOTICES)
   emit()
 }
 

@@ -35,6 +35,8 @@ import { supportedLocales } from '../i18n/locales'
 import { defaultPlantPhoto } from './images'
 import type { ApiFailure } from '../lib/apiFailure'
 import { siteRole } from '../lib/siteUrls'
+import { notifyCareDone } from '../lib/httpNotice'
+import { CARE_XP } from '../features/greenhouse/greenhouseLevel'
 import {
   fetchActivitiesOutcome,
   fetchCatalogOutcome,
@@ -939,6 +941,9 @@ export function StoreProvider({
 
         todo.completedOn = at
         if (todo.dueOn == null) todo.dueOn = at
+        // Outside the update: the store has no i18n, the toast builds the text.
+        const care = todo.subcategory === 'photo' ? 'photo' : 'water'
+        queueMicrotask(() => notifyCareDone(todo.id, care, CARE_XP))
 
         if (todo.subcategory === 'water') {
           plant.history = [{ at, label: 'Watered', labelHe: 'הושקה' }, ...plant.history]
