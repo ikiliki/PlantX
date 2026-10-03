@@ -271,6 +271,7 @@
     "noActivity": "No one has graded this plant yet."
   },
   "passport": {
+    "setPlace": "Unknown · set your place",
     "title": "Plant passport",
     "lineage": "Lineage",
     "history": "History",
@@ -351,9 +352,9 @@
     "levelXp": "{xp} XP",
     "levelUp": "Level up!",
     "levelPlants": "{n} plants",
-    "levelCare": "{n} care tasks",
+    "levelCare": "{n} tasks done",
     "levelPlantsOne": "1 plant",
-    "levelCareOne": "1 care task",
+    "levelCareOne": "1 task done",
     "levelHow": "How to level up",
     "levelEarnPlant": "+{xp} XP for every plant you add",
     "levelEarnCare": "+{xp} XP for every care task you complete",
@@ -459,6 +460,9 @@
     "aiCount": "{n} AI verified"
   },
   "todo": {
+    "cancel": "Cancel",
+    "saveWaterDate": "Save",
+    "doneOnDay": "{n} done",
     "title": "Tasks",
     "navToday": "Today",
     "navPlanned": "Planned",
@@ -513,6 +517,8 @@
     "dropTitleOne": "Drop a photo or tap to choose",
     "dropHint": "Up to {max} photos, JPG or PNG.",
     "dropHintOne": "One photo, JPG or PNG.",
+    "dropTitleTouch": "Take or choose a photo",
+    "dropHintTouch": "One photo from your camera or gallery.",
     "retakePhoto": "Use another photo",
     "scanTitle": "AI is reading your plant",
     "scanStage1": "Looking at leaf shape, veins, and color",
@@ -1257,6 +1263,8 @@
     "retry": "Retry"
   },
   "http": {
+    "donePhoto": "Photo added · +{xp} XP",
+    "doneWater": "Watered · +{xp} XP",
     "fail": "Something went wrong",
     "dismiss": "Dismiss",
     "report": "Report an issue",

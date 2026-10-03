@@ -271,6 +271,7 @@
     "noActivity": "עדיין אף אחד לא דירג את הצמח."
   },
   "passport": {
+    "setPlace": "לא ידוע · הגדירו מיקום",
     "title": "דרכון צמח",
     "lineage": "שושלת",
     "history": "היסטוריה",
@@ -351,9 +352,9 @@
     "levelXp": "{xp} XP",
     "levelUp": "עלית רמה!",
     "levelPlants": "{n} צמחים",
-    "levelCare": "{n} משימות טיפול",
+    "levelCare": "{n} משימות שבוצעו",
     "levelPlantsOne": "צמח אחד",
-    "levelCareOne": "משימת טיפול אחת",
+    "levelCareOne": "משימה אחת בוצעה",
     "levelHow": "איך עולים רמה",
     "levelEarnPlant": "+{xp} XP על כל צמח שמוסיפים",
     "levelEarnCare": "+{xp} XP על כל משימת טיפול שמסיימים",
@@ -459,6 +460,9 @@
     "aiCount": "{n} מאומתים ב־AI"
   },
   "todo": {
+    "cancel": "ביטול",
+    "saveWaterDate": "שמירה",
+    "doneOnDay": "{n} בוצעו",
     "title": "משימות",
     "navToday": "היום",
     "navPlanned": "מתוכנן",
@@ -513,6 +517,8 @@
     "dropTitleOne": "גררו תמונה או הקישו לבחירה",
     "dropHint": "עד {max} תמונות, JPG או PNG.",
     "dropHintOne": "תמונה אחת, JPG או PNG.",
+    "dropTitleTouch": "צלמו או בחרו תמונה",
+    "dropHintTouch": "תמונה אחת מהמצלמה או מהגלריה.",
     "retakePhoto": "תמונה אחרת",
     "scanTitle": "ה־AI קורא את הצמח שלכם",
     "scanStage1": "בוחן צורת עלים, עורקים וצבע",
@@ -1257,6 +1263,8 @@
     "retry": "נסה שוב"
   },
   "http": {
+    "donePhoto": "התמונה נוספה · ‎+{xp} XP",
+    "doneWater": "הושקה · ‎+{xp} XP",
     "fail": "משהו השתבש",
     "dismiss": "סגירה",
     "report": "דיווח על תקלה",

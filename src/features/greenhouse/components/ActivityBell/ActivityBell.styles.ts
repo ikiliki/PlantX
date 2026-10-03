@@ -50,3 +50,22 @@ export const Panel = styled.div`
     max-height: min(62svh, 480px);
   }
 `
+
+export const Close = styled.button`
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.chipNeutral};
+  color: ${theme.colors.forest};
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+`

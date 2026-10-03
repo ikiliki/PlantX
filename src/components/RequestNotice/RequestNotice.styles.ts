@@ -22,7 +22,7 @@ export const Stack = styled.div`
   }
 `
 
-export const Card = styled.article`
+export const Card = styled.article<{ $tone?: 'done' }>`
   pointer-events: auto;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -31,7 +31,7 @@ export const Card = styled.article`
   padding: 12px 12px 12px 14px;
   border-radius: ${theme.radii.lg};
   border: 1px solid ${theme.colors.border};
-  background: ${theme.colors.creamCard};
+  background: ${({ $tone }) => ($tone === 'done' ? theme.colors.chipGreen : theme.colors.creamCard)};
   color: ${theme.colors.ink};
   box-shadow: ${theme.shadow.lift};
   animation: ${rise} ${theme.motion.base} ${theme.motion.ease};
@@ -41,7 +41,7 @@ export const Card = styled.article`
   }
 `
 
-export const Orb = styled.span`
+export const Orb = styled.span<{ $tone?: 'done' }>`
   width: 28px;
   height: 28px;
   margin-top: 2px;
@@ -50,6 +50,11 @@ export const Orb = styled.span`
     radial-gradient(circle at 35% 30%, #fff 0 2px, transparent 3px),
     radial-gradient(circle at 40% 35%, ${theme.colors.warmth}, ${theme.colors.danger} 72%);
   box-shadow: inset 0 -6px 10px rgba(18, 60, 45, 0.25);
+
+  ${({ $tone }) =>
+    $tone === 'done'
+      ? `background: radial-gradient(circle at 35% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 40% 35%, ${theme.colors.growth}, ${theme.colors.forest} 72%);`
+      : ''}
 `
 
 export const Copy = styled.div`

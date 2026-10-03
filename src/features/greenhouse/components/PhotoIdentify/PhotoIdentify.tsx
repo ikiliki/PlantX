@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { mockIdentify } from '../../../../mock/identifyMock'
 import { postIdentify } from '../../../../mock/liveApi'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
@@ -129,6 +130,8 @@ export function PhotoIdentify({
   const started = useRef(new Set<string>())
   const [selectedId, setSelectedId] = useState<string>()
   const [dragging, setDragging] = useState(false)
+  // A phone can't drop a file: it takes a photo or picks one from the gallery.
+  const touch = useMediaQuery('(pointer: coarse)')
 
   const selected = scans.find((scan) => scan.id === selectedId) ?? scans[scans.length - 1]
   const room = Math.max(0, max - scans.length)
@@ -248,10 +251,14 @@ export function PhotoIdentify({
           </DropArt>
           <DropCopy>
             <strong>
-              {max > 1 ? t.addPlant.dropTitle.replace('{max}', String(max)) : t.addPlant.dropTitleOne}
+              {max > 1
+                ? t.addPlant.dropTitle.replace('{max}', String(max))
+                : touch
+                  ? t.addPlant.dropTitleTouch
+                  : t.addPlant.dropTitleOne}
             </strong>
             <small>
-              {max > 1 ? t.addPlant.dropHint.replace('{max}', String(max)) : t.addPlant.dropHintOne}
+              {max > 1 ? t.addPlant.dropHint.replace('{max}', String(max)) : touch ? t.addPlant.dropHintTouch : t.addPlant.dropHintOne}
             </small>
           </DropCopy>
         </Drop>

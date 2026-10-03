@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { Icon, type IconName } from '../Icon/Icon'
-import { Btn, Root } from './IconToggle.styles'
+import { Btn, Name, Root } from './IconToggle.styles'
 
 export type IconToggleOption<T extends string> = {
   id: T
@@ -36,11 +36,15 @@ export function IconToggle<T extends string>({
           type="button"
           role="radio"
           aria-label={option.label}
+          title={option.label}
           aria-checked={value === option.id}
           $on={value === option.id}
+          $floating={floating}
           onClick={() => onChange(option.id)}
         >
           <Icon name={option.icon} size={16} />
+          {/* Floating, the chosen option also shows its name, so icons alone don't have to explain it. */}
+          {floating && value === option.id ? <Name aria-hidden>{option.label}</Name> : null}
         </Btn>
       ))}
     </Root>

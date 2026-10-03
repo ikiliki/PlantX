@@ -6,10 +6,22 @@ const water = '#3B7CC9'
 const metal = '#8B929A'
 
 export const Root = styled.section`
+  container-type: inline-size;
   display: grid;
   gap: 16px;
   min-width: 0;
-  width: min(960px, 100%);
+  width: min(1240px, 100%);
+`
+
+export const Split = styled.div`
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+
+  @container (min-width: 900px) {
+    grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+    align-items: start;
+  }
 `
 
 export const Board = styled.div`
@@ -258,6 +270,22 @@ export const DayNum = styled.span`
   font-size: 12px;
   font-weight: 700;
   color: ${theme.colors.ink};
+`
+
+/** Care done on this day: a small tick in the corner, tinted by kind. */
+export const DoneMark = styled.span<{ $kind: 'water' | 'photo' }>`
+  position: absolute;
+  inset-block-start: 4px;
+  inset-inline-end: 4px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: ${theme.radii.pill};
+  font-size: 10px;
+  font-weight: 900;
+  color: ${theme.colors.creamCard};
+  background: ${({ $kind }) => ($kind === 'photo' ? theme.colors.warn : theme.colors.info)};
 `
 
 export const Icons = styled.div`
