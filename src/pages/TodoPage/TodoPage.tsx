@@ -4,7 +4,6 @@ import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { GuestCurtain } from '../../components/GuestCurtain/GuestCurtain'
 import { GuestView } from '../../components/GuestView/GuestView'
-import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { TodoCalendar } from '../../features/todo/components/TodoCalendar/TodoCalendar'
 import { needsFirstPlant } from '../../features/todo/todoSchedule'
 import { forAudience } from '../../theme/audience'
@@ -22,7 +21,8 @@ export function TodoPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getUTCFullYear())
   const [month, setMonth] = useState(now.getUTCMonth())
-  const [adding, setAdding] = useState(false)
+  // Add Plant lives on the greenhouse: go there and open it, so the new plant lands where it shows.
+  const openAddPlant = () => navigate('/greenhouse?add=1')
   const plantsWaiting = useSectionFetch(signedIn, ['plants'])
 
   const ownerId = db.currentUserId
@@ -60,7 +60,7 @@ export function TodoPage() {
         focusTodoId={todoId}
         firstPlant={firstPlant}
         showFilters={!plantsWaiting && !firstPlant}
-        onAddFirstPlant={() => setAdding(true)}
+        onAddFirstPlant={openAddPlant}
         onMonthChange={(nextYear, nextMonth) => {
           setYear(nextYear)
           setMonth(nextMonth)
@@ -74,7 +74,6 @@ export function TodoPage() {
           navigate('/tasks', { replace: true })
         }}
       />
-      {adding ? <AddPlantDialog onClose={() => setAdding(false)} /> : null}
     </Page>
   )
 
@@ -95,7 +94,7 @@ export function TodoPage() {
                     title={t.guest.tasksTitle}
                     body={t.guest.tasksBody}
                     action={t.guest.logIn}
-                    secondary={{ label: t.guest.tryAddPlant, onClick: () => setAdding(true) }}
+                    secondary={{ label: t.guest.tryAddPlant, onClick: openAddPlant }}
                   />
                 }
               >
@@ -112,7 +111,6 @@ export function TodoPage() {
                   onPickFirstWater={() => undefined}
                 />
               </GuestCurtain>
-              {adding ? <AddPlantDialog onClose={() => setAdding(false)} /> : null}
             </Page>
           ),
           signedIn: board,

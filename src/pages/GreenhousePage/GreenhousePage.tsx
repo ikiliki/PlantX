@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { GuestCurtain } from '../../components/GuestCurtain/GuestCurtain'
@@ -135,7 +135,17 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
 
   const openAdd = () => setAdding(true)
 
-  // A guest sees the same layout with placeholders (nothing is fetched), the Add tile, and a log-in card.
+  // Tasks (and any link) can ask for Add Plant with ?add=1: open it here, then drop the flag.
+  useEffect(() => {
+    if (view !== 'page' || params.get('add') !== '1') return
+    setAdding(true)
+    const nextParams = new URLSearchParams(params)
+    nextParams.delete('add')
+    setParams(nextParams, { replace: true })
+  }, [params, setParams, view])
+
+  // A guest sees the same layout with placeholders (nothing is fetched) and the Add tile.
+  // Log in stays in the top bar and in Add Plant, so the board has no log-in card.
   const guestBody =
     scope === 'global' ? (
       <GuestCurtain card={<GuestView card title={t.guest.globalTitle} body={t.guest.globalBody} action={t.guest.logIn} />}>
@@ -144,7 +154,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     ) : (
       <CollectionBoard
         skeleton="guest"
-        rail={<GuestView card title={t.guest.greenhouseTitle} body={t.guest.greenhouseBody} action={t.guest.logIn} />}
         plants={[]}
         sold={[]}
         activity={[]}
