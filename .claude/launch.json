@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mock",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5174
+    },
+    {
+      "name": "qa-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:api:qa"],
+      "port": 8787
+    },
+    {
+      "name": "qa-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:web:qa"],
+      "port": 5173
+    }
+  ]
+}
