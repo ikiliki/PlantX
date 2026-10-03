@@ -29,6 +29,7 @@ test.describe('signed in', () => {
     for (const stage of ['Plant check', 'Species', 'Catalog fields']) {
       await expect(page.getByRole('radio', { name: stage }).or(page.getByRole('button', { name: stage })).first()).toBeVisible()
     }
-    await expect(page.getByText(/API key/i).first()).toBeVisible()
+    // The detail grid label, not the Ready (no API key) option inside the closed select.
+    await expect(page.getByRole('term').filter({ hasText: /^API key$/i }).first()).toBeVisible()
   })
 })
