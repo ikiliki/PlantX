@@ -4,45 +4,20 @@
     {
       "name": "mock",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
+      "runtimeArgs": ["run", "dev"],
       "port": 5174
     },
     {
       "name": "qa-api",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev:api:qa"
-      ],
+      "runtimeArgs": ["run", "dev:api:qa"],
       "port": 8787
     },
     {
       "name": "qa-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev:web:qa"
-      ],
+      "runtimeArgs": ["run", "dev:web:qa"],
       "port": 5173
-    },
-    {
-      "name": "pp-local",
-      "runtimeExecutable": "node",
-      "runtimeArgs": [
-        "C:/Users/USER/plantx-preprod/scripts/tmp-pp-local.mjs"
-      ],
-      "port": 5176
-    },
-    {
-      "name": "pp-local-qa",
-      "runtimeExecutable": "node",
-      "runtimeArgs": [
-        "C:/Users/USER/plantx-preprod/scripts/tmp-pp-local-qa.mjs"
-      ],
-      "port": 5176
     }
   ]
 }
