@@ -72,7 +72,8 @@ await writeFile(
     handler: 'index.js',
     launcherType: 'Nodejs',
     shouldAddHelpers: true,
-    regions: ['syd1'],
+    // PP only: the PlantX-PP database is in Singapore (prod stays on syd1 on master).
+    regions: ['sin1'],
   }),
 )
 await writeFile(
