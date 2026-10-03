@@ -16,9 +16,11 @@ permissions:
   issues: write
   deployments: read
 
+# One slot per deployed commit: Vercel reports every branch, and a later feature-branch deploy
+# must not cancel the run for the PP head.
 concurrency:
-  group: pp-regression
-  cancel-in-progress: true
+  group: pp-regression-${{ github.event.deployment.sha || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   e2e:
