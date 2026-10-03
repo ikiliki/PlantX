@@ -1,3 +1,4 @@
+import { changedSince, snapshot } from '../../lib/changedRows.ts'
 import { Errors } from '../../lib/errors.ts'
 import { getStore } from '../../db/index.ts'
 import { activityService } from '../activity/activity.service.ts'
@@ -58,8 +59,10 @@ export function isFirstWaterTodo(todo: Todo, rows: Todo[]) {
   )
 }
 
-async function save(rows: Todo[]) {
-  await getStore().todos.saveAll(rows)
+/** Only the todos changed since `before` (the snapshot taken after list) are written. */
+async function save(rows: Todo[], before: Map<string, string>) {
+  const changed = changedSince(before, rows)
+  if (changed.length) await getStore().todos.upsert(changed)
 }
 
 function push(rows: Todo[], input: TodoInput): Todo {
@@ -123,6 +126,7 @@ export const todoService = {
   /** New plant with no water history: open a first-watering session. */
   async ensureFirstWater(plantId: string, ownerId: string) {
     const rows = await getStore().todos.list()
+    const before = snapshot(rows)
     if (hasAnyWater(rows, plantId)) return openOf(rows, plantId, 'water') ?? null
     const todo = push(rows, {
       ownerId,
@@ -132,18 +136,19 @@ export const todoService = {
       dueOn: null,
       completedOn: null,
     })
-    await save(rows)
+    await save(rows, before)
     return todo
   },
 
   /** After a photo upload, open or move the photo todo one month out. */
   async schedulePhoto(plantId: string, ownerId: string, uploadedOn = today()) {
     const rows = await getStore().todos.list()
+    const before = snapshot(rows)
     const dueOn = addMonths(uploadedOn, PHOTO_GAP_MONTHS)
     const open = openOf(rows, plantId, 'photo')
     if (open) {
       open.dueOn = dueOn
-      await save(rows)
+      await save(rows, before)
       return open
     }
     const todo = push(rows, {
@@ -154,7 +159,7 @@ export const todoService = {
       dueOn,
       completedOn: null,
     })
-    await save(rows)
+    await save(rows, before)
     return todo
   },
 
@@ -166,6 +171,7 @@ export const todoService = {
   async complete(todoId: string, userId: string, completedOn?: string) {
     const store = getStore()
     const rows = await store.todos.list()
+    const before = snapshot(rows)
     const todo = rows.find((row) => row.id === todoId)
     if (!todo) throw Errors.missing(`Todo ${todoId} not found`)
     if (todo.ownerId !== userId) throw Errors.forbidden('Todo belongs to another owner')
@@ -227,8 +233,8 @@ export const todoService = {
     }
 
     // Todos first. A unique-index failure must not leave a watering that never completed.
-    await save(rows)
-    await store.plants.saveAll(plants)
+    await save(rows, before)
+    await store.plants.upsert([plant])
     const activity = activityInput ? await activityService.record(activityInput) : null
     return {
       todo,
@@ -246,6 +252,8 @@ export const todoService = {
     const store = getStore()
     const plants = await store.plants.list()
     const rows = await store.todos.list()
+    const plantsBefore = snapshot(plants)
+    const before = snapshot(rows)
     let changed = false
     type LegacyPlant = (typeof plants)[number] & { wateredAt?: string; photoAt?: string }
 
@@ -312,8 +320,8 @@ export const todoService = {
     }
 
     if (!changed) return { plants: 0, todos: rows.length }
-    await store.plants.saveAll(plants)
-    await save(rows)
+    await store.plants.upsert(changedSince(plantsBefore, plants))
+    await save(rows, before)
     return { plants: plants.length, todos: rows.length }
   },
 }

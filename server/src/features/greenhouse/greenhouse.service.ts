@@ -120,11 +120,9 @@ export const greenhouseService = {
       records.map((record) => (record ? { scanned: true, diagnosis: record.diagnosis, requestId: record.id } : undefined)),
       catalog,
     )
-    const plants = await store.plants.list()
     const { wateredAt: _w, photoAt: _p, ...rest } = plant as Plant & { wateredAt?: string; photoAt?: string }
     const row: Plant = { ...withLocation({ ...rest, photos, ownerId }), identification }
-    plants.unshift(row)
-    await store.plants.saveAll(plants)
+    await store.plants.upsert([row])
     try {
       await linkRequests(row, records)
     } catch (err) {

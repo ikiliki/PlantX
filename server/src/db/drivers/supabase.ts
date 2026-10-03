@@ -21,6 +21,9 @@ const { Pool } = pg
 type PoolClient = pg.PoolClient
 type SqlRow = Record<string, unknown>
 
+/** `all` replaces the table with the list (seeding, admin bulk edits). `rows` writes only the given rows. */
+type SaveMode = 'all' | 'rows'
+
 function connectionString() {
   const url = (process.env.DATABASE_URL || process.env.PROD_DATABASE_URL || '').trim()
   if (!url) {
@@ -102,6 +105,30 @@ export function createSupabaseStore(): PlantxStore {
     return new Set(found.map((row) => String(row.id)))
   }
 
+  /**
+   * Row positions. `all` (saveAll) renumbers the list as given. `rows` (upsert) keeps a stored row's
+   * position and puts new rows before the first or after the last, so one write never touches the rest.
+   */
+  async function placer(
+    client: PoolClient,
+    table: string,
+    items: { id: string }[],
+    mode: SaveMode,
+    place: 'first' | 'last',
+  ): Promise<(id: string, index: number) => number> {
+    if (mode === 'all') return (_id, index) => index
+    const known = new Map(
+      (await rows(client, `select id, position from ${table} where id = any($1::text[])`, [items.map((item) => item.id)])).map(
+        (row) => [String(row.id), Number(row.position)] as const,
+      ),
+    )
+    const edge = await rows(client, `select coalesce(${place === 'first' ? 'min' : 'max'}(position), 0) as p from ${table}`)
+    const fresh = items.filter((item) => !known.has(item.id))
+    const base = Number(edge[0]?.p ?? 0)
+    fresh.forEach((item, i) => known.set(item.id, place === 'first' ? base - fresh.length + i : base + 1 + i))
+    return (id) => known.get(id) ?? 0
+  }
+
   return {
     driver: 'supabase',
 
@@ -115,10 +142,12 @@ export function createSupabaseStore(): PlantxStore {
     users: {
       list: () => withTx(listUsers),
       saveAll: (users) => withTx((client) => saveUsers(client, users)),
+      upsert: (users) => withTx((client) => saveUsers(client, users, 'rows')),
     },
     pendingUsers: {
       list: () => withTx(listPendingUsers),
       saveAll: (items) => withTx((client) => savePendingUsers(client, items)),
+      upsert: (items) => withTx((client) => savePendingUsers(client, items, 'rows')),
     },
     pendingTransactions: {
       list: () => withTx(listPendingTransactions),
@@ -132,14 +161,17 @@ export function createSupabaseStore(): PlantxStore {
           return Number(found[0]?.n ?? 0)
         }),
       saveAll: (plants) => withTx((client) => savePlants(client, plants)),
+      upsert: (plants) => withTx((client) => savePlants(client, plants, 'rows')),
     },
     activities: {
       list: () => withTx(listActivities),
       saveAll: (items) => withTx((client) => saveActivities(client, items)),
+      upsert: (items) => withTx((client) => saveActivities(client, items, 'rows')),
     },
     todos: {
       list: () => withTx(listTodos),
       saveAll: (items) => withTx((client) => saveTodos(client, items)),
+      upsert: (items) => withTx((client) => saveTodos(client, items, 'rows')),
     },
     catalog: {
       get: () => withTx(getCatalog),
@@ -202,8 +234,9 @@ export function createSupabaseStore(): PlantxStore {
     })
   }
 
-  async function saveUsers(client: PoolClient, users: User[]) {
+  async function saveUsers(client: PoolClient, users: User[], mode: SaveMode = 'all') {
     const known = new Set(users.map((user) => user.id))
+    if (mode === 'rows') for (const id of await ids(client, 'select id from users')) known.add(id)
     const cleaned = users.map((user) => ({
       ...user,
       friendIds: [...new Set((user.friendIds ?? []).filter((id) => known.has(id) && id !== user.id))],
@@ -211,10 +244,12 @@ export function createSupabaseStore(): PlantxStore {
       specialtiesHe: user.specialtiesHe ?? [],
     }))
     if (cleaned.length === 0) {
-      await client.query('delete from users')
+      if (mode === 'all') await client.query('delete from users')
       return
     }
-    for (const [position, user] of cleaned.entries()) {
+    const positionOf = await placer(client, 'users', cleaned, mode, 'last')
+    for (const [index, user] of cleaned.entries()) {
+      const position = positionOf(user.id, index)
       await client.query(
         `insert into users (
           id, position, name, name_he, role, business_name, business_name_he,
@@ -297,7 +332,7 @@ export function createSupabaseStore(): PlantxStore {
         )
       }
     }
-    await client.query('delete from users where not (id = any($1::text[]))', [kept])
+    if (mode === 'all') await client.query('delete from users where not (id = any($1::text[]))', [kept])
   }
 
   async function listPendingUsers(client: PoolClient): Promise<PendingUser[]> {
@@ -322,13 +357,15 @@ export function createSupabaseStore(): PlantxStore {
     })
   }
 
-  async function savePendingUsers(client: PoolClient, items: PendingUser[]) {
+  async function savePendingUsers(client: PoolClient, items: PendingUser[], mode: SaveMode = 'all') {
     const userIds = await ids(client, 'select id from users')
     if (items.length === 0) {
-      await client.query('delete from pending_users')
+      if (mode === 'all') await client.query('delete from pending_users')
       return
     }
-    for (const [position, item] of items.entries()) {
+    const positionOf = await placer(client, 'pending_users', items, mode, 'first')
+    for (const [index, item] of items.entries()) {
+      const position = positionOf(item.id, index)
       await client.query(
         `insert into pending_users (
           id, position, name, email, note, created_at, status, approved_at, rejected_at, user_id
@@ -357,7 +394,9 @@ export function createSupabaseStore(): PlantxStore {
         ],
       )
     }
-    await client.query('delete from pending_users where not (id = any($1::text[]))', [items.map((item) => item.id)])
+    if (mode === 'all') {
+      await client.query('delete from pending_users where not (id = any($1::text[]))', [items.map((item) => item.id)])
+    }
   }
 
   async function listPendingTransactions(client: PoolClient): Promise<PendingTransaction[]> {
@@ -454,9 +493,9 @@ export function createSupabaseStore(): PlantxStore {
     return Boolean(found[0]?.name)
   }
 
-  async function savePlants(client: PoolClient, plants: Plant[]) {
+  async function savePlants(client: PoolClient, plants: Plant[], mode: SaveMode = 'all') {
     if (plants.length === 0) {
-      await client.query('delete from plants')
+      if (mode === 'all') await client.query('delete from plants')
       return
     }
     const subIds = await ids(client, 'select id from catalog_subcategories')
@@ -464,10 +503,14 @@ export function createSupabaseStore(): PlantxStore {
     const keptPlants = plants.filter((plant) => ownerIds.has(plant.ownerId))
     const keptIds = new Set(keptPlants.map((plant) => plant.id))
     if (keptPlants.length === 0) {
-      await client.query('delete from plants')
+      if (mode === 'all') await client.query('delete from plants')
       return
     }
-    for (const [position, plant] of keptPlants.entries()) {
+    // A parent may be a stored plant this write does not carry.
+    const parentIds = mode === 'rows' ? new Set([...keptIds, ...(await ids(client, 'select id from plants'))]) : keptIds
+    const positionOf = await placer(client, 'plants', keptPlants, mode, 'first')
+    for (const [index, plant] of keptPlants.entries()) {
+      const position = positionOf(plant.id, index)
       await client.query(
         `insert into plants (
           id, position, code, owner_id, species_id, market_class_id, variety, variety_he,
@@ -532,7 +575,7 @@ export function createSupabaseStore(): PlantxStore {
       )
     }
     for (const plant of keptPlants) {
-      const parentId = plant.parentId && keptIds.has(plant.parentId) ? plant.parentId : null
+      const parentId = plant.parentId && parentIds.has(plant.parentId) ? plant.parentId : null
       await client.query('update plants set parent_id = $2 where id = $1', [plant.id, parentId])
     }
     const kept = [...keptIds]
@@ -636,7 +679,7 @@ export function createSupabaseStore(): PlantxStore {
         }
       }
     }
-    await client.query('delete from plants where not (id = any($1::text[]))', [kept])
+    if (mode === 'all') await client.query('delete from plants where not (id = any($1::text[]))', [kept])
   }
 
   /** Care todos. Missing until the todos migration runs. */
@@ -663,18 +706,19 @@ export function createSupabaseStore(): PlantxStore {
     })
   }
 
-  async function saveTodos(client: PoolClient, items: Todo[]) {
+  async function saveTodos(client: PoolClient, items: Todo[], mode: SaveMode = 'all') {
     if (!(await hasTodos(client))) return
     const userIds = await ids(client, 'select id from users')
     const plantIds = await ids(client, 'select id from plants')
     const kept = items.filter((item) => userIds.has(item.ownerId) && plantIds.has(item.plantId))
     if (kept.length === 0) {
-      await client.query('delete from todos')
+      if (mode === 'all') await client.query('delete from todos')
       return
     }
+    const positionOf = await placer(client, 'todos', kept, mode, 'first')
     // Close finished rows before inserting the next open one. todos_open_unique
     // allows one open row per plant and kind, and Postgres checks it on each insert.
-    const pending = kept.map((item, position) => ({ item, position }))
+    const pending = kept.map((item, index) => ({ item, position: positionOf(item.id, index) }))
     pending.sort((a, b) => Number(a.item.completedOn == null) - Number(b.item.completedOn == null))
     for (const { item, position } of pending) {
       await client.query(
@@ -702,7 +746,7 @@ export function createSupabaseStore(): PlantxStore {
         ],
       )
     }
-    await client.query('delete from todos where not (id = any($1::text[]))', [kept.map((item) => item.id)])
+    if (mode === 'all') await client.query('delete from todos where not (id = any($1::text[]))', [kept.map((item) => item.id)])
   }
 
   async function listActivities(client: PoolClient): Promise<Activity[]> {
@@ -724,7 +768,7 @@ export function createSupabaseStore(): PlantxStore {
     })
   }
 
-  async function saveActivities(client: PoolClient, items: Activity[]) {
+  async function saveActivities(client: PoolClient, items: Activity[], mode: SaveMode = 'all') {
     const userIds = await ids(client, 'select id from users')
     const plantIds = await ids(client, 'select id from plants')
     const linked = await hasIdentifyLinks(client)
@@ -733,9 +777,10 @@ export function createSupabaseStore(): PlantxStore {
       (item) => userIds.has(item.userId) && (linked || (item.kind !== 'scan' && item.kind !== 'added')),
     )
     if (kept.length === 0) {
-      await client.query('delete from activities')
+      if (mode === 'all') await client.query('delete from activities')
       return
     }
+    const positionOf = await placer(client, 'activities', kept, mode, 'first')
     const wanted = kept.flatMap((item) => (item.identifyRequestId ? [item.identifyRequestId] : []))
     const requestIds = linked
       ? new Set(
@@ -744,10 +789,10 @@ export function createSupabaseStore(): PlantxStore {
           ),
         )
       : new Set<string>()
-    for (const [position, item] of kept.entries()) {
+    for (const [index, item] of kept.entries()) {
       const params = [
         item.id,
-        position,
+        positionOf(item.id, index),
         item.kind,
         item.userId,
         item.plantId && plantIds.has(item.plantId) ? item.plantId : null,
@@ -789,7 +834,9 @@ export function createSupabaseStore(): PlantxStore {
         params,
       )
     }
-    await client.query('delete from activities where not (id = any($1::text[]))', [kept.map((item) => item.id)])
+    if (mode === 'all') {
+      await client.query('delete from activities where not (id = any($1::text[]))', [kept.map((item) => item.id)])
+    }
   }
 
   async function getCatalog(client: PoolClient): Promise<Catalog> {

@@ -28,10 +28,13 @@ export interface PlantxStore {
   users: {
     list(): Promise<User[]>
     saveAll(users: User[]): Promise<void>
+    /** Insert or update only these rows. Never deletes. */
+    upsert(users: User[]): Promise<void>
   }
   pendingUsers: {
     list(): Promise<PendingUser[]>
     saveAll(rows: PendingUser[]): Promise<void>
+    upsert(rows: PendingUser[]): Promise<void>
   }
   pendingTransactions: {
     list(): Promise<PendingTransaction[]>
@@ -42,14 +45,17 @@ export interface PlantxStore {
     /** Row count only. Live status must not load photo blobs just to count them. */
     count(): Promise<number>
     saveAll(plants: Plant[]): Promise<void>
+    upsert(plants: Plant[]): Promise<void>
   }
   activities: {
     list(): Promise<Activity[]>
     saveAll(rows: Activity[]): Promise<void>
+    upsert(rows: Activity[]): Promise<void>
   }
   todos: {
     list(): Promise<Todo[]>
     saveAll(rows: Todo[]): Promise<void>
+    upsert(rows: Todo[]): Promise<void>
   }
   catalog: {
     get(): Promise<Catalog>
