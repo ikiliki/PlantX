@@ -1,0 +1,117 @@
+# UI regression after each PP deploy. Vercel reports the deploy to GitHub; this runs Playwright
+# against that deployment and posts the result with screenshots to the "PP regression" issue.
+# Identify is always answered by the tests (e2e/support.ts): no live provider is ever called.
+name: PP regression
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: App URL to test (e.g. the PP preview)
+        required: true
+
+permissions:
+  contents: write # screenshots go to the qa-assets branch
+  issues: write
+  deployments: read
+
+concurrency:
+  group: pp-regression
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Preview')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Only the PP branch head
+        id: target
+        env:
+          INPUT_URL: ${{ inputs.url }}
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
+          DEPLOY_URL: ${{ github.event.deployment_status.environment_url }}
+        run: |
+          if [ -n "$INPUT_URL" ]; then
+            echo "url=$INPUT_URL" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          pp=$(gh api "repos/$GITHUB_REPOSITORY/branches/preprod%2Fai-testers" --jq .commit.sha)
+          if [ "$pp" != "$DEPLOY_SHA" ]; then
+            echo "Deploy $DEPLOY_SHA is not the PP head ($pp); skipping."
+            echo "run=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.target.outputs.run == 'true'
+        with:
+          ref: ${{ github.event.deployment.sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        if: steps.target.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        if: steps.target.outputs.run == 'true'
+        run: npm ci && npx playwright install --with-deps chromium
+
+      - name: Run tests
+        id: tests
+        if: steps.target.outputs.run == 'true'
+        continue-on-error: true
+        env:
+          CI: '1'
+          PLANTX_E2E_URL: ${{ steps.target.outputs.url }}
+          PLANTX_TEST_TOKEN: ${{ secrets.PLANTX_TEST_TOKEN }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npx playwright test
+
+      - name: Upload report (videos, traces)
+        id: upload
+        if: always() && steps.target.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pp-regression-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 30
+
+      - name: Post screenshots and summary
+        if: always() && steps.target.outputs.run == 'true'
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          APP_URL: ${{ steps.target.outputs.url }}
+          OUTCOME: ${{ steps.tests.outcome }}
+        run: |
+          dir="qa/e2e/$GITHUB_RUN_ID"
+          base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/qa-assets/$dir"
+          node scripts/e2e-report.mjs "test-results/assets" "$base" "$RUN_URL (download the artifact)"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin qa-assets
+          git worktree add ../qa-assets origin/qa-assets
+          mkdir -p "../qa-assets/$dir" && cp test-results/assets/*.png "../qa-assets/$dir/" 2>/dev/null || true
+          (cd ../qa-assets && git add qa && git commit -qm "PP regression screenshots, run $GITHUB_RUN_ID" && git push origin HEAD:qa-assets) || true
+
+          { echo "**App:** $APP_URL · **Commit:** \`${GITHUB_SHA::7}\` · [Run]($RUN_URL)"; echo; cat test-results/summary.md; } > comment.md
+          cat comment.md >> "$GITHUB_STEP_SUMMARY"
+
+          gh label create e2e --color 5319E7 --description "Automated UI regression" 2>/dev/null || true
+          issue=$(gh issue list --label e2e --state open --search "PP regression in:title" --json number --jq '.[0].number')
+          if [ -z "$issue" ]; then
+            issue=$(gh issue create --title "PP regression" --label e2e --body "Results of the automated UI regression after each PP deploy." | grep -o '[0-9]*$')
+          fi
+          gh issue comment "$issue" --body-file comment.md
+
+      - name: Fail when tests failed
+        if: steps.tests.outcome == 'failure'
+        run: exit 1
