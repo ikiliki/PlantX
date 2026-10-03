@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       manifest: {
         name: 'PlantX',
         short_name: 'PlantX',
-        description: 'Market infrastructure for living inventory',
+        description: 'A greenhouse for every plant you grow at home: passports, care reminders and a community of growers.',
         theme_color: '#0B1F14',
         background_color: '#0B1F14',
         display: 'standalone',

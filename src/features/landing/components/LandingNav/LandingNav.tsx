@@ -26,6 +26,7 @@ export function LandingNav() {
       <Links>
         <Jump href="#ai">{t.landing.navAi}</Jump>
         <Jump href="#tour">{t.landing.navTour}</Jump>
+        <Jump href="#soon">{t.landing.navSoon}</Jump>
       </Links>
       <Actions>
         {canChooseLocale() && (

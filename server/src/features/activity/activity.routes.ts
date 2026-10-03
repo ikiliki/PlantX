@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
-import { signedIn } from '../../lib/session.ts'
+import { signedIn, type SignedInEnv } from '../../lib/session.ts'
+import { greenhouseService } from '../greenhouse/greenhouse.service.ts'
 import { activityService } from './activity.service.ts'
 import type { Activity, ActivityInput, ActivityKind } from './activity.types.ts'
 
@@ -9,14 +10,14 @@ import type { Activity, ActivityInput, ActivityKind } from './activity.types.ts'
  * Activity HTTP surface, members only.
  * Lists are the basic row. `GET /id/:id` is the one place that adds the linked identify request.
  */
-export const activityRoutes = new Hono()
+export const activityRoutes = new Hono<SignedInEnv>()
 
 activityRoutes.use('*', signedIn)
 
 const KINDS: ActivityKind[] = ['photo', 'water', 'propagate', 'grade', 'passport', 'listing', 'scan', 'added']
 
-function isKind(value: string): value is ActivityKind {
-  return (KINDS as string[]).includes(value)
+function isKind(value: unknown): value is ActivityKind {
+  return typeof value === 'string' && (KINDS as string[]).includes(value)
 }
 
 function readLimit(raw: string | undefined) {
@@ -73,13 +74,28 @@ activityRoutes.get('/:type', async (c) => {
   return c.json({ activities })
 })
 
-/** Generic write — what the future event bus will hit. Prefer plant care routes for water/photo. */
+/**
+ * Generic write — what the future event bus will hit. Prefer plant care routes for water/photo.
+ * Always as the signed-in user, on their own plant; id and time are the server's.
+ */
 activityRoutes.post('/', async (c) => {
+  const user = c.get('user')
   const body = (await c.req.json()) as ActivityInput
   if (body?.kind === 'scan' || body?.kind === 'added' || body?.identifyRequestId) {
     throw Errors.invalid('scan and added activities are recorded by identify and Add Plant only')
   }
-  const activity = await activityService.record(body)
+  if (!isKind(body?.kind)) throw Errors.invalid(`kind must be one of ${KINDS.join(', ')}`)
+  if (body.plantId) {
+    const plant = await greenhouseService.get(body.plantId)
+    if (plant.ownerId !== user.id) throw Errors.forbidden('Plant is not yours')
+  }
+  const activity = await activityService.record({
+    kind: body.kind,
+    userId: user.id,
+    plantId: body.plantId,
+    body: body.body,
+    bodyHe: body.bodyHe,
+  })
   return c.json({ activity, activities: await activityService.list() })
 })
 

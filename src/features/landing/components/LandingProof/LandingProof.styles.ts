@@ -13,7 +13,7 @@ export const Grid = styled.div`
   gap: 12px;
 
   @container landing (min-width: 900px) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 `
 
