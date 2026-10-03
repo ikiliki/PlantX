@@ -56,8 +56,10 @@ Hard rules:
 ## Verification
 
 - No unit tests and no linter. `npm run build` (tsc + vite) is the type check — `tsconfig.json` covers `src/` only, so server code is not checked on its own.
-- UI regression: `npm run e2e` (Playwright, `e2e/`) against `PLANTX_E2E_URL` (default local QA on 5173; start it first). Desktop and phone. Tests answer `/api/identify` themselves and block creating plants, so they never call a provider or leave rows. On PP set `PLANTX_TEST_TOKEN`.
-- CI: `.github/workflows/pp-regression.yml` runs it after each Vercel deploy of the PP head and comments results with screenshots on the "PP regression" issue (images on `qa-assets`, videos in the run artifact). `issue-status.yml` moves `status:` labels when a PR that says "Refs #n" merges into pp or master.
+- UI regression: `npm run e2e` — tests for a fix ship in the same commit as the fix; tag guest, read-only tests `@prod`.
+  Run (Playwright, `e2e/`) against `PLANTX_E2E_URL` (default local QA on 5173; start it first). Desktop and phone. Tests answer `/api/identify` themselves and block creating plants, so they never call a provider or leave rows. On PP set `PLANTX_TEST_TOKEN`.
+- CI: `.github/workflows/pp-regression.yml` runs it after each Vercel deploy of the PP head, and only the `@prod` tests (guest, read-only; production has no test login) after each production deploy, and comments results with screenshots on the "PP regression" issue (images on `qa-assets`, videos in the run artifact). `issue-status.yml` moves `status:` labels when a PR that says "Refs #n" merges into pp or master.
+- PRs into pp: `pr-e2e.yml` runs the same suite against a QA stack built on the runner (Docker Supabase, `dev:qa`, demo catalog via `scripts/e2e-seed.mjs`) and comments screenshots on the PR. Its `e2e` check is required by branch protection before merging into pp.
 - Visual checks: `node scripts/mobile-audit.mjs` against mock mode on 5174, in English and Hebrew.
 - `scripts/tmp-*` and `scripts/_*` are throwaway verification output — don't commit them.
 

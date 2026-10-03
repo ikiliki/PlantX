@@ -19,7 +19,9 @@ import { GreenhouseBack, GreenhouseScope, useHeaderNav, type GreenhouseScopeId }
 import {
   GreenhouseLevelCard,
   GreenhouseLevelSkeleton,
+  GreenhouseLevelView,
 } from '../../features/greenhouse/components/GreenhouseLevelCard/GreenhouseLevelCard'
+import { greenhouseLevel } from '../../features/greenhouse/greenhouseLevel'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
@@ -166,7 +168,15 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     scope === 'global' ? (
       <GreenhouseDirectorySkeleton />
     ) : (
-      <CollectionBoard skeleton="loading" plants={[]} sold={[]} activity={[]} onAdd={openAdd} compact={view === 'widget'} />
+      <CollectionBoard
+        skeleton="loading"
+        addDisabled
+        plants={[]}
+        sold={[]}
+        activity={[]}
+        onAdd={openAdd}
+        compact={view === 'widget'}
+      />
     )
 
   const memberBody = fetching ? (
@@ -186,8 +196,9 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     />
   )
 
+  // A guest gets the real header with an empty greenhouse (level 1, no plants), not a blurred placeholder.
   const levelCard = forAudience(signedIn, {
-    guest: <GreenhouseLevelSkeleton blurred />,
+    guest: <GreenhouseLevelView summary={greenhouseLevel('', [], [])} />,
     signedIn: <GreenhouseLevelCard ownerId={ownerId} />,
   })
 
