@@ -1,6 +1,7 @@
 import { OTHER_CATEGORY_ID } from '../../plantClass'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { UNKNOWN_AREA } from '../../../../mock/locations'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
@@ -77,6 +78,7 @@ import {
   TimelineRow,
   Title,
   Toast,
+  SetPlace,
 } from './PlantPassport.styles'
 
 type TabId = 'grading' | 'todo' | 'activity' | 'market'
@@ -199,7 +201,16 @@ export function PlantPassport({
   const traits = [
     { label: t.market.size, value: plant.sizeBand ?? plant.sizeGrade },
     ...(stage ? [{ label: t.market.stage, value: stage }] : []),
-    { label: t.sell.location, value: tr(plant.locationZone, plant.locationZoneHe) },
+    {
+      label: t.sell.location,
+      // Unknown on the owner's own plant: say where to set it instead of leaving a dead end.
+      value:
+        isOwner && plant.locationZone === UNKNOWN_AREA.region ? (
+          <SetPlace to="/settings">{t.passport.setPlace}</SetPlace>
+        ) : (
+          tr(plant.locationZone, plant.locationZoneHe)
+        ),
+    },
   ]
   const catalogCategory = categoryBySpeciesId(db.catalog, plant.speciesId)
   const catalogSub = subcategoryOfPlant(db.catalog, plant)

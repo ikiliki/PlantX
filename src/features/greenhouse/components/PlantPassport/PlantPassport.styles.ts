@@ -956,3 +956,11 @@ export const Missing = styled.p`
   text-align: center;
   color: ${theme.colors.muted};
 `
+
+/** Owner's plant with an unknown place: a link to Settings. */
+export const SetPlace = styled(Link)`
+  color: ${theme.colors.warn};
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+`

@@ -75,13 +75,12 @@ export function needsFirstPlant(plants: Plant[], ownerId: string | null) {
 }
 
 /**
- * Counts for the Tasks tab. `today`: due today or earlier, plus first waterings; an empty greenhouse
- * counts 1 (add your first plant). `planned`: scheduled after today. The tab label shows `today` only.
+ * Counts for the Tasks tab: real open tasks only. `today`: due today or earlier, plus first waterings.
+ * `planned`: scheduled after today. An empty greenhouse counts 0; the Tasks page shows the add-plant card.
  */
-export function taskTabCounts(todos: Todo[], plants: Plant[], ownerId: string | null, now = todayIso()) {
+export function taskTabCounts(todos: Todo[], ownerId: string | null, now = todayIso()) {
   if (!ownerId) return { today: 0, planned: 0 }
   const mine = todos.filter((todo) => todo.ownerId === ownerId)
-  if (needsFirstPlant(plants, ownerId)) return { today: 1, planned: 0 }
   return { today: dueTodos(mine, now).length, planned: upcomingTodos(mine, now).length }
 }
 

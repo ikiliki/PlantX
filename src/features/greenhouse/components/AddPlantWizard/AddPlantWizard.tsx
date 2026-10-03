@@ -344,6 +344,18 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const freeNav = scans.length > 0 && !(scanning && !ai)
   const place = ownerGreenhousePlace(signedIn ? currentUser : null)
 
+  // A plant is named like a plant ("Pothos Golden"), not by its class code; the code stays on the passport.
+  const plantTitle = (() => {
+    if (isOther) return { en: otherName, he: otherName }
+    const category = catalog.categories.find((item) => item.id === draft.categoryId)
+    const sub = isOtherSub ? undefined : catalog.subcategories.find((item) => item.id === draft.subcategoryId)
+    if (!category) return { en: matched?.name ?? '', he: matched?.nameHe ?? '' }
+    return {
+      en: sub ? `${category.name} ${sub.name}` : category.name,
+      he: sub ? `${category.nameHe} ${sub.nameHe}` : category.nameHe,
+    }
+  })()
+
   const save = () => {
     if (!signedIn) {
       openAuth('buy')
@@ -360,8 +372,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         return
       }
       const id = addGreenhousePlant({
-        title: matched.name,
-        titleHe: matched.nameHe,
+        title: plantTitle.en,
+        titleHe: plantTitle.he,
         description: descriptionTouched ? description : matched.observed,
         descriptionHe: descriptionTouched ? description : matched.observedHe,
         photos,
@@ -389,8 +401,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       return
     }
     const id = addGreenhousePlant({
-      title: matched.name,
-      titleHe: matched.nameHe,
+      title: plantTitle.en,
+      titleHe: plantTitle.he,
       description: descriptionTouched ? description : matched.observed,
       descriptionHe: descriptionTouched ? description : matched.observedHe,
       photos,
