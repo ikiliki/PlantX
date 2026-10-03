@@ -56,7 +56,15 @@ sessionRoutes.post('/test-login', async (c) => {
   if (!body.userId) throw Errors.invalid('userId required')
   const user = await sessionService.requireById(body.userId)
   await setSession(c, user.id)
-  return c.json(await liveService.payload(user.id))
+  // No live payload: callers reload (PP bar) or fetch /api/live themselves, so switching stays fast.
+  return c.json({ ok: true, userId: user.id })
+})
+
+/** Preprod only: who the PP bar can switch to. Ids and names only; signing in still needs the token. */
+sessionRoutes.get('/test-users', async (c) => {
+  if (!preprodEnabled()) throw Errors.missing()
+  const users = await sessionService.listActive()
+  return c.json({ users: users.map((user) => ({ id: user.id, name: user.name, role: user.role })) })
 })
 
 /** Preprod only: one link for browser AI agents that cannot set headers. Rotate the token after a run. */

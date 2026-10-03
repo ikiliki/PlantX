@@ -1,57 +1,73 @@
-# Preprod: AI testers and load runs
+# Preprod (PP): AI testers
 
-The branch `preprod/ai-testers` is **never merged**. It deploys as a Vercel Preview of the same project, with its own Supabase database.
+The branch `preprod/ai-testers` is **never merged** into master.
 
-## Signing in without Google
-Seeded testers are `test-user-001` … `test-user-NNN` (emails `@preprod.invalid`).
-- **Admin persona:** `u-admin`.
-- **Guest persona:** don't sign in.
+Flow:
+1. Work on a feature branch.
+2. Merge the feature into pp and test there.
+3. Merge the **feature** (not pp) into master.
 
-**Browser AI agents (ChatGPT agent, Claude in Chrome, …).** Give the agent one link per tester. The first visit sets Vercel's bypass cookie, the second signs in.
+PP deploys as a Vercel Preview of the same project, with its own Supabase project (PlantX-PP).
 
-```
-https://<preview>/?x-vercel-protection-bypass=<BYPASS>&x-vercel-set-bypass-cookie=true
-https://<preview>/api/session/test-login?user=test-user-001&token=<PLANTX_TEST_TOKEN>
-```
+## Users
+- **Admin:** `u-admin` (Omri).
+- **Testers:** `test-user-001` … `test-user-020`. They're empty: no plants, todos or friends.
+- **Catalog:** copied from production.
 
-It lands on `/greenhouse` signed in.
+## Switching users (one tab, no cookies to juggle)
+Every PP page has a **"PP · <name>"** tab at the top.
+1. Open it.
+2. Paste the test token once. The tab remembers it.
+3. Click a user, **Omri (admin)**, or **Guest**.
 
-**Scripts:** `POST /api/session/test-login` with header `X-Test-Token` and body `{ "userId": "test-user-001" }`. The response sets the `plantx_session` cookie.
+The page reloads as that user. While it works it shows "Switching user…".
 
-The token sits in URLs and agent transcripts. **Rotate `PLANTX_TEST_TOKEN` after every test session.**
+Prompt for ChatGPT agent mode:
 
-## What the route needs
-It answers only when all of these hold. Otherwise it returns 404.
+> Open <preview URL>. Click the "PP" tab at the top center, paste this token in "Test token": <PLANTX_TEST_TOKEN>.
+> Click a tester (e.g. "Tester 3") to act as that user; click "Omri (admin)" for admin; "Guest" to sign out.
+> After each click wait for the page to reload and the tab to show the new name.
+
+Other ways in:
+- **Link:** `https://<preview>/api/session/test-login?user=test-user-003&token=<token>`.
+- **Script:** `POST /api/session/test-login` with header `X-Test-Token` and body `{ "userId": "test-user-003" }`.
+
+**Rotate `PLANTX_TEST_TOKEN` after a test session.** It sits in agent transcripts.
+
+## Vercel login wall
+If Deployment Protection is on for previews, an agent hits a Vercel login page first. Do one of these:
+- Settings → Deployment Protection → set Vercel Authentication to **Production only** or off.
+- Or create a *Protection Bypass for Automation* secret, and have the agent open `https://<preview>/?x-vercel-protection-bypass=<secret>&x-vercel-set-bypass-cookie=true` once.
+
+## When it is on
+The PP endpoints and the bar answer only when all of these hold:
 - `PLANTX_PREPROD=1`
 - `PLANTX_TEST_TOKEN` is set
 - `VERCEL_ENV` is not `production`
 
-Photo identify runs in **mock** mode on preprod, so it never calls Gemini or Pl@ntNet.
+Otherwise they return 404 and the bar doesn't render. Photo identify runs in **mock** mode on PP.
 
-## Setup (once)
-1. Create a new Supabase project. Apply the schema with `npx supabase db push --db-url <preprod url>`.
-2. In Vercel, under Settings → Environment Variables, scope these to **Preview** and branch **`preprod/ai-testers`** only:
-   - `PROD_DATABASE_URL`: the preprod pooler URL.
-   - `SESSION_SECRET`: a new value. Generate it with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
-   - `PLANTX_PREPROD=1`.
-   - `PLANTX_TEST_TOKEN`: random, generated the same way.
-3. Under Settings → Deployment Protection, create a **Protection Bypass for Automation** secret. That value is `<BYPASS>`.
-4. Seed, then push the branch:
+## Vercel env (Preview, branch `preprod/ai-testers` only)
+
+| Key | Value |
+| --- | --- |
+| `DATABASE_URL` | PlantX-PP session pooler URL |
+| `PROD_DATABASE_URL` | same URL |
+| `SESSION_SECRET` | from `.env.preprod` |
+| `PLANTX_PREPROD` | `1` |
+| `PLANTX_TEST_TOKEN` | from `.env.preprod` |
+
+## Reset PP
+This wipes all data, then recreates the admin, the prod catalog (read only) and empty testers:
 
 ```bash
-PREPROD_DATABASE_URL=<preprod url> npm run seed:preprod -- --users 200
+PREPROD_DATABASE_URL=<pp url> CATALOG_SOURCE_URL=<prod url> npm run seed:preprod -- --users 20
 ```
-
-Re-running the seed resets the testers and their plants.
 
 ## Load run
 
 ```bash
-PLANTX_TEST_TOKEN=<token> VERCEL_BYPASS=<BYPASS> npm run load:preprod -- --base https://<preview> --users 200
+PLANTX_TEST_TOKEN=<token> VERCEL_BYPASS=<secret> npm run load:preprod -- --base https://<preview> --users 20
 ```
 
-The run prints:
-- per-endpoint p50/p95 latency and errors;
-- an **integrity** line: how many plants added during the run went missing.
-
-Missing plants are the known whole-table `saveAll` race in `server/src/db/drivers/supabase.ts`.
+It prints p50/p95 per endpoint and an integrity line counting plants that went missing.

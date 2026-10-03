@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      // Navigations to /api (sign-in links, /api/docs) must reach the server, not the cached app shell.
+      workbox: { navigateFallbackDenylist: [/^\/api(?:\/|$)/] },
       manifest: {
         name: 'PlantX',
         short_name: 'PlantX',
