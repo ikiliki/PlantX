@@ -113,6 +113,11 @@ export const greenhouseService = {
     const photos = (plant.photos ?? []).filter(Boolean)
     if (photos.length > MAX_PLANT_PHOTOS) throw Errors.invalid(`A plant has at most ${MAX_PLANT_PHOTOS} photos`)
     const store = getStore()
+    // Add only creates. The id comes from the client, so an existing id would overwrite someone else's plant.
+    const existing = await store.plants.list()
+    if (existing.some((item) => item.id === plant.id)) throw Errors.exists(`Plant ${plant.id} already exists`)
+    const parent = plant.parentId ? existing.find((item) => item.id === plant.parentId) : undefined
+    if (plant.parentId && parent?.ownerId !== ownerId) throw Errors.forbidden('Parent plant is not yours')
     const catalog = await catalogService.get()
     const records = await trustedRequests(identifyRequestIds, ownerId, photos.length)
     const identification = identificationFor(
@@ -120,8 +125,29 @@ export const greenhouseService = {
       records.map((record) => (record ? { scanned: true, diagnosis: record.diagnosis, requestId: record.id } : undefined)),
       catalog,
     )
-    const { wateredAt: _w, photoAt: _p, ...rest } = plant as Plant & { wateredAt?: string; photoAt?: string }
-    const row: Plant = { ...withLocation({ ...rest, photos, ownerId }), identification }
+    // Passport fields the owner may not set: verification, community grades, sale history, status and timeline.
+    const {
+      wateredAt: _w,
+      photoAt: _p,
+      verifiedAt: _va,
+      verifiedBy: _vb,
+      grades: _g,
+      comps: _c,
+      publishedAt: _pa,
+      ...rest
+    } = plant as Plant & { wateredAt?: string; photoAt?: string }
+    const createdAt = today()
+    const row: Plant = {
+      ...withLocation({
+        ...rest,
+        photos,
+        ownerId,
+        status: 'owned',
+        createdAt,
+        history: [{ at: createdAt, label: 'Added to greenhouse', labelHe: 'נוסף לחממה' }],
+      }),
+      identification,
+    }
     await store.plants.upsert([row])
     try {
       await linkRequests(row, records)
