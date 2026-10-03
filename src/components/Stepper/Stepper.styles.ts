@@ -48,7 +48,7 @@ export const Item = styled.button<{ $state: StepState }>`
   cursor: ${({ disabled }) => (disabled ? 'default' : 'pointer')};
 `
 
-export const Dot = styled.span<{ $state: StepState }>`
+export const Dot = styled.span<{ $state: StepState; $warn?: boolean }>`
   display: grid;
   place-items: center;
   width: 32px;
@@ -80,9 +80,19 @@ export const Dot = styled.span<{ $state: StepState }>`
             color: ${theme.colors.muted};
             box-shadow: inset 0 0 0 1px ${theme.colors.border};
           `}
+
+  ${({ $warn, $state }) =>
+    $warn &&
+    css`
+      background: ${theme.colors.chipWarm};
+      color: ${theme.colors.warn};
+      box-shadow:
+        ${$state === 'current' ? `0 0 0 5px ${theme.colors.chipWarm},` : ''}
+        inset 0 0 0 1.5px ${theme.colors.warn};
+    `}
 `
 
-export const Label = styled.span<{ $state: StepState }>`
+export const Label = styled.span<{ $state: StepState; $warn?: boolean }>`
   max-width: 100%;
   font-size: 11px;
   font-weight: 700;
@@ -90,7 +100,7 @@ export const Label = styled.span<{ $state: StepState }>`
   line-height: 1.2;
   text-align: center;
   overflow-wrap: anywhere;
-  color: ${({ $state }) => ($state === 'next' ? theme.colors.muted : theme.colors.forest)};
+  color: ${({ $state, $warn }) => ($warn ? theme.colors.warn : $state === 'next' ? theme.colors.muted : theme.colors.forest)};
 
   @container (max-width: 420px) {
     font-size: 10px;

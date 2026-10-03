@@ -38,7 +38,9 @@ export const Scroll = styled.div`
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  /* The step slides in sideways; hide that overflow so no horizontal scrollbar flashes. */
+  overflow-x: hidden;
+  overflow-y: auto;
 `
 
 export const StepBody = styled.div<{ $direction: 1 | -1 }>`
@@ -158,6 +160,20 @@ export const BannerAction = styled.button`
   cursor: pointer;
 `
 
+/** Review: one button per empty required field, each opening its step. */
+export const MissingActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`
+
+/** Short note next to a field label that still needs a value. */
+export const MissingField = styled.span`
+  font-size: 12px;
+  font-weight: 800;
+  color: ${theme.colors.warn};
+`
+
 export const More = styled.details`
   display: grid;
   gap: 16px;
@@ -218,11 +234,18 @@ export const Review = styled.article`
   @container (min-width: 540px) {
     grid-template-columns: 200px minmax(0, 1fr);
     align-items: start;
+
+    > :first-child {
+      width: 100%;
+    }
   }
 `
 
 export const ReviewPhoto = styled.div`
   position: relative;
+  /* Stacked, a full-width square pushes the fields below the fold. */
+  width: min(100%, 240px);
+  justify-self: center;
   aspect-ratio: 1;
   border-radius: ${theme.radii.md};
   overflow: hidden;
@@ -342,6 +365,18 @@ export const ReviewRow = styled.div`
     font-weight: 700;
     color: ${theme.colors.ink};
     overflow-wrap: anywhere;
+  }
+
+  &[data-missing='true'] {
+    margin-inline: -8px;
+    padding-inline: 8px;
+    border-radius: ${theme.radii.sm};
+    background: ${theme.colors.chipWarm};
+  }
+
+  &[data-missing='true'] dt,
+  &[data-missing='true'] dd {
+    color: ${theme.colors.warn};
   }
 `
 

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { PlantImage } from '../PlantImage/PlantImage'
-import { Chip, ChipHint, ChipPhoto, ChipText, ChipThumb, Empty, Group, Legend, MoreChip, Required, Suggested, Tip } from './ChoiceChips.styles'
+import { Chip, ChipHint, MissingNote, ChipPhoto, ChipText, ChipThumb, Empty, Group, Legend, MoreChip, Required, Suggested, Tip } from './ChoiceChips.styles'
 
 export type ChoiceChipOption = {
   id: string
@@ -27,6 +27,7 @@ export function ChoiceChips({
   emptyLabel,
   onPick,
   onTip,
+  missing,
 }: {
   label: string
   options: ChoiceChipOption[]
@@ -45,6 +46,8 @@ export function ChoiceChips({
   onPick?: (id: string) => void
   /** Click on the hover note, not the chip. */
   onTip?: (id: string) => void
+  /** Required and still empty after an answer that should have filled it: tinted, with this short note. */
+  missing?: string
 }) {
   const [hover, setHover] = useState<{ id: string; text: string; top: number; left: number; above: boolean } | null>(null)
   const hideTimer = useRef<number | null>(null)
@@ -68,10 +71,11 @@ export function ChoiceChips({
     hideTimer.current = window.setTimeout(() => setHover(null), 160)
   }
   return (
-    <Group disabled={disabled}>
+    <Group disabled={disabled} data-missing={missing ? 'true' : undefined}>
       <Legend>
         {label}
         {required ? <Required aria-hidden>*</Required> : null}
+        {missing ? <MissingNote>{missing}</MissingNote> : null}
       </Legend>
       <div role="radiogroup" aria-label={label} aria-required={required} data-layout={layout}>
         {options.length === 0 ? <Empty>{emptyLabel}</Empty> : null}

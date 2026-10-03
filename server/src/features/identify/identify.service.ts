@@ -320,6 +320,7 @@ async function diagnosePipeline(ctx: DiagnoseCtx): Promise<{ diagnosis: Diagnosi
   }
 
   let gatePlantAnswer = true
+  let gateFailed = false
   try {
     if (gateMock) {
       const gated = await mockIdentify('gemini', ctx.catalog, gateScenario)
@@ -329,13 +330,14 @@ async function diagnosePipeline(ctx: DiagnoseCtx): Promise<{ diagnosis: Diagnosi
       gatePlantAnswer = await gatePlant(ctx.image)
     }
   } catch (err) {
+    // A check that errored did not say "not a plant". Species and draft still run; the draft answers isPlant too.
     const fail = failedTry(geminiProvider, err)
     tried.push(fail)
     steps.push({ id: 'gate', provider: 'gemini', ok: false, detail: fail.detail })
-    throw new IdentifyUnavailableError(tried, steps)
+    gateFailed = true
   }
 
-  steps.push({ id: 'gate', provider: 'gemini', ok: true, isPlant: gatePlantAnswer })
+  if (!gateFailed) steps.push({ id: 'gate', provider: 'gemini', ok: true, isPlant: gatePlantAnswer })
   if (!gatePlantAnswer) {
     const raw: RawSuggestion = {
       provider: 'gemini',

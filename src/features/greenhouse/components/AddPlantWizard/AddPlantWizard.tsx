@@ -43,6 +43,8 @@ import {
   AiFact,
   Banner,
   BannerAction,
+  MissingActions,
+  MissingField,
   Burst,
   Check,
   CategoryMark,
@@ -160,8 +162,12 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const [descriptionTouched, setDescriptionTouched] = useState(false)
   const [savedId, setSavedId] = useState('')
   const [saveFailed, setSaveFailed] = useState(false)
+  const [reviewSeen, setReviewSeen] = useState(false)
 
   const stepId: StepId = STEPS[step]
+  useEffect(() => {
+    if (stepId === 'review') setReviewSeen(true)
+  }, [stepId])
   stepRef.current = step
   descriptionTouchedRef.current = descriptionTouched
   const usable = withAi ? scans.filter((scan) => isUsableDiagnosis(scan.diagnosis)) : []
@@ -171,6 +177,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const missingCatalog = Boolean(recognized && !recognized.draft.categoryId)
   const aiDraft = ai?.draft
   const scanning = scans.some((scan) => scan.phase === 'identifying')
+  /** This photo already went to AI (answered or failed). Another try needs another photo. */
+  const aiUsed = withAi && scans.some((scan) => wasScanned(scan) && scan.phase !== 'identifying')
   const photos = scans.map((scan) => scan.photo)
   const otherName = recognized?.label || recognized?.scientificName || t.addPlant.otherCategory
   const matched =
@@ -195,9 +203,21 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const varieties = subcategoryChoices(catalog, draft)
   const sizes = sizeChoices(catalog, draft)
   const stages = stageChoices(catalog, draft)
-  const requiredExtra = propertiesForPlant(catalog, draft.categoryId, draft.subcategoryId, true).filter(
-    (item) => !PLAIN_STEPS_PROPERTY_IDS.includes(item.id),
-  )
+  const requiredExtra = requiredTraits(draft)
+  /** Names of the Specs fields still empty, in the order Specs shows them. */
+  const missingSpecs = [
+    !draft.size ? t.admin.size : '',
+    !draft.stage ? t.admin.stage : '',
+    ...requiredExtra.filter((item) => !draft.traits[item.id]).map((item) => catalogName(item, locale)),
+  ].filter(Boolean)
+
+  // Other shows no traits on Specs, so it cannot require one.
+  function requiredTraits(value: PlantClassDraft) {
+    if (value.categoryId === OTHER_CATEGORY_ID) return []
+    return propertiesForPlant(catalog, value.categoryId, value.subcategoryId, true).filter(
+      (item) => !PLAIN_STEPS_PROPERTY_IDS.includes(item.id),
+    )
+  }
 
   const categories = useMemo(() => {
     const needle = categoryQuery.trim().toLowerCase()
@@ -266,6 +286,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       const plantName = locale === 'he' ? named.nameHe : named.name
       setDescription((observed.trim() || plantName).trim())
     }
+    // Always Review: anything AI left empty is listed there and flagged on its step.
     if (stepRef.current === 0) {
       setDirection(1)
       setStep(STEPS.length - 1)
@@ -273,6 +294,16 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plantScan?.id, withAi])
+
+  // A new photo is a fresh start for AI: it waits for Continue with AI again.
+  const scansRef = useRef(scans)
+  scansRef.current = scans
+  const changeScans: typeof setScans = (update) => {
+    const current = scansRef.current
+    const next = typeof update === 'function' ? update(current) : update
+    if (next.some((scan) => !current.some((item) => item.id === scan.id))) setWithAi(false)
+    setScans(update)
+  }
 
   const go = (next: number) => {
     setDirection(next > step ? 1 : -1)
@@ -289,6 +320,28 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const specsReady =
     Boolean(draft.size && draft.stage) && requiredExtra.every((item) => draft.traits[item.id])
   const detailsReady = Boolean(description.trim() && matched)
+  const reviewReady = identityReady && specsReady && detailsReady
+  const specsHint = t.addPlant.needFields.replace('{fields}', missingSpecs.join(', ').toLocaleLowerCase(locale))
+  /** Every empty required field, with the step that fills it. */
+  const missing: { id: string; label: string; step: StepId }[] = [
+    ...(!draft.categoryId ? [{ id: 'category', label: t.admin.category, step: 'identity' as const }] : []),
+    ...(draft.categoryId && !identityReady
+      ? [{ id: 'subcategory', label: t.admin.subcategory, step: 'identity' as const }]
+      : []),
+    ...(!draft.size ? [{ id: 'size', label: t.admin.size, step: 'specs' as const }] : []),
+    ...(!draft.stage ? [{ id: 'stage', label: t.admin.stage, step: 'specs' as const }] : []),
+    ...requiredExtra
+      .filter((item) => !draft.traits[item.id])
+      .map((item) => ({ id: item.id, label: catalogName(item, locale), step: 'specs' as const })),
+    ...(!description.trim() ? [{ id: 'description', label: t.greenhouse.addDescription, step: 'details' as const }] : []),
+  ]
+  // Flag gaps once there is an answer to compare with (AI ran) or the grower has seen Review.
+  const flagMissing = Boolean(recognized) || reviewSeen
+  const missingNote = recognized ? t.addPlant.aiMissedField : t.addPlant.requiredField
+  const isMissing = (id: string) => flagMissing && missing.some((item) => item.id === id)
+  const flaggedSteps = flagMissing ? [...new Set(missing.map((item) => item.step))] : []
+  // After a photo every step is open, except while the AI is still reading it.
+  const freeNav = scans.length > 0 && !(scanning && !ai)
   const place = ownerGreenhousePlace(signedIn ? currentUser : null)
 
   const save = () => {
@@ -371,6 +424,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     setDescriptionTouched(false)
     setSavedId('')
     setSaveFailed(false)
+    setReviewSeen(false)
   }
 
   if (savedId) {
@@ -540,6 +594,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <ChoiceChips
                 label={t.admin.category}
                 required
+                missing={isMissing('category') ? missingNote : undefined}
                 value={draft.categoryId}
                 suggestedId={aiDraft?.categoryId || (missingCatalog ? OTHER_CATEGORY_ID : undefined)}
                 suggestedLabel={AI_MARK}
@@ -566,6 +621,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <ChoiceChips
                 label={t.admin.subcategory}
                 required
+                missing={isMissing('subcategory') ? missingNote : undefined}
                 disabled={!draft.categoryId}
                 value={draft.subcategoryId}
                 suggestedId={
@@ -619,6 +675,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <ChoiceChips
                 label={t.admin.size}
                 required
+                missing={isMissing('size') ? missingNote : undefined}
                 value={draft.size}
                 suggestedId={aiDraft?.size || undefined}
                 suggestedLabel={AI_MARK}
@@ -630,6 +687,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <ChoiceChips
                 label={t.admin.stage}
                 required
+                missing={draft.size && isMissing('stage') ? missingNote : undefined}
                 disabled={!draft.size}
                 value={draft.size ? draft.stage : ''}
                 suggestedId={aiDraft?.stage || undefined}
@@ -642,6 +700,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                       }))
                     : []
                 }
+                emptyLabel={t.addPlant.sizeFirst}
                 onChange={(value) => setClass({ stage: value as StageBand | '' })}
               />
             </Section>
@@ -652,6 +711,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                   <ChoiceChips
                     label={catalogName(property, locale)}
                     required={property.required}
+                    missing={open && property.required && isMissing(property.id) ? missingNote : undefined}
                     disabled={!open}
                     value={open ? (draft.traits[property.id] ?? '') : ''}
                     suggestedId={aiDraft?.traits?.[property.id]}
@@ -663,6 +723,13 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                             label: optionLabel(option, locale),
                           }))
                         : []
+                    }
+                    emptyLabel={
+                      !draft.size
+                        ? t.addPlant.sizeFirst
+                        : !draft.stage
+                          ? t.addPlant.stageFirst
+                          : t.addPlant.traitNotForVariety
                     }
                     onChange={(value) =>
                       setClass({
@@ -684,8 +751,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <StepLead>{t.addPlant.detailsLead}</StepLead>
             </StepHead>
             {matched ? <ClassCode title={t.greenhouse.classWord}>{matched.code}</ClassCode> : null}
-            <Field>
+            <Field data-missing={isMissing('description') ? 'true' : undefined}>
               {t.greenhouse.addDescription}
+              {isMissing('description') ? <MissingField>{missingNote}</MissingField> : null}
               <TextArea
                 value={description}
                 required
@@ -718,6 +786,15 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             value: draft.stage ? (STAGE_LABEL[draft.stage]?.[locale] ?? draft.stage) : '',
             step: 'specs',
           },
+          // Required traits are on Review too, so a missing one is visible with its Edit link.
+          ...requiredExtra.map((property) => {
+            const option = property.options.find((item) => item.id === draft.traits[property.id])
+            return {
+              label: catalogName(property, locale),
+              value: option ? optionLabel(option, locale) : '',
+              step: 'specs' as StepId,
+            }
+          }),
         ]
         const plantPhoto = photos[0] || ''
         const catalogPhoto = identityPhoto && identityPhoto !== plantPhoto ? identityPhoto : ''
@@ -725,9 +802,21 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         return (
           <>
             <StepHead>
-              <StepTitle>{t.addPlant.reviewTitle}</StepTitle>
-              <StepLead>{t.addPlant.reviewLead}</StepLead>
+              <StepTitle>{reviewReady ? t.addPlant.reviewTitle : t.addPlant.reviewTitleMissing}</StepTitle>
+              <StepLead>{reviewReady ? t.addPlant.reviewLead : t.addPlant.reviewLeadMissing}</StepLead>
             </StepHead>
+            {missing.length > 0 ? (
+              <Banner $tone="warn" role="status">
+                <span>{recognized ? t.addPlant.aiMissedTitle : t.addPlant.stillMissingTitle}</span>
+                <MissingActions>
+                  {missing.map((item) => (
+                    <BannerAction key={item.id} type="button" onClick={() => go(STEPS.indexOf(item.step))}>
+                      {item.label}
+                    </BannerAction>
+                  ))}
+                </MissingActions>
+              </Banner>
+            ) : null}
             <Review>
               <ReviewPhoto>
                 {hero ? <PlantImage src={hero} alt="" /> : null}
@@ -747,9 +836,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 {matched ? <ClassCode>{matched.code}</ClassCode> : null}
                 <ReviewRows>
                   {rows.map((row) => (
-                    <ReviewRow key={row.label}>
+                    <ReviewRow key={row.label} data-missing={row.value ? undefined : 'true'}>
                       <dt>{row.label}</dt>
-                      <dd>{row.value || '—'}</dd>
+                      <dd>{row.value || t.addPlant.missingValue}</dd>
                       <EditLink type="button" onClick={() => go(STEPS.indexOf(row.step))}>
                         {t.addPlant.edit}
                       </EditLink>
@@ -779,35 +868,37 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const next = (() => {
     switch (stepId) {
       case 'photo':
-        return { label: '', disabled: true, hint: '' }
+        // Both buttons wait for a photo; say so instead of leaving them silently disabled.
+        return { label: '', disabled: true, hint: scans.length === 0 ? t.addPlant.needPhoto : '' }
+      // Next stays open so the grower can move freely; the hint says what is still empty. Only Save waits.
       case 'identity':
         return {
           label: t.addPlant.next,
-          disabled: !identityReady,
+          disabled: !freeNav,
           hint: identityReady || !phone ? '' : t.addPlant.needIdentity,
         }
       case 'specs':
         return {
           label: t.addPlant.next,
-          disabled: !specsReady,
-          hint: specsReady ? '' : t.addPlant.needSpecs,
+          disabled: !freeNav,
+          hint: specsReady ? '' : specsHint,
         }
       case 'details':
         return {
           label: t.addPlant.next,
-          disabled: !detailsReady,
+          disabled: !freeNav,
           hint: detailsReady ? '' : t.addPlant.needDetails,
         }
       case 'review':
         return {
           label: t.greenhouse.savePlant,
-          disabled: !detailsReady || !specsReady || !identityReady,
+          disabled: !reviewReady,
           hint: saveFailed
             ? t.addPlant.saveFailed
             : !identityReady
               ? t.addPlant.needIdentity
               : !specsReady
-                ? t.addPlant.needSpecs
+                ? specsHint
                 : !detailsReady
                   ? t.addPlant.needDetails
                   : '',
@@ -822,6 +913,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         current={step}
         onStep={(index) => (scanning && !ai ? undefined : go(index))}
         ariaLabel={t.greenhouse.add}
+        open={freeNav}
+        flagged={flaggedSteps.filter((id) => id !== stepId)}
+        flaggedLabel={t.addPlant.stepNeedsInput}
       />
       <Scroll ref={scrollRef}>
         <StepBody key={stepId} $direction={direction}>
@@ -832,15 +926,16 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         <div hidden={stepId !== 'photo'}>
           <PhotoIdentify
             scans={scans}
-            onScansChange={setScans}
+            onScansChange={changeScans}
             checks={identification.photos}
             max={ADD_PLANT_UPLOAD_LIMIT}
             analyze={withAi}
             showAnswer={false}
           />
-          <PhotoNote>
-            {ADD_PLANT_UPLOAD_LIMIT > 1 ? t.addPlant.photoLead : t.addPlant.photoLeadOne}
-          </PhotoNote>
+          {/* Only before a photo: once added, the scan card says what to do next. */}
+          {scans.length === 0 ? (
+            <PhotoNote>{ADD_PLANT_UPLOAD_LIMIT > 1 ? t.addPlant.photoLead : t.addPlant.photoLeadOne}</PhotoNote>
+          ) : null}
         </div>
       </Scroll>
       <Footer $static>
@@ -866,7 +961,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               variant="secondary"
               disabled={scans.length === 0}
               onClick={() => {
-                setWithAi(false)
+                // After a scan the answer stays; the grower edits it from here.
+                if (!aiUsed) setWithAi(false)
                 go(step + 1)
               }}
             >
@@ -875,7 +971,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             <Button
               type="button"
               variant="info"
-              disabled={scans.length === 0 || scanning}
+              disabled={scans.length === 0 || scanning || aiUsed}
               onClick={() => {
                 if (!signedIn) {
                   openAuth('buy')

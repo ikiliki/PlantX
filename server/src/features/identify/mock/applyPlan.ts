@@ -1,5 +1,8 @@
 import type { Catalog, CatalogSuggestion, IdentifyMockMatch, IdentifyMockScenario } from '../../../../../src/mock/types.ts'
+import { CORE_PROPERTY_IDS, propertiesForPlant } from '../../../../../src/features/catalog/catalog.ts'
 import type { RawSuggestion } from '../types.ts'
+
+const isCore = (id: string) => (CORE_PROPERTY_IDS as readonly string[]).includes(id)
 
 export type MockPlan = {
   match?: IdentifyMockMatch
@@ -15,8 +18,14 @@ function applyMatch(raw: RawSuggestion, catalog: Catalog, match: IdentifyMockMat
   const props = match.properties ?? {}
   const traits: Record<string, string> = {}
   for (const [key, optionId] of Object.entries(props)) {
-    if (!optionId || key === 'health' || key === 'size' || key === 'stage' || key === 'area') continue
+    if (!optionId || isCore(key)) continue
     traits[key] = optionId
+  }
+  // A match answers every required trait, so the default mock is a full answer. Admin picks win.
+  for (const property of propertiesForPlant(catalog, category.id, sub?.id ?? '', true)) {
+    if (isCore(property.id) || traits[property.id]) continue
+    const first = property.options[0]?.id
+    if (first) traits[property.id] = first
   }
   const name = category.name.trim()
   return {

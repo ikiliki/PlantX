@@ -13,6 +13,7 @@ export function IdentifyStageFields({
   scenario,
   scenarios = ALL,
   disabled,
+  missingKey = false,
   onResponse,
   onScenario,
 }: {
@@ -21,6 +22,8 @@ export function IdentifyStageFields({
   scenario: IdentifyMockScenario
   scenarios?: IdentifyMockScenario[]
   disabled?: boolean
+  /** The stage's API has no key: Ready would fail every live call, so the option says so. */
+  missingKey?: boolean
   onResponse: (response: IdentifyResponseMode) => void
   onScenario: (scenario: IdentifyMockScenario) => void
 }) {
@@ -37,7 +40,9 @@ export function IdentifyStageFields({
           disabled={disabled}
           onChange={(event) => onResponse(event.target.value as IdentifyResponseMode)}
         >
-          <option value="ready">{t.admin.apisResponseReady}</option>
+          <option value="ready">
+            {missingKey ? t.admin.apisResponseReadyNoKey : t.admin.apisResponseReady}
+          </option>
           <option value="mock">{t.admin.apisResponseMock}</option>
         </Select>
       </Field>
