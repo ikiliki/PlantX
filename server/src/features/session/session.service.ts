@@ -9,12 +9,9 @@ import { getStore } from '../../db/index.ts'
 import { changedSince, snapshot } from '../../lib/changedRows.ts'
 import { Errors } from '../../lib/errors.ts'
 import { BOOTSTRAP_ADMIN } from '../../lib/ensureData.ts'
+import { isActive } from '../../lib/session.ts'
 import type { GoogleProfile } from '../../lib/googleAuth.ts'
 import { usersService } from '../users/users.service.ts'
-
-function isActive(user: User) {
-  return (user.accountStatus ?? 'active') === 'active'
-}
 
 function bootstrapEmail() {
   return (BOOTSTRAP_ADMIN.email ?? '').toLowerCase()
