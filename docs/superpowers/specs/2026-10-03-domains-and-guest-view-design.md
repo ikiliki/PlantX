@@ -108,11 +108,13 @@ Every new title, body and button is added to both `en.json` and `he.json`. Hebre
 
 ### Gate guest-hidden routes
 
-Add `requireUser` to:
+One Hono middleware, `signedIn`, in `server/src/lib/session.ts` (`createMiddleware` from `hono/factory`): it runs the `requireUser` check and sets `c.set('user', user)`, typed through the router's `Variables`. Handlers read `c.get('user')` instead of looking the user up again. No per-handler guard calls.
 
-- `GET /api/users/directory`, `/api/users/levels`, `/api/users/:id/level`
-- `GET /api/activities`, `/api/activities/user/:userId`, `/api/activities/id/:id`, `/api/activities/:type/:userId`, `/api/activities/:type`
-- `GET /api/plants`, `/api/plants/:id`, `/api/plants/:id/activities`
+- **Activities router:** `activityRoutes.use('*', signedIn)` — every route in it is gated, handlers unchanged.
+- **Plants router:** `greenhouseRoutes.use('*', signedIn)` — covers `GET /api/plants`, `/:id`, `/:id/activities`; the existing `requireUser` calls in its write routes become `c.get('user')`.
+- **Users router** (mixed: public register, admin routes): per-route `signedIn` on `GET /directory`, `/levels`, `/:id/level` only.
+
+`requireUser` / `requireAdmin` stay as they are elsewhere; no wider refactor in this branch.
 
 `GET /api/catalog` stays public. Before gating `GET /api/plants` and `/:id`, confirm nothing public (catalog counts, landing) reads them; if something does, it gets a narrow public endpoint returning only the counts it needs.
 
