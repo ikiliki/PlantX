@@ -51,6 +51,23 @@ export const Row = styled.li<{ $tone: 'water' | 'photo'; $mark?: boolean; $done?
   }};
   box-shadow: ${({ $mark }) => ($mark ? theme.shadow.soft : 'none')};
   opacity: ${({ $done }) => ($done ? 0.88 : 1)};
+  color: inherit;
+  text-decoration: none;
+
+  &:is(a):hover {
+    box-shadow: ${theme.shadow.soft};
+  }
+`
+
+/** Chevron on a planned row that opens the task. */
+export const Go = styled.span`
+  font-size: 18px;
+  font-weight: 700;
+  color: ${theme.colors.moss};
+
+  [dir='rtl'] & {
+    transform: scaleX(-1);
+  }
 `
 
 export const Kind = styled.span`

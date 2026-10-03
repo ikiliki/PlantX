@@ -94,6 +94,19 @@ export const DateField = styled.label`
   }
 `
 
+/** First watering: the date and its Save / Cancel. */
+export const DateForm = styled.form`
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+`
+
+export const DateActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`
+
 export const Name = styled.strong`
   font-size: 14px;
   line-height: 1.25;
@@ -109,7 +122,7 @@ export const Meta = styled.p`
   line-height: 1.35;
 `
 
-export const Action = styled.button<{ $tone: 'water' | 'photo' }>`
+export const Action = styled.button<{ $tone: 'water' | 'photo' | 'quiet' }>`
   ${pressable}
   appearance: none;
   display: inline-flex;
@@ -120,8 +133,9 @@ export const Action = styled.button<{ $tone: 'water' | 'photo' }>`
   padding: 0 12px;
   border: 0;
   border-radius: ${theme.radii.pill};
-  background: ${({ $tone }) => ($tone === 'water' ? water : metal)};
-  color: ${theme.colors.creamCard};
+  background: ${({ $tone }) => ($tone === 'water' ? water : $tone === 'photo' ? metal : 'transparent')};
+  color: ${({ $tone }) => ($tone === 'quiet' ? theme.colors.forest : theme.colors.creamCard)};
+  box-shadow: ${({ $tone }) => ($tone === 'quiet' ? `inset 0 0 0 1px ${theme.colors.border}` : 'none')};
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -129,5 +143,10 @@ export const Action = styled.button<{ $tone: 'water' | 'photo' }>`
 
   span {
     color: ${theme.colors.creamCard};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 `

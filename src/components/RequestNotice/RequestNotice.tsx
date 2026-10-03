@@ -28,6 +28,9 @@ import {
   Title,
 } from './RequestNotice.styles'
 
+const DONE_MS = 4000
+const FAIL_MS = 8000
+
 /** Error corner. English sits on the right; Hebrew mirrors to the left. Technical details stay off this card. */
 export function RequestNoticeStack({
   items,
@@ -47,6 +50,14 @@ export function RequestNoticeStack({
   const [sending, setSending] = useState(false)
   const [failed, setFailed] = useState(false)
 
+  // Notices close on their own: a success note quickly, an error after a while, but never while its report is open.
+  useEffect(() => {
+    const timers = items
+      .filter((item) => item.id !== openId)
+      .map((item) => window.setTimeout(() => onDismiss(item.id), item.tone === 'done' ? DONE_MS : FAIL_MS))
+    return () => timers.forEach((timer) => window.clearTimeout(timer))
+  }, [items, openId, onDismiss])
+
   useEffect(() => {
     if (openId != null && !items.some((item) => item.id === openId)) {
       setOpenId(null)
@@ -63,7 +74,7 @@ export function RequestNoticeStack({
     setFailed(false)
   }
 
-  const submit = async (item: HttpNotice) => {
+  const submit = async (item: Extract<HttpNotice, { tone: 'fail' }>) => {
     setSending(true)
     setFailed(false)
     try {
@@ -83,6 +94,21 @@ export function RequestNoticeStack({
   return (
     <Stack aria-live="polite">
       {items.map((item) => {
+        if (item.tone === 'done') {
+          return (
+            <Card key={item.id} role="status" $tone="done">
+              <Orb aria-hidden $tone="done" />
+              <Copy>
+                <Title>
+                  {(item.care === 'photo' ? t.http.donePhoto : t.http.doneWater).replace('{xp}', String(item.xp))}
+                </Title>
+              </Copy>
+              <Close type="button" aria-label={t.http.dismiss} onClick={() => onDismiss(item.id)}>
+                ×
+              </Close>
+            </Card>
+          )
+        }
         const open = openId === item.id
         const words = wordCount(note)
         return (

@@ -30,11 +30,11 @@ export const Root = styled.div<{ $floating?: boolean; $count: number }>`
     $floating &&
     css`
       ${floating}
-      grid-template-columns: repeat(${$count}, 48px);
+      grid-template-columns: repeat(${$count}, auto);
     `}
 `
 
-export const Btn = styled.button<{ $on?: boolean }>`
+export const Btn = styled.button<{ $on?: boolean; $floating?: boolean }>`
   ${pressable}
   display: grid;
   place-items: center;
@@ -48,4 +48,21 @@ export const Btn = styled.button<{ $on?: boolean }>`
   color: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.muted)};
   box-shadow: ${({ $on }) => ($on ? theme.shadow.soft : 'none')};
   cursor: pointer;
+
+  ${({ $floating, $on }) =>
+    $floating &&
+    css`
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 48px;
+      padding: 0 ${$on ? '12px' : '0'};
+    `}
+`
+
+export const Name = styled.span`
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
 `

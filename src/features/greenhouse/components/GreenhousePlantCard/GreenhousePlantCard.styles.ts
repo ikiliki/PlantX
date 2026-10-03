@@ -263,7 +263,13 @@ export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
               padding: 8px 8px 10px;
             `
           : css`
-              display: none;
+              /* Phone shelf: the name only, so several plants can be told apart; tags stay off. */
+              gap: 0;
+              padding: 8px 10px 10px;
+
+              > :not(:first-child) {
+                display: none;
+              }
             `}
   }
 `
@@ -273,6 +279,12 @@ export const NameRow = styled.div`
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+
+  @container (max-width: 559px) {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
 `
 
 export const Name = styled(Link)`
@@ -288,7 +300,11 @@ export const Name = styled(Link)`
   }
 
   @container (max-width: 559px) {
+    min-width: 0;
+    overflow: hidden;
     font-size: 14px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 `
 

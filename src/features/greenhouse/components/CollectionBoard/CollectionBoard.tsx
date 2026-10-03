@@ -249,7 +249,8 @@ export function CollectionBoard({
   const shelf = skeleton ? (
     <Growing>
       <CollectionGrid data-plant-grid>
-        <AddPlantCard onClick={onAdd} label={skeleton === 'guest' ? t.guest.tryAddPlant : undefined} />
+        {/* Loading doesn't know the plant count yet, so it never says "another". */}
+        <AddPlantCard onClick={onAdd} label={skeleton === 'guest' ? t.guest.tryAddPlant : t.greenhouse.add} />
         {rail ? <PhoneRail>{rail}</PhoneRail> : null}
         {Array.from({ length: SKELETON_CARDS }, (_, index) => (
           <GreenhousePlantCardSkeleton key={index} blurred={skeleton === 'guest'} />
