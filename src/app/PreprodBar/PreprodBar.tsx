@@ -47,6 +47,7 @@ export function PreprodBar() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
+  // On load, and again each time the panel opens, so newly approved users show up.
   useEffect(() => {
     let live = true
     fetch('/api/session/test-users', { credentials: 'include' })
@@ -58,7 +59,7 @@ export function PreprodBar() {
     return () => {
       live = false
     }
-  }, [])
+  }, [open])
 
   if (!users) return null
 
