@@ -6,7 +6,7 @@ import { Detail, Mark, Root, Text } from './IdentifyBadge.styles'
  * Who identified the plant class. `compact` is the card tag; the full badge spells out provider and confidence.
  * A plant with no record (added before identify existed) reads as needing an AI check.
  * `notInCatalog`: the plant is saved as Other. With an `ai` record that means the AI recognized it
- * but the catalog has no class for it yet — still AI verified, not edited by hand.
+ * but the catalog has no class for it yet. Still counted as an AI answer, but shown as "AI recognized it", not verified.
  */
 export function IdentifyBadge({
   identification,
@@ -22,8 +22,13 @@ export function IdentifyBadge({
   const pct = probability != null ? Math.round(probability * 100) : null
   const aiOther = source === 'ai' && notInCatalog
 
-  const title =
-    source === 'ai' ? t.addPlant.badgeAiBy : source === 'edited' ? t.addPlant.badgeEdited : t.addPlant.badgeManual
+  const title = aiOther
+    ? t.addPlant.badgeAiOther
+    : source === 'ai'
+      ? t.addPlant.badgeAiBy
+      : source === 'edited'
+        ? t.addPlant.badgeEdited
+        : t.addPlant.badgeManual
 
   const detail =
     source === 'ai'

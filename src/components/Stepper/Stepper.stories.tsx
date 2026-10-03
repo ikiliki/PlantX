@@ -33,3 +33,13 @@ export const Narrow = () => (
     <Stepper steps={steps} current={3} ariaLabel="Add plant" />
   </div>
 )
+
+/** Every step reachable; Specs still needs a field. */
+export const OpenWithFlag = () => {
+  const [current, setCurrent] = useState(4)
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <Stepper steps={steps} current={current} onStep={setCurrent} ariaLabel="Add plant" open flagged={['specs']} flaggedLabel="needs input" />
+    </div>
+  )
+}

@@ -36,6 +36,7 @@ import {
   Empty,
   Fields,
   SaveError,
+  StageNote,
   MatchBlock,
   Panel,
   StatusLine,
@@ -214,6 +215,8 @@ function ProviderBody({
   const name = t.admin[providerNameKey[provider.id]]
   const credits = formatCredits(provider.id, provider.credits, t)
   const lastUsed = formatWhen(provider.lastUsedAt, locale)
+  // Ready with no key fails every Add Plant: say so on the stage, not only in the status grid.
+  const liveWithoutKey = settings.enabled && settings.response === 'ready' && !provider.keySet
   const items: { label: string; value: ReactNode }[] = [
     {
       label: t.admin.apisDocs,
@@ -305,11 +308,20 @@ function ProviderBody({
           scenario={settings.scenario}
           scenarios={scenarios}
           disabled={locked}
+          missingKey={!provider.keySet}
           onResponse={(response) => onChange({ response })}
           onScenario={(scenario) => onChange({ scenario })}
         />
       </Controls>
       {saveError ? <SaveError role="alert">{saveError}</SaveError> : null}
+      {liveWithoutKey ? (
+        <StageNote $tone="warn" role="status">
+          {t.admin.apisReadyNeedsKey.replace('{provider}', name)}
+        </StageNote>
+      ) : null}
+      {stage === 'species' && settings.response === 'mock' && settings.scenario === 'notInCatalog' ? (
+        <StageNote>{t.admin.apisSpeciesNotInCatalogNote}</StageNote>
+      ) : null}
 
       {stage === 'draft' && settings.response === 'mock' && settings.scenario === 'match' && (catalogLoading ? (
         <LoaderShell busy />

@@ -62,6 +62,24 @@ export const Tiles = () => {
   )
 }
 
+/** Required, and the AI answer left it empty. */
+export const Missing = () => {
+  const [value, setValue] = useState('')
+  return (
+    <ChoiceChips
+      label="Growth form"
+      required
+      value={value}
+      missing={value ? undefined : 'AI could not fill this'}
+      options={[
+        { id: 'climbing', label: 'Climbing' },
+        { id: 'hanging', label: 'Hanging' },
+      ]}
+      onChange={setValue}
+    />
+  )
+}
+
 export const Disabled = () => (
   <ChoiceChips label="Health" disabled options={healthLetters} value="" onChange={() => undefined} />
 )
