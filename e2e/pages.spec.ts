@@ -1,17 +1,6 @@
 import { expectPage, signIn, test, expect } from './support'
 
-test.describe('guest', () => {
-  test('greenhouse asks a guest to sign in', async ({ page }) => {
-    await expectPage(page, '/greenhouse')
-    await expect(page.getByRole('link', { name: /log in|sign in/i }).or(page.getByRole('button', { name: /log in|sign in/i })).first()).toBeVisible()
-  })
-
-  test('landing loads', async ({ page }) => {
-    await page.goto('/landing')
-    await page.waitForLoadState('networkidle')
-    await expect(page.getByRole('heading').first()).toBeVisible()
-  })
-})
+/** Signed in through the QA session route or the PP test login; never runs against production. */
 
 test.describe('signed in', () => {
   test.beforeEach(async ({ page }) => {

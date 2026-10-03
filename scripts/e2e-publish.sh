@@ -18,7 +18,7 @@ mkdir -p "../qa-assets/$dir"
 cp test-results/assets/*.png "../qa-assets/$dir/" 2>/dev/null || true
 (cd ../qa-assets && git add qa && git commit -qm "UI regression screenshots, run $GITHUB_RUN_ID" && git push -q origin HEAD:qa-assets) || true
 
-{ echo "**App:** $APP_URL · **Commit:** \`${GITHUB_SHA::7}\` · [Run]($RUN_URL)"; echo; cat test-results/summary.md; } > comment.md
+{ echo "${RUN_LABEL:+**$RUN_LABEL** · }**App:** $APP_URL · **Commit:** \`${GITHUB_SHA::7}\` · [Run]($RUN_URL)"; echo; cat test-results/summary.md; } > comment.md
 cat comment.md >> "$GITHUB_STEP_SUMMARY"
 
 if [ "$target" = "pr" ]; then
