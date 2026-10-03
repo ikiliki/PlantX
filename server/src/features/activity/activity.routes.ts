@@ -1,14 +1,17 @@
 import { Hono } from 'hono'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
+import { signedIn } from '../../lib/session.ts'
 import { activityService } from './activity.service.ts'
 import type { Activity, ActivityInput, ActivityKind } from './activity.types.ts'
 
 /**
- * Activity HTTP surface.
+ * Activity HTTP surface, members only.
  * Lists are the basic row. `GET /id/:id` is the one place that adds the linked identify request.
  */
 export const activityRoutes = new Hono()
+
+activityRoutes.use('*', signedIn)
 
 const KINDS: ActivityKind[] = ['photo', 'water', 'propagate', 'grade', 'passport', 'listing', 'scan', 'added']
 

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { StoreProvider } from '../../../../mock/store'
 import { greenhouseLevel } from '../../greenhouseLevel'
-import { GreenhouseLevelView } from './GreenhouseLevelCard'
+import { GreenhouseLevelSkeleton, GreenhouseLevelView } from './GreenhouseLevelCard'
 
 const withApp = (Story: () => ReactNode) => (
   <StoreProvider source="example">
@@ -26,4 +26,6 @@ const done = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `t${i}`, 
 export const NewGrower = () => <GreenhouseLevelView summary={greenhouseLevel('u', [], [])} />
 export const Leafling = () => <GreenhouseLevelView summary={greenhouseLevel('u', plants(6), done(4))} />
 export const LevelUp = () => <GreenhouseLevelView summary={greenhouseLevel('u', plants(12), done(20))} celebrate />
-export const MasterGrower = () => <GreenhouseLevelView summary={greenhouseLevel('u', plants(120), done(400))} />
+export const Loading = () => <GreenhouseLevelSkeleton />
+export const GuestBlurred = () => <GreenhouseLevelSkeleton blurred />
+export const MasterGrower =() => <GreenhouseLevelView summary={greenhouseLevel('u', plants(120), done(400))} />

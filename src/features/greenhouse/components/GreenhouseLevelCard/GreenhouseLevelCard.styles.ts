@@ -1,4 +1,5 @@
 import styled, { css, keyframes } from 'styled-components'
+import { blurred } from '../../../../components/Skeleton/Skeleton'
 import { pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
@@ -17,6 +18,11 @@ const pop = keyframes`
 `
 
 /** The greenhouse page header: full width, sized by its own container (stacked narrow, one row wide). */
+/** Wraps the guest's level-card skeleton so it reads as out of reach. */
+export const Blurred = styled.div`
+  ${blurred}
+`
+
 export const Root = styled.aside<{ $celebrate: boolean }>`
   position: relative;
   box-sizing: border-box;

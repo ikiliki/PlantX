@@ -6,12 +6,38 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { publicGrowerName } from '../../../profile/avatarIcons'
 import { personaScenarioId } from '../../../../mock/personas'
 import { useStore } from '../../../../mock/store'
-import type { FeedUpdate as FeedUpdateData } from '../../../../mock/types'
+import type { FeedUpdate as FeedUpdateData, FeedUpdateKind } from '../../../../mock/types'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { clientEnv } from '../../../../theme/plantxEnv'
 import { VerifiedStamp } from '../../../greenhouse/components/VerifiedStamp/VerifiedStamp'
 import { activityKindLabel } from '../../activityMoment'
 import { ActivityMoment, MomentGlyph, MomentPlay } from '../ActivityMoment/ActivityMoment'
 import { Card, Grower, Kind, Line, Meta, Open, ProfileButton, When } from './FeedUpdate.styles'
+
+/** The order a placeholder feed cycles through, so it looks like a real day of care. */
+export const SKELETON_FEED_KINDS: FeedUpdateKind[] = ['water', 'added', 'photo', 'water', 'scan', 'added']
+
+/** Same card, kind tint and motion, with bars for the grower and text. No data, no requests. */
+export function FeedUpdateSkeleton({ kind }: { kind: FeedUpdateKind }) {
+  return (
+    <Card $kind={kind} data-moment={kind}>
+      <MomentPlay kind={kind} />
+      <SkeletonBar width="36px" height={36} round />
+      <Open as="div">
+        <Meta>
+          <Kind $kind={kind}>
+            <MomentGlyph kind={kind} />
+            <SkeletonBar width="64px" height={10} />
+          </Kind>
+          <SkeletonBar width="48px" height={10} />
+        </Meta>
+        <SkeletonBar height={16} />
+        <SkeletonBar width="70%" height={16} />
+        <SkeletonBar width="28px" height={10} />
+      </Open>
+    </Card>
+  )
+}
 
 export function FeedUpdate({ update }: { update: FeedUpdateData }) {
   const { t, tr, locale } = useI18n()

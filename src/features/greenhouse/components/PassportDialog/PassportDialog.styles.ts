@@ -20,12 +20,13 @@ export const Backdrop = styled.div`
   }
 `
 
-export const Dialog = styled.div`
+/** `$fit` sizes the dialog to its content (the guest message) instead of the full passport. */
+export const Dialog = styled.div<{ $fit?: boolean }>`
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(1160px, calc(100vw - 24px));
-  height: min(840px, calc(100vh - 20px));
+  width: ${({ $fit }) => ($fit ? 'min(480px, calc(100vw - 24px))' : 'min(1160px, calc(100vw - 24px))')};
+  height: ${({ $fit }) => ($fit ? 'auto' : 'min(840px, calc(100vh - 20px))')};
   max-height: min(840px, calc(100vh - 20px));
   overflow: hidden;
   scrollbar-width: none;
@@ -37,7 +38,7 @@ export const Dialog = styled.div`
   ${sheetSurface}
   ${media.sm} {
     width: 100%;
-    height: 75svh;
+    height: ${({ $fit }) => ($fit ? 'auto' : '75svh')};
     max-height: 75svh;
     padding-top: 28px;
     padding-bottom: 0;
@@ -63,6 +64,11 @@ export const CloseBar = styled.div`
   inset-block-start: 12px;
   inset-inline-end: 12px;
   pointer-events: none;
+`
+
+/** A guest gets the log-in message instead of the passport. */
+export const GuestPane = styled.div`
+  padding: 48px ${theme.space.lg} ${theme.space.lg};
 `
 
 export const Close = styled.button`

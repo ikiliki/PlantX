@@ -25,8 +25,26 @@ export default {
 
 export const Greenhouse = () => (
   <GuestView
-    title="Sign in to open your greenhouse"
-    body="A guest can browse the market and the wiki. Your plants stay behind an account."
-    action="Log in or register"
+    title="Log in to see your greenhouse"
+    body="Your plants, level and care live in your account. Until then, enjoy the catalog."
+    action="Log in"
+  />
+)
+
+export const Card = () => (
+  <GuestView
+    card
+    title="Log in to see what's growing"
+    body="The feed shows what growers water, photograph and add."
+    action="Log in"
+  />
+)
+
+export const WithTryAction = () => (
+  <GuestView
+    title="Log in to see your greenhouse"
+    body="Your plants, level and care live in your account. Until then, enjoy the catalog."
+    action="Log in"
+    secondary={{ label: 'Try adding a plant', onClick: () => undefined }}
   />
 )

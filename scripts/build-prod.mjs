@@ -3,6 +3,7 @@ import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
+import { loadEnv } from 'vite'
 
 process.env.VITE_PLANTX_ENV = 'prod'
 process.env.PLANTX_ENV = 'prod'
@@ -10,6 +11,30 @@ process.env.PLANTX_ENV = 'prod'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const output = path.join(root, '.vercel', 'output')
 const funcDir = path.join(output, 'functions', 'api.func')
+
+/**
+ * Landing and app on two domains (VITE_LANDING_URL, VITE_APP_URL — the same values the client reads).
+ * The landing domain serves only the marketing page and has no API; the app domain sends /landing there.
+ * Unset (previews), one host serves both and there are no host rules.
+ */
+function siteSplitRoutes() {
+  const env = { ...loadEnv('production', root, 'VITE_'), ...process.env }
+  if (!env.VITE_APP_URL || !env.VITE_LANDING_URL) return { before: [], after: [] }
+  const app = new URL(env.VITE_APP_URL)
+  const landing = new URL(env.VITE_LANDING_URL)
+  const onLanding = [{ type: 'host', value: landing.host }]
+  const onApp = [{ type: 'host', value: app.host }]
+  return {
+    before: [{ src: '/api(?:/.*)?', has: onLanding, status: 404 }],
+    after: [
+      // Static files already matched; what is left on the landing host besides the page goes to the app.
+      { src: '/(?!(?:landing|stills)?/?$)(.*)', has: onLanding, status: 308, headers: { Location: `${app.origin}/$1` } },
+      { src: '/(?:landing|stills)/?', has: onApp, status: 308, headers: { Location: `${landing.origin}/` } },
+    ],
+  }
+}
+
+const siteSplit = siteSplitRoutes()
 
 function run(command) {
   return new Promise((resolve, reject) => {
@@ -55,7 +80,9 @@ await writeFile(
   JSON.stringify({
     version: 3,
     routes: [
+      ...siteSplit.before,
       { handle: 'filesystem' },
+      ...siteSplit.after,
       { src: '/api(?:/(.*))?', dest: '/api' },
       { src: '/(.*)', dest: '/index.html' },
     ],

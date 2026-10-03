@@ -27,7 +27,7 @@ PlantX is a bilingual (English + Hebrew) marketplace for living plants.
 | prod | `npm run dev:prod` | 5175 | 8789 | hosted Supabase (`PROD_DATABASE_URL`) |
 
 - `npm run qa:reset` reapplies migrations. `npm run seed:fixtures` regenerates `server/fixtures/demo` from `src/mock`.
-- Deploy: `npm run build:prod` builds the client and bundles the API into Vercel Build Output (`/api/*` → function).
+- Deploy: `npm run build:prod` builds the client and bundles the API into Vercel Build Output (`/api/*` → function). With `VITE_LANDING_URL` / `VITE_APP_URL` set it also adds the two-domain host redirects (`src/lib/siteUrls.ts` is the client side). Production needs `SESSION_SECRET` (signed session cookie).
 - Env: see `.env.example`. Never commit `.env` / `.env.local`.
 
 ## Key files
@@ -61,8 +61,7 @@ Hard rules:
 
 ## Known issues (follow-ups)
 
-- **Auth:** `POST /api/session` with `{ userId }` or `{ email }` signs in as any active user without a password, including the admin by id (the UI is Google-only now, but the endpoint remains) (`server/src/features/session/session.routes.ts`, `session.service.ts` `requireById`).
-- **Auth:** session cookie is the raw, unsigned user id (`server/src/lib/session.ts`).
+- **Auth:** `POST /api/session` with `{ userId }` or `{ email }` still signs in without a password on QA (local Docker; verification scripts use it). Production rejects it (`server/src/features/session/session.routes.ts`).
 - **Auth:** Google token check falls back to unverified claims when tokeninfo is unreachable (`server/src/lib/googleAuth.ts`).
 - `.env.example` still mentions Plant.id / `KINDWISE_API_KEY` (removed). `scripts/smoke.mjs` visits routes that no longer exist.
 - Legacy JSON dirs (`data/`, `server/data*`) and root `mock/catalog.json` are unused. `esbuild` is used by `build-prod.mjs` but not declared.

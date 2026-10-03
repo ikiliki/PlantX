@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { seedUpdates } from '../../../../mock/updates'
 import { StoreProvider } from '../../../../mock/store'
-import { FeedUpdate } from './FeedUpdate'
+import { FeedUpdate, FeedUpdateSkeleton, SKELETON_FEED_KINDS } from './FeedUpdate'
 
 const withApp = (Story: () => ReactNode) => (
   <StoreProvider source="example">
@@ -22,6 +22,14 @@ export default {
   component: FeedUpdate,
   decorators: [withApp],
 }
+
+export const Skeletons = () => (
+  <>
+    {SKELETON_FEED_KINDS.map((kind, index) => (
+      <FeedUpdateSkeleton key={index} kind={kind} />
+    ))}
+  </>
+)
 
 export const AllKinds = () => (
   <>

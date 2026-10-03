@@ -4,7 +4,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { Plant, User } from '../../../../mock/types'
 import { useGreenhouseLevels } from '../../useGreenhouseLevels'
-import { GreenhouseCard, greenhouseHref, greenhouseShelf } from '../GreenhouseCard/GreenhouseCard'
+import { GreenhouseCard, GreenhouseCardSkeleton, greenhouseHref, greenhouseShelf } from '../GreenhouseCard/GreenhouseCard'
 import { Empty, List, Root, Search } from './GreenhouseDirectory.styles'
 
 /**
@@ -36,6 +36,23 @@ function matches(user: User, needle: string) {
     .join(' ')
     .toLowerCase()
   return blob.includes(needle)
+}
+
+const SKELETON_ROWS = 6
+
+/** The directory's layout with placeholder rows: loading for a member, behind the guest's log-in card. */
+export function GreenhouseDirectorySkeleton() {
+  const { t } = useI18n()
+  return (
+    <Root aria-hidden>
+      <Search type="search" disabled placeholder={t.greenhouse.directorySearch} tabIndex={-1} />
+      <List>
+        {Array.from({ length: SKELETON_ROWS }, (_, index) => (
+          <GreenhouseCardSkeleton key={index} />
+        ))}
+      </List>
+    </Root>
+  )
 }
 
 export function GreenhouseDirectory() {

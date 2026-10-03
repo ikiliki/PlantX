@@ -175,6 +175,11 @@ export const Grid = styled.div`
   grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-auto-rows: ${dayTrack};
   gap: 4px;
+
+  /* Phone: the month takes about 60% of the screen so the tasks stay in view under it. */
+  @container (max-width: 560px) {
+    grid-auto-rows: clamp(54px, calc((60svh - 150px) / 6), ${dayTrack});
+  }
 `
 
 export const Cell = styled.div`
@@ -452,6 +457,12 @@ export const DayPanel = styled.section`
   border: 1px solid ${theme.colors.border};
   background: ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
+
+  /* Phone: the filters live inside this card; the plant picker spans its width. */
+  ${Toolbar} > select {
+    flex: 1 1 100%;
+    max-width: none;
+  }
 
   @container (max-width: 400px) {
     padding: 12px 10px;

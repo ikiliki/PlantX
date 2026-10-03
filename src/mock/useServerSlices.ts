@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
-import type { ServerSlice } from './liveApi'
+import { guestCanLoad, type ServerSlice } from './liveApi'
 import { useStore } from './store'
 
 const RETRY_LIMIT = 2
 const RETRY_MS = 600
 
-/** Load full rows for the slices this screen is showing. Returns the slices still in flight. */
+/**
+ * Load full rows for the slices this screen is showing. Returns the slices still in flight.
+ * A guest only loads public slices; signing in changes the key, so the rest load then.
+ */
 export function useServerSlices(parts: readonly ServerSlice[]) {
-  const { loadSlice, liveWritable, liveStatus } = useStore()
-  const key = parts.join(',')
+  const { loadSlice, liveWritable, liveStatus, signedIn } = useStore()
+  const key = (signedIn ? parts : parts.filter(guestCanLoad)).join(',')
   const [done, setDone] = useState<ReadonlySet<ServerSlice>>(new Set())
   const [attempt, setAttempt] = useState(0)
 

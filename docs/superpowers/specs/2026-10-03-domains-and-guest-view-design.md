@@ -16,22 +16,20 @@ One codebase, one build, one deploy. Both domains point at the same Vercel proje
 
 ### Config
 
-New env vars (documented in `.env.example`):
+New env vars (documented in `.env.example`), read by both the client and `build-prod.mjs` — one source for the hosts:
 
-| Var | Used by | Example |
-| --- | --- | --- |
-| `VITE_APP_URL` | client | `https://app.example.com` |
-| `VITE_LANDING_URL` | client | `https://example.com` |
-| `PLANTX_APP_HOST` | `build-prod.mjs` | `app.example.com` |
-| `PLANTX_LANDING_HOST` | `build-prod.mjs` | `example.com` |
+| Var | Example |
+| --- | --- |
+| `VITE_APP_URL` | `https://app.example.com` |
+| `VITE_LANDING_URL` | `https://example.com` |
 
-When the host vars are unset (dev, QA, previews) there is no host split: everything behaves as today, with `/landing` reachable on the one host.
+When either is unset (dev, QA, previews) there is no host split: everything behaves as today, with `/landing` reachable on the one host.
 
-`src/lib/siteUrls.ts` exposes `appUrl(path)`, `landingUrl(path)` and `siteRole(): 'app' | 'landing' | 'both'` from `location.host` and the vars above.
+`src/lib/siteUrls.ts` exposes `appHref(path)`, `landingHref()` and `siteRole(): 'app' | 'landing' | 'both'` from `location.host` and the vars above.
 
 ### Routing
 
-Server side (`build-prod.mjs` writes these into `.vercel/output/config.json` before the existing routes, only when both host vars are set):
+Server side (`build-prod.mjs` writes these into `.vercel/output/config.json` around the filesystem handler, only when both vars are set):
 
 - Landing host: `/api/*` → 404. Any path that is not a static file, `/` or `/landing` → 308 to the same path on the app host.
 - App host: `/landing` and `/stills` → 308 to the landing host `/`.
@@ -40,25 +38,25 @@ Client side (`AppRoutes`): when `siteRole()` is `landing`, `/` renders `LandingP
 
 ### Landing changes
 
-- `LandingHero` "Log in" and `LandingJoin` "Open app" become absolute links to `appUrl('/login')` and `appUrl('/greenhouse')`.
-- `LandingJoin` today embeds the Google sign-in card. On the landing host it is replaced by a "Get started" button to `appUrl('/login')`. Signing in only ever happens on the app host, so Google needs one origin and the cookie stays on one host. When `siteRole()` is `both` the card stays as today.
+- Every landing link into the app (hero Sign up / Go to app / Log in, nav Go to app) uses `appHref(path)`, absolute on the landing domain.
+- `LandingJoin` today embeds the Google sign-in card. On the landing host it is replaced by a Sign up link to `appHref('/login?mode=signup')`. Signing in only ever happens on the app host, so Google needs one origin and the cookie stays on one host. When `siteRole()` is `both` the card stays as today.
 - On the landing host the store does not call `/api` (no live boot, no slices). The landing only needs locale and static content.
 
 ### App changes
 
-- The app's link to the landing uses `landingUrl('/')`.
-- PWA: `vite.config.ts` sets `injectRegister: null`; `main.tsx` registers the service worker via `virtual:pwa-register` only when `siteRole()` is not `landing`. The landing domain never caches the app shell.
+- The app's links to the landing (login Back, hold pages, landing brand) use `landingHref()`.
+- PWA: `main.tsx` already registers manually; it now registers the service worker via `virtual:pwa-register` only when `siteRole()` is not `landing`. The landing domain never caches the app shell.
 - CORS is unchanged: the app calls its own `/api` on the same origin.
 
 ### Manual steps (owner)
 
-- Attach both domains to the Vercel project and set the four env vars for production.
+- Attach both domains to the Vercel project and set `VITE_APP_URL`, `VITE_LANDING_URL` and `SESSION_SECRET` for the production build.
 - Add the app domain to Google's Authorized JavaScript origins.
 - Everyone signs in once after the move (host-only cookie plus the new signed format, Part 3).
 
 ### Testing the host split
 
-Vercel previews are `*.vercel.app`, so host rules don't fire there unless two preview aliases are assigned and the host vars point at them. Locally: unit-check the generated `config.json`, and run the client with `siteRole` forced via the vars against `localhost` and `127.0.0.1` as two hosts. The first full check is otherwise production right after the domains are attached.
+Vercel previews are `*.vercel.app`, so host rules don't fire there unless two preview aliases are assigned and the two URL vars point at them. Locally: unit-check the generated `config.json`, and run the client with `siteRole` forced via the vars against `localhost` and `127.0.0.1` as two hosts. The first full check is otherwise production right after the domains are attached.
 
 ## Part 2 — Guest view
 
@@ -155,4 +153,4 @@ Today sign-in is Google only. Adding passwords is its own feature: hashing (Node
 - `node scripts/mobile-audit.mjs` on mock mode (5174), English and Hebrew, covering each guest screen.
 - QA as a guest: every route shows its intended view with no console errors or retry loops; `curl` the gated endpoints without a cookie → 401; with a forged `plantx_session=u-admin` cookie → 401.
 - QA signed in: greenhouse, global, tasks, home, passport, Add Plant unchanged.
-- `build:prod` with host vars set: inspect the generated `config.json` routes.
+- `build:prod` with both URL vars set: inspect the generated `config.json` routes.

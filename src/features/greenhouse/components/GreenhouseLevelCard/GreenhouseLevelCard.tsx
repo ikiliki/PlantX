@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react'
-import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { publicGrowerName } from '../../../profile/avatarIcons'
 import { fetchGreenhouseLevel } from '../../../../mock/liveApi'
@@ -11,6 +11,7 @@ import { CARE_XP, PLANT_XP, greenhouseLevel, type GreenhouseLevel } from '../../
 import {
   Bar,
   BarFill,
+  Blurred,
   Burst,
   How,
   HowList,
@@ -131,6 +132,34 @@ export function GreenhouseLevelView({
   )
 }
 
+/** The same card with an empty ring and bars: loading for a member, blurred for a guest. No requests. */
+export function GreenhouseLevelSkeleton({ blurred = false }: { blurred?: boolean }) {
+  const card = (
+    <Root aria-hidden $celebrate={false}>
+      <Inner>
+        <Top>
+          <LevelBadge level={1} progress={0} />
+          <TopCopy>
+            <SkeletonBar width="90px" height={18} />
+            <SkeletonBar width="130px" height={12} />
+          </TopCopy>
+        </Top>
+        <Progress>
+          <Bar aria-hidden />
+          <SkeletonBar width="110px" height={10} />
+        </Progress>
+        <Side>
+          <TallyRow>
+            <SkeletonBar width="80px" height={26} />
+            <SkeletonBar width="96px" height={26} />
+          </TallyRow>
+        </Side>
+      </Inner>
+    </Root>
+  )
+  return blurred ? <Blurred>{card}</Blurred> : card
+}
+
 /**
  * A greenhouse level, from plants added and care tasks completed. Hidden when its placement is off.
  * `publicView`: another grower's page. Their tasks never reach this browser, so outside mock mode the
@@ -176,13 +205,7 @@ export function GreenhouseLevelCard({ ownerId, publicView = false }: { ownerId: 
 
   if (!isPlacementEnabled(db.system, 'greenhouse.level')) return null
   const waiting = local ? fetching : !remoteSettled
-  if (waiting) {
-    return (
-      <Root aria-busy="true" $celebrate={false}>
-        <LoaderShell busy compact />
-      </Root>
-    )
-  }
+  if (waiting) return <GreenhouseLevelSkeleton />
   const shown = local ? summary : remote
   if (!shown) return null
   const user = db.users.find((item) => item.id === ownerId)

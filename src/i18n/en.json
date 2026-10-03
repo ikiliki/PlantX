@@ -34,7 +34,7 @@
       "admin": "Admin — catalog + system"
     },
     "personaBodies": {
-      "guest": "Market, news, and the catalog are open. Greenhouse and rank ask you to sign in.",
+      "guest": "The catalog and Add Plant are open. Greenhouses, tasks, home and rank ask you to log in.",
       "new": "A blank account. No plants, nothing listed.",
       "unverified": "Owns plants, but publishRequirement is verified — listing stays blocked.",
       "richCollection": "A full shelf with passports, cuttings, and pending market listings.",
@@ -342,8 +342,6 @@
     "directoryPlantsOne": "1 plant",
     "verified": "Verified",
     "verifiedGreenhouse": "Verified greenhouse",
-    "guestTitle": "Sign in to open your greenhouse",
-    "guestBody": "Guests can browse the market and the catalog. Plants, listing, and the wallet stay on an account.",
     "eyebrow": "Living collection",
     "description": "Your shelf of plants — passports, care, and what grows next.",
     "owned": "Owned",
@@ -497,8 +495,6 @@
     "filterAllPlants": "All plants",
     "filterKinds": "Categories",
     "filterAllKinds": "All",
-    "guestTitle": "Sign in for tasks",
-    "guestBody": "Watering and photo reminders stay on your account.",
     "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     "dayTasks": "Day {day}, {n} tasks"
   },
@@ -1209,6 +1205,20 @@
     "topEmpty": "No greenhouses to rank yet.",
     "updateScan": "AI scan",
     "updateAdded": "New plant"
+  },
+  "guest": {
+    "logIn": "Log in",
+    "tryAddPlant": "Try adding a plant",
+    "greenhouseTitle": "Log in to see your greenhouse",
+    "greenhouseBody": "Your plants, level and care live in your account. Until then, enjoy the catalog and try adding a plant.",
+    "globalTitle": "Log in to see other greenhouses",
+    "globalBody": "Growers' greenhouses are shared with members. Log in to look around, or enjoy the catalog meanwhile.",
+    "tasksTitle": "Log in to see your tasks",
+    "tasksBody": "Watering and photo reminders come from your own plants. Try adding a plant to see how it starts.",
+    "homeTitle": "Log in to see what's growing",
+    "homeBody": "The feed shows what growers water, photograph and add. Enjoy the catalog until you log in.",
+    "passportTitle": "Log in to open this passport",
+    "passportBody": "A plant's passport belongs to its grower and is shared with members."
   },
   "common": {
     "ils": "₪",

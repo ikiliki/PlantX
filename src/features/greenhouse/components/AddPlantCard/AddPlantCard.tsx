@@ -1,8 +1,11 @@
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { Copy, HeroBody, HeroCopy, Hint, Orb, Plus, Root, Spark, Stage } from './AddPlantCard.styles'
 
-/** Last tile of the collection. `hero` spans the grid as the empty greenhouse invite. */
-export function AddPlantCard({ onClick, hero }: { onClick: () => void; hero?: boolean }) {
+/**
+ * Last tile of the collection. `hero` spans the grid as the empty greenhouse invite.
+ * `label` replaces "Add another plant" (a guest tries Add Plant on a greenhouse they don't have).
+ */
+export function AddPlantCard({ onClick, hero, label }: { onClick: () => void; hero?: boolean; label?: string }) {
   const { t } = useI18n()
 
   if (hero) {
@@ -34,7 +37,7 @@ export function AddPlantCard({ onClick, hero }: { onClick: () => void; hero?: bo
         </Orb>
       </Stage>
       <Copy>
-        <strong>{t.greenhouse.addAnother}</strong>
+        <strong>{label ?? t.greenhouse.addAnother}</strong>
         <Hint>{t.greenhouse.addCardHint}</Hint>
       </Copy>
     </Root>

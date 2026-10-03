@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import type { User } from '../../../../mock/types'
 import { plantImages } from '../../../../mock/images'
-import { GreenhouseCard } from './GreenhouseCard'
+import { GreenhouseCard, GreenhouseCardSkeleton } from './GreenhouseCard'
 
 const maya: User = {
   id: 'u-maya',
@@ -53,6 +53,8 @@ export const OnePlant = () => (
 )
 
 export const EmptyShelf = () => <GreenhouseCard user={maya} href="/greenhouse/u-maya" plantCount={0} />
+
+export const Skeleton = () => <GreenhouseCardSkeleton />
 
 export const Compact = () => (
   <GreenhouseCard user={maya} href="/greenhouse/u-maya" plantCount={2} photos={photos.slice(0, 2)} compact />

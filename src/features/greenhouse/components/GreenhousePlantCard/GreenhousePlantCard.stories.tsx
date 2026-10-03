@@ -4,7 +4,7 @@ import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { plantImages } from '../../../../mock/images'
 import { StoreProvider, useStore } from '../../../../mock/store'
 import type { PlantIdentification } from '../../../../mock/types'
-import { GreenhousePlantCard } from './GreenhousePlantCard'
+import { GreenhousePlantCard, GreenhousePlantCardSkeleton } from './GreenhousePlantCard'
 
 function CardStory({
   identification,
@@ -61,6 +61,10 @@ export const ThreePhotos = () => (
 )
 
 export const Preview = () => <CardStory preview />
+
+export const Skeleton = () => <GreenhousePlantCardSkeleton />
+
+export const SkeletonBlurred = () => <GreenhousePlantCardSkeleton blurred />
 
 export const JustAdded = () => (
   <CardStory fresh identification={{ source: 'ai', provider: 'gemini', mode: 'live', probability: 0.82, at }} />

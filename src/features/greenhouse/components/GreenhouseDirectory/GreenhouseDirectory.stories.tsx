@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { StoreProvider, useStore } from '../../../../mock/store'
-import { GreenhouseDirectory } from './GreenhouseDirectory'
+import { GreenhouseDirectory, GreenhouseDirectorySkeleton } from './GreenhouseDirectory'
 
 function SignedIn({ children }: { children: ReactNode }) {
   const { loginAs } = useStore()
@@ -34,3 +34,5 @@ export default {
 }
 
 export const Global = () => <GreenhouseDirectory />
+
+export const Loading = () => <GreenhouseDirectorySkeleton />

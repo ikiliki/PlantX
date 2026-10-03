@@ -30,6 +30,12 @@ export const CardLink = styled(Link)<{ $compact?: boolean }>`
   ${face}
 `
 
+/** The same face without a link, for the placeholder row. */
+export const CardShell = styled.div<{ $compact?: boolean }>`
+  ${face}
+  pointer-events: none;
+`
+
 export const Copy = styled.span<{ $stamp?: boolean }>`
   display: grid;
   gap: 2px;

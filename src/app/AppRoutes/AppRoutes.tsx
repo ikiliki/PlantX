@@ -4,6 +4,7 @@ import { HoldNotice } from '../../components/HoldNotice/HoldNotice'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { NotLaunched } from '../../components/NotLaunched/NotLaunched'
 import { AdminGate } from '../../features/admin/components/AdminGate/AdminGate'
+import { siteRole } from '../../lib/siteUrls'
 import { useStore } from '../../mock/store'
 import { admitsWhenClosed } from '../../theme/operator'
 import { AppShell } from '../AppShell/AppShell'
@@ -97,8 +98,8 @@ export function AppRoutes() {
   return (
     <>
       <Routes location={overlay ? background : location}>
-          {/* The app opens on the greenhouse (a guest gets the sign-in card there). The marketing page lives at /landing. */}
-          <Route path="/" element={<Navigate to="/greenhouse" replace />} />
+          {/* The app opens on the greenhouse. The marketing page is /landing, or the root of its own domain. */}
+          <Route path="/" element={siteRole() === 'landing' ? <LandingPage /> : <Navigate to="/greenhouse" replace />} />
           <Route path="landing" element={<LandingPage />} />
           <Route path="stills" element={<LandingStillsPage />} />
           <Route path="not-launched" element={<NotLaunched />} />

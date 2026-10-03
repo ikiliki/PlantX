@@ -229,15 +229,6 @@ export const TaxonomySep = styled.span`
   font-weight: 700;
 `
 
-/** Grows so the stat tiles sit lower, with a clear gap under the title. */
-export const StatSpacer = styled.div`
-  flex: 1 1 36px;
-  min-height: 36px;
-  ${stacked} {
-    display: none;
-  }
-`
-
 export const ShowMore = styled.button`
   justify-self: start;
   margin: 0;
@@ -248,6 +239,9 @@ export const ShowMore = styled.button`
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  ${stacked} {
+    order: 4;
+  }
 
   &:hover {
     text-decoration: underline;
@@ -259,6 +253,9 @@ export const AsideStats = styled.dl`
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: ${theme.space.sm};
   margin: 0;
+  ${stacked} {
+    order: 3;
+  }
 `
 
 const asideStatTile = css`
@@ -346,6 +343,14 @@ export const AsideLabel = styled.span`
   color: ${theme.colors.moss};
 `
 
+/** Wide layout: labels over the owner and greenhouse rows, pushed to the bottom. Stacked, the rows sit under the name and the labels go. */
+export const OwnerLabel = styled(AsideLabel)`
+  margin-top: auto;
+  ${stacked} {
+    display: none;
+  }
+`
+
 export const Main = styled.div<{ $embedded?: boolean; $dialog?: boolean }>`
   display: flex;
   flex-direction: column;
@@ -424,8 +429,24 @@ export const OwnerLink = styled(Link)`
   color: ${theme.colors.ink};
   text-decoration: none;
   transition: background ${theme.motion.fast} ${theme.motion.ease};
+  ${stacked} {
+    order: 1;
+  }
   &:hover {
     background: ${theme.colors.creamCard};
+  }
+`
+
+/** The owner's greenhouse (level, XP, plants); stacked, it sits under the owner card. */
+export const GreenhouseLink = styled(OwnerLink)`
+  ${stacked} {
+    order: 2;
+  }
+`
+
+export const GreenhouseLabel = styled(AsideLabel)`
+  ${stacked} {
+    display: none;
   }
 `
 

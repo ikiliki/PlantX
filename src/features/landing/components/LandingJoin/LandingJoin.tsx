@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { AuthPanel } from '../../../auth/components/AuthPanel/AuthPanel'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { appHref, siteRole } from '../../../../lib/siteUrls'
 import { useStore } from '../../../../mock/store'
 import { Body, Box, Card, Kicker, Open, Title, Wrap } from './LandingJoin.styles'
 
@@ -21,6 +22,9 @@ export function LandingJoin() {
         <Card>
           {signedIn ? (
             <Open to="/greenhouse">{t.landing.openApp}</Open>
+          ) : siteRole() === 'landing' ? (
+            // Sign-in lives on the app domain only: one Google origin, one session cookie host.
+            <Open to={appHref('/login?mode=signup')}>{t.landing.signUp}</Open>
           ) : (
             <AuthPanel
               reason="buy"
