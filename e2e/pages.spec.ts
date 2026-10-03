@@ -13,6 +13,20 @@ test.describe('signed in', () => {
     })
   }
 
+  test('greenhouse Add tile is disabled until the plants arrive', async ({ page }) => {
+    let release: () => void = () => {}
+    const held = new Promise<void>((resolve) => (release = resolve))
+    await page.route('**/api/plants**', async (route) => {
+      if (route.request().method() === 'GET') await held
+      await route.fallback()
+    })
+    await page.goto('/greenhouse')
+    const tile = page.locator('[data-plant-grid] > button').first()
+    await expect(tile).toBeDisabled()
+    release()
+    await expect(tile).toBeEnabled()
+  })
+
   test('admin APIs shows the three stages', async ({ page }) => {
     await expectPage(page, '/admin/apis')
     for (const stage of ['Plant check', 'Species', 'Catalog fields']) {

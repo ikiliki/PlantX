@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
@@ -204,4 +204,17 @@ export const Empty = styled.p`
   margin: 4px 0 0;
   color: ${theme.colors.muted};
   font-size: 14px;
+`
+
+/** Placeholder cards inside the shelf grid; hidden for a guest under 560px. */
+export const SkeletonCards = styled.div<{ $guest?: boolean }>`
+  display: contents;
+
+  ${({ $guest }) =>
+    $guest &&
+    css`
+      @container (max-width: 559px) {
+        display: none;
+      }
+    `}
 `

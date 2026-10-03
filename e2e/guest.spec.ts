@@ -11,6 +11,27 @@ test.describe('guest', { tag: '@prod' }, () => {
     await expect(page.getByText('Log in to see your greenhouse')).toHaveCount(0)
   })
 
+  test('greenhouse header shows an empty greenhouse, not a placeholder', async ({ page }) => {
+    await expectPage(page, '/greenhouse')
+    const header = page.getByRole('complementary', { name: /greenhouse level/i })
+    await expect(header.getByText(/level 1/i)).toBeVisible()
+    await expect(header.getByText(/0 plants/i)).toBeVisible()
+  })
+
+  test('Add tile is the same size as the cards next to it; phones show no placeholder cards', async ({ page }, testInfo) => {
+    await expectPage(page, '/greenhouse')
+    const tile = page.getByRole('button', { name: /try adding a plant/i }).first()
+    // Placeholder cards sit in their own wrapper inside the grid; the add tile is the grid's button.
+    const placeholders = page.locator('[data-plant-grid] > div > [aria-hidden="true"]')
+    if (testInfo.project.name === 'phone') {
+      await expect(placeholders.first()).toBeHidden()
+      return
+    }
+    const tileBox = await tile.boundingBox()
+    const cardBox = await placeholders.first().boundingBox()
+    expect(tileBox && cardBox && Math.abs(tileBox.height - cardBox.height)).toBeLessThanOrEqual(2)
+  })
+
   test('Tasks "Try adding a plant" opens Add Plant on the greenhouse', async ({ page }) => {
     await expectPage(page, '/tasks')
     await page.getByRole('button', { name: 'Try adding a plant' }).click()

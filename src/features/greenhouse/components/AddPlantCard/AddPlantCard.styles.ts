@@ -32,7 +32,7 @@ export const Root = styled.button<{ $hero?: boolean }>`
   cursor: pointer;
   overflow: hidden;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: ${theme.colors.moss};
     box-shadow: ${theme.shadow.lift};
   }
@@ -48,8 +48,8 @@ export const Root = styled.button<{ $hero?: boolean }>`
       gap: 0;
       padding: 0;
 
-      &:hover,
-      &:focus-visible {
+      &:hover:not(:disabled),
+      &:focus-visible:not(:disabled) {
         z-index: 1;
         border-color: ${theme.colors.moss};
         transform: scale(1.04);
@@ -60,6 +60,15 @@ export const Root = styled.button<{ $hero?: boolean }>`
         transform: scale(0.98);
       }
 
+      /* Still loading: visible, but not clickable and not animated. */
+      &:disabled {
+        cursor: default;
+        opacity: 0.55;
+        transform: none;
+        box-shadow: none;
+        border-color: ${theme.colors.border};
+      }
+
       @media (prefers-reduced-motion: reduce) {
         &:hover,
         &:focus-visible,
@@ -68,13 +77,6 @@ export const Root = styled.button<{ $hero?: boolean }>`
         }
       }
 
-      @container (max-width: 559px) {
-        align-self: start;
-        width: 100%;
-        aspect-ratio: 1;
-        grid-template-rows: 1fr;
-        padding: 8px;
-      }
     `}
 
   ${({ $hero }) =>
@@ -118,11 +120,6 @@ export const Stage = styled.span`
   aspect-ratio: 1;
   min-width: 0;
 
-  @container (max-width: 559px) {
-    aspect-ratio: auto;
-    height: 100%;
-    padding-bottom: 36px;
-  }
 `
 
 export const Copy = styled.span`
@@ -154,17 +151,14 @@ export const Copy = styled.span`
     -webkit-line-clamp: 2;
   }
 
+  /* Phone: a square stage and one label row, the same shape as a plant card with its name. */
   @container (max-width: 559px) {
-    position: absolute;
-    inset-inline: 8px;
-    bottom: 8px;
-    width: auto;
-    padding: 0;
+    padding: 8px 10px 10px;
     gap: 0;
 
     strong {
       font-size: 12px;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
     }
 
     > span {
