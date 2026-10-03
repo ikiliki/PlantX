@@ -78,8 +78,12 @@ export function identifyFacts(
   const category = catalog.categories.find((item) => item.id === draft.categoryId)
   const sub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
   const common = diagnosis.commonNames[0] || diagnosis.label
+  // The species step did not answer: the name came from the catalog-fields step, so don't call it the species.
+  const speciesFailed = diagnosis.steps?.some((step) => step.id === 'species' && !step.ok) ?? false
   const facts: (AiScanFact | null)[] = [
-    common ? { id: 'common', label: t.addPlant.factSpecies, value: common } : null,
+    common
+      ? { id: 'common', label: speciesFailed ? t.addPlant.factName : t.addPlant.factSpecies, value: common }
+      : null,
     diagnosis.scientificName && diagnosis.scientificName !== common
       ? { id: 'scientific', label: t.addPlant.factScientific, value: diagnosis.scientificName }
       : null,
