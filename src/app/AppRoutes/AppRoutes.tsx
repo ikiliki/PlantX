@@ -4,6 +4,7 @@ import { HoldNotice } from '../../components/HoldNotice/HoldNotice'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { NotLaunched } from '../../components/NotLaunched/NotLaunched'
 import { AdminGate } from '../../features/admin/components/AdminGate/AdminGate'
+import { siteRole } from '../../lib/siteUrls'
 import { useStore } from '../../mock/store'
 import { admitsWhenClosed } from '../../theme/operator'
 import { AppShell } from '../AppShell/AppShell'
@@ -87,7 +88,7 @@ export function AppRoutes() {
   }, [plantId, fromGreenhouse, background.pathname, background.search, background.hash, background.state, navigate])
 
   const closeOverlay = useCallback(() => {
-    const back = backRef.current ?? staticLocation('/')
+    const back = backRef.current ?? staticLocation('/greenhouse')
     navigate(
       { pathname: back.pathname, search: back.search, hash: back.hash },
       { replace: true, state: back.state },
@@ -97,7 +98,9 @@ export function AppRoutes() {
   return (
     <>
       <Routes location={overlay ? background : location}>
-          <Route path="/" element={<LandingPage />} />
+          {/* The app opens on the greenhouse. The marketing page is /landing, or the root of its own domain. */}
+          <Route path="/" element={siteRole() === 'landing' ? <LandingPage /> : <Navigate to="/greenhouse" replace />} />
+          <Route path="landing" element={<LandingPage />} />
           <Route path="stills" element={<LandingStillsPage />} />
           <Route path="not-launched" element={<NotLaunched />} />
         <Route element={<ProductShell />}>
@@ -130,7 +133,7 @@ export function AppRoutes() {
           <Route path="admin/requests" element={<RequestsPage />} />
           <Route path="admin/apis" element={<ApisPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/greenhouse" replace />} />
       </Routes>
       {plantId && fromGreenhouse && <PassportDialog plantId={plantId} onClose={closeOverlay} />}
       {sellerId && !sellerFull && <SellerDialog userId={sellerId} onClose={closeOverlay} />}

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { appHref } from '../../../../lib/siteUrls'
 import { landingShots } from '../../landingShots'
 import { DeviceFrame } from '../DeviceFrame/DeviceFrame'
 import {
@@ -26,12 +27,12 @@ export function LandingHero() {
         <Title>{t.landing.heroTitle}</Title>
         <Sub>{t.landing.heroSub}</Sub>
         <Actions>
-          <Primary to="/login?mode=signup">{t.landing.signUp}</Primary>
-          <Secondary to="/greenhouse">{t.landing.goToApp}</Secondary>
+          <Primary to={appHref('/login?mode=signup')}>{t.landing.signUp}</Primary>
+          <Secondary to={appHref('/greenhouse')}>{t.landing.goToApp}</Secondary>
         </Actions>
         <LoginLine>
           {t.landing.haveAccount}{' '}
-          <Link to="/login">{t.landing.logIn}</Link>
+          <Link to={appHref('/login')}>{t.landing.logIn}</Link>
         </LoginLine>
       </div>
       <Visual>

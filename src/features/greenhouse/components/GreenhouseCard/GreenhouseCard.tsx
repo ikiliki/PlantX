@@ -2,13 +2,14 @@ import { Link } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Icon } from '../../../../components/Icon/Icon'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { publicGrowerName } from '../../../profile/avatarIcons'
 import type { Plant, User } from '../../../../mock/types'
 import type { GreenhouseLevel } from '../../greenhouseLevel'
 import { LevelBadge } from '../LevelBadge/LevelBadge'
 import { VerifiedStamp } from '../VerifiedStamp/VerifiedStamp'
-import { Bio, CardLink, Copy, EmptyTile, LevelLine, Meta, Name, NameRow, PlantTile, Shelf } from './GreenhouseCard.styles'
+import { Bio, CardLink, CardShell, Copy, EmptyTile, LevelLine, Meta, Name, NameRow, PlantTile, Shelf } from './GreenhouseCard.styles'
 
 const SHELF = 3
 
@@ -23,6 +24,27 @@ export function greenhouseShelf(plants: Plant[], ownerId: string) {
     .filter((plant) => plant.ownerId === ownerId && (plant.status === 'owned' || plant.status === 'listed') && plant.photos[0])
     .slice(0, SHELF)
     .map((plant) => ({ id: plant.id, src: plant.photos[0] }))
+}
+
+/** The same row with a bare ring, bars and empty tiles. Not a link; no data. */
+export function GreenhouseCardSkeleton() {
+  return (
+    <CardShell aria-hidden $compact={false}>
+      <SkeletonBar width="48px" height={48} round />
+      <Copy $stamp={false}>
+        <SkeletonBar width="55%" height={16} />
+        <SkeletonBar width="40%" height={11} />
+        <SkeletonBar width="65%" height={11} />
+      </Copy>
+      <Shelf aria-hidden>
+        {Array.from({ length: SHELF }, (_, index) => (
+          <EmptyTile key={index} $compact={false}>
+            <Icon name="greenhouse" size={16} />
+          </EmptyTile>
+        ))}
+      </Shelf>
+    </CardShell>
+  )
 }
 
 /** A greenhouse row: name, then a shelf of up to three plants. */

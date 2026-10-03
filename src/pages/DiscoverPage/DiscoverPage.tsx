@@ -1,8 +1,10 @@
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
+import { GuestCurtain } from '../../components/GuestCurtain/GuestCurtain'
+import { GuestView } from '../../components/GuestView/GuestView'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { GreenhouseLure } from '../../features/discover/components/GreenhouseLure/GreenhouseLure'
 import { HomeMobileFloats } from '../../features/discover/components/HomeMobileFloats/HomeMobileFloats'
-import { FeedUpdate } from '../../features/feed/components/FeedUpdate/FeedUpdate'
+import { FeedUpdate, FeedUpdateSkeleton, SKELETON_FEED_KINDS } from '../../features/feed/components/FeedUpdate/FeedUpdate'
 import { MarketRail } from '../../features/feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../features/feed/components/RankRail/RankRail'
 import { TopGreenhouses } from '../../features/feed/components/TopGreenhouses/TopGreenhouses'
@@ -13,8 +15,9 @@ import { useHomeFeed } from '../../features/feed/useHomeFeed'
 import { InfiniteSentinel, useInfiniteList } from '../../components/InfiniteScroll/InfiniteScroll'
 import { Reveal } from '../../components/Reveal/Reveal'
 import { useI18n } from '../../i18n/I18nProvider'
-import { useServerSlices } from '../../mock/useServerSlices'
+import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { useStore } from '../../mock/store'
+import { forAudience } from '../../theme/audience'
 import { isFeatureEnabled } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
 import type { FeedUpdateKind, Todo } from '../../mock/types'
@@ -79,6 +82,8 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   const todos = ownerId ? db.todos.filter((todo) => todo.ownerId === ownerId) : []
   const plants = ownerId ? db.plants.filter((plant) => plant.ownerId === ownerId) : []
   const carePlant = careTodo ? plants.find((plant) => plant.id === careTodo.plantId) : undefined
+  const feedLoading = useSectionFetch(signedIn, ['updates'])
+  const skeletonFeed = SKELETON_FEED_KINDS.map((kind, index) => <FeedUpdateSkeleton key={index} kind={kind} />)
   const openCare = (todo: Todo) => setCareTodo(todo)
 
   const todoRail = todoOn ? (
@@ -114,6 +119,58 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
     )
   }
 
+  const memberFeed = (
+    <FeatureGate placement="home.feed" title={t.nav.home}>
+      <PullToRefresh enabled={mobile} busy={refreshing} label={t.feed.refreshing} onRefresh={refresh} />
+      {mobile ? (
+        <IconToggle
+          floating
+          label={t.feed.filterLabel}
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { id: 'all', label: t.feed.filterAll, icon: 'home' },
+            { id: 'activities', label: t.feed.filterActivities, icon: 'greenhouse' },
+            { id: 'tasks', label: t.feed.filterTasks, icon: 'drop' },
+          ]}
+        />
+      ) : (
+        <FeedTools>
+          <FilterChips
+            label={t.feed.filterLabel}
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { id: 'all', label: t.feed.filterAll, count: allItems.length, icon: 'home' },
+              { id: 'activities', label: t.feed.filterActivities, count: activityItems.length, icon: 'greenhouse' },
+              { id: 'tasks', label: t.feed.filterTasks, count: taskItems.length, icon: 'drop' },
+            ]}
+          />
+          <RefreshButton label={t.feed.refresh} busy={refreshing} onClick={refresh} />
+        </FeedTools>
+      )}
+      {feedLoading ? (
+        <GuestCurtain>{skeletonFeed}</GuestCurtain>
+      ) : (
+        <>
+          {feed.total === 0 && <Empty>{empty}</Empty>}
+          {shown.map((item, index) => (
+            <Reveal key={item.id} index={index}>
+              <FeedUpdate update={item.update} />
+            </Reveal>
+          ))}
+          <InfiniteSentinel hasMore={feed.hasMore} onLoadMore={feed.loadMore} tick={feed.shown.length} />
+        </>
+      )}
+    </FeatureGate>
+  )
+
+  const guestFeed = (
+    <GuestCurtain card={<GuestView card title={t.guest.homeTitle} body={t.guest.homeBody} action={t.guest.logIn} />}>
+      {skeletonFeed}
+    </GuestCurtain>
+  )
+
   return (
     <Shell>
       <Layout>
@@ -123,46 +180,13 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
           </RailLure>
         </Rail>
         <Feed>
-          <FeatureGate placement="home.feed" title={t.nav.home}>
-            <PullToRefresh enabled={mobile} busy={refreshing} label={t.feed.refreshing} onRefresh={refresh} />
-            {mobile ? (
-              <IconToggle
-                floating
-                label={t.feed.filterLabel}
-                value={filter}
-                onChange={setFilter}
-                options={[
-                  { id: 'all', label: t.feed.filterAll, icon: 'home' },
-                  { id: 'activities', label: t.feed.filterActivities, icon: 'greenhouse' },
-                  { id: 'tasks', label: t.feed.filterTasks, icon: 'drop' },
-                ]}
-              />
-            ) : (
-              <FeedTools>
-                <FilterChips
-                  label={t.feed.filterLabel}
-                  value={filter}
-                  onChange={setFilter}
-                  options={[
-                    { id: 'all', label: t.feed.filterAll, count: allItems.length, icon: 'home' },
-                    { id: 'activities', label: t.feed.filterActivities, count: activityItems.length, icon: 'greenhouse' },
-                    { id: 'tasks', label: t.feed.filterTasks, count: taskItems.length, icon: 'drop' },
-                  ]}
-                />
-                <RefreshButton label={t.feed.refresh} busy={refreshing} onClick={refresh} />
-              </FeedTools>
-            )}
-            {feed.total === 0 && <Empty>{empty}</Empty>}
-            {shown.map((item, index) => (
-              <Reveal key={item.id} index={index}>
-                <FeedUpdate update={item.update} />
-              </Reveal>
-            ))}
-            <InfiniteSentinel hasMore={feed.hasMore} onLoadMore={feed.loadMore} tick={feed.shown.length} />
-          </FeatureGate>
+          {forAudience(signedIn, {
+            guest: guestFeed,
+            signedIn: memberFeed,
+          })}
         </Feed>
         <Rail>
-          <TopGreenhouses />
+          {signedIn ? <TopGreenhouses /> : null}
           <MarketRail />
           <RankRail />
           <div data-wiki-rail>

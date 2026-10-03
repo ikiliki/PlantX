@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../../i18n/I18nProvider'
+import { landingHref } from '../../lib/siteUrls'
 import { Back, Body, Card, Center, Mark, Orb, Stage, Title } from './HoldStage.styles'
 
 /** Shared full-screen public hold: landing is the only other public page. No app header. */
@@ -50,7 +51,7 @@ export function HoldStage({
           {t.release.backToLanding}
         </Back>
       ) : (
-        <Back as={Link} to="/">
+        <Back as={Link} to={landingHref()}>
           <span aria-hidden="true">←</span>
           {t.release.backToLanding}
         </Back>

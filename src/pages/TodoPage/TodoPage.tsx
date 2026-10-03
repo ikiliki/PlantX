@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { PageGate } from '../../components/PageGate/PageGate'
-import { AuthPanel } from '../../features/auth/components/AuthPanel/AuthPanel'
+import { GuestCurtain } from '../../components/GuestCurtain/GuestCurtain'
+import { GuestView } from '../../components/GuestView/GuestView'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { TodoCalendar } from '../../features/todo/components/TodoCalendar/TodoCalendar'
 import { needsFirstPlant } from '../../features/todo/todoSchedule'
@@ -10,7 +11,7 @@ import { forAudience } from '../../theme/audience'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
 import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
-import { GuestAuth, Heading, Page } from './TodoPage.styles'
+import { Heading, Page } from './TodoPage.styles'
 
 export function TodoPage() {
   useServerSlices(['users', 'plants', 'todos', 'updates'])
@@ -83,14 +84,35 @@ export function TodoPage() {
         {forAudience(signedIn, {
           guest: (
             <Page>
-              <GuestAuth>
-                <AuthPanel
-                  reason="buy"
-                  dialog
-                  titleId="todo-auth-title"
-                  onSuccess={() => navigate('/tasks', { replace: true })}
+              <Heading>
+                <h1>{t.todo.title}</h1>
+              </Heading>
+              {/* The real calendar with no tasks: nothing is fetched for a guest. */}
+              <GuestCurtain
+                card={
+                  <GuestView
+                    card
+                    title={t.guest.tasksTitle}
+                    body={t.guest.tasksBody}
+                    action={t.guest.logIn}
+                    secondary={{ label: t.guest.tryAddPlant, onClick: () => setAdding(true) }}
+                  />
+                }
+              >
+                <TodoCalendar
+                  year={year}
+                  month={month}
+                  todos={[]}
+                  plants={[]}
+                  firstPlant={false}
+                  showFilters
+                  onAddFirstPlant={() => undefined}
+                  onMonthChange={() => undefined}
+                  onComplete={() => undefined}
+                  onPickFirstWater={() => undefined}
                 />
-              </GuestAuth>
+              </GuestCurtain>
+              {adding ? <AddPlantDialog onClose={() => setAdding(false)} /> : null}
             </Page>
           ),
           signedIn: board,

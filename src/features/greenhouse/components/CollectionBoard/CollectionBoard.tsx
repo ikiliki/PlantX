@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { FilterChips } from '../../../../components/FilterChips/FilterChips'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { ActivityThread, type ActivityEntry } from '../ActivityThread/ActivityThread'
 import { AddPlantCard } from '../AddPlantCard/AddPlantCard'
-import { CollectionGrid, GreenhousePlantCard } from '../GreenhousePlantCard/GreenhousePlantCard'
+import { CollectionGrid, GreenhousePlantCard, GreenhousePlantCardSkeleton } from '../GreenhousePlantCard/GreenhousePlantCard'
 import { TodoCareDialog } from '../../../todo/components/TodoCareDialog/TodoCareDialog'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { useI18n } from '../../../../i18n/I18nProvider'
@@ -27,6 +27,7 @@ import {
   Count,
   Empty,
   Growing,
+  PhoneRail,
   Rail,
   Shelf,
   ShelfFrame,
@@ -38,6 +39,9 @@ export type GreenhouseFilter = 'all' | 'needs' | 'upcoming' | 'ai' | 'listed' | 
 
 /** Two rows × four columns for each care category strip. */
 const CARE_PAGE = 8
+
+/** Placeholder cards next to the Add tile: two full rows on a wide shelf. */
+const SKELETON_CARDS = 7
 
 export function greenhouseFilter(value: string | null): GreenhouseFilter {
   if (value === 'listed' || value === 'sold' || value === 'needs' || value === 'upcoming' || value === 'ai') return value
@@ -59,7 +63,16 @@ export function CollectionBoard({
   onAdd,
   compact,
   freshId,
+  skeleton,
+  rail,
 }: {
+  /**
+   * No data on the shelf: the Add tile, then placeholder cards. `loading` while a member's plants
+   * arrive; `guest` blurs them (nothing is fetched for a guest).
+   */
+  skeleton?: 'loading' | 'guest'
+  /** Replaces the activity thread (the guest's log-in card). On a phone it sits under the Add tile. */
+  rail?: ReactNode
   plants: Plant[]
   sold: Plant[]
   activity: ActivityEntry[]
@@ -233,7 +246,17 @@ export function CollectionBoard({
       />
     ) : null
 
-  const shelf = (
+  const shelf = skeleton ? (
+    <Growing>
+      <CollectionGrid data-plant-grid>
+        <AddPlantCard onClick={onAdd} label={skeleton === 'guest' ? t.guest.tryAddPlant : undefined} />
+        {rail ? <PhoneRail>{rail}</PhoneRail> : null}
+        {Array.from({ length: SKELETON_CARDS }, (_, index) => (
+          <GreenhousePlantCardSkeleton key={index} blurred={skeleton === 'guest'} />
+        ))}
+      </CollectionGrid>
+    </Growing>
+  ) : (
     <Growing>
       {!compact && living.length > 0 && !empty ? (
         <Toolbar>
@@ -337,9 +360,7 @@ export function CollectionBoard({
         <Shelf ref={shelfRef}>{shelf}</Shelf>
         <ShelfMore $on={moreBelow} aria-hidden />
       </ShelfFrame>
-      <Rail ref={railRef}>
-        <ActivityThread activity={activity} height={activityHeight} />
-      </Rail>
+      <Rail ref={railRef}>{rail ?? <ActivityThread activity={activity} height={activityHeight} />}</Rail>
       {careDialog}
     </Board>
   )

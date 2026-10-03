@@ -1,5 +1,6 @@
 import { OTHER_CATEGORY_ID } from '../../plantClass'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isPlacementEnabled, isPlacementReady } from '../../../../theme/release'
@@ -57,6 +58,24 @@ function formatCareDay(iso: string | null, locale: string) {
     day: 'numeric',
     timeZone: 'UTC',
   })
+}
+
+/** Same shelf card with an empty photo and bars: loading for a member, the guest's blurred shelf. */
+export function GreenhousePlantCardSkeleton({ blurred = false }: { blurred?: boolean }) {
+  return (
+    <Root aria-hidden $skeleton $blurred={blurred}>
+      <Photo />
+      <Details>
+        <NameRow>
+          <SkeletonBar width="24px" height={24} round />
+          <SkeletonBar width="60%" height={16} />
+        </NameRow>
+        <Tags>
+          <SkeletonBar width="72px" height={18} />
+        </Tags>
+      </Details>
+    </Root>
+  )
 }
 
 /** Shelf card. Care filters show name + action + date; the whole card opens the care popup. */

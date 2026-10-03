@@ -10,12 +10,13 @@ import { greenhouseLevel, type GreenhouseLevel } from './greenhouseLevel'
  * grower's own entry always comes from local data, so it moves the moment they add a plant.
  */
 export function useGreenhouseLevels(): Record<string, GreenhouseLevel> {
-  const { db, currentUser } = useStore()
+  const { db, currentUser, signedIn } = useStore()
   const mock = clientEnv() === 'mock'
   const [remote, setRemote] = useState<Record<string, GreenhouseLevel>>({})
 
+  // Levels are members-only on the server.
   useEffect(() => {
-    if (mock) return
+    if (mock || !signedIn) return
     let cancelled = false
     void fetchGreenhouseLevels().then((res) => {
       if (!cancelled && res) setRemote(res.levels)
@@ -23,7 +24,7 @@ export function useGreenhouseLevels(): Record<string, GreenhouseLevel> {
     return () => {
       cancelled = true
     }
-  }, [mock])
+  }, [mock, signedIn])
 
   return useMemo(() => {
     if (mock) {

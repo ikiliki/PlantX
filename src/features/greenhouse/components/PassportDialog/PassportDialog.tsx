@@ -1,10 +1,13 @@
 import { useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { useStore } from '../../../../mock/store'
 import type { TodoSubcategory } from '../../../../mock/types'
+import { GuestView } from '../../../../components/GuestView/GuestView'
 import { SheetGrip, useSheetDrag } from '../../../../components/SheetGrip/SheetGrip'
+import { forAudience } from '../../../../theme/audience'
 import { PlantPassport } from '../PlantPassport/PlantPassport'
-import { Backdrop, Close, CloseBar, Dialog } from './PassportDialog.styles'
+import { Backdrop, Close, CloseBar, Dialog, GuestPane } from './PassportDialog.styles'
 
 export function PassportDialog({
   plantId,
@@ -20,6 +23,7 @@ export function PassportDialog({
   careMark?: TodoSubcategory
 }) {
   const { t } = useI18n()
+  const { signedIn } = useStore()
   const dialogRef = useRef<HTMLDivElement>(null)
   const sheet = useSheetDrag(onClose)
 
@@ -70,10 +74,12 @@ export function PassportDialog({
           dialogRef.current = node
           sheet.bind(node)
         }}
+        $fit={!signedIn}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="plant-passport-title"
+        aria-labelledby={signedIn ? 'plant-passport-title' : undefined}
+        aria-label={signedIn ? undefined : t.guest.passportTitle}
         onClick={(event) => event.stopPropagation()}
       >
         <SheetGrip label={t.common.dragToClose} {...sheet.grip} />
@@ -82,7 +88,16 @@ export function PassportDialog({
             ×
           </Close>
         </CloseBar>
-        <PlantPassport key={plantId} plantId={plantId} embedded dialog initialTab={tab} activityKey={activityKey} careMark={careMark} />
+        {forAudience(signedIn, {
+          guest: (
+            <GuestPane>
+              <GuestView title={t.guest.passportTitle} body={t.guest.passportBody} action={t.guest.logIn} />
+            </GuestPane>
+          ),
+          signedIn: (
+            <PlantPassport key={plantId} plantId={plantId} embedded dialog initialTab={tab} activityKey={activityKey} careMark={careMark} />
+          ),
+        })}
       </Dialog>
     </Backdrop>,
     document.body,

@@ -33,6 +33,11 @@ export type LiveMeta = {
 
 export type ServerSlice = 'users' | 'plants' | 'updates' | 'todos' | 'catalog' | 'pending' | 'transactions'
 
+/** Everything except the catalog is members-only on the server; a guest never asks for it. */
+export function guestCanLoad(slice: ServerSlice) {
+  return slice === 'catalog'
+}
+
 export type LivePayload = {
   system: SystemConfig
   /** Present on the server. Storybook still sends the full mock arrays below. */
@@ -203,13 +208,6 @@ export async function postGoogleSessionResult(credential: string) {
   } finally {
     window.clearTimeout(timer)
   }
-}
-
-export function postRegister(body: { name: string; email: string; note?: string }) {
-  return request<{ pending: import('./types').PendingUser }>('/api/users/pending', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  })
 }
 
 export function fetchPendingUsers(status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending') {

@@ -1,11 +1,14 @@
 import { Hono } from 'hono'
 import type { Plant } from '../../../../src/mock/types.ts'
-import { requireUser } from '../../lib/session.ts'
+import { signedIn, type SignedInEnv } from '../../lib/session.ts'
 import { activityService } from '../activity/activity.service.ts'
 import { todoService } from '../todo/todo.service.ts'
 import { greenhouseService } from './greenhouse.service.ts'
 
-export const greenhouseRoutes = new Hono()
+/** Plants are members-only: guests see the catalog, not other growers' greenhouses. */
+export const greenhouseRoutes = new Hono<SignedInEnv>()
+
+greenhouseRoutes.use('*', signedIn)
 
 greenhouseRoutes.get('/', async (c) => c.json({ plants: await greenhouseService.list() }))
 
@@ -24,7 +27,7 @@ greenhouseRoutes.get('/:id/activities', async (c) => {
 })
 
 greenhouseRoutes.post('/', async (c) => {
-  const user = await requireUser(c)
+  const user = c.get('user')
   const { identifyRequestIds, identifyRequestId, ...plant } = (await c.req.json()) as Plant & {
     identifyRequestIds?: unknown
     identifyRequestId?: unknown

@@ -25,6 +25,12 @@ export const Tile = () => (
   </div>
 )
 
+export const Guest = () => (
+  <div style={{ maxWidth: 240 }}>
+    <AddPlantCard onClick={() => undefined} label="Try adding a plant" />
+  </div>
+)
+
 export const Phone = () => (
   <div style={{ width: 168, containerType: 'inline-size' }}>
     <AddPlantCard onClick={() => undefined} />

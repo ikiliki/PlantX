@@ -34,6 +34,7 @@ import { publishBlocker } from '../features/greenhouse/communityGrade'
 import { supportedLocales } from '../i18n/locales'
 import { defaultPlantPhoto } from './images'
 import type { ApiFailure } from '../lib/apiFailure'
+import { siteRole } from '../lib/siteUrls'
 import {
   fetchActivitiesOutcome,
   fetchCatalogOutcome,
@@ -54,7 +55,6 @@ import {
   patchAccount,
   postPlant,
   postTodoComplete,
-  postRegister,
   postRejectPending,
   postSession,
   putSystem,
@@ -186,12 +186,6 @@ interface StoreApi {
   loginWithGoogle: (credential: string) => Promise<{ ok: true } | { ok: false; reason: string }>
   /** Local UI only. Any admin SSO click signs in the operator. No server. */
   loginWithMockSso: () => Promise<{ ok: true } | { ok: false; reason: string }>
-  /** Landing / auth register — queues for admin approval. Does not sign in. */
-  requestAccess: (input: {
-    name: string
-    email: string
-    note?: string
-  }) => Promise<{ ok: true } | { ok: false; reason: 'invalid' | 'exists' | 'offline' }>
   approvePendingUser: (id: string) => Promise<boolean>
   rejectPendingUser: (id: string) => Promise<boolean>
   disableUser: (id: string) => Promise<boolean>
@@ -288,8 +282,10 @@ export function StoreProvider({
 }) {
   const example = source === 'example'
   const uiMocks = example || clientEnv() === 'mock'
+  /** The landing domain has no API; it only needs locale and static content. */
+  const offline = !uiMocks && siteRole() === 'landing'
   const [db, setDb] = useState<MockDb>(() => (uiMocks ? exampleClientDb() : loadDb()))
-  const [liveStatus, setLiveStatus] = useState<LiveStatus>(uiMocks ? 'up' : 'loading')
+  const [liveStatus, setLiveStatus] = useState<LiveStatus>(uiMocks || offline ? 'up' : 'loading')
   const [runtimeEnv, setRuntimeEnv] = useState<ClientEnv>(() => (uiMocks ? 'mock' : clientEnv()))
   const [runtimeEnvLabel, setRuntimeEnvLabel] = useState(() => clientEnvLabel(uiMocks ? 'mock' : clientEnv()))
   const [runtimeSeed, setRuntimeSeed] = useState<'empty' | 'demo'>(uiMocks ? 'demo' : 'empty')
@@ -542,7 +538,7 @@ export function StoreProvider({
   )
 
   useEffect(() => {
-    if (uiMocks) return
+    if (uiMocks || offline) return
     void retryLive()
     // Initial hydrate only — retryLive is exposed for the offline banner.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -554,7 +550,7 @@ export function StoreProvider({
     [db],
   )
   const signedIn = Boolean(currentUser && currentUser.role !== 'guest')
-  const liveWritable = !uiMocks && liveStatus === 'up'
+  const liveWritable = !uiMocks && !offline && liveStatus === 'up'
 
   const api: StoreApi = {
     db: visible,
@@ -714,40 +710,6 @@ export function StoreProvider({
       if (!result.ok) return { ok: false as const, reason: result.error }
       applyLive(result.live)
       setLiveStatus('up')
-      return { ok: true as const }
-    },
-    requestAccess: async ({ name, email, note }) => {
-      const trimmedName = name.trim()
-      const trimmedEmail = email.trim().toLowerCase()
-      if (!trimmedName || !trimmedEmail.includes('@')) return { ok: false, reason: 'invalid' as const }
-      if (db.users.some((u) => u.email?.toLowerCase() === trimmedEmail)) {
-        return { ok: false, reason: 'exists' as const }
-      }
-      if (db.pendingUsers.some((u) => u.status === 'pending' && u.email === trimmedEmail)) {
-        return { ok: false, reason: 'exists' as const }
-      }
-
-      if (liveWritable) {
-        const res = await postRegister({ name: trimmedName, email: trimmedEmail, note })
-        if (!res) return { ok: false, reason: 'offline' as const }
-        update((d) => {
-          d.pendingUsers = [res.pending, ...d.pendingUsers.filter((row) => row.id !== res.pending.id)]
-          return d
-        })
-        return { ok: true as const }
-      }
-
-      update((d) => {
-        d.pendingUsers.unshift({
-          id: `pu-${Date.now()}`,
-          name: trimmedName,
-          email: trimmedEmail,
-          note: note?.trim() || undefined,
-          createdAt: new Date().toISOString(),
-          status: 'pending',
-        })
-        return d
-      })
       return { ok: true as const }
     },
     approvePendingUser: async (id) => {

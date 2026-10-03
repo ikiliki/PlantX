@@ -1,5 +1,6 @@
 import styled, { css, keyframes } from 'styled-components'
 import { Link } from 'react-router-dom'
+import { blurred } from '../../../../components/Skeleton/Skeleton'
 import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
@@ -15,7 +16,13 @@ const livingPulse = keyframes`
   50% { box-shadow: 0 0 0 7px rgba(207, 234, 120, 0); }
 `
 
-export const Root = styled.article<{ $fresh?: boolean; $care?: boolean; $living?: boolean }>`
+export const Root = styled.article<{
+  $fresh?: boolean
+  $care?: boolean
+  $living?: boolean
+  $skeleton?: boolean
+  $blurred?: boolean
+}>`
   display: grid;
   grid-template-rows: auto 1fr;
   border-radius: ${theme.radii.lg};
@@ -25,6 +32,12 @@ export const Root = styled.article<{ $fresh?: boolean; $care?: boolean; $living?
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease};
+  ${({ $skeleton }) =>
+    $skeleton &&
+    css`
+      pointer-events: none;
+    `}
+  ${({ $blurred }) => $blurred && blurred}
   ${({ $care }) =>
     $care &&
     css`

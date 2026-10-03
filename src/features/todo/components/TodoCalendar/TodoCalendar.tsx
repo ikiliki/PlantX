@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { FilterChips } from '../../../../components/FilterChips/FilterChips'
-import { Icon } from '../../../../components/Icon/Icon'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { AddPlantCard } from '../../../greenhouse/components/AddPlantCard/AddPlantCard'
@@ -14,7 +13,6 @@ import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
 import {
   Board,
   Cell,
-  ChipRow,
   Day,
   KindRow,
   DaysChip,
@@ -129,11 +127,7 @@ export function TodoCalendar({
 
   const [plantFilter, setPlantFilter] = useState<string | 'all'>('all')
   const [kindFilter, setKindFilter] = useState<TodoSubcategory | 'all'>('all')
-  const [selectedDays, setSelectedDays] = useState<string[]>(() =>
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 899px)').matches ? [] : [todayIso()],
-  )
-  const [appliedDays, setAppliedDays] = useState<string[]>([])
-  const [pickerOpen, setPickerOpen] = useState(false)
+  const [selectedDays, setSelectedDays] = useState<string[]>(() => [todayIso()])
   const [drop, setDrop] = useState<{ day: string; kind: TodoSubcategory; key: number } | undefined>()
   const [passport, setPassport] = useState<{ plantId: string; careMark: TodoSubcategory } | undefined>()
   const [fill, setFill] = useState<Todo | null>(null)
@@ -167,13 +161,9 @@ export function TodoCalendar({
     if (!todo) return
     focusedRef.current = focusTodoId
     const day = todo.dueOn ?? todayIso()
-    if (mobile) {
-      setAppliedDays([day])
-      return
-    }
     setPlantFilter(todo.plantId)
     setSelectedDays([day])
-  }, [focusTodoId, todos, mobile])
+  }, [focusTodoId, todos])
 
   useEffect(() => {
     return () => {
@@ -278,23 +268,7 @@ export function TodoCalendar({
           })
         : t.todo.selectedDays.replace('{n}', String(selectedDays.length))
 
-  const mobileTodos = filtered
-    .filter((todo) => appliedDays.length === 0 || appliedDays.includes(todo.dueOn ?? today))
-    .sort((a, b) => (a.dueOn ?? '').localeCompare(b.dueOn ?? '') || a.subcategory.localeCompare(b.subcategory))
-  const shownTodos = mobile ? mobileTodos : selectedTodos
-  const taskMarks = new Set(open.map((todo) => todo.dueOn ?? today))
-  const chipLabel =
-    appliedDays.length === 0
-      ? t.todo.calendarChip
-      : appliedDays.length === 1
-        ? new Date(`${appliedDays[0]}T12:00:00.000Z`).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            timeZone: 'UTC',
-          })
-        : t.todo.selectedDays.replace('{n}', String(appliedDays.length))
-
+  const shownTodos = selectedTodos
   function toggleDay(day: string) {
     setSelectedDays((prev) => (prev.includes(day) ? prev.filter((item) => item !== day) : [...prev, day].sort()))
   }
@@ -329,63 +303,53 @@ export function TodoCalendar({
     ...kinds.map((kind) => ({ id: kind, label: kindLabel(kind, t.todo), iconNode: <TodoKindIcon kind={kind} size={14} /> })),
   ]
 
+  const toolbar =
+    !firstPlant && showFilters ? (
+      <Toolbar>
+        {mobile ? (
+          <KindRow role="radiogroup" aria-label={t.todo.filterKinds}>
+            {kindOptions.map((option) => (
+              <DaysChip
+                key={option.id}
+                type="button"
+                role="radio"
+                $on={kindFilter === option.id}
+                aria-checked={kindFilter === option.id}
+                onClick={() => setKindFilter(option.id)}
+              >
+                {'iconNode' in option ? option.iconNode : null}
+                {option.label}
+              </DaysChip>
+            ))}
+          </KindRow>
+        ) : (
+          <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
+        )}
+        <FilterSelect
+          aria-label={t.todo.filterPlants}
+          value={plantFilter}
+          onChange={(event) => {
+            const value = event.target.value
+            setPlantFilter(value === 'all' ? 'all' : value)
+          }}
+        >
+          <option value="all">{t.todo.filterAllPlants}</option>
+          {living.map((plant) => (
+            <option key={plant.id} value={plant.id}>
+              {tr(plant.title, plant.titleHe)}
+            </option>
+          ))}
+        </FilterSelect>
+      </Toolbar>
+    ) : null
+
   return (
     <Root>
-      {!firstPlant && showFilters ? (
-        <Toolbar>
-          {mobile ? (
-            <ChipRow>
-              <DaysChip
-                type="button"
-                $on={appliedDays.length > 0}
-                aria-pressed={appliedDays.length > 0}
-                aria-haspopup="dialog"
-                aria-expanded={pickerOpen}
-                onClick={() => setPickerOpen(true)}
-              >
-                <Icon name="calendar" size={14} />
-                {chipLabel}
-              </DaysChip>
-              <KindRow role="radiogroup" aria-label={t.todo.filterKinds}>
-                {kindOptions.map((option) => (
-                  <DaysChip
-                    key={option.id}
-                    type="button"
-                    role="radio"
-                    $on={kindFilter === option.id}
-                    aria-checked={kindFilter === option.id}
-                    onClick={() => setKindFilter(option.id)}
-                  >
-                    {'iconNode' in option ? option.iconNode : null}
-                    {option.label}
-                  </DaysChip>
-                ))}
-              </KindRow>
-            </ChipRow>
-          ) : (
-            <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
-          )}
-          <FilterSelect
-            aria-label={t.todo.filterPlants}
-            value={plantFilter}
-            onChange={(event) => {
-              const value = event.target.value
-              setPlantFilter(value === 'all' ? 'all' : value)
-            }}
-          >
-            <option value="all">{t.todo.filterAllPlants}</option>
-            {living.map((plant) => (
-              <option key={plant.id} value={plant.id}>
-                {tr(plant.title, plant.titleHe)}
-              </option>
-            ))}
-          </FilterSelect>
-        </Toolbar>
-      ) : null}
+      {mobile ? null : toolbar}
       {mobile && firstPlant ? <AddPlantCard hero onClick={() => onAddFirstPlant?.()} /> : null}
-      {mobile ? null : (
+      {mobile && firstPlant ? null : (
       <Board>
-        {firstPlant ? (
+        {firstPlant && !mobile ? (
           <AddPlantCard hero onClick={() => onAddFirstPlant?.()} />
         ) : null}
 
@@ -496,6 +460,7 @@ export function TodoCalendar({
           <h3>{mobile ? t.todo.title : t.todo.dayTitle}</h3>
           {mobile ? null : <p>{selectedLabel}</p>}
         </DayPanelHead>
+        {mobile ? toolbar : null}
         {shownTodos.length === 0 ? (
           <EmptyDay>{mobile ? t.todo.emptyTasks : t.todo.emptyDay}</EmptyDay>
         ) : (
@@ -517,7 +482,6 @@ export function TodoCalendar({
                           const date = new Date(`${today}T12:00:00.000Z`)
                           setFillYear(date.getUTCFullYear())
                           setFillMonth(date.getUTCMonth())
-                          setPickerOpen(false)
                           setFill(todo)
                         }
                       : undefined
@@ -529,22 +493,6 @@ export function TodoCalendar({
         )}
       </DayPanel>
       )}
-
-      {pickerOpen ? (
-        <TodoDayPicker
-          year={year}
-          month={month}
-          today={today}
-          selected={appliedDays}
-          marks={taskMarks}
-          onMonthChange={onMonthChange}
-          onOk={(days) => {
-            setAppliedDays(days)
-            setPickerOpen(false)
-          }}
-          onClose={() => setPickerOpen(false)}
-        />
-      ) : null}
 
       {fill ? (
         <TodoDayPicker

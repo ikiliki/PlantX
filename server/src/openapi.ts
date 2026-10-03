@@ -134,14 +134,6 @@ export const openApiDocument = {
           userId: { type: 'string', nullable: true, description: 'Persona id, or null to sign out' },
         },
       },
-      RegisterBody: {
-        type: 'object',
-        properties: {
-          name: { type: 'string' },
-          email: { type: 'string', format: 'email' },
-        },
-        required: ['name', 'email'],
-      },
       IdentifyTried: {
         type: 'object',
         properties: {
@@ -793,30 +785,6 @@ export const openApiDocument = {
           },
           '404': {
             description: 'Unknown user',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
-          },
-        },
-      },
-    },
-    '/api/session/register': {
-      post: {
-        tags: ['session'],
-        summary: 'Register a grower',
-        requestBody: {
-          required: true,
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/RegisterBody' } } },
-        },
-        responses: {
-          '200': {
-            description: 'Created and signed in',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Live' } } },
-          },
-          '400': {
-            description: 'Invalid body',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
-          },
-          '409': {
-            description: 'Email already exists',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
           },
         },

@@ -1,31 +1,17 @@
 import { Hono } from 'hono'
-import { requireAdmin, userFromSession } from '../../lib/session.ts'
+import { requireAdmin, signedIn } from '../../lib/session.ts'
 import { usersService } from './users.service.ts'
 
 export const usersRoutes = new Hono()
 
-/** Public: landing / auth register → pending queue. */
-usersRoutes.post('/pending', async (c) => {
-  const body = (await c.req.json()) as { name?: string; email?: string; note?: string }
-  const pending = await usersService.requestAccess({
-    name: body.name ?? '',
-    email: body.email ?? '',
-    note: body.note,
-  })
-  return c.json({ pending }, 201)
-})
+/** Members: every greenhouse's level, for the Global directory. Counts and XP only. */
+usersRoutes.get('/levels', signedIn, async (c) => c.json({ levels: await usersService.levels() }))
 
-/** Public: every greenhouse's level, for the Global directory. Counts and XP only. */
-usersRoutes.get('/levels', async (c) => c.json({ levels: await usersService.levels() }))
+/** Members' greenhouses. Other people do not receive the admin. The admin receives everyone, including himself. */
+usersRoutes.get('/directory', signedIn, async (c) => c.json({ users: await usersService.directory(c.get('user')) }))
 
-/** Public greenhouses. Other people do not receive the admin. The admin receives everyone, including himself. */
-usersRoutes.get('/directory', async (c) => {
-  const viewer = await userFromSession(c)
-  return c.json({ users: await usersService.directory(viewer) })
-})
-
-/** Public: a greenhouse's level for its public page. Counts and XP only. */
-usersRoutes.get('/:id/level', async (c) => c.json({ level: await usersService.level(c.req.param('id')) }))
+/** Members: a greenhouse's level for its public page. Counts and XP only. */
+usersRoutes.get('/:id/level', signedIn, async (c) => c.json({ level: await usersService.level(c.req.param('id')) }))
 
 usersRoutes.get('/pending', async (c) => {
   await requireAdmin(c)

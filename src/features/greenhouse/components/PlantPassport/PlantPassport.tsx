@@ -1,6 +1,6 @@
 import { OTHER_CATEGORY_ID } from '../../plantClass'
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
@@ -20,6 +20,9 @@ import { speciesHref } from '../../../species/components/GuideLink/GuideLink'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { publicGrowerName } from '../../../profile/avatarIcons'
 import { useStore } from '../../../../mock/store'
+import { LevelBadge } from '../LevelBadge/LevelBadge'
+import { greenhouseHref } from '../GreenhouseCard/GreenhouseCard'
+import { useGreenhouseLevels } from '../../useGreenhouseLevels'
 import { isPlacementEnabled } from '../../../../theme/release'
 import type { StageBand, TodoSubcategory } from '../../../../mock/types'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
@@ -35,7 +38,9 @@ import {
   ActionRow,
   ActivityBody,
   Aside,
-  AsideLabel,
+  GreenhouseLabel,
+  GreenhouseLink,
+  OwnerLabel,
   AsideStat,
   AsideStats,
   Board,
@@ -61,7 +66,6 @@ import {
   Rating,
   SectionTitle,
   ShowMore,
-  StatSpacer,
   CategoryName,
   SubName,
   Tab,
@@ -113,11 +117,50 @@ export function PlantPassport({
   const { t, tr, formatMoney, locale } = useI18n()
   const plant = db.plants.find((item) => item.id === plantId)
   const [tab, setTab] = useState<TabId>(initialTab)
+  // Extra fields show in full on the wide layout; they fold behind Show more only when they would crowd the owner rows.
   const [customsOpen, setCustomsOpen] = useState(false)
+  const [probe, setProbe] = useState(true)
+  const [crowded, setCrowded] = useState(false)
+  const asideRef = useRef<HTMLElement>(null)
   const listing = db.listings.find((item) => item.plantId === plantId && item.status === 'active')
   const [toast, setToast] = useState('')
   const [photoIndex, setPhotoIndex] = useState(0)
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false)
+  const levels = useGreenhouseLevels()
+  const { pathname } = useLocation()
+  // As a popup, the owner and greenhouse rows only make sense from Home and the market; elsewhere the grower is already known.
+  const showOwner = !dialog || pathname === '/home' || pathname.startsWith('/market')
+
+  const hasLevel = Boolean(levels[db.plants.find((item) => item.id === plantId)?.ownerId ?? ''])
+  // Measure again whenever the plant or the board size changes: show every field, then fold if they overflow.
+  useEffect(() => {
+    setCrowded(false)
+    setProbe(true)
+  }, [plantId, showOwner, hasLevel])
+
+  useEffect(() => {
+    const board = asideRef.current?.parentElement
+    if (!board) return
+    let size = `${board.clientWidth}x${board.clientHeight}`
+    const observer = new ResizeObserver(() => {
+      const next = `${board.clientWidth}x${board.clientHeight}`
+      if (next === size) return
+      size = next
+      setCrowded(false)
+      setProbe(true)
+    })
+    observer.observe(board)
+    return () => observer.disconnect()
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!probe) return
+    const aside = asideRef.current
+    if (!aside) return
+    const stacked = (aside.parentElement?.clientWidth ?? 0) <= 760
+    setCrowded(stacked || aside.scrollHeight > aside.clientHeight + 1)
+    setProbe(false)
+  }, [probe])
 
   useEffect(() => {
     setPhotoIndex(0)
@@ -254,7 +297,7 @@ export function PlantPassport({
         onViewerOpenChange={setPhotoViewerOpen}
       />
 
-      <Aside $embedded={embedded} $dialog={dialog}>
+      <Aside ref={asideRef} $embedded={embedded} $dialog={dialog}>
         <IdentityHead>
           <PhotoIconButton
             type="button"
@@ -315,8 +358,6 @@ export function PlantPassport({
           )}
           {toast && activeTab !== 'market' && <Toast role="status">{toast}</Toast>}
 
-        <StatSpacer />
-
         <AsideStats>
           {gradeLetter ? (
             <AsideStat title={gradeLabel} data-grade-source={communityGrade ? 'community' : 'catalog'}>
@@ -353,7 +394,7 @@ export function PlantPassport({
             <dt>{t.market.quantity}</dt>
             <dd>×{plant.quantity}</dd>
           </AsideStat>
-          {customsOpen &&
+          {(customsOpen || !crowded) &&
             customFields.map((field) => (
               <AsideStat key={field.id}>
                 <dt>{field.label}</dt>
@@ -361,15 +402,15 @@ export function PlantPassport({
               </AsideStat>
             ))}
         </AsideStats>
-        {customFields.length > 0 && (
+        {customFields.length > 0 && crowded && (
           <ShowMore type="button" onClick={() => setCustomsOpen((open) => !open)}>
             {customsOpen ? t.passport.showLess : t.passport.showMore}
           </ShowMore>
         )}
 
-        {owner && (
+        {owner && showOwner && (
           <>
-            <AsideLabel>{t.passport.owner}</AsideLabel>
+            <OwnerLabel>{t.passport.owner}</OwnerLabel>
             <OwnerLink to={`/sellers/${owner.id}`} aria-label={`${t.passport.owner}: ${ownerName}`}>
               <Avatar name={ownerName} color={owner.avatarColor} icon={owner.avatarIcon} size={38} />
               <OwnerMeta>
@@ -377,6 +418,31 @@ export function PlantPassport({
                 <Rating>★ {owner.rating}</Rating>
               </OwnerMeta>
             </OwnerLink>
+            {levels[owner.id] ? (
+              <GreenhouseLabel>{t.nav.greenhouse}</GreenhouseLabel>
+            ) : null}
+            {levels[owner.id] ? (
+              <GreenhouseLink to={greenhouseHref(owner.id)} aria-label={`${t.greenhouse.levelLabel}: ${ownerName}`}>
+                <LevelBadge
+                  level={levels[owner.id].level}
+                  progress={levels[owner.id].progress}
+                  owner={{ name: ownerName, color: owner.avatarColor, icon: owner.avatarIcon }}
+                  size="sm"
+                />
+                <OwnerMeta>
+                  <OwnerName>
+                    {t.greenhouse.levelN.replace('{n}', String(levels[owner.id].level))} ·{' '}
+                    {t.greenhouse[`levelRank${levels[owner.id].rank}` as keyof typeof t.greenhouse] as string}
+                  </OwnerName>
+                  <Rating>
+                    {t.greenhouse.levelXp.replace('{xp}', String(levels[owner.id].xp))} ·{' '}
+                    {levels[owner.id].plants === 1
+                      ? t.greenhouse.levelPlantsOne
+                      : t.greenhouse.levelPlants.replace('{n}', String(levels[owner.id].plants))}
+                  </Rating>
+                </OwnerMeta>
+              </GreenhouseLink>
+            ) : null}
           </>
         )}
       </Aside>

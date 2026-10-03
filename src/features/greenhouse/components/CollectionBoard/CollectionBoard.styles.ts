@@ -129,6 +129,17 @@ export const Rail = styled.aside`
   }
 `
 
+/** The rail's replacement where the rail is hidden (the phone shell): a full row under the Add tile. */
+export const PhoneRail = styled.div`
+  display: none;
+  grid-column: 1 / -1;
+  justify-items: center;
+
+  @media (max-width: calc(${theme.breakpoints.md} - 1px)) {
+    display: grid;
+  }
+`
+
 export const Growing = styled.section`
   display: grid;
   gap: 16px;

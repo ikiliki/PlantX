@@ -20,9 +20,3 @@ export const Heading = styled.header`
   clip: rect(0 0 0 0);
   white-space: nowrap;
 `
-
-export const GuestAuth = styled.div`
-  width: min(420px, 100%);
-  margin-inline: auto;
-  padding-block: 40px;
-`
