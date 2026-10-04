@@ -210,6 +210,15 @@ export const TaxonomyRow = styled.div`
   line-height: 1.35;
 `
 
+/** A taxonomy name and its AI stamp: the stamp stays beside the name when the row wraps. */
+export const TaxonomyItem = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+`
+
 export const CategoryName = styled.span`
   font-weight: 700;
   color: ${theme.colors.forest};

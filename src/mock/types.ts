@@ -228,7 +228,10 @@ export type IdentifyFieldMark = {
   aiValue?: string
 }
 
-export type IdentifyFieldMarks = Partial<Record<IdentifyFieldId, IdentifyFieldMark>>
+export type IdentifyFieldMarks = Partial<Record<IdentifyFieldId, IdentifyFieldMark>> & {
+  /** Catalog traits the AI filled (property id → mark), e.g. growth form or variegation. */
+  traits?: Record<string, IdentifyFieldMark>
+}
 
 export interface MarketClass {
   id: string

@@ -3,6 +3,7 @@ import type {
   Diagnosis,
   IdentifyFieldCheck,
   IdentifyFieldChecks,
+  IdentifyFieldMark,
   IdentifyFieldMarks,
   PhotoCheck,
   PlantClassDraft,
@@ -24,7 +25,12 @@ export type SavedClass = {
   quality?: string
   sizeBand?: string
   stage?: string
+  /** Catalog trait values (property id → option id), for per-trait AI provenance. */
+  traits?: Record<string, string>
 }
+
+/** Property ids that are class fields or the location, not traits the AI can fill. */
+const NOT_TRAITS = new Set(['health', 'size', 'stage', 'area'])
 
 /** One photo's identify answer. `requestId` is absent in UI-mock mode and for photos that were never sent. */
 export type PhotoScanResult = {
@@ -58,6 +64,7 @@ export function savedClassFromDraft(draft: PlantClassDraft, catalog: Catalog): S
     quality: draft.quality || undefined,
     sizeBand: draft.size || undefined,
     stage: draft.stage || undefined,
+    traits: draft.traits,
   }
 }
 
@@ -151,6 +158,13 @@ export function fieldMarksFor(saved: SavedClass, diagnosis: Diagnosis, catalog: 
     if (!check || check === 'manual') continue
     marks[key] = { check, aiValue: aiValues[key] }
   }
+  // Traits the AI filled: kept when the saved value is the AI's option, changed otherwise.
+  const traits: Record<string, IdentifyFieldMark> = {}
+  for (const [id, aiValue] of Object.entries(draft.traits ?? {})) {
+    if (!aiValue || NOT_TRAITS.has(id)) continue
+    traits[id] = { check: saved.traits?.[id] === aiValue ? 'kept' : 'changed', aiValue }
+  }
+  if (Object.keys(traits).length > 0) marks.traits = traits
   return marks
 }
 

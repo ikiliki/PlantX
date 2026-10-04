@@ -41,6 +41,7 @@ function savedClassOf(plant: Plant): SavedClass {
     quality: plant.quality,
     sizeBand: plant.sizeBand,
     stage: plant.stage,
+    traits: plant.traits,
   }
 }
 

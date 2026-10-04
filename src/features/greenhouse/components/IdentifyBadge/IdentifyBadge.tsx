@@ -2,11 +2,12 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import type { PlantIdentification } from '../../../../mock/types'
 import { Detail, EditedTag, Mark, Root, Row, Text } from './IdentifyBadge.styles'
 
-/** Any class field the owner changed away from the AI's answer. */
+/** Any class field or trait the owner changed away from the AI's answer. */
 export function wasHandEdited(identification?: PlantIdentification) {
   const fields = identification?.fields
   if (!fields) return false
-  return Object.values(fields).some((mark) => mark?.check === 'changed')
+  const { traits, ...classFields } = fields
+  return [...Object.values(classFields), ...Object.values(traits ?? {})].some((mark) => mark?.check === 'changed')
 }
 
 /**

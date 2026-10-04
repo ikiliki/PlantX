@@ -71,6 +71,7 @@ import {
   CategoryName,
   SubName,
   Tab,
+  TaxonomyItem,
   TaxonomyRow,
   TaxonomySep,
   TabBar,
@@ -289,11 +290,17 @@ export function PlantPassport({
         if (!propertyRelevant(db.catalog, property, catalogCategory.id, catalogSub?.id ?? '')) return []
         const raw = plantPropertyValue(plant, property.id)
         const option = raw ? property.options.find((item) => item.id === raw) : undefined
+        // A trait the AI filled carries its stamp; a changed one shows the AI's option in the tooltip.
+        const mark = plant.identification?.fields?.traits?.[property.id]
+        const aiOption =
+          mark?.check === 'changed' ? property.options.find((item) => item.id === mark.aiValue) : undefined
         return [
           {
             id: property.id,
             label: catalogName(property, locale),
             value: option ? optionLabel(option, locale) : raw || '—',
+            mark,
+            aiLabel: aiOption ? optionLabel(aiOption, locale) : mark?.aiValue,
           },
         ]
       })
@@ -396,35 +403,42 @@ export function PlantPassport({
             {(categoryLabel || subLabel) && (
               <TaxonomyRow>
                 <PlantCatalogMark plant={plant} size={24} />
-                {categoryLabel &&
-                  (species ? (
-                    <CategoryName as={Link} to={speciesHref(species.id)}>
-                      {categoryLabel}
-                    </CategoryName>
-                  ) : (
-                    <CategoryName>{categoryLabel}</CategoryName>
-                  ))}
-                {categoryLabel && categoryMark ? (
-                  <FieldStamp
-                    mark={categoryMark}
-                    aiLabel={
-                      categoryMark.check === 'changed'
-                        ? aiFieldLabel('category', categoryMark.aiValue, db.catalog, locale, stageLabels)
-                        : undefined
-                    }
-                  />
+                {categoryLabel ? (
+                  <TaxonomyItem>
+                    {species ? (
+                      <CategoryName as={Link} to={speciesHref(species.id)}>
+                        {categoryLabel}
+                      </CategoryName>
+                    ) : (
+                      <CategoryName>{categoryLabel}</CategoryName>
+                    )}
+                    {categoryMark ? (
+                      <FieldStamp
+                        mark={categoryMark}
+                        aiLabel={
+                          categoryMark.check === 'changed'
+                            ? aiFieldLabel('category', categoryMark.aiValue, db.catalog, locale, stageLabels)
+                            : undefined
+                        }
+                      />
+                    ) : null}
+                  </TaxonomyItem>
                 ) : null}
                 {categoryLabel && subLabel && <TaxonomySep aria-hidden>·</TaxonomySep>}
-                {subLabel && <SubName>{subLabel}</SubName>}
-                {subLabel && subMark ? (
-                  <FieldStamp
-                    mark={subMark}
-                    aiLabel={
-                      subMark.check === 'changed'
-                        ? aiFieldLabel('subcategory', subMark.aiValue, db.catalog, locale, stageLabels)
-                        : undefined
-                    }
-                  />
+                {subLabel ? (
+                  <TaxonomyItem>
+                    <SubName>{subLabel}</SubName>
+                    {subMark ? (
+                      <FieldStamp
+                        mark={subMark}
+                        aiLabel={
+                          subMark.check === 'changed'
+                            ? aiFieldLabel('subcategory', subMark.aiValue, db.catalog, locale, stageLabels)
+                            : undefined
+                        }
+                      />
+                    ) : null}
+                  </TaxonomyItem>
                 ) : null}
               </TaxonomyRow>
             )}
@@ -494,6 +508,7 @@ export function PlantPassport({
               <AsideStat key={field.id}>
                 <dt>{field.label}</dt>
                 <dd>{field.value}</dd>
+                {field.mark ? <FieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
               </AsideStat>
             ))}
         </AsideStats>
