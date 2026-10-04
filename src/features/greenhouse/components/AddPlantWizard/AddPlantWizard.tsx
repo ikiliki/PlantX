@@ -237,30 +237,27 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   }, [matched, locale, descriptionTouched])
 
   const setClass = (partial: Partial<PlantClassDraft>) => {
-    setDraft((current) => narrowDraft(catalog, { ...current, ...partial }))
+    setDraft((current) => narrowDraft(catalog, { ...current, ...partial }, { fillSingle: !withAi }))
   }
 
   const draftFromDiagnosis = (diagnosis: Diagnosis) => {
     const hasCategory = Boolean(diagnosis.draft.categoryId)
-    const next = narrowDraft(catalog, {
-      ...emptyClassDraft,
-      ...diagnosis.draft,
-      categoryId: hasCategory ? (diagnosis.draft.categoryId ?? OTHER_CATEGORY_ID) : OTHER_CATEGORY_ID,
-      // Subcategory is required. An answer with no variety gets Other, so size and stage are checked against it.
-      subcategoryId: hasCategory ? diagnosis.draft.subcategoryId || OTHER_SUBCATEGORY_ID : '',
-      traits: { ...diagnosis.draft.traits },
-    })
+    // Only what the AI answered is filled. Anything else stays empty and is flagged for the owner,
+    // so a value the AI never suggested is not presented (or stamped) as an AI answer.
+    const next = narrowDraft(
+      catalog,
+      {
+        ...emptyClassDraft,
+        ...diagnosis.draft,
+        categoryId: hasCategory ? (diagnosis.draft.categoryId ?? OTHER_CATEGORY_ID) : OTHER_CATEGORY_ID,
+        // Subcategory is required. An answer with no variety gets Other: that is the AI's suggestion.
+        subcategoryId: hasCategory ? diagnosis.draft.subcategoryId || OTHER_SUBCATEGORY_ID : '',
+        traits: { ...diagnosis.draft.traits },
+      },
+      { fillSingle: false },
+    )
     // A variety id the catalog no longer has can still narrow to empty: Other, not empty.
     if (!next.subcategoryId) next.subcategoryId = OTHER_SUBCATEGORY_ID
-    // Review needs a size and a stage. Use the answer when it has one, otherwise the first choice.
-    if (!next.size) {
-      const band = sizeChoices(catalog, next)[0]
-      if (band) next.size = band
-    }
-    if (!next.stage) {
-      const band = stageChoices(catalog, next)[0]
-      if (band) next.stage = band
-    }
     return next
   }
 

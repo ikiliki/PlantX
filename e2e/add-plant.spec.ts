@@ -38,6 +38,27 @@ test.describe('Add Plant', () => {
     await expect(dialog.getByText("AI couldn't fill these")).toHaveCount(0)
   })
 
+  test('size and stage the AI did not answer stay empty for the owner', async ({ page, identify }) => {
+    const pick = await catalogPick(page)
+    identify.answer(diagnosisFor(pick, { withTrait: true, withSizeStage: false }))
+    const dialog = await openAddPlant(page)
+    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await dialog.getByRole('button', { name: 'Continue with AI' }).click()
+
+    await expect(dialog.getByRole('navigation').getByRole('button', { name: /Specs, needs input/ })).toBeVisible({
+      timeout: 20_000,
+    })
+    await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeDisabled()
+    await dialog.getByRole('navigation').getByRole('button', { name: /Specs/ }).click()
+    for (const label of [/^size/i, /^stage/i]) {
+      const group = dialog.getByRole('group', { name: label })
+      await expect(group.getByRole('radio', { checked: true })).toHaveCount(0)
+      await group.getByRole('radio').first().click({ force: true })
+    }
+    await dialog.getByRole('navigation').getByRole('button', { name: /Review/ }).click()
+    await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeEnabled()
+  })
+
   test('a field AI missed is flagged and can be filled from Review', async ({ page, identify }) => {
     const pick = await catalogPick(page)
     const trait = pick.trait.name

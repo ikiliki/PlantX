@@ -71,6 +71,9 @@ export function savedClassFromDraft(draft: PlantClassDraft, catalog: Catalog): S
 /** Species id of a plant saved as Other: a plant the catalog does not know yet. */
 export const OTHER_SPECIES_ID = 'other'
 
+/** Subcategory a plant is saved under when its category has none that fits (stored as no subcategory). */
+export const OTHER_SUBCATEGORY_ID = 'other-sub'
+
 /** The AI recognized a plant but no catalog category fits it. */
 export function isNotInCatalogAnswer(diagnosis: Diagnosis | null | undefined) {
   return Boolean(diagnosis?.isPlant && !diagnosis.draft.categoryId)
@@ -115,21 +118,38 @@ function fieldCheck(suggested: string | undefined, saved: string | undefined): I
   return suggested === saved ? 'kept' : 'changed'
 }
 
+/** The AI's category: its catalog category, or Other when it recognized a plant the catalog lacks. */
+function aiCategoryOf(diagnosis: Diagnosis) {
+  return diagnosis.draft.categoryId || (isNotInCatalogAnswer(diagnosis) ? OTHER_SPECIES_ID : undefined)
+}
+
+/** The AI's subcategory: the one it named, or Other when it named a category but no subcategory. */
+function aiSubcategoryOf(diagnosis: Diagnosis) {
+  return diagnosis.draft.categoryId ? diagnosis.draft.subcategoryId || OTHER_SUBCATEGORY_ID : undefined
+}
+
 /** Per class field: did the owner keep the AI's value, change it, or fill it with no AI value? */
 export function fieldChecksFor(saved: SavedClass, diagnosis: Diagnosis, catalog: Catalog): IdentifyFieldChecks {
   const { draft } = diagnosis
   const category = catalog.categories.find((item) => item.id === draft.categoryId)
-  return {
-    category: draft.categoryId
-      ? category?.speciesId === saved.speciesId
+  const categoryCheck: IdentifyFieldCheck = draft.categoryId
+    ? category?.speciesId === saved.speciesId
+      ? 'kept'
+      : 'changed'
+    : isNotInCatalogAnswer(diagnosis)
+      ? saved.speciesId === OTHER_SPECIES_ID
         ? 'kept'
         : 'changed'
-      : isNotInCatalogAnswer(diagnosis)
-        ? saved.speciesId === OTHER_SPECIES_ID
-          ? 'kept'
-          : 'changed'
-        : 'manual',
-    subcategory: fieldCheck(draft.subcategoryId, saved.subcategoryId),
+      : 'manual'
+  const aiSub = aiSubcategoryOf(diagnosis)
+  return {
+    category: categoryCheck,
+    // Another category means another subcategory too, even when both read Other.
+    subcategory: !aiSub
+      ? 'manual'
+      : categoryCheck === 'changed'
+        ? 'changed'
+        : fieldCheck(aiSub, saved.subcategoryId || OTHER_SUBCATEGORY_ID),
     quality: fieldCheck(draft.quality, saved.quality),
     size: fieldCheck(draft.size, saved.sizeBand),
     stage: fieldCheck(draft.stage, saved.stage),
@@ -145,8 +165,8 @@ export function fieldMarksFor(saved: SavedClass, diagnosis: Diagnosis, catalog: 
   const checks = fieldChecksFor(saved, diagnosis, catalog)
   const { draft } = diagnosis
   const aiValues: Record<keyof IdentifyFieldChecks, string | undefined> = {
-    category: draft.categoryId || undefined,
-    subcategory: draft.subcategoryId || undefined,
+    category: aiCategoryOf(diagnosis),
+    subcategory: aiSubcategoryOf(diagnosis),
     quality: draft.quality || undefined,
     size: draft.size || undefined,
     stage: draft.stage || undefined,

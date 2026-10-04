@@ -1,4 +1,4 @@
-import { OTHER_CATEGORY_ID } from '../../plantClass'
+import { OTHER_CATEGORY_ID, OTHER_SUBCATEGORY_ID } from '../../plantClass'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { UNKNOWN_AREA } from '../../../../mock/locations'
@@ -107,8 +107,10 @@ function aiFieldLabel(
   catalog: ReturnType<typeof useStore>['db']['catalog'],
   locale: Parameters<typeof catalogName>[1],
   stageLabels: { mature: string; established: string; rooted: string; cutting: string },
+  otherLabel: string,
 ): string | undefined {
   if (!aiValue) return undefined
+  if (aiValue === OTHER_CATEGORY_ID || aiValue === OTHER_SUBCATEGORY_ID) return otherLabel
   if (fieldId === 'size') return aiValue
   if (fieldId === 'stage') return stageName(aiValue as StageBand, stageLabels) ?? aiValue
   if (fieldId === 'subcategory') {
@@ -417,7 +419,7 @@ export function PlantPassport({
                         mark={categoryMark}
                         aiLabel={
                           categoryMark.check === 'changed'
-                            ? aiFieldLabel('category', categoryMark.aiValue, db.catalog, locale, stageLabels)
+                            ? aiFieldLabel('category', categoryMark.aiValue, db.catalog, locale, stageLabels, t.addPlant.otherCategory)
                             : undefined
                         }
                       />
@@ -433,7 +435,7 @@ export function PlantPassport({
                         mark={subMark}
                         aiLabel={
                           subMark.check === 'changed'
-                            ? aiFieldLabel('subcategory', subMark.aiValue, db.catalog, locale, stageLabels)
+                            ? aiFieldLabel('subcategory', subMark.aiValue, db.catalog, locale, stageLabels, t.addPlant.otherCategory)
                             : undefined
                         }
                       />
@@ -489,7 +491,7 @@ export function PlantPassport({
             const mark = trait.fieldId ? plant.identification?.fields?.[trait.fieldId] : undefined
             const aiLabel =
               mark?.check === 'changed' && trait.fieldId
-                ? aiFieldLabel(trait.fieldId, mark.aiValue, db.catalog, locale, stageLabels)
+                ? aiFieldLabel(trait.fieldId, mark.aiValue, db.catalog, locale, stageLabels, t.addPlant.otherCategory)
                 : undefined
             return (
               <AsideStat key={trait.label}>
