@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { mockIdentify } from '../../../../mock/identifyMock'
 import { postIdentify } from '../../../../mock/liveApi'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
@@ -78,8 +79,12 @@ export function identifyFacts(
   const category = catalog.categories.find((item) => item.id === draft.categoryId)
   const sub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
   const common = diagnosis.commonNames[0] || diagnosis.label
+  // The species step did not answer: the name came from the catalog-fields step, so don't call it the species.
+  const speciesFailed = diagnosis.steps?.some((step) => step.id === 'species' && !step.ok) ?? false
   const facts: (AiScanFact | null)[] = [
-    common ? { id: 'common', label: t.addPlant.factSpecies, value: common } : null,
+    common
+      ? { id: 'common', label: speciesFailed ? t.addPlant.factName : t.addPlant.factSpecies, value: common }
+      : null,
     diagnosis.scientificName && diagnosis.scientificName !== common
       ? { id: 'scientific', label: t.addPlant.factScientific, value: diagnosis.scientificName }
       : null,
@@ -125,6 +130,8 @@ export function PhotoIdentify({
   const started = useRef(new Set<string>())
   const [selectedId, setSelectedId] = useState<string>()
   const [dragging, setDragging] = useState(false)
+  // A phone can't drop a file: it takes a photo or picks one from the gallery.
+  const touch = useMediaQuery('(pointer: coarse)')
 
   const selected = scans.find((scan) => scan.id === selectedId) ?? scans[scans.length - 1]
   const room = Math.max(0, max - scans.length)
@@ -244,10 +251,14 @@ export function PhotoIdentify({
           </DropArt>
           <DropCopy>
             <strong>
-              {max > 1 ? t.addPlant.dropTitle.replace('{max}', String(max)) : t.addPlant.dropTitleOne}
+              {max > 1
+                ? t.addPlant.dropTitle.replace('{max}', String(max))
+                : touch
+                  ? t.addPlant.dropTitleTouch
+                  : t.addPlant.dropTitleOne}
             </strong>
             <small>
-              {max > 1 ? t.addPlant.dropHint.replace('{max}', String(max)) : t.addPlant.dropHintOne}
+              {max > 1 ? t.addPlant.dropHint.replace('{max}', String(max)) : touch ? t.addPlant.dropHintTouch : t.addPlant.dropHintOne}
             </small>
           </DropCopy>
         </Drop>

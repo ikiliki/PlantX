@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { GuestCurtain } from '../../components/GuestCurtain/GuestCurtain'
@@ -19,7 +19,9 @@ import { GreenhouseBack, GreenhouseScope, useHeaderNav, type GreenhouseScopeId }
 import {
   GreenhouseLevelCard,
   GreenhouseLevelSkeleton,
+  GreenhouseLevelView,
 } from '../../features/greenhouse/components/GreenhouseLevelCard/GreenhouseLevelCard'
+import { greenhouseLevel } from '../../features/greenhouse/greenhouseLevel'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
@@ -135,7 +137,17 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
 
   const openAdd = () => setAdding(true)
 
-  // A guest sees the same layout with placeholders (nothing is fetched), the Add tile, and a log-in card.
+  // Tasks (and any link) can ask for Add Plant with ?add=1: open it here, then drop the flag.
+  useEffect(() => {
+    if (view !== 'page' || params.get('add') !== '1') return
+    setAdding(true)
+    const nextParams = new URLSearchParams(params)
+    nextParams.delete('add')
+    setParams(nextParams, { replace: true })
+  }, [params, setParams, view])
+
+  // A guest sees the same layout with placeholders (nothing is fetched) and the Add tile.
+  // Log in stays in the top bar and in Add Plant, so the board has no log-in card.
   const guestBody =
     scope === 'global' ? (
       <GuestCurtain card={<GuestView card title={t.guest.globalTitle} body={t.guest.globalBody} action={t.guest.logIn} />}>
@@ -144,7 +156,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     ) : (
       <CollectionBoard
         skeleton="guest"
-        rail={<GuestView card title={t.guest.greenhouseTitle} body={t.guest.greenhouseBody} action={t.guest.logIn} />}
         plants={[]}
         sold={[]}
         activity={[]}
@@ -157,7 +168,15 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     scope === 'global' ? (
       <GreenhouseDirectorySkeleton />
     ) : (
-      <CollectionBoard skeleton="loading" plants={[]} sold={[]} activity={[]} onAdd={openAdd} compact={view === 'widget'} />
+      <CollectionBoard
+        skeleton="loading"
+        addDisabled
+        plants={[]}
+        sold={[]}
+        activity={[]}
+        onAdd={openAdd}
+        compact={view === 'widget'}
+      />
     )
 
   const memberBody = fetching ? (
@@ -177,8 +196,9 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     />
   )
 
+  // A guest gets the real header with an empty greenhouse (level 1, no plants), not a blurred placeholder.
   const levelCard = forAudience(signedIn, {
-    guest: <GreenhouseLevelSkeleton blurred />,
+    guest: <GreenhouseLevelView summary={greenhouseLevel('', [], [])} />,
     signedIn: <GreenhouseLevelCard ownerId={ownerId} />,
   })
 

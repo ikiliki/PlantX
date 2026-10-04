@@ -1,0 +1,79 @@
+# Required check for PRs into PP. Runs the UI regression against the QA stack built from the PR
+# (Docker Supabase + local API and web on this runner), so nothing touches PP or production.
+# Branch protection on preprod/ai-testers requires the "e2e" check to pass before merging.
+name: PR e2e
+
+on:
+  pull_request:
+    branches: [preprod/ai-testers]
+
+permissions:
+  contents: write # screenshots go to the qa-assets branch
+  pull-requests: write
+
+concurrency:
+  group: pr-e2e-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci && npx playwright install --with-deps chromium
+
+      - name: Start QA database
+        run: npm run qa:up
+
+      - name: Start QA API and web
+        run: |
+          nohup npm run dev:qa > qa.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl -sf http://localhost:8787/api/env >/dev/null && curl -sf http://localhost:5173 >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat qa.log; exit 1
+
+      - name: Load the test catalog
+        run: node scripts/e2e-seed.mjs
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        env:
+          CI: '1'
+          PLANTX_E2E_URL: http://localhost:5173
+        run: npx playwright test
+
+      - name: Upload report (videos, traces)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-e2e-${{ github.event.pull_request.number }}-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+            qa.log
+          retention-days: 30
+
+      - name: Post screenshots and summary
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          APP_URL: QA stack built from this PR
+        run: bash scripts/e2e-publish.sh pr ${{ github.event.pull_request.number }}
+
+      - name: Fail when tests failed
+        if: steps.tests.outcome == 'failure'
+        run: exit 1

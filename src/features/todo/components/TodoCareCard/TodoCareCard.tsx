@@ -4,7 +4,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import type { Plant, Todo } from '../../../../mock/types'
 import { canFillTodo, careFillWindow, isFirstWaterTodo, todayIso } from '../../todoSchedule'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
-import { Action, Body, Card, CardHit, DateField, Meta, Name, Photo, Tone } from './TodoCareCard.styles'
+import { Action, Body, Card, CardHit, DateActions, DateField, DateForm, Meta, Name, Photo, Tone } from './TodoCareCard.styles'
 
 export function TodoCareCard({
   todo,
@@ -26,9 +26,12 @@ export function TodoCareCard({
   const first = isFirstWaterTodo(todo, todos)
   const fillable = canFillTodo(todo, todos)
   const [picking, setPicking] = useState(false)
+  const [picked, setPicked] = useState(() => todayIso())
   const photo = plant.photos[0]
   const tone = todo.subcategory === 'photo' ? 'photo' : 'water'
   const today = todayIso()
+  const fillWindow = careFillWindow(todo.subcategory, today)
+  const pickedOk = Boolean(picked) && picked <= today && picked >= fillWindow.min
   const detail =
     todo.subcategory === 'photo'
       ? t.todo.detailPhoto
@@ -61,22 +64,33 @@ export function TodoCareCard({
           </Action>
         ) : first ? (
           picking ? (
-            <DateField>
-              <span>{t.todo.pickDay}</span>
-              <input
-                type="date"
-                min={careFillWindow(todo.subcategory, today).min}
-                max={today}
-                defaultValue={today}
-                autoFocus
-                onChange={(event) => {
-                  const value = event.target.value
-                  const { min } = careFillWindow(todo.subcategory, today)
-                  if (!value || value > today || value < min) return
-                  onPickFirstWater(todo, value)
-                }}
-              />
-            </DateField>
+            // Pick a day, then Save: a change alone never completes the task, and today can be saved as is.
+            <DateForm
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (pickedOk) onPickFirstWater(todo, picked)
+              }}
+            >
+              <DateField>
+                <span>{t.todo.pickDay}</span>
+                <input
+                  type="date"
+                  min={fillWindow.min}
+                  max={today}
+                  value={picked}
+                  autoFocus
+                  onChange={(event) => setPicked(event.target.value)}
+                />
+              </DateField>
+              <DateActions>
+                <Action type="button" $tone="quiet" onClick={() => setPicking(false)}>
+                  {t.todo.cancel}
+                </Action>
+                <Action type="submit" $tone={tone} disabled={!pickedOk}>
+                  {t.todo.saveWaterDate}
+                </Action>
+              </DateActions>
+            </DateForm>
           ) : (
             <Action type="button" $tone={tone} onClick={() => setPicking(true)}>
               <TodoKindIcon kind="water" size={14} />

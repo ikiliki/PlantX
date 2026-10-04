@@ -1,8 +1,9 @@
+import { Link } from 'react-router-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { Plant, Todo, TodoSubcategory } from '../../../../mock/types'
 import { isFirstWaterTodo, isOpenTodo } from '../../todoSchedule'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
-import { Block, Copy, Empty, Kind, List, Root, Row } from './PassportTodo.styles'
+import { Block, Copy, Empty, Go, Kind, List, Root, Row } from './PassportTodo.styles'
 
 function kindLabel(kind: TodoSubcategory, t: { actionWater: string; actionPhoto: string }) {
   return kind === 'photo' ? t.actionPhoto : t.actionWater
@@ -40,16 +41,20 @@ export function PassportTodo({
               const when = first
                 ? t.passport.todoFirstWater
                 : t.passport.todoDue.replace('{day}', todo.dueOn ?? '—')
+              // A planned task opens it on the Tasks page (that plant, its day).
               return (
-                <Row key={todo.id} $tone={todo.subcategory} $mark={marked}>
-                  <Kind>
-                    <TodoKindIcon kind={todo.subcategory} size={18} />
-                  </Kind>
-                  <Copy>
-                    <strong>{kindLabel(todo.subcategory, t.todo)}</strong>
-                    <span>{when}</span>
-                  </Copy>
-                </Row>
+                <li key={todo.id}>
+                  <Row as={Link} to={`/tasks/${todo.id}`} $tone={todo.subcategory} $mark={marked}>
+                    <Kind>
+                      <TodoKindIcon kind={todo.subcategory} size={18} />
+                    </Kind>
+                    <Copy>
+                      <strong>{kindLabel(todo.subcategory, t.todo)}</strong>
+                      <span>{when}</span>
+                    </Copy>
+                    <Go aria-hidden>›</Go>
+                  </Row>
+                </li>
               )
             })}
           </List>

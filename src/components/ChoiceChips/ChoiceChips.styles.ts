@@ -25,6 +25,23 @@ export const Group = styled.fieldset`
     opacity: 0.55;
   }
 
+  &[data-missing='true'] {
+    padding: 10px 12px 12px;
+    border-radius: ${theme.radii.md};
+    background: ${theme.colors.chipWarm};
+    box-shadow: inset 0 0 0 1.5px ${theme.colors.warn};
+  }
+
+  /* A legend sits on the fieldset edge by default; float it so it stays inside the tinted box. */
+  &[data-missing='true'] > legend {
+    float: inline-start;
+    width: 100%;
+  }
+
+  &[data-missing='true'] > legend + * {
+    clear: both;
+  }
+
   [role='radiogroup'] {
     display: flex;
     flex-wrap: wrap;
@@ -76,6 +93,15 @@ export const Legend = styled.legend`
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: ${theme.colors.moss};
+`
+
+export const MissingNote = styled.span`
+  margin-inline-start: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  color: ${theme.colors.warn};
 `
 
 export const Required = styled.span`

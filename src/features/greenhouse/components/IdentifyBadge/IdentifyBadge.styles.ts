@@ -63,6 +63,17 @@ export const Root = styled.span<{ $source: PlantIdentificationSource; $compact?:
             box-shadow: inset 0 0 0 1px ${theme.colors.border};
           `}
 
+  /* AI named it, but the catalog has no class: not the green verified look. */
+  &[data-not-in-catalog='true'] {
+    background: ${theme.colors.info};
+    color: ${theme.colors.creamCard};
+  }
+
+  &[data-not-in-catalog='true'] > span[aria-hidden] {
+    background: rgba(255, 255, 255, 0.2);
+    color: ${theme.colors.creamCard};
+  }
+
   ${({ $compact }) =>
     $compact &&
     css`

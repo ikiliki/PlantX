@@ -18,4 +18,11 @@ export const landingShots = {
   aiReview: '/landing/ai-review.jpg',
 } as const
 
+/** Real plant photos (`public/class-photos/`) for the hero passport and the coming-soon market card. */
+export const landingPhotos = {
+  passport: '/class-photos/pot-njoy-b-m-est.jpg',
+  shelf: ['/class-photos/monstera-thai.jpg', '/class-photos/hoya-krimson.jpg', '/class-photos/pilea-std.jpg'],
+  market: ['/class-photos/frydek-var.jpg', '/class-photos/rubber-tineke.jpg', '/class-photos/orchid-white.jpg'],
+} as const
+
 export type LandingDevice = 'desk' | 'phone'

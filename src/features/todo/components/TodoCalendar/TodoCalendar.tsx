@@ -18,6 +18,8 @@ import {
   DaysChip,
   DayList,
   DayNum,
+  DoneMark,
+  Split,
   DayPanel,
   DayPanelHead,
   DropIcon,
@@ -154,6 +156,14 @@ export function TodoCalendar({
     [open, plantFilter, kindFilter],
   )
   const filtered = scoped
+  /** Care already done, on the day it was done, with the same plant and kind filters. */
+  const doneByDay = new Map<string, Todo[]>()
+  for (const todo of todos) {
+    if (!todo.completedOn) continue
+    if (plantFilter !== 'all' && todo.plantId !== plantFilter) continue
+    if (kindFilter !== 'all' && todo.subcategory !== kindFilter) continue
+    doneByDay.set(todo.completedOn, [...(doneByDay.get(todo.completedOn) ?? []), todo])
+  }
 
   useEffect(() => {
     if (!focusTodoId || focusedRef.current === focusTodoId) return
@@ -347,6 +357,8 @@ export function TodoCalendar({
     <Root>
       {mobile ? null : toolbar}
       {mobile && firstPlant ? <AddPlantCard hero onClick={() => onAddFirstPlant?.()} /> : null}
+      {/* Wide: the day's tasks sit next to the calendar, so the first screen shows something to do. */}
+      <Split>
       {mobile && firstPlant ? null : (
       <Board>
         {firstPlant && !mobile ? (
@@ -372,6 +384,7 @@ export function TodoCalendar({
             if (day == null) return <Cell key={`e-${index}`} />
             const key = isoDay(year, month, day)
             const items = byDay.get(key) ?? []
+            const done = doneByDay.get(key) ?? []
             const tone = dayTone(items)
             const selected = selectedDays.includes(key)
             const many = items.length > 1
@@ -419,6 +432,14 @@ export function TodoCalendar({
                 }}
               >
                 <DayNum>{day}</DayNum>
+                {done.length > 0 ? (
+                  <DoneMark
+                    $kind={done[0].subcategory === 'photo' ? 'photo' : 'water'}
+                    title={t.todo.doneOnDay.replace('{n}', String(done.length))}
+                  >
+                    ✓
+                  </DoneMark>
+                ) : null}
                 {items.length > 0 ? (
                   <Icons data-peek="">
                     <PlantBtn
@@ -493,6 +514,7 @@ export function TodoCalendar({
         )}
       </DayPanel>
       )}
+      </Split>
 
       {fill ? (
         <TodoDayPicker

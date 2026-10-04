@@ -1,0 +1,112 @@
+# UI regression after each deploy. Vercel reports the deploy to GitHub; this runs Playwright against it
+# and posts the result with screenshots to the "PP regression" issue.
+# - PP head (Preview): the whole suite, signed in through the PP test login.
+# - Production: only the @prod tests (guest, read-only), against the production domain.
+# Identify is always answered by the tests (e2e/support.ts): no live provider is ever called.
+name: PP regression
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: App URL to test (e.g. the PP preview)
+        required: true
+
+permissions:
+  contents: write # screenshots go to the qa-assets branch
+  issues: write
+  deployments: read
+
+# One slot per deployed commit: Vercel reports every branch, and a later feature-branch deploy
+# must not cancel the run for the PP head.
+concurrency:
+  group: pp-regression-${{ github.event.deployment.sha || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       (github.event.deployment.environment == 'Preview' || github.event.deployment.environment == 'Production'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Only the PP branch head
+        id: target
+        env:
+          INPUT_URL: ${{ inputs.url }}
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
+          DEPLOY_URL: ${{ github.event.deployment_status.environment_url }}
+          DEPLOY_ENV: ${{ github.event.deployment.environment }}
+        run: |
+          if [ -n "$INPUT_URL" ]; then
+            echo "url=$INPUT_URL" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ "$DEPLOY_ENV" = "Production" ]; then
+            # Production has no test login: guest-only checks on the real domain.
+            echo "url=https://plantx-coral.vercel.app" >> "$GITHUB_OUTPUT"
+            echo "grep=@prod" >> "$GITHUB_OUTPUT"; echo "label=Production" >> "$GITHUB_OUTPUT"
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          pp=$(gh api "repos/$GITHUB_REPOSITORY/branches/preprod%2Fai-testers" --jq .commit.sha)
+          if [ "$pp" != "$DEPLOY_SHA" ]; then
+            echo "Deploy $DEPLOY_SHA is not the PP head ($pp); skipping."
+            echo "run=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"; echo "label=PP" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.target.outputs.run == 'true'
+        with:
+          ref: ${{ github.event.deployment.sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        if: steps.target.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        if: steps.target.outputs.run == 'true'
+        run: npm ci && npx playwright install --with-deps chromium
+
+      - name: Run tests
+        id: tests
+        if: steps.target.outputs.run == 'true'
+        continue-on-error: true
+        env:
+          CI: '1'
+          PLANTX_E2E_URL: ${{ steps.target.outputs.url }}
+          # No test token in production: the login route is off there and only @prod tests run.
+          PLANTX_TEST_TOKEN: ${{ steps.target.outputs.grep == '' && secrets.PLANTX_TEST_TOKEN || '' }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          GREP: ${{ steps.target.outputs.grep }}
+        run: npx playwright test ${GREP:+--grep "$GREP"}
+
+      - name: Upload report (videos, traces)
+        id: upload
+        if: always() && steps.target.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pp-regression-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 30
+
+      - name: Post screenshots and summary
+        if: always() && steps.target.outputs.run == 'true'
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          APP_URL: ${{ steps.target.outputs.url }}
+          RUN_LABEL: ${{ steps.target.outputs.label }}
+          OUTCOME: ${{ steps.tests.outcome }}
+        run: bash scripts/e2e-publish.sh issue
+
+      - name: Fail when tests failed
+        if: steps.tests.outcome == 'failure'
+        run: exit 1

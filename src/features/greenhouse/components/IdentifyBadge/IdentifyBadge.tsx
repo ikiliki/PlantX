@@ -13,7 +13,7 @@ export function wasHandEdited(identification?: PlantIdentification) {
  * Who identified the plant class. `compact` is the card tag; the full badge spells out provider and confidence.
  * A plant with no record (added before identify existed) reads as filled in by hand.
  * `notInCatalog`: the plant is saved as Other. With an `ai` record that means the AI recognized it
- * but the catalog has no class for it yet — still AI verified, not edited by hand.
+ * but the catalog has no class for it yet — still counted as an AI answer, shown as "AI recognized it", not verified.
  *
  * Three states from the design: filled by hand (no AI), AI verified and untouched, and AI verified
  * but a detail changed by hand — then the AI stamp stays and a second "Manually edited" tag sits beside it.
@@ -34,8 +34,9 @@ export function IdentifyBadge({
   // An AI plant whose class still matches but had another detail (e.g. size) changed by hand.
   const alsoEdited = source === 'ai' && wasHandEdited(identification)
 
-  const title =
-    source === 'ai'
+  const title = aiOther
+    ? t.addPlant.badgeAiOther
+    : source === 'ai'
       ? t.addPlant.badgeAiBy
       : source === 'edited'
         ? t.addPlant.badgeManuallyEdited

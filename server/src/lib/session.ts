@@ -16,7 +16,15 @@ function sessionSecret() {
   return 'plantx-qa-session-secret'
 }
 
-/** The signed-in user, or null. A cookie that fails the signature check counts as signed out. */
+/** Disabled accounts cannot sign in or keep a session. */
+export function isActive(user: User) {
+  return (user.accountStatus ?? 'active') === 'active'
+}
+
+/**
+ * The signed-in user, or null. A cookie that fails the signature check counts as signed out, and so
+ * does one for an account that was disabled since — disabling takes effect on the next request.
+ */
 export async function userFromSession(c: Context) {
   const id = await getSignedCookie(c, sessionSecret(), SESSION_COOKIE)
   if (!id) {
@@ -24,7 +32,12 @@ export async function userFromSession(c: Context) {
     return null
   }
   const users = await getStore().users.list()
-  return users.find((user) => user.id === id && user.role !== 'guest') ?? null
+  const user = users.find((item) => item.id === id && item.role !== 'guest')
+  if (!user || !isActive(user)) {
+    deleteCookie(c, SESSION_COOKIE, { path: '/' })
+    return null
+  }
+  return user
 }
 
 /** Route auth guard — throws; middleware logs and responds. */

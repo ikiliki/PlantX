@@ -37,6 +37,16 @@ export const SaveError = styled.p`
   line-height: 1.45;
 `
 
+export const StageNote = styled.p<{ $tone?: 'warn' }>`
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: ${theme.radii.md};
+  font-size: 13px;
+  line-height: 1.45;
+  color: ${({ $tone }) => ($tone === 'warn' ? theme.colors.warn : theme.colors.muted)};
+  background: ${({ $tone }) => ($tone === 'warn' ? theme.colors.chipWarm : theme.colors.chipNeutral)};
+`
+
 export const Empty = styled.p`
   margin: 0;
   padding: 18px 20px;

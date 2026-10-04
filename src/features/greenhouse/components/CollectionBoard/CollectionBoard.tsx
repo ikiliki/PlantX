@@ -18,7 +18,7 @@ import {
   plantHasWaterDue,
 } from '../../../todo/todoSchedule'
 import type { Plant, Todo } from '../../../../mock/types'
-import {
+import { SkeletonCards,
   Board,
   CareGrid,
   CareSection,
@@ -65,6 +65,7 @@ export function CollectionBoard({
   freshId,
   skeleton,
   rail,
+  addDisabled = false,
 }: {
   /**
    * No data on the shelf: the Add tile, then placeholder cards. `loading` while a member's plants
@@ -73,6 +74,8 @@ export function CollectionBoard({
   skeleton?: 'loading' | 'guest'
   /** Replaces the activity thread (the guest's log-in card). On a phone it sits under the Add tile. */
   rail?: ReactNode
+  /** The add tile shows but waits (data or the session still loading). */
+  addDisabled?: boolean
   plants: Plant[]
   sold: Plant[]
   activity: ActivityEntry[]
@@ -249,11 +252,19 @@ export function CollectionBoard({
   const shelf = skeleton ? (
     <Growing>
       <CollectionGrid data-plant-grid>
-        <AddPlantCard onClick={onAdd} label={skeleton === 'guest' ? t.guest.tryAddPlant : undefined} />
+        {/* Loading doesn't know the plant count yet, so it never says "another". */}
+        <AddPlantCard
+          onClick={onAdd}
+          label={skeleton === 'guest' ? t.guest.tryAddPlant : t.greenhouse.add}
+          disabled={addDisabled}
+        />
         {rail ? <PhoneRail>{rail}</PhoneRail> : null}
-        {Array.from({ length: SKELETON_CARDS }, (_, index) => (
-          <GreenhousePlantCardSkeleton key={index} blurred={skeleton === 'guest'} />
-        ))}
+        {/* A guest on a phone sees only the Add tile; the placeholder shelf is for wider screens. */}
+        <SkeletonCards $guest={skeleton === 'guest'}>
+          {Array.from({ length: SKELETON_CARDS }, (_, index) => (
+            <GreenhousePlantCardSkeleton key={index} blurred={skeleton === 'guest'} />
+          ))}
+        </SkeletonCards>
       </CollectionGrid>
     </Growing>
   ) : (

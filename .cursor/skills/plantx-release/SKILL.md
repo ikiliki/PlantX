@@ -53,7 +53,7 @@ Home hosts market, rank, and wiki rails. Greenhouse level (`greenhouse.level`) i
 
 ## Landing
 
-The landing uses stills of the real app, not mounted pages (see plantx-views). Only features that are ready get a section or a tour tab.
+The landing uses stills of the real app, not mounted pages (see plantx-views). Only features that are ready get a section or a tour tab. Not-ready features (market, rank) show only as non-interactive Coming soon cards in `LandingSoon`.
 
 ## Reserved later
 

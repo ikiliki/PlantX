@@ -4,6 +4,7 @@ import { LandingHero } from '../../features/landing/components/LandingHero/Landi
 import { LandingJoin } from '../../features/landing/components/LandingJoin/LandingJoin'
 import { LandingNav } from '../../features/landing/components/LandingNav/LandingNav'
 import { LandingProof } from '../../features/landing/components/LandingProof/LandingProof'
+import { LandingSoon } from '../../features/landing/components/LandingSoon/LandingSoon'
 import { LandingTour } from '../../features/landing/components/LandingTour/LandingTour'
 import { useI18n } from '../../i18n/I18nProvider'
 import { Foot, Main, Page } from './LandingPage.styles'
@@ -19,6 +20,7 @@ export function LandingPage() {
         <LandingProof />
         <LandingAi />
         <LandingTour />
+        <LandingSoon />
         <LandingJoin />
         <Foot>
           <span>{t.landing.footerCopy}</span>

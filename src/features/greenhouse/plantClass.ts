@@ -84,19 +84,23 @@ function optionIds<T extends string>(catalog: Catalog, propertyId: string, keep:
   return propertyById(catalog, propertyId)?.options.map((item) => item.id).filter(keep) ?? []
 }
 
+/** Smallest to largest, and cutting to mature, whatever order the class list had. */
+const bySize = (a: SizeBand, b: SizeBand) => FALLBACK_SIZES.indexOf(a) - FALLBACK_SIZES.indexOf(b)
+const byStage = (a: StageBand, b: StageBand) => FALLBACK_STAGES.indexOf(a) - FALLBACK_STAGES.indexOf(b)
+
 export function sizeChoices(catalog: Catalog, draft: PlantClassDraft): SizeBand[] {
   const fromClasses = uniqueBy(classesFor(draft, 'size'), (item) => item.size).map((item) => item.size)
-  if (fromClasses.length > 0) return fromClasses
+  if (fromClasses.length > 0) return fromClasses.sort(bySize)
   const fromCatalog = optionIds(catalog, 'size', isSize)
-  if (fromCatalog.length > 0) return fromCatalog
+  if (fromCatalog.length > 0) return fromCatalog.sort(bySize)
   return FALLBACK_SIZES
 }
 
 export function stageChoices(catalog: Catalog, draft: PlantClassDraft): StageBand[] {
   const fromClasses = uniqueBy(classesFor(draft, 'stage'), (item) => item.stage).map((item) => item.stage)
-  if (fromClasses.length > 0) return fromClasses
+  if (fromClasses.length > 0) return fromClasses.sort(byStage)
   const fromCatalog = optionIds(catalog, 'stage', isStage)
-  if (fromCatalog.length > 0) return fromCatalog
+  if (fromCatalog.length > 0) return fromCatalog.sort(byStage)
   return FALLBACK_STAGES
 }
 
