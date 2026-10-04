@@ -75,7 +75,7 @@ test.describe('guest', { tag: '@prod' }, () => {
 
 // The landing is its own domain in production, so it stays out of @prod.
 test('landing loads', async ({ page }) => {
-  await page.goto('/landing')
-  await page.waitForLoadState('networkidle')
-  await expect(page.getByRole('heading').first()).toBeVisible()
+  // The landing auto-advances its AI steps and keeps loading stills, so the network may never go idle.
+  await page.goto('/landing', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 20_000 })
 })
