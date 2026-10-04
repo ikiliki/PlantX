@@ -1,10 +1,16 @@
 import styled from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
+/* Phones keep the hero lean; the three-benefit band shows from the wide layout up. */
 export const Band = styled.section`
-  width: min(1180px, 100%);
-  margin: 0 auto;
-  padding: 0 ${theme.space.md} 48px;
+  display: none;
+
+  @container landing (min-width: 900px) {
+    display: block;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 0 ${theme.space.md} 48px;
+  }
 `
 
 export const Grid = styled.div`
@@ -32,7 +38,10 @@ export const Proof = styled.article`
   }
 
   span {
-    font-size: 12px;
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.5;
     color: ${theme.colors.muted};
   }
 `
