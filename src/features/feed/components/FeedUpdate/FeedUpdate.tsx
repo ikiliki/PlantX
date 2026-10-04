@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
+import { XpChip } from '../XpChip/XpChip'
 import { formatFeedTime } from '../../formatFeedTime'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { publicGrowerName } from '../../../profile/avatarIcons'
@@ -73,6 +74,7 @@ export function FeedUpdate({ update }: { update: FeedUpdateData }) {
               <MomentGlyph kind={update.kind} />
               {activityKindLabel(update.kind, t.feed)}
             </Kind>
+            <XpChip kind={update.kind} />
             {verified ? <VerifiedStamp place="inline" /> : null}
             <Grower $verified={verified}>{verified ? t.greenhouse.verifiedGreenhouse : growerLabel}</Grower>
           </Meta>

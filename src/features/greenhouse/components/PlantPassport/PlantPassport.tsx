@@ -27,6 +27,7 @@ import { useGreenhouseLevels } from '../../useGreenhouseLevels'
 import { isPlacementEnabled } from '../../../../theme/release'
 import type { StageBand, TodoSubcategory } from '../../../../mock/types'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
+import { canSeeActivity } from '../../../feed/activityXp'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
@@ -588,7 +589,7 @@ export function PlantPassport({
               <SectionTitle>{t.passport.history}</SectionTitle>
               {(() => {
                 const fromActivity = (db.updates ?? [])
-                  .filter((item) => item.plantId === plant.id)
+                  .filter((item) => item.plantId === plant.id && canSeeActivity(item, signedIn ? currentUser : null))
                   .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
                 if (fromActivity.length) {
                   return (

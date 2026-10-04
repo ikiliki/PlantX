@@ -22,10 +22,7 @@ function withoutTitle(label: string, title: string) {
   return rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : label
 }
 
-/**
- * This owner's greenhouse log, oldest first so the latest sits at the bottom.
- * A scan that became a plant is left out: that plant's "added" row tells the same story.
- */
+/** This owner's greenhouse log, every kind (scans included), oldest first so the latest sits at the bottom. */
 export function ownerActivity(
   db: MockDb,
   ownerId: string,
@@ -36,7 +33,6 @@ export function ownerActivity(
   if (!ownerId) return []
   return db.updates
     .filter((item) => item.userId === ownerId)
-    .filter((item) => !(item.kind === 'scan' && item.plantId && plants.some((entry) => entry.id === item.plantId)))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     .map((item) => {
       const plant = item.plantId ? plants.find((entry) => entry.id === item.plantId) : undefined
@@ -50,8 +46,8 @@ export function ownerActivity(
         label: withoutTitle(tr(item.body, item.bodyHe), title),
         kind: item.kind,
         updateId: item.id,
-        // Scans that became a plant are filtered out above, so a scan here was not added.
-        tag: scan ? t.addPlant.scanNotAdded : undefined,
+        // A scan that did not become a plant says so.
+        tag: scan && !plant ? t.addPlant.scanNotAdded : undefined,
       }
     })
 }

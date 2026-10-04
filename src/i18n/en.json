@@ -471,7 +471,10 @@
     "emptyTitle": "Your greenhouse is ready for its first plant",
     "emptyBody": "Take a photo and AI identifies the plant, maps it to the catalog, and fills in the details. You check and save.",
     "emptyAction": "Add your first plant",
-    "aiCount": "{n} AI verified"
+    "aiCount": "{n} AI verified",
+    "activityShow": "Show",
+    "activityXp": "XP",
+    "activityAll": "All"
   },
   "todo": {
     "cancel": "Cancel",
@@ -610,7 +613,6 @@
     "needIdentity": "Pick a category and subcategory",
     "needSpecs": "Pick size, stage, and the required traits",
     "needFields": "Pick {fields}",
-    "needDetails": "Add a description",
     "needReviewPhoto": "Add a photo to finish",
     "saveFailed": "Couldn't save. Try again.",
     "doneTitle": "Planted!",
@@ -1227,13 +1229,8 @@
     "hoursAgo": "h",
     "daysAgo": "d",
     "empty": "No greenhouse activity yet.",
-    "filterLabel": "Feed",
     "refresh": "Refresh",
     "refreshing": "Refreshing",
-    "filterAll": "All",
-    "filterActivities": "Activities",
-    "filterTasks": "Tasks",
-    "filterEmpty": "Nothing here yet.",
     "friendsEmpty": "Nothing from friends yet.",
     "everyone": "Everyone",
     "friendsOnly": "Friends only",
@@ -1248,7 +1245,8 @@
     "topGreenhouses": "Top greenhouses",
     "topEmpty": "No greenhouses to rank yet.",
     "updateScan": "AI scan",
-    "updateAdded": "New plant"
+    "updateAdded": "New plant",
+    "xpEarned": "+{n} XP"
   },
   "guest": {
     "logIn": "Log in",
@@ -1298,7 +1296,8 @@
     "send": "Send report",
     "sending": "Sending…",
     "sendFailed": "Could not send the report",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "donePlant": "Planted · +{xp} XP"
   },
   "roles": {
     "grower": "Home grower",

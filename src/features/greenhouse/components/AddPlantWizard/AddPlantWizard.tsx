@@ -43,12 +43,14 @@ import {
   Banner,
   BannerAction,
   MissingActions,
-  MissingField,
   Burst,
   Check,
   CategoryMark,
   ClassCode,
   Done,
+  DoneActions,
+  DoneBody,
+  DoneTags,
   DoneTitle,
   EditLink,
   Footer,
@@ -277,7 +279,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const identityReady = Boolean(draft.categoryId) && (isOtherSub || Boolean(selectedSub))
   const specsReady =
     Boolean(draft.size && draft.stage) && requiredExtra.every((item) => draft.traits[item.id])
-  const detailsReady = Boolean(description.trim() && matched)
+  // The description is optional; Details is ready once the class is named.
+  const detailsReady = Boolean(matched)
   const reviewReady = identityReady && specsReady && detailsReady
   const specsHint = t.addPlant.needFields.replace('{fields}', missingSpecs.join(', ').toLocaleLowerCase(locale))
   /** Every empty required field, with the step that fills it. */
@@ -291,7 +294,6 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     ...requiredExtra
       .filter((item) => !draft.traits[item.id])
       .map((item) => ({ id: item.id, label: catalogName(item, locale), step: 'specs' as const })),
-    ...(!description.trim() ? [{ id: 'description', label: t.greenhouse.addDescription, step: 'details' as const }] : []),
   ]
   // Flag gaps once there is an answer to compare with (AI ran) or the grower has seen Review.
   const flagMissing = Boolean(recognized) || reviewSeen
@@ -320,7 +322,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       openAuth('buy')
       return
     }
-    if (!matched || !description.trim()) {
+    if (!matched) {
       setSaveFailed(true)
       return
     }
@@ -407,24 +409,28 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     const name = matched ? (locale === 'he' ? matched.nameHe : matched.name) : ''
     return (
       <Root>
-        <Done role="status">
-          <Burst aria-hidden>
-            {Array.from({ length: 10 }, (_, index) => (
-              <Leaf key={index} style={{ '--i': index } as CSSProperties} />
-            ))}
-            <Check>✓</Check>
-          </Burst>
-          <DoneTitle>{t.addPlant.doneTitle}</DoneTitle>
-          <StepLead>{t.addPlant.doneBody.replace('{name}', name)}</StepLead>
-          <IdentifyBadge identification={identification} notInCatalog={isOther} />
-          <Footer $static>
+        <Done role="status" data-add-done>
+          <DoneBody>
+            <Burst aria-hidden>
+              {Array.from({ length: 10 }, (_, index) => (
+                <Leaf key={index} style={{ '--i': index } as CSSProperties} />
+              ))}
+              <Check>✓</Check>
+            </Burst>
+            <DoneTitle>{t.addPlant.doneTitle}</DoneTitle>
+            <StepLead>{t.addPlant.doneBody.replace('{name}', name)}</StepLead>
+            <DoneTags>
+              <IdentifyBadge identification={identification} notInCatalog={isOther} />
+            </DoneTags>
+          </DoneBody>
+          <DoneActions>
             <Button type="button" variant="secondary" onClick={reset}>
               {t.addPlant.addAnother}
             </Button>
             <Button type="button" variant="growth" onClick={() => (onSaved ? onSaved(savedId) : onClose?.())}>
               {t.addPlant.done}
             </Button>
-          </Footer>
+          </DoneActions>
         </Done>
       </Root>
     )
@@ -682,12 +688,10 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <StepLead>{t.addPlant.detailsLead}</StepLead>
             </StepHead>
             {matched ? <ClassCode title={t.greenhouse.classWord}>{matched.code}</ClassCode> : null}
-            <Field data-missing={isMissing('description') ? 'true' : undefined}>
+            <Field>
               {t.greenhouse.addDescription}
-              {isMissing('description') ? <MissingField>{missingNote}</MissingField> : null}
               <TextArea
                 value={description}
-                required
                 placeholder={t.addPlant.descriptionPlaceholder}
                 onChange={(event) => {
                   setDescriptionTouched(true)
@@ -710,14 +714,15 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         const rows: { label: string; value: string; step: StepId; mark?: IdentifyFieldMark; ai?: string }[] = [
           {
             label: t.admin.category,
-            value: isOther ? t.addPlant.otherCategory : category ? catalogName(category, locale) : '—',
+            // Empty reads as Missing with its Edit link, like every other required row.
+            value: isOther ? t.addPlant.otherCategory : category ? catalogName(category, locale) : '',
             step: 'identity',
             mark: marks?.category,
             ai: nameOf(catalog.categories, marks?.category?.aiValue),
           },
           {
             label: t.admin.subcategory,
-            value: isOtherSub ? t.addPlant.otherCategory : sub ? catalogName(sub, locale) : '—',
+            value: isOtherSub ? t.addPlant.otherCategory : sub ? catalogName(sub, locale) : '',
             step: 'identity',
             mark: marks?.subcategory,
             ai: nameOf(catalog.subcategories, marks?.subcategory?.aiValue),
@@ -845,7 +850,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         return {
           label: t.addPlant.next,
           disabled: !freeNav,
-          hint: detailsReady ? '' : t.addPlant.needDetails,
+          hint: detailsReady ? '' : t.addPlant.needIdentity,
         }
       case 'review':
         return {
@@ -857,11 +862,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               ? t.addPlant.needIdentity
               : !specsReady
                 ? specsHint
-                : !detailsReady
-                  ? t.addPlant.needDetails
-                  : photos.length === 0
-                    ? t.addPlant.needReviewPhoto
-                    : '',
+                : photos.length === 0
+                  ? t.addPlant.needReviewPhoto
+                  : '',
         }
     }
   })()

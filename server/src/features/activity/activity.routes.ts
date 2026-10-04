@@ -1,14 +1,16 @@
 import { Hono } from 'hono'
+import { canSeeActivity } from '../../../../src/features/feed/activityXp.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { signedIn, type SignedInEnv } from '../../lib/session.ts'
 import { greenhouseService } from '../greenhouse/greenhouse.service.ts'
-import { activityService } from './activity.service.ts'
+import { activityService, visibleTo } from './activity.service.ts'
 import type { Activity, ActivityInput, ActivityKind } from './activity.types.ts'
 
 /**
  * Activity HTTP surface, members only.
  * Lists are the basic row. `GET /id/:id` is the one place that adds the linked identify request.
+ * Only XP activities (added, water, photo) are public; other kinds reach their owner and admins only.
  */
 export const activityRoutes = new Hono<SignedInEnv>()
 
@@ -32,7 +34,7 @@ activityRoutes.get('/', async (c) => {
     userId: c.req.query('userId') || undefined,
     limit: readLimit(c.req.query('limit')),
   })
-  return c.json({ activities })
+  return c.json({ activities: visibleTo(activities, c.get('user')) })
 })
 
 /** Every kind for one person. */
@@ -41,13 +43,13 @@ activityRoutes.get('/user/:userId', async (c) => {
     userId: c.req.param('userId'),
     limit: readLimit(c.req.query('limit')),
   })
-  return c.json({ activities })
+  return c.json({ activities: visibleTo(activities, c.get('user')) })
 })
 
 /** One activity, plus the identify request when this row has one. */
 activityRoutes.get('/id/:id', async (c) => {
   const activity = await activityService.get(c.req.param('id'))
-  if (!activity) throw Errors.missing('Activity not found')
+  if (!activity || !canSeeActivity(activity, c.get('user'))) throw Errors.missing('Activity not found')
   return c.json({ activity, detail: await detailFor(activity) })
 })
 
@@ -60,7 +62,7 @@ activityRoutes.get('/:type/:userId', async (c) => {
     userId: c.req.param('userId'),
     limit: readLimit(c.req.query('limit')),
   })
-  return c.json({ activities })
+  return c.json({ activities: visibleTo(activities, c.get('user')) })
 })
 
 activityRoutes.get('/:type', async (c) => {
@@ -71,7 +73,7 @@ activityRoutes.get('/:type', async (c) => {
     userId: c.req.query('userId') || undefined,
     limit: readLimit(c.req.query('limit')),
   })
-  return c.json({ activities })
+  return c.json({ activities: visibleTo(activities, c.get('user')) })
 })
 
 /**
@@ -96,7 +98,7 @@ activityRoutes.post('/', async (c) => {
     body: body.body,
     bodyHe: body.bodyHe,
   })
-  return c.json({ activity, activities: await activityService.list() })
+  return c.json({ activity, activities: visibleTo(await activityService.list(), user) })
 })
 
 /** Linked identify request, without the photo thumb. Absent when the row has none. */

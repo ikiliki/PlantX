@@ -11,6 +11,14 @@ test.describe('guest', { tag: '@prod' }, () => {
     await expect(page.getByText('Log in to see your greenhouse')).toHaveCount(0)
   })
 
+  test('greenhouse activity shows only its header to a guest, no XP / All filter', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'phone', 'Phones keep the activity behind the signed-in bell')
+    await expectPage(page, '/greenhouse')
+    const rail = page.getByRole('complementary', { name: 'Greenhouse activities' })
+    await expect(rail.getByRole('heading', { name: 'Greenhouse activities' })).toBeVisible()
+    await expect(rail.getByRole('radiogroup')).toHaveCount(0)
+  })
+
   test('greenhouse header shows an empty greenhouse, not a placeholder', async ({ page }) => {
     await expectPage(page, '/greenhouse')
     const header = page.getByRole('complementary', { name: /greenhouse level/i })

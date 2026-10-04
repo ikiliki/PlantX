@@ -38,6 +38,19 @@ test.describe('Add Plant', () => {
     await expect(dialog.getByText("AI couldn't fill these")).toHaveCount(0)
   })
 
+  test('the description is optional', async ({ page, identify }) => {
+    const pick = await catalogPick(page)
+    identify.answer(diagnosisFor(pick, { withTrait: true }))
+    const dialog = await openAddPlant(page)
+    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await dialog.getByRole('button', { name: 'Continue with AI' }).click()
+    await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeEnabled({ timeout: 20_000 })
+    await dialog.getByRole('navigation').getByRole('button', { name: /Details/ }).click()
+    await dialog.locator('textarea').fill('')
+    await dialog.getByRole('navigation').getByRole('button', { name: /Review/ }).click()
+    await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeEnabled()
+  })
+
   test('size and stage the AI did not answer stay empty for the owner', async ({ page, identify }) => {
     const pick = await catalogPick(page)
     identify.answer(diagnosisFor(pick, { withTrait: true, withSizeStage: false }))

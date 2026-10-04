@@ -4,8 +4,11 @@ export type NoticeTone = 'fail' | 'done'
 
 export type HttpNotice =
   | { id: number; tone: 'fail'; context: IssueContext }
-  /** A care task was completed: short success note with the XP earned. */
-  | { id: number; tone: 'done'; care: 'water' | 'photo'; xp: number }
+  /** XP was earned (a care task done, a plant added): short success note with the XP. */
+  | { id: number; tone: 'done'; care: XpEvent; xp: number }
+
+/** What earned the XP in a success note. */
+export type XpEvent = 'water' | 'photo' | 'plant'
 
 /** At most this many notices on screen; the newest stays. */
 const MAX_NOTICES = 2
@@ -71,8 +74,8 @@ function push(context: IssueContext) {
 
 const notifiedDone = new Set<string>()
 
-/** Success note for a completed care task. Once per task, so a re-run of the store update can't repeat it. */
-export function notifyCareDone(taskId: string, care: 'water' | 'photo', xp: number) {
+/** Success note with the XP earned (care done, plant added). Once per key, so a re-run of the store update can't repeat it. */
+export function notifyCareDone(taskId: string, care: XpEvent, xp: number) {
   if (notifiedDone.has(taskId)) return
   notifiedDone.add(taskId)
   items = [{ id: ++seq, tone: 'done' as const, care, xp }, ...items].slice(0, MAX_NOTICES)

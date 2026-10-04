@@ -36,7 +36,7 @@ import { defaultPlantPhoto } from './images'
 import type { ApiFailure } from '../lib/apiFailure'
 import { siteRole } from '../lib/siteUrls'
 import { notifyCareDone } from '../lib/httpNotice'
-import { CARE_XP } from '../features/greenhouse/greenhouseLevel'
+import { CARE_XP, PLANT_XP } from '../features/greenhouse/greenhouseLevel'
 import {
   fetchActivitiesOutcome,
   fetchCatalogOutcome,
@@ -1079,6 +1079,8 @@ export function StoreProvider({
         if (created.photos.length > 0) d.todos = schedulePhotoTodo(d.todos, created)
         return d
       })
+      // Same XP note as finished care; the success screen stays as it is.
+      if (created) queueMicrotask(() => notifyCareDone(id, 'plant', PLANT_XP))
       if (created && liveWritable) {
         void postPlant(created, input.identifyRequestIds).then((res) => {
           if (!res) return

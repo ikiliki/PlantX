@@ -1,7 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { Segmented } from '../../../../components/Segmented/Segmented'
+import { isPublicActivity } from '../../../feed/activityXp'
 import { ActivityMoment, MomentGlyph, MomentPlay } from '../../../feed/components/ActivityMoment/ActivityMoment'
+import { XpChip } from '../../../feed/components/XpChip/XpChip'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { FeedUpdateKind } from '../../../../mock/types'
@@ -49,6 +52,7 @@ function ActivityMessage({ entry, onOpen }: { entry: ActivityEntry; onOpen?: () 
         <When>
           {entry.kind ? <MomentGlyph kind={entry.kind} /> : null}
           {entry.at}
+          <XpChip kind={entry.kind} />
           {entry.tag ? <Tag $pending={scan && !entry.plantId}>{entry.tag}</Tag> : null}
         </When>
       </Meta>
@@ -70,16 +74,19 @@ function ActivityMessage({ entry, onOpen }: { entry: ActivityEntry; onOpen?: () 
   )
 }
 
-export function ActivityThread({ activity, height }: { activity: ActivityEntry[]; height?: number }) {
+/** The owner's greenhouse log. Opens on activities that earned XP; All adds scans and the rest. */
+export function ActivityThread({ activity: all, height }: { activity: ActivityEntry[]; height?: number }) {
   const { t } = useI18n()
-  const { db } = useStore()
+  const { db, signedIn } = useStore()
+  const [show, setShow] = useState<'xp' | 'all'>('xp')
+  const activity = show === 'xp' ? all.filter((entry) => entry.kind && isPublicActivity(entry.kind)) : all
   const [openId, setOpenId] = useState<string | null>(null)
   const openUpdate = openId ? db.updates.find((item) => item.id === openId) : undefined
   const scrollRef = useRef<HTMLDivElement>(null)
   const [moreAbove, setMoreAbove] = useState(false)
   const stick = useRef(true)
   const before = useRef({ height: 0, top: 0 })
-  const signature = activity.map((entry) => `${entry.at}|${entry.plant}|${entry.label}`).join('|')
+  const signature = `${show}|${activity.map((entry) => `${entry.at}|${entry.plant}|${entry.label}`).join('|')}`
   const list = useInfiniteList(activity, { anchor: 'end', signature })
   const seen = useRef(signature)
   if (seen.current !== signature) {
@@ -122,6 +129,18 @@ export function ActivityThread({ activity, height }: { activity: ActivityEntry[]
     <Root $height={height} aria-label={t.greenhouse.activityTitle}>
       <Head>
         <Title>{t.greenhouse.activityTitle}</Title>
+        {/* A guest has no log of their own: just the header. */}
+        {signedIn ? (
+          <Segmented
+            ariaLabel={t.greenhouse.activityShow}
+            value={show}
+            onChange={setShow}
+            options={[
+              { id: 'xp', label: t.greenhouse.activityXp },
+              { id: 'all', label: t.greenhouse.activityAll },
+            ]}
+          />
+        ) : null}
       </Head>
       <ScrollFrame>
         <Scroll ref={scrollRef}>

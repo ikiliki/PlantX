@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Plant } from '../../../../src/mock/types.ts'
 import { signedIn, type SignedInEnv } from '../../lib/session.ts'
-import { activityService } from '../activity/activity.service.ts'
+import { activityService, visibleTo } from '../activity/activity.service.ts'
 import { todoService } from '../todo/todo.service.ts'
 import { greenhouseService } from './greenhouse.service.ts'
 
@@ -22,7 +22,7 @@ greenhouseRoutes.get('/:id/activities', async (c) => {
   const plant = await greenhouseService.get(c.req.param('id'))
   return c.json({
     plantId: plant.id,
-    activities: await activityService.listForPlant(plant.id),
+    activities: visibleTo(await activityService.listForPlant(plant.id), c.get('user')),
   })
 })
 
@@ -39,7 +39,7 @@ greenhouseRoutes.post('/', async (c) => {
     ids.map((id) => (typeof id === 'string' && id ? id : undefined)),
   )
   const [activities, todos] = await Promise.all([
-    activityService.list(),
+    activityService.list().then((rows) => visibleTo(rows, user)),
     todoService.list({ ownerId: user.id }),
   ])
   return c.json({

@@ -35,6 +35,13 @@ export const Dialog = styled.div`
   ${dialogEnter}
   ${sheetSurface}
 
+  /* The Planted screen needs less room on desktop; the phone sheet keeps its height. */
+  @media not all and (max-width: ${theme.breakpoints.md}) {
+    &:has([data-add-done]) {
+      height: min(500px, 86vh);
+    }
+  }
+
   @media (max-width: ${theme.breakpoints.md}) {
     width: 100%;
     height: min(640px, 82svh);

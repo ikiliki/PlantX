@@ -1,7 +1,9 @@
+import { canSeeActivity } from '../../../../src/features/feed/activityXp.ts'
 import { addedActivityText, scanActivityText } from '../../../../src/features/greenhouse/identification.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
+import type { User } from '../../../../src/mock/types.ts'
 import type { Activity, ActivityInput, ActivityQuery } from './activity.types.ts'
 
 function newestFirst(a: Activity, b: Activity) {
@@ -12,6 +14,11 @@ function newestFirst(a: Activity, b: Activity) {
  * Generic activity log. UI actions (and later an event bus) call `record`.
  * Home feed and plant cards call `list` / `listForPlant`.
  */
+/** What this viewer may read: XP activities for everyone, the rest for their owner and admins. */
+export function visibleTo(activities: Activity[], viewer: Pick<User, 'id' | 'role'> | null | undefined) {
+  return activities.filter((activity) => canSeeActivity(activity, viewer))
+}
+
 export const activityService = {
   async list(query: ActivityQuery = {}): Promise<Activity[]> {
     let rows = (await getStore().activities.list()).slice().sort(newestFirst)
