@@ -164,6 +164,9 @@ export function fieldChecksFor(saved: SavedClass, diagnosis: Diagnosis, catalog:
 export function fieldMarksFor(saved: SavedClass, diagnosis: Diagnosis, catalog: Catalog): IdentifyFieldMarks {
   const checks = fieldChecksFor(saved, diagnosis, catalog)
   const { draft } = diagnosis
+  // A category changed by hand makes the rest of the AI answer about another plant:
+  // only the category carries a mark, everything else counts as entered by hand.
+  if (checks.category === 'changed') return { category: { check: 'changed', aiValue: aiCategoryOf(diagnosis) } }
   const aiValues: Record<keyof IdentifyFieldChecks, string | undefined> = {
     category: aiCategoryOf(diagnosis),
     subcategory: aiSubcategoryOf(diagnosis),

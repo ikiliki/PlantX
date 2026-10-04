@@ -29,6 +29,7 @@ import type { StageBand, TodoSubcategory } from '../../../../mock/types'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
+import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
 import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo'
@@ -38,7 +39,6 @@ import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
 import {
   ActionRow,
   ActivityBody,
-  AiStamp,
   Aside,
   GreenhouseLabel,
   GreenhouseLink,
@@ -121,30 +121,6 @@ function aiFieldLabel(
   return category ? catalogName(category, locale) : aiValue
 }
 
-/** Blue ✦ when the AI value was kept; muted ✎ when the owner changed it (tooltip then shows the AI value). */
-function FieldStamp({
-  mark,
-  aiLabel,
-  corner,
-}: {
-  mark: { check: 'kept' | 'changed' | 'manual'; aiValue?: string }
-  aiLabel?: string
-  corner?: boolean
-}) {
-  const { t } = useI18n()
-  if (mark.check === 'manual') return null
-  const changed = mark.check === 'changed'
-  const tip = changed
-    ? aiLabel
-      ? t.passport.aiWas.replace('{value}', aiLabel)
-      : t.passport.aiChanged
-    : t.passport.aiFilled
-  return (
-    <AiStamp $changed={changed} $corner={corner} title={tip} aria-label={tip}>
-      {changed ? '✎' : '✦'}
-    </AiStamp>
-  )
-}
 
 export function PlantPassport({
   plantId,
@@ -415,7 +391,7 @@ export function PlantPassport({
                       <CategoryName>{categoryLabel}</CategoryName>
                     )}
                     {categoryMark ? (
-                      <FieldStamp
+                      <AiFieldStamp
                         mark={categoryMark}
                         aiLabel={
                           categoryMark.check === 'changed'
@@ -431,7 +407,7 @@ export function PlantPassport({
                   <TaxonomyItem>
                     <SubName>{subLabel}</SubName>
                     {subMark ? (
-                      <FieldStamp
+                      <AiFieldStamp
                         mark={subMark}
                         aiLabel={
                           subMark.check === 'changed'
@@ -497,7 +473,7 @@ export function PlantPassport({
               <AsideStat key={trait.label}>
                 <dt>{trait.label}</dt>
                 <dd>{trait.value}</dd>
-                {mark ? <FieldStamp mark={mark} aiLabel={aiLabel} corner /> : null}
+                {mark ? <AiFieldStamp mark={mark} aiLabel={aiLabel} corner /> : null}
               </AsideStat>
             )
           })}
@@ -510,7 +486,7 @@ export function PlantPassport({
               <AsideStat key={field.id}>
                 <dt>{field.label}</dt>
                 <dd>{field.value}</dd>
-                {field.mark ? <FieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
+                {field.mark ? <AiFieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
               </AsideStat>
             ))}
         </AsideStats>

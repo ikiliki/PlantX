@@ -343,7 +343,8 @@
     "timeToday": "היום",
     "timeAgo": "לפני {n} ימים",
     "averagePrice": "מחיר ממוצע",
-    "priceTip": "מחירים נוספים"
+    "priceTip": "מחירים נוספים",
+    "aiSuggested": "ה־AI הציע"
   },
   "greenhouse": {
     "title": "החממה",
@@ -601,7 +602,6 @@
     "manualHint": "יישמר כלא מאומת ב־AI",
     "analyzeWithAi": "ניתוח עם AI",
     "continueWithAi": "המשך עם AI",
-    "needPhoto": "הוסיפו תמונה כדי להמשיך",
     "photoReady": "התמונה נוספה",
     "photoReadyBody": "המשיכו עם AI, או מלאו את הטופס בעצמכם.",
     "skipPhotoHint": "אין תמונה? אפשר למלא ידנית",

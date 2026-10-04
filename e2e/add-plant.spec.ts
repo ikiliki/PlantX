@@ -18,7 +18,6 @@ test.describe('Add Plant', () => {
 
   test('AI needs a photo; filling in by hand does not, but Save does', async ({ page }) => {
     const dialog = await openAddPlant(page)
-    await expect(dialog.getByText('Add a photo to continue')).toBeVisible()
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
     await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeEnabled()
 

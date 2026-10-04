@@ -10,7 +10,7 @@ import { createCatalog } from '../../../../mock/catalog'
 import { ownerGreenhousePlace } from '../../../../mock/locations'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { useStore } from '../../../../mock/store'
-import type { CatalogProperty, Diagnosis, PlantClassDraft, SizeBand, StageBand } from '../../../../mock/types'
+import type { CatalogProperty, Diagnosis, IdentifyFieldMark, PlantClassDraft, SizeBand, StageBand } from '../../../../mock/types'
 import { catalogName, optionLabel, propertiesForPlant } from '../../../catalog/catalog'
 import { catalogSpecies } from '../../../species/catalogSpecies'
 import {
@@ -37,10 +37,9 @@ import { theme } from '../../../../theme/tokens'
 import { CatalogPreview } from '../../../species/components/CatalogPreview/CatalogPreview'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
-import { identifyFacts, PhotoIdentify, wasScanned, type PhotoScan } from '../PhotoIdentify/PhotoIdentify'
+import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
+import { PhotoIdentify, wasScanned, type PhotoScan } from '../PhotoIdentify/PhotoIdentify'
 import {
-  AiAnswer,
-  AiFact,
   Banner,
   BannerAction,
   MissingActions,
@@ -59,7 +58,6 @@ import {
   Leaf,
   Review,
   ReviewBody,
-  ReviewName,
   PhotoBadge,
   ReviewPhoto,
   ReviewRow,
@@ -702,30 +700,49 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       case 'review': {
         const category = catalog.categories.find((item) => item.id === draft.categoryId)
         const sub = catalog.subcategories.find((item) => item.id === draft.subcategoryId)
-        const rows: { label: string; value: string; step: StepId }[] = [
+        // Same per-field marks the plant is saved with: ✦ the AI's pick, ✎ changed by hand.
+        const marks = identification.fields
+        const nameOf = (list: { id: string }[], id: string | undefined) => {
+          if (id === OTHER_CATEGORY_ID || id === OTHER_SUBCATEGORY_ID) return t.addPlant.otherCategory
+          const found = list.find((item) => item.id === id) as Parameters<typeof catalogName>[0] | undefined
+          return found ? catalogName(found, locale) : id
+        }
+        const rows: { label: string; value: string; step: StepId; mark?: IdentifyFieldMark; ai?: string }[] = [
           {
             label: t.admin.category,
             value: isOther ? t.addPlant.otherCategory : category ? catalogName(category, locale) : '—',
             step: 'identity',
+            mark: marks?.category,
+            ai: nameOf(catalog.categories, marks?.category?.aiValue),
           },
           {
             label: t.admin.subcategory,
             value: isOtherSub ? t.addPlant.otherCategory : sub ? catalogName(sub, locale) : '—',
             step: 'identity',
+            mark: marks?.subcategory,
+            ai: nameOf(catalog.subcategories, marks?.subcategory?.aiValue),
           },
-          { label: t.admin.size, value: draft.size, step: 'specs' },
+          { label: t.admin.size, value: draft.size, step: 'specs', mark: marks?.size, ai: marks?.size?.aiValue },
           {
             label: t.admin.stage,
             value: draft.stage ? (STAGE_LABEL[draft.stage]?.[locale] ?? draft.stage) : '',
             step: 'specs',
+            mark: marks?.stage,
+            ai: marks?.stage?.aiValue
+              ? (STAGE_LABEL[marks.stage.aiValue as StageBand]?.[locale] ?? marks.stage.aiValue)
+              : undefined,
           },
           // Required traits are on Review too, so a missing one is visible with its Edit link.
           ...requiredExtra.map((property) => {
             const option = property.options.find((item) => item.id === draft.traits[property.id])
+            const mark = marks?.traits?.[property.id]
+            const aiOption = property.options.find((item) => item.id === mark?.aiValue)
             return {
               label: catalogName(property, locale),
               value: option ? optionLabel(option, locale) : '',
               step: 'specs' as StepId,
+              mark,
+              ai: aiOption ? optionLabel(aiOption, locale) : mark?.aiValue,
             }
           }),
         ]
@@ -779,31 +796,25 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               </ReviewPhoto>
               <ReviewBody>
                 {photos.length > 1 ? <PhotoChecks photos={photos} checks={identification.photos} size="sm" /> : null}
-                <ReviewName>{matched ? (locale === 'he' ? matched.nameHe : matched.name) : ''}</ReviewName>
                 {matched ? <ClassCode>{matched.code}</ClassCode> : null}
                 <ReviewRows>
                   {rows.map((row) => (
                     <ReviewRow key={row.label} data-missing={row.value ? undefined : 'true'}>
                       <dt>{row.label}</dt>
-                      <dd>{row.value || t.addPlant.missingValue}</dd>
+                      <dd>
+                        {row.value || t.addPlant.missingValue}
+                        {row.value && row.mark ? <AiFieldStamp mark={row.mark} aiLabel={row.ai} /> : null}
+                      </dd>
                       <EditLink type="button" onClick={() => go(STEPS.indexOf(row.step))}>
                         {t.addPlant.edit}
                       </EditLink>
                     </ReviewRow>
                   ))}
                 </ReviewRows>
-                {recognized ? (
-                  <AiAnswer>
-                    <strong>{t.addPlant.resultTitle}</strong>
-                    {identifyFacts(recognized, catalog, locale, t).map((fact) => (
-                      <AiFact key={fact.id}>
-                        <span>{fact.label}</span>
-                        {fact.value}
-                      </AiFact>
-                    ))}
-                  </AiAnswer>
+                {/* The default description is the class name, already on top: show only one that says more. */}
+                {description && description.trim() !== (locale === 'he' ? matched?.nameHe : matched?.name)?.trim() ? (
+                  <StepLead>{description}</StepLead>
                 ) : null}
-                {description ? <StepLead>{description}</StepLead> : null}
               </ReviewBody>
             </Review>
           </>
@@ -815,8 +826,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const next = (() => {
     switch (stepId) {
       case 'photo':
-        // Both buttons wait for a photo; say so instead of leaving them silently disabled.
-        return { label: '', disabled: true, hint: scans.length === 0 ? t.addPlant.needPhoto : '' }
+        // Fill in manually works without a photo; the photo is asked for only at Save.
+        return { label: '', disabled: true, hint: '' }
       // Next stays open so the grower can move freely; the hint says what is still empty. Only Save waits.
       case 'identity':
         return {

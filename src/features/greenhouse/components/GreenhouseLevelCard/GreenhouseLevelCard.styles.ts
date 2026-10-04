@@ -157,6 +157,9 @@ export const BarFill = styled.div`
 `
 
 export const Next = styled.p`
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 6px 0 0;
   font-size: 12px;
   font-weight: 600;
@@ -188,19 +191,36 @@ export const Tally = styled.span<{ $tone: 'plant' | 'care' }>`
 `
 
 /** "?" at the end of the level line, same size and gray as that line. Padding only grows the tap area. */
+/** Small circled (?) after the XP-to-next-level line; opens the level rules. */
 export const How = styled.button<{ $on: boolean }>`
   ${pressable}
+  position: relative;
   flex: none;
-  margin: -8px -10px -8px -2px;
-  padding: 8px 10px 8px 2px;
-  border: 0;
-  background: none;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1.5px solid currentColor;
+  border-radius: ${theme.radii.pill};
+  background: ${({ $on }) => ($on ? theme.colors.chipGreen : 'none')};
   color: ${({ $on }) => ($on ? theme.colors.ink : theme.colors.muted)};
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 800;
   line-height: 1;
   cursor: pointer;
+
+  /* A finger-sized target around the small circle. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+  }
+
+  &:hover {
+    color: ${theme.colors.ink};
+  }
 `
 
 export const HowList = styled.ul`

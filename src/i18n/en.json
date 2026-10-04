@@ -343,7 +343,8 @@
     "timeToday": "Today",
     "timeAgo": "{n}d ago",
     "averagePrice": "Average price",
-    "priceTip": "Other prices"
+    "priceTip": "Other prices",
+    "aiSuggested": "AI suggested"
   },
   "greenhouse": {
     "title": "Greenhouse",
@@ -601,7 +602,6 @@
     "manualHint": "Saved as not verified by AI",
     "analyzeWithAi": "Analyze with AI",
     "continueWithAi": "Continue with AI",
-    "needPhoto": "Add a photo to continue",
     "photoReady": "Photo added",
     "photoReadyBody": "Continue with AI, or fill the form yourself.",
     "skipPhotoHint": "No photo? You can still fill it in by hand",

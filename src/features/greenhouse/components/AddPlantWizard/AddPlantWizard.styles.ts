@@ -300,49 +300,11 @@ export const PhotoBadge = styled.div`
   filter: drop-shadow(0 6px 14px rgba(12, 32, 24, 0.28));
 `
 
-export const AiAnswer = styled.div`
-  display: grid;
-  gap: 4px;
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: ${theme.radii.md};
-  background: ${theme.colors.chipGreen};
-  color: ${theme.colors.forest};
-
-  strong {
-    font-size: 13px;
-  }
-`
-
-export const AiFact = styled.p`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.35;
-
-  span {
-    font-weight: 600;
-    color: ${theme.colors.moss};
-  }
-`
-
 export const ReviewBody = styled.div`
   display: grid;
   gap: 10px;
   justify-items: start;
   min-width: 0;
-`
-
-export const ReviewName = styled.h4`
-  margin: 0;
-  font-family: ${theme.fonts.display};
-  font-weight: 400;
-  font-size: 22px;
-  line-height: 1.2;
-  color: ${theme.colors.ink};
 `
 
 export const ReviewRows = styled.dl`
@@ -368,6 +330,10 @@ export const ReviewRow = styled.div`
   }
 
   dd {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
     margin: 0;
     font-size: 14px;
     font-weight: 700;
