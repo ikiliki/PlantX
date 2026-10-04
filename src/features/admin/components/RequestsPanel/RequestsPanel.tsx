@@ -9,6 +9,7 @@ import {
   fetchCatalogSuggestions,
   fetchPendingUsers,
 } from '../../../../mock/liveApi'
+import { createCatalog } from '../../../../mock/catalog'
 import { useStore } from '../../../../mock/store'
 import type { CatalogSuggestion, CatalogSuggestionDraft, PendingUser } from '../../../../mock/types'
 import {
@@ -56,7 +57,7 @@ export function RequestsPanel({
   suggestions?: CatalogSuggestion[]
 }) {
   const { t } = useI18n()
-  const { db, plantxEnv, approvePendingUser, rejectPendingUser, commitCatalog } = useStore()
+  const { db, fullDb, plantxEnv, approvePendingUser, rejectPendingUser, commitCatalog } = useStore()
   const suggestionsVersion = useSuggestionsVersion()
   const scripted = applications !== undefined || suggestions !== undefined
   const [remoteApps, setRemoteApps] = useState<PendingUser[]>([])
@@ -152,14 +153,10 @@ export function RequestsPanel({
   }
 
   const acceptIdea = (id: string, draft: CatalogSuggestionDraft) => {
-    let saved = false
-    commitCatalog(({ catalog, species }) => {
-      const next = applyCatalogSuggestion(catalog, species, draft)
-      if (!next) return { catalog, species }
-      saved = true
-      return next
-    })
-    if (!saved) return false
+    // Decide from the current catalog now: a state updater runs later, so a flag set inside it is not read in time.
+    const next = applyCatalogSuggestion(fullDb.catalog ?? createCatalog(), fullDb.species, draft)
+    if (!next) return false
+    commitCatalog(() => next)
     // An empty id is the admin's own new entry: there is no suggestion row to mark.
     if (id && scripted) {
       setStorySuggestions((rows) => rows.map((row) => (row.id === id ? { ...row, status: 'added', draft } : row)))
