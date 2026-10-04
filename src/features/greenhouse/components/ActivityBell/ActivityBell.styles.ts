@@ -43,6 +43,11 @@ export const Panel = styled.div`
   z-index: ${theme.z.menu};
   container-type: inline-size;
 
+  /* The thread header (title + XP / All) leaves room for the close button. */
+  aside > :first-child {
+    padding-inline-end: 48px;
+  }
+
   aside {
     width: 100%;
     height: min(62svh, 480px);

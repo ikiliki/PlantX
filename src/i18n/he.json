@@ -471,7 +471,10 @@
     "emptyTitle": "החממה שלכם מוכנה לצמח הראשון",
     "emptyBody": "צלמו תמונה וה־AI יזהה את הצמח, ישייך אותו לקטלוג וימלא את הפרטים. אתם בודקים ושומרים.",
     "emptyAction": "הוספת הצמח הראשון",
-    "aiCount": "{n} מאומתים ב־AI"
+    "aiCount": "{n} מאומתים ב־AI",
+    "activityShow": "הצגה",
+    "activityXp": "XP",
+    "activityAll": "הכול"
   },
   "todo": {
     "cancel": "ביטול",

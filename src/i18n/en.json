@@ -471,7 +471,10 @@
     "emptyTitle": "Your greenhouse is ready for its first plant",
     "emptyBody": "Take a photo and AI identifies the plant, maps it to the catalog, and fills in the details. You check and save.",
     "emptyAction": "Add your first plant",
-    "aiCount": "{n} AI verified"
+    "aiCount": "{n} AI verified",
+    "activityShow": "Show",
+    "activityXp": "XP",
+    "activityAll": "All"
   },
   "todo": {
     "cancel": "Cancel",

@@ -31,6 +31,8 @@ export const Root = styled.aside<{ $height?: number }>`
 export const Head = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   min-width: 0;
   padding: 10px 12px 8px;
   border-bottom: 1px solid ${theme.colors.border};

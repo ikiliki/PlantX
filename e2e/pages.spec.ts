@@ -44,6 +44,25 @@ test.describe('signed in', () => {
     await expect(page.locator('[data-feed-update="e2e-scan"]')).toHaveCount(0)
   })
 
+  test('greenhouse activity opens on XP; All adds my scans', async ({ page }, testInfo) => {
+    const at = new Date().toISOString()
+    const scan = { id: 'e2e-own-scan', kind: 'scan', userId: 'u-admin', body: 'e2e own scan', bodyHe: 'e2e own scan', createdAt: at }
+    await page.route('**/api/activities', async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback()
+      const res = await route.fetch()
+      const body = (await res.json()) as { activities: unknown[] }
+      await route.fulfill({ response: res, json: { activities: [scan, ...body.activities] } })
+    })
+    await expectPage(page, '/greenhouse')
+    // Phones keep the activity behind the top-bar bell.
+    if (testInfo.project.name === 'phone') await page.getByRole('button', { name: 'Greenhouse activities' }).click()
+    const rail = page.getByRole('complementary', { name: 'Greenhouse activities' })
+    await expect(rail.getByRole('radio', { name: 'XP' })).toBeChecked()
+    await expect(rail.getByText('e2e own scan')).toHaveCount(0)
+    await rail.getByRole('radio', { name: 'All' }).click()
+    await expect(rail.getByText('e2e own scan')).toBeVisible()
+  })
+
   test('admin APIs shows the three stages', async ({ page }) => {
     await expectPage(page, '/admin/apis')
     for (const stage of ['Plant check', 'Species', 'Catalog fields']) {
