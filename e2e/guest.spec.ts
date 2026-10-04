@@ -65,6 +65,13 @@ test.describe('guest', { tag: '@prod' }, () => {
     await expectPage(page, '/wiki')
   })
 
+  test('a plant from the October catalog has its wiki article', async ({ page }) => {
+    await expectPage(page, '/wiki/sp-staghorn')
+    await expect(page.getByRole('heading', { name: 'Staghorn fern' }).first()).toBeVisible()
+    await expect(page.getByText('Platycerium bifurcatum').first()).toBeVisible()
+    await expect(page.getByText('Soak the mount, then let it dry slightly').first()).toBeVisible()
+  })
+
   test('Suggest a plant asks a guest to sign in first', async ({ page }) => {
     await expectPage(page, '/wiki')
     await page.getByRole('button', { name: /suggest a plant/i }).click()
