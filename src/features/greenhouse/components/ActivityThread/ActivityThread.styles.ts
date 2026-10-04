@@ -28,11 +28,13 @@ export const Root = styled.aside<{ $height?: number }>`
   }
 `
 
+/** Title, then XP / All. In a narrow rail the toggle drops under the title instead of squeezing it. */
 export const Head = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px 8px;
   min-width: 0;
   padding: 10px 12px 8px;
   border-bottom: 1px solid ${theme.colors.border};
@@ -41,6 +43,7 @@ export const Head = styled.div`
 export const Title = styled.h2`
   margin: 0;
   min-width: 0;
+  white-space: nowrap;
   font-family: ${theme.fonts.display};
   font-weight: 400;
   font-size: 18px;

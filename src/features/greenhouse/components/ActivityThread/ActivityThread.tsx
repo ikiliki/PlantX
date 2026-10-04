@@ -77,7 +77,7 @@ function ActivityMessage({ entry, onOpen }: { entry: ActivityEntry; onOpen?: () 
 /** The owner's greenhouse log. Opens on activities that earned XP; All adds scans and the rest. */
 export function ActivityThread({ activity: all, height }: { activity: ActivityEntry[]; height?: number }) {
   const { t } = useI18n()
-  const { db } = useStore()
+  const { db, signedIn } = useStore()
   const [show, setShow] = useState<'xp' | 'all'>('xp')
   const activity = show === 'xp' ? all.filter((entry) => entry.kind && isPublicActivity(entry.kind)) : all
   const [openId, setOpenId] = useState<string | null>(null)
@@ -129,15 +129,18 @@ export function ActivityThread({ activity: all, height }: { activity: ActivityEn
     <Root $height={height} aria-label={t.greenhouse.activityTitle}>
       <Head>
         <Title>{t.greenhouse.activityTitle}</Title>
-        <Segmented
-          ariaLabel={t.greenhouse.activityShow}
-          value={show}
-          onChange={setShow}
-          options={[
-            { id: 'xp', label: t.greenhouse.activityXp },
-            { id: 'all', label: t.greenhouse.activityAll },
-          ]}
-        />
+        {/* A guest has no log of their own: just the header. */}
+        {signedIn ? (
+          <Segmented
+            ariaLabel={t.greenhouse.activityShow}
+            value={show}
+            onChange={setShow}
+            options={[
+              { id: 'xp', label: t.greenhouse.activityXp },
+              { id: 'all', label: t.greenhouse.activityAll },
+            ]}
+          />
+        ) : null}
       </Head>
       <ScrollFrame>
         <Scroll ref={scrollRef}>
