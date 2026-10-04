@@ -3,6 +3,7 @@ import { ThemeProvider } from 'styled-components'
 import { AppRoutes } from './app/AppRoutes/AppRoutes'
 import { RequestNotice } from './components/RequestNotice/RequestNotice'
 import { DemoBar } from './app/DemoBar/DemoBar'
+import { PreprodBar } from './app/PreprodBar/PreprodBar'
 import { I18nProvider } from './i18n/I18nProvider'
 import { StoreProvider, useStore } from './mock/store'
 import { GlobalStyle } from './theme/GlobalStyle'
@@ -27,6 +28,7 @@ export default function App() {
           <DocumentDirection />
           <BrowserRouter>
             <DemoBarGate />
+            <PreprodBar />
             <AuthProvider>
               <SellProvider>
                 <AppRoutes />

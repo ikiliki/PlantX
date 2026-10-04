@@ -108,6 +108,16 @@
       "graded": "Graded"
     }
   },
+  "preprod": {
+    "label": "PP",
+    "signedInAs": "Signed in as {name}",
+    "token": "Test token",
+    "guest": "Guest",
+    "admin": "{name} (admin)",
+    "badToken": "Wrong test token.",
+    "failed": "Could not switch user. Try again.",
+    "switching": "Switching user… the page reloads when ready."
+  },
   "login": {
     "title": "Sign in to PlantX",
     "subtitle": "Continue with a demo greenhouse, or browse as a guest",

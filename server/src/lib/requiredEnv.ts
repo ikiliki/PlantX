@@ -19,6 +19,9 @@ export function missingEnv(): EnvGap[] {
   if (!set('GOOGLE_CLIENT_ID', 'VITE_GOOGLE_CLIENT_ID')) gaps.push({ name: 'GOOGLE_CLIENT_ID', need: 'app' })
   // QA signs sessions with a fixed dev key; production must have its own.
   if (plantxEnv() === 'prod' && !set('SESSION_SECRET')) gaps.push({ name: 'SESSION_SECRET', need: 'app' })
+  if ((process.env.PLANTX_PREPROD || '').trim() === '1' && !set('PLANTX_TEST_TOKEN')) {
+    gaps.push({ name: 'PLANTX_TEST_TOKEN', need: 'app' })
+  }
   if (!set('PLANTNET_API_KEY')) gaps.push({ name: 'PLANTNET_API_KEY', need: 'identify' })
   if (!set('GEMINI_API_KEY')) gaps.push({ name: 'GEMINI_API_KEY', need: 'identify' })
   return gaps
