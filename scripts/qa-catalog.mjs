@@ -1,8 +1,11 @@
 /**
- * Loads the review catalog into local QA only (port 54322).
+ * Loads the catalog from src/mock/catalogGuide.ts into local QA only (port 54322).
  * Does not touch production.
+ *
+ *   npx tsx scripts/qa-catalog.mjs
  */
 import pg from 'pg'
+import { CATALOG_PLANTS } from '../src/mock/catalogGuide.ts'
 
 const QA = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 const url = new URL(QA)
@@ -12,75 +15,18 @@ if (url.port !== '54322' || url.hostname !== '127.0.0.1') {
 
 const opt = (id, label, labelHe, sign = id) => ({ id, label, labelHe, sign })
 
-const categories = [
-  ['pothos', 'sp-pothos', 'Pothos', 'פוטוס', 'POT'],
-  ['monstera', 'sp-monstera', 'Monstera', 'מונסטרה', 'MON'],
-  ['snake-plant', 'sp-snake', 'Snake plant', 'סנסיווריה', 'SAN'],
-  ['peace-lily', 'sp-peace', 'Peace lily', 'ספטיפיליום', 'SPL'],
-  ['spider-plant', 'sp-spider', 'Spider plant', 'ירקה', 'SPD'],
-  ['zz', 'sp-zz', 'ZZ plant', 'זמיה', 'ZAM'],
-  ['heartleaf', 'sp-heartleaf', 'Heartleaf philodendron', 'פילודנדרון לבבי', 'HRT'],
-  ['pilea', 'sp-pilea', 'Chinese money plant', 'פילאה', 'PIL'],
-  ['fiddle', 'sp-fiddle', 'Fiddle-leaf fig', 'פיקוס כינור', 'FLF'],
-  ['adansonii', 'sp-adansonii', 'Swiss cheese plant', 'מונסטרה אדנסוני', 'ADA'],
-  ['satin', 'sp-satin', 'Satin pothos', 'סינקדפסוס', 'SAT'],
-  ['rubber', 'sp-rubber', 'Rubber plant', 'פיקוס גומי', 'RUB'],
-  ['gloriosum', 'sp-gloriosum', 'Philodendron gloriosum', 'פילודנדרון גלוריוסום', 'GLO'],
-  ['clarinervium', 'sp-clarinervium', 'Anthurium clarinervium', 'אנטוריום קלרינרביום', 'ANT'],
-  ['hoya', 'sp-hoya', 'Hoya', 'הויה', 'HOY'],
-  ['frydek', 'sp-frydek', 'Alocasia Frydek', 'אלוקסיה פריידק', 'FRY'],
-  ['syngonium', 'sp-syngonium', 'Arrowhead', 'סינגוניום', 'SYN'],
-  ['begonia', 'sp-begonia', 'Polka-dot begonia', 'בגוניה מקולטה', 'BEG'],
-  ['orchid', 'sp-orchid', 'Moth orchid', 'סחלב', 'ORC'],
-].map(([id, speciesId, name, nameHe, ticker]) => ({ id, speciesId, name, nameHe, ticker, photo: '' }))
+const categories = CATALOG_PLANTS.map(({ id, speciesId, name, nameHe, ticker, photo }) => ({
+  id,
+  speciesId,
+  name,
+  nameHe,
+  ticker,
+  photo,
+}))
 
-const sub = (id, categoryId, name, nameHe, code) => ({ id, categoryId, name, nameHe, code, photo: null })
-
-const subcategories = [
-  sub('pothos-gold', 'pothos', 'Golden', 'זהוב', 'GOLD'),
-  sub('pothos-marble', 'pothos', 'Marble Queen', 'מרבל קווין', 'MARB'),
-  sub('pothos-neon', 'pothos', 'Neon', 'ניאון', 'NEON'),
-  sub('pothos-njoy', 'pothos', "N'Joy", 'אן ג׳וי', 'NJOY'),
-  sub('monstera-std', 'monstera', 'Standard', 'סטנדרט', 'STD'),
-  sub('monstera-thai', 'monstera', 'Thai Constellation', 'תאי קונסטלציה', 'THAI'),
-  sub('monstera-albo', 'monstera', 'Albo', 'אלבו', 'ALBO'),
-  sub('snake-laurentii', 'snake-plant', 'Laurentii', 'לורנטי', 'LAUR'),
-  sub('snake-moonshine', 'snake-plant', 'Moonshine', 'מונשיין', 'MOON'),
-  sub('snake-hahnii', 'snake-plant', 'Hahnii', 'האני', 'HAHN'),
-  sub('peace-wallisii', 'peace-lily', 'Wallisii', 'ווליסי', 'WALL'),
-  sub('peace-sensation', 'peace-lily', 'Sensation', 'סנסיישן', 'SENS'),
-  sub('spider-vittatum', 'spider-plant', 'Vittatum', 'ויטטום', 'VITT'),
-  sub('spider-bonnie', 'spider-plant', 'Bonnie', 'בוני', 'BONN'),
-  sub('zz-std', 'zz', 'Standard', 'סטנדרט', 'STD'),
-  sub('zz-raven', 'zz', 'Raven', 'רייבן', 'RAVN'),
-  sub('heart-green', 'heartleaf', 'Green', 'ירוק', 'GRN'),
-  sub('heart-brasil', 'heartleaf', 'Brasil', 'ברזיל', 'BRAS'),
-  sub('heart-micans', 'heartleaf', 'Micans', 'מיקנס', 'MICA'),
-  sub('pilea-std', 'pilea', 'Standard', 'סטנדרט', 'STD'),
-  sub('fiddle-std', 'fiddle', 'Standard', 'סטנדרט', 'STD'),
-  sub('fiddle-bambino', 'fiddle', 'Bambino', 'במבינו', 'BAMB'),
-  sub('adan-narrow', 'adansonii', 'Narrow', 'צר', 'NAR'),
-  sub('adan-wide', 'adansonii', 'Wide', 'רחב', 'WIDE'),
-  sub('satin-argy', 'satin', 'Argyraeus', 'ארגיראוס', 'ARGY'),
-  sub('satin-exotica', 'satin', 'Exotica', 'אקזוטיקה', 'EXO'),
-  sub('rubber-burgundy', 'rubber', 'Burgundy', 'בורגונדי', 'BURG'),
-  sub('rubber-tineke', 'rubber', 'Tineke', 'טינקה', 'TINK'),
-  sub('rubber-ruby', 'rubber', 'Ruby', 'רובי', 'RUBY'),
-  sub('gloriosum-std', 'gloriosum', 'Standard', 'סטנדרט', 'STD'),
-  sub('clarinervium-std', 'clarinervium', 'Standard', 'סטנדרט', 'STD'),
-  sub('hoya-krimson', 'hoya', 'Krimson Queen', 'קרימסון קווין', 'KRIM'),
-  sub('hoya-compacta', 'hoya', 'Compacta', 'קומפקטה', 'COMP'),
-  sub('frydek-green', 'frydek', 'Green', 'ירוק', 'GRN'),
-  sub('frydek-var', 'frydek', 'Variegated', 'מגוון', 'VAR'),
-  sub('syn-white', 'syngonium', 'White Butterfly', 'וייט בטרפליי', 'WBF'),
-  sub('syn-pink', 'syngonium', 'Pink Allusion', 'פינק אלוז׳ן', 'PINK'),
-  sub('syn-neon', 'syngonium', 'Neon', 'ניאון', 'NEON'),
-  sub('begonia-std', 'begonia', 'Standard', 'סטנדרט', 'STD'),
-  sub('begonia-wightii', 'begonia', 'Wightii', 'וייטי', 'WIGH'),
-  sub('orchid-white', 'orchid', 'White', 'לבן', 'WHT'),
-  sub('orchid-pink', 'orchid', 'Pink', 'ורוד', 'PNK'),
-  sub('orchid-spotted', 'orchid', 'Spotted', 'מנוקד', 'SPOT'),
-]
+const subcategories = CATALOG_PLANTS.flatMap((plant) =>
+  plant.subs.map(({ id, name, nameHe, code, photo }) => ({ id, categoryId: plant.id, name, nameHe, code, photo })),
+)
 
 const letter = (id) => opt(id, id, id, id)
 
@@ -130,7 +76,16 @@ const properties = [
     required: true,
     inMarketName: true,
     sign: 'GF',
-    categoryIds: ['pothos'],
+    categoryIds: [
+      'pothos',
+      'string-turtles',
+      'inch-plant',
+      'string-hearts',
+      'string-pearls',
+      'mistletoe-cactus',
+      'mini-monstera',
+      'melanochrysum',
+    ],
     subcategoryIds: [],
     options: [
       opt('climbing', 'Climbing', 'מטפס', 'CLB'),
@@ -211,6 +166,21 @@ const properties = [
       opt('spike', 'Spike', 'שיבולת', 'SPK'),
       opt('open', 'Open', 'פתוח', 'OPN'),
       opt('resting', 'Resting', 'מנוחה', 'RST'),
+    ],
+  },
+  {
+    id: 'flowering',
+    name: 'Flowering',
+    nameHe: 'מצב פריחה',
+    required: false,
+    inMarketName: true,
+    sign: 'FLW',
+    categoryIds: ['african-violet', 'cyclamen', 'flamingo-flower', 'thanksgiving', 'desert-rose'],
+    subcategoryIds: [],
+    options: [
+      opt('buds', 'Buds', 'ניצנים', 'BUD'),
+      opt('blooming', 'In bloom', 'פורח', 'INB'),
+      opt('resting', 'Resting', 'במנוחה', 'RST'),
     ],
   },
 ]

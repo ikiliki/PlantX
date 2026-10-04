@@ -318,5 +318,421 @@
     "author": "Forest &amp; Kim Starr",
     "license": "CC BY 3.0",
     "source": "https://commons.wikimedia.org/wiki/File:Starr_031108-0130_Ficus_lyrata.jpg"
+  },
+  {
+    "id": "baby-rubber",
+    "file": "baby-rubber.jpg",
+    "title": "Peperomia obtusifolia",
+    "author": "Jerzy Opiola",
+    "license": "CC BY-SA 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Peperomia_obtusifoli_LTVOOl7bxzhD.jpeg"
+  },
+  {
+    "id": "watermelon-pep",
+    "file": "watermelon-pep.jpg",
+    "title": "Peperomia argyreia",
+    "author": "Krzysztof Ziarnek, Kenraiz",
+    "license": "CC BY-SA 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Peperomia_argyreia_2_3rYLwajpBxVh.jpeg"
+  },
+  {
+    "id": "ripple-pep",
+    "file": "ripple-pep.jpg",
+    "title": "Peperomia caperata",
+    "author": "Mokkie",
+    "license": "CC BY-SA 3.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Peperomia_caperata___5pyHKEPjiXNi.jpeg"
+  },
+  {
+    "id": "string-turtles",
+    "file": "string-turtles.jpg",
+    "title": "Peperomia prostrata",
+    "author": "Jerzy Opiola",
+    "license": "CC BY-SA 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Peperomia_prostrata_lQisQjkpTHsJ.jfif"
+  },
+  {
+    "id": "prayer-plant",
+    "file": "prayer-plant.jpg",
+    "title": "Maranta leuconeura",
+    "author": "Maja Dumat",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Maranta_leuconeura--Maja-Dumat--CC-BY.jpg"
+  },
+  {
+    "id": "orbifolia",
+    "file": "orbifolia.jpg",
+    "title": "Goeppertia orbifolia",
+    "author": "Fregisseur",
+    "license": "CC BY-SA 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Goeppertia_orbifolia_TKVQwYloo28B.jpeg"
+  },
+  {
+    "id": "peacock-plant",
+    "file": "peacock-plant.jpg",
+    "title": "Goeppertia makoyana",
+    "author": "Maja Dumont",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Calathea_makoyana_Maja_Dumat_ccby2.0.jpg"
+  },
+  {
+    "id": "pinstripe",
+    "file": "pinstripe.jpg",
+    "title": "Goeppertia ornata",
+    "author": "Renan Andrade",
+    "license": "CC BY-SA 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Goeppertia_ornata_fo_miaBQjqpxBXH.jpeg"
+  },
+  {
+    "id": "birds-nest-fern",
+    "file": "birds-nest-fern.jpg",
+    "title": "Asplenium nidus",
+    "author": "Forest and Kim Starr",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Asplenium_nidus_pott_U8ymw9CxCvqy.jpeg"
+  },
+  {
+    "id": "boston-fern",
+    "file": "boston-fern.jpg",
+    "title": "Nephrolepis exaltata",
+    "author": "David Eickhoff",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Nephrolepis_exaltata_David_Eickhoff_ccby2.0.jpg"
+  },
+  {
+    "id": "staghorn",
+    "file": "staghorn.jpg",
+    "title": "Platycerium bifurcatum",
+    "author": "Forest and Kim Starr",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Platycerium_bifurcatum_Forest_and_Kim_Starr_ccby2.0_2.jpg"
+  },
+  {
+    "id": "maidenhair",
+    "file": "maidenhair.jpg",
+    "title": "Adiantum raddianum",
+    "author": "Forest and Kim Starr",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Adiantum-raddianum-2--Forest-and-Kim-Starr--CC-BY.jpg"
+  },
+  {
+    "id": "parlor-palm",
+    "file": "parlor-palm.jpg",
+    "title": "Chamaedorea elegans",
+    "author": "Cindy Christian",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/20250724_111430_Cham_6ELfDQ4It62b.jpeg"
+  },
+  {
+    "id": "areca-palm",
+    "file": "areca-palm.jpg",
+    "title": "Dypsis lutescens",
+    "author": "Kathleen Moore",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Dypsis-lutescens--Kathleen_Moore--CC-BY-20.jpg"
+  },
+  {
+    "id": "ponytail-palm",
+    "file": "ponytail-palm.jpg",
+    "title": "Beaucarnea recurvata",
+    "author": "Maja Dumat",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Beaucarnea-recurvata--Maja-Dumat--CC-BY.jpg"
+  },
+  {
+    "id": "cast-iron",
+    "file": "cast-iron.jpg",
+    "title": "Aspidistra elatior",
+    "author": "rrei320",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Aspidistra-elatior--rrei320--CC-BY.jpg"
+  },
+  {
+    "id": "dragon-tree",
+    "file": "dragon-tree.jpg",
+    "title": "Dracaena marginata",
+    "author": "Cindy Christian",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/20250522_140453_Drac_nyZiYu9HlJNe.jpeg"
+  },
+  {
+    "id": "corn-plant",
+    "file": "corn-plant.jpg",
+    "title": "Dracaena fragrans",
+    "author": "Cindy Christian",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/20250522_140307_Drac_XTxme7Av44KW.jpeg"
+  },
+  {
+    "id": "inch-plant",
+    "file": "inch-plant.jpg",
+    "title": "Tradescantia zebrina",
+    "author": "Maja Dumat",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Tradescantia-zebrina--Maja-Dumat--CC-BY.jpg"
+  },
+  {
+    "id": "nerve-plant",
+    "file": "nerve-plant.jpg",
+    "title": "Fittonia albivenis",
+    "author": "Hope Duckworth",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/fittonia_albivenis-i_uf7pWi4EY677.jfif"
+  },
+  {
+    "id": "aluminum-plant",
+    "file": "aluminum-plant.jpg",
+    "title": "Pilea cadierei",
+    "author": "Daderot",
+    "license": "CC0 1.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Pilea_cadierei_Dader_N77MNbJ8llee.jpeg"
+  },
+  {
+    "id": "string-hearts",
+    "file": "string-hearts.jpg",
+    "title": "Ceropegia woodii",
+    "author": "Maja Dumat",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Ceropegia_woodii_vin_ERlka53XAQIs.jpeg"
+  },
+  {
+    "id": "string-pearls",
+    "file": "string-pearls.jpg",
+    "title": "Curio rowleyanus",
+    "author": "Cindy Christian",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/20250930_135350_Curi_u4iWx1ywAkw8.jpeg"
+  },
+  {
+    "id": "jade",
+    "file": "jade.jpg",
+    "title": "Crassula ovata",
+    "author": "Orange Harvey",
+    "license": "CC BY-SA 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Crassula_ovata_Oreng_vCZVAIpmMi0l.mpo"
+  },
+  {
+    "id": "aloe-vera",
+    "file": "aloe-vera.jpg",
+    "title": "Aloe vera",
+    "author": "Mokkie",
+    "license": "CC BY-SA 3.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Aloe_Vera_form_Mokki_xvFrD1IxGzWb.jpeg"
+  },
+  {
+    "id": "zebra-haworthia",
+    "file": "zebra-haworthia.jpg",
+    "title": "Haworthiopsis attenuata",
+    "author": "Popperipopp",
+    "license": "CC BY 3.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Haworthia_attenuata_n3QO2T4IdIi2.jpg"
+  },
+  {
+    "id": "mexican-snowball",
+    "file": "mexican-snowball.jpg",
+    "title": "Echeveria elegans",
+    "author": "Dick Culbert",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Echeveria_elegansDi_3ZawA3GRRWcM.jpeg"
+  },
+  {
+    "id": "thanksgiving",
+    "file": "thanksgiving.jpg",
+    "title": "Schlumbergera truncata",
+    "author": "Cindy Christian",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/20191227_122459_Schl_tPkYR7Ay2iWc.jpeg"
+  },
+  {
+    "id": "mistletoe-cactus",
+    "file": "mistletoe-cactus.jpg",
+    "title": "Rhipsalis baccifera",
+    "author": "Sadambio",
+    "license": "CC BY-SA 2.5",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Rhipsalis_baccifera_3O81S9MwQoiW.jfif"
+  },
+  {
+    "id": "venus-flytrap",
+    "file": "venus-flytrap.jpg",
+    "title": "Dionaea muscipula",
+    "author": "Cathy Dewitt",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Dionaea_muscipula-ve_excjYf6kJ4LT.jpg"
+  },
+  {
+    "id": "mini-monstera",
+    "file": "mini-monstera.jpg",
+    "title": "Rhaphidophora tetrasperma",
+    "author": "Maja Dumat",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Rhaphidophora_tetras_ghApwVQ7mh0k.jpeg"
+  },
+  {
+    "id": "hoya-kerrii",
+    "file": "hoya-kerrii.jpg",
+    "title": "Hoya kerrii",
+    "author": "Kate Ter Haar",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Hoya_kerrii_potted_p_AafEj7AHSp5G.jpeg"
+  },
+  {
+    "id": "living-stones",
+    "file": "living-stones.jpg",
+    "title": "Lithops spp.",
+    "author": "Dick Culbert",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Lithops_plate_Dick_C_sTbZggWvb2Ej.jpeg"
+  },
+  {
+    "id": "sky-plant",
+    "file": "sky-plant.jpg",
+    "title": "Tillandsia ionantha",
+    "author": "tatiana Petra",
+    "license": "Public Domain Mark 1.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/tillandsia-ionatha-t_ylDAAJE35kFs.jpe"
+  },
+  {
+    "id": "desert-rose",
+    "file": "desert-rose.jpg",
+    "title": "Adenium obesum",
+    "author": "Daderot",
+    "license": "CC0 1.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Adenium_obesum_form__3RIttW5eXs75.jpeg"
+  },
+  {
+    "id": "purple-shamrock",
+    "file": "purple-shamrock.jpg",
+    "title": "Oxalis triangularis",
+    "author": "Maja Dumat",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Oxalis_triangularis__s93koRatXZ7Y.jpg"
+  },
+  {
+    "id": "flamingo-flower",
+    "file": "flamingo-flower.jpg",
+    "title": "Anthurium andraeanum",
+    "author": "Forest and Kim Starr",
+    "license": "CC BY 3.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Anthurium_andraeanum_UappEkgFFlsC.jpeg"
+  },
+  {
+    "id": "bird-paradise",
+    "file": "bird-paradise.jpg",
+    "title": "Strelitzia reginae",
+    "author": "Cliff",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Strelitzia_reginae_L_K2MqAFyBe1II.jpe"
+  },
+  {
+    "id": "white-paradise",
+    "file": "white-paradise.jpg",
+    "title": "Strelitzia nicolai",
+    "author": "Jorge Franganillo",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Strelitzia_nicolai_J_Pad6lfcn1fB9.jpeg"
+  },
+  {
+    "id": "fatsia",
+    "file": "fatsia.jpg",
+    "title": "Fatsia japonica",
+    "author": "skdavidson",
+    "license": "CC BY-SA 2.5",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/fatsia_habitat_2_zdUlzNpK6crh.mpo"
+  },
+  {
+    "id": "coffee",
+    "file": "coffee.jpg",
+    "title": "Coffea arabica",
+    "author": "Forest and Kim Starr",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Coffea_arabica_Forest_and_Kim_Starr_ccby2.0.jpg"
+  },
+  {
+    "id": "banana",
+    "file": "banana.jpg",
+    "title": "Musa acuminata",
+    "author": "Forest and Kim Starr",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Musa_acuminata_Grand_ZUKccbTn0GsQ.jpeg"
+  },
+  {
+    "id": "caladium",
+    "file": "caladium.jpg",
+    "title": "Caladium bicolor",
+    "author": "Holmes Palacios",
+    "license": "CC BY 2.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/Caladium-bicolor-Holmes-Palacios--CC-BY.jpg"
+  },
+  {
+    "id": "african-violet",
+    "file": "african-violet.jpg",
+    "title": "Streptocarpus ionanthus",
+    "author": "Hope Duckworth",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/saintpaulia-ionanthu_3mxA7td8eMld.jfif"
+  },
+  {
+    "id": "cyclamen",
+    "file": "cyclamen.jpg",
+    "title": "Cyclamen persicum",
+    "author": "Hope Duckworth",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/cyclamen_persicum-wh_nggzAxMbob09.jpe"
+  },
+  {
+    "id": "crystallinum",
+    "file": "crystallinum.jpg",
+    "title": "Anthurium crystallinum",
+    "author": "Pajast",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Anthurium_crystallinum.JPG"
+  },
+  {
+    "id": "veitchii",
+    "file": "veitchii.jpg",
+    "title": "Anthurium veitchii",
+    "author": "Michael Wolf",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Anthurium_veitchii_05.jpg"
+  },
+  {
+    "id": "melanochrysum",
+    "file": "melanochrysum.jpg",
+    "title": "Philodendron melanochrysum",
+    "author": "David J. Stang",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Philodendron_melanochrysum_13zz.jpg"
+  },
+  {
+    "id": "cuprea",
+    "file": "cuprea.jpg",
+    "title": "Alocasia cuprea",
+    "author": "Frank Schulenburg",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Alocasia_cuprea.jpg"
+  },
+  {
+    "id": "spider-variegatum",
+    "file": "spider-variegatum.jpg",
+    "title": "Chlorophytum comosum 'Variegatum'",
+    "author": "linveggie",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chlorophytum_comosum_Variegatum.jpg"
+  },
+  {
+    "id": "snake-black-gold",
+    "file": "snake-black-gold.jpg",
+    "title": "Dracaena trifasciata 'Black Gold'",
+    "author": "Yercaud-elango",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Sansevieria_trifaciata_Black_Gold-1-R.M.Nagar-bengaluru-India.jpg"
+  },
+  {
+    "id": "hoya-green",
+    "file": "hoya-green.jpg",
+    "title": "Hoya carnosa",
+    "author": "Matt Stevens (Pitt County)",
+    "license": "CC BY 4.0",
+    "source": "https://eit-planttoolbox-prod.s3.amazonaws.com/media/images/20250522_140412_Hoya_82TMpz5jA5rQ.jpeg"
   }
 ]
