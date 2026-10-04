@@ -73,14 +73,18 @@ export const Primary = styled(Link)`
   font-weight: 800;
 `
 
-export const Secondary = styled(Link)`
+export const Secondary = styled.a`
   ${pressable}
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid ${theme.colors.border};
   background: rgba(255, 253, 248, 0.75);
   padding: 14px 22px;
   border-radius: ${theme.radii.pill};
   font-weight: 700;
   color: ${theme.colors.forest};
+  text-decoration: none;
 `
 
 export const LoginLine = styled.p`

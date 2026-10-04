@@ -14,12 +14,12 @@ export function LandingHero() {
         <Title>{t.landing.heroTitle}</Title>
         <Sub>{t.landing.heroSub}</Sub>
         <Actions>
-          <Primary to={appHref('/login?mode=signup')}>{t.landing.signUp}</Primary>
-          <Secondary to={appHref('/greenhouse')}>{t.landing.goToApp}</Secondary>
+          <Primary to={appHref('/greenhouse')}>{t.landing.startGreenhouse}</Primary>
+          <Secondary href="#tour">{t.landing.heroSeeHow}</Secondary>
         </Actions>
         <LoginLine>
-          {t.landing.haveAccount}{' '}
-          <Link to={appHref('/login')}>{t.landing.logIn}</Link>
+          {t.landing.guestLead}{' '}
+          <Link to={appHref('/login')}>{t.landing.logIn}</Link> {t.landing.guestTail}
         </LoginLine>
       </div>
       <Visual>
