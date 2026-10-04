@@ -1,6 +1,7 @@
-# UI regression after each deploy. Vercel reports the deploy to GitHub; this runs Playwright against it
-# and posts the result with screenshots to the "PP regression" issue.
-# - PP head (Preview): the whole suite, signed in through the PP test login.
+# UI regression after each deploy. Vercel reports the deploy to GitHub; this runs Playwright against it.
+# - Any preview (every branch is a PP environment): the whole suite, signed in through the PP test login.
+#   Results go to the branch's open PR, or to the "PP regression" issue for the preprod/ai-testers head.
+#   A branch without a PR gets the run summary only.
 # - Production: only the @prod tests (guest, read-only), against the production domain.
 # Identify is always answered by the tests (e2e/support.ts): no live provider is ever called.
 name: PP regression
@@ -16,10 +17,10 @@ on:
 permissions:
   contents: write # screenshots go to the qa-assets branch
   issues: write
+  pull-requests: write # results on the branch's PR
   deployments: read
 
-# One slot per deployed commit: Vercel reports every branch, and a later feature-branch deploy
-# must not cancel the run for the PP head.
+# One slot per deployed commit: a deploy of another branch must not cancel this one.
 concurrency:
   group: pp-regression-${{ github.event.deployment.sha || github.run_id }}
   cancel-in-progress: false
@@ -35,7 +36,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Only the PP branch head
+      - name: What to test and where to report
         id: target
         env:
           INPUT_URL: ${{ inputs.url }}
@@ -52,12 +53,15 @@ jobs:
             echo "grep=@prod" >> "$GITHUB_OUTPUT"; echo "label=Production" >> "$GITHUB_OUTPUT"
             echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"
           pp=$(gh api "repos/$GITHUB_REPOSITORY/branches/preprod%2Fai-testers" --jq .commit.sha)
-          if [ "$pp" != "$DEPLOY_SHA" ]; then
-            echo "Deploy $DEPLOY_SHA is not the PP head ($pp); skipping."
-            echo "run=false" >> "$GITHUB_OUTPUT"; exit 0
+          if [ "$pp" = "$DEPLOY_SHA" ]; then
+            echo "label=PP" >> "$GITHUB_OUTPUT"; echo "report=issue" >> "$GITHUB_OUTPUT"; exit 0
           fi
-          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"; echo "label=PP" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$DEPLOY_SHA/pulls" --jq '[.[] | select(.state == "open")][0].number // empty')
+          branch=$(gh api "repos/$GITHUB_REPOSITORY/commits/$DEPLOY_SHA/pulls" --jq '[.[] | select(.state == "open")][0].head.ref // empty')
+          echo "label=PP preview${branch:+ · $branch}" >> "$GITHUB_OUTPUT"
+          if [ -n "$pr" ]; then echo "report=pr $pr" >> "$GITHUB_OUTPUT"; else echo "report=summary" >> "$GITHUB_OUTPUT"; fi
 
       - uses: actions/checkout@v4
         if: steps.target.outputs.run == 'true'
@@ -105,7 +109,8 @@ jobs:
           APP_URL: ${{ steps.target.outputs.url }}
           RUN_LABEL: ${{ steps.target.outputs.label }}
           OUTCOME: ${{ steps.tests.outcome }}
-        run: bash scripts/e2e-publish.sh issue
+          REPORT: ${{ steps.target.outputs.report || 'issue' }}
+        run: bash scripts/e2e-publish.sh $REPORT
 
       - name: Fail when tests failed
         if: steps.tests.outcome == 'failure'

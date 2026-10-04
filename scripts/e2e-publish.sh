@@ -2,6 +2,7 @@
 # CI only. Pushes this run's screenshots to the qa-assets branch and comments the summary.
 # Usage: scripts/e2e-publish.sh issue            → the open "PP regression" issue
 #        scripts/e2e-publish.sh pr <number>      → that pull request
+#        scripts/e2e-publish.sh summary          → the run summary only
 # Needs GH_TOKEN, and APP_URL / RUN_URL for the header line.
 set -u
 target="$1"
@@ -21,6 +22,9 @@ cp test-results/assets/*.png "../qa-assets/$dir/" 2>/dev/null || true
 { echo "${RUN_LABEL:+**$RUN_LABEL** · }**App:** $APP_URL · **Commit:** \`${GITHUB_SHA::7}\` · [Run]($RUN_URL)"; echo; cat test-results/summary.md; } > comment.md
 cat comment.md >> "$GITHUB_STEP_SUMMARY"
 
+if [ "$target" = "summary" ]; then
+  exit 0
+fi
 if [ "$target" = "pr" ]; then
   gh pr comment "$2" --body-file comment.md
   exit 0
