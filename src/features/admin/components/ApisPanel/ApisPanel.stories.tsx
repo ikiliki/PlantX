@@ -126,6 +126,9 @@ const fiddle: CatalogSuggestion = {
   provider: 'gemini',
   hits: 2,
   status: 'open',
+  origin: 'identify',
+  suggestedBy: [],
+  note: '',
   draft: {
     category: { name: 'Fiddle-leaf fig', nameHe: 'פיקוס כינור', ticker: 'FIC', photo: '' },
     subcategory: { name: 'Standard', nameHe: 'רגיל', code: 'STD', photo: '' },

@@ -228,7 +228,10 @@ function optionId(label: string, sign: string, taken: string[]) {
   return uniqueId(base, taken)
 }
 
-/** Create the category, its subcategory, and the proposed properties. Returns null when a ticker or sign is taken. */
+/**
+ * Create the category, its subcategory, and the proposed properties; with `draft.categoryId`, add the variety
+ * to that category instead. Returns null when a ticker, variety code or sign is taken.
+ */
 export function applyCatalogSuggestion(
   catalog: Catalog,
   species: Species[],
@@ -243,8 +246,11 @@ export function applyCatalogSuggestion(
     .replace(/[^A-Z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 8)
-  if (!name || !ticker || !subName || !code) return null
-  if (catalog.categories.some((item) => item.ticker === ticker)) return null
+  const existing = draft.categoryId ? catalog.categories.find((item) => item.id === draft.categoryId) : undefined
+  if (draft.categoryId && !existing) return null
+  if (!subName || !code) return null
+  if (!existing && (!name || !ticker || catalog.categories.some((item) => item.ticker === ticker))) return null
+  if (existing && catalog.subcategories.some((item) => item.categoryId === existing.id && item.code === code)) return null
   const usedSigns = new Set<string>()
   for (const prop of draft.properties) {
     if (!prop.inMarketName) continue
@@ -253,13 +259,16 @@ export function applyCatalogSuggestion(
     usedSigns.add(sign)
   }
 
-  const stepped = upsertCategory(catalog, species, {
-    name,
-    nameHe: draft.category.nameHe,
-    ticker,
-    photo: draft.category.photo,
-  })
-  const category = stepped.catalog.categories.find((item) => item.ticker === ticker)
+  // A new variety joins its category as it is; a new plant creates the category (and its species) first.
+  const stepped = existing
+    ? { catalog, species }
+    : upsertCategory(catalog, species, {
+        name,
+        nameHe: draft.category.nameHe,
+        ticker,
+        photo: draft.category.photo,
+      })
+  const category = existing ?? stepped.catalog.categories.find((item) => item.ticker === ticker)
   if (!category) return null
 
   let next = upsertSubcategory(stepped.catalog, {

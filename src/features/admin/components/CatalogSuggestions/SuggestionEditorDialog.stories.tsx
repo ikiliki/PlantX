@@ -14,6 +14,9 @@ const sample: CatalogSuggestion = {
   provider: 'gemini',
   hits: 2,
   status: 'open',
+  origin: 'member',
+  suggestedBy: ['u-maya'],
+  note: 'Found it at a nursery in Haifa. Leaves look like a violin.',
   draft: {
     category: { name: 'Ficus', nameHe: 'פיקוס', ticker: 'FICU', photo: defaultPlantPhoto },
     subcategory: { name: 'Fiddle-leaf', nameHe: 'כינור', code: 'LYRA', photo: defaultPlantPhoto },

@@ -10,6 +10,7 @@ import type { Catalog, Diagnosis, IdentifyTried, Locale, PhotoCheck } from '../.
 import { readPhoto, thumbPhoto } from '../../../../lib/readPhoto'
 import { catalogName } from '../../../catalog/catalog'
 import { MAX_PLANT_PHOTOS, scanActivityText } from '../../identification'
+import { noteMockScanSuggestion } from '../../../catalog/useCatalogSuggestions'
 import { AiScan, type AiScanFact, type AiScanState } from '../AiScan/AiScan'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import {
@@ -167,6 +168,8 @@ export function PhotoIdentify({
       patch(id, { phase: 'failed', tried: result.tried, requestId: result.record?.id })
       return
     }
+    // The server files a not-in-catalog scan as the member's suggestion; mock mode does it here.
+    if (uiMock && currentUser && db.catalog) noteMockScanSuggestion(result.diagnosis, currentUser.id, db.catalog)
     patch(id, {
       phase: phaseFromDiagnosis(result.diagnosis),
       diagnosis: result.diagnosis,

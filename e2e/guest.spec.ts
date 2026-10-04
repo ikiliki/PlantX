@@ -64,11 +64,18 @@ test.describe('guest', { tag: '@prod' }, () => {
   test('catalog is open to guests', async ({ page }) => {
     await expectPage(page, '/wiki')
   })
+
+  test('Suggest a plant asks a guest to sign in first', async ({ page }) => {
+    await expectPage(page, '/wiki')
+    await page.getByRole('button', { name: /suggest a plant/i }).click()
+    await expect(page.getByRole('dialog').filter({ hasText: /log in|sign in|google/i }).last()).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Suggest a plant' })).toHaveCount(0)
+  })
 })
 
 // The landing is its own domain in production, so it stays out of @prod.
 test('landing loads', async ({ page }) => {
-  await page.goto('/landing')
-  await page.waitForLoadState('networkidle')
-  await expect(page.getByRole('heading').first()).toBeVisible()
+  // The landing auto-advances its AI steps and keeps loading stills, so the network may never go idle.
+  await page.goto('/landing', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 20_000 })
 })

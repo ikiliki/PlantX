@@ -30,3 +30,22 @@ export const Empty = styled.p`
   text-align: center;
   color: ${theme.colors.muted};
 `
+
+export const SuggestRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 14px;
+  border: 1px dashed ${theme.colors.border};
+  border-radius: ${theme.radii.md};
+  background: ${theme.colors.cream};
+  p {
+    flex: 1 1 220px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: ${theme.colors.muted};
+  }
+`

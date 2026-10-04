@@ -42,11 +42,21 @@ function rowOf(row: Record<string, unknown>): CatalogSuggestion {
     provider: String(row.provider ?? ''),
     hits: Number(row.hits ?? 1),
     status: row.status === 'dismissed' || row.status === 'added' ? row.status : 'open',
+    origin: row.origin === 'member' ? 'member' : 'identify',
+    suggestedBy: Array.isArray(row.suggested_by) ? row.suggested_by.map(String) : [],
+    note: String(row.note ?? ''),
     draft: draftOf(row),
   }
 }
 
-/** Open category ideas from identify. */
+/** A new variety joins rows for the same category and name; a new plant joins by scientific name, else name. */
+function matchKey(input: { name: string; scientificName: string; draft: { categoryId?: string } }) {
+  const categoryId = input.draft.categoryId?.trim() ?? ''
+  const name = input.name.trim().toLowerCase()
+  return { categoryId, key: categoryId ? name : input.scientificName.trim().toLowerCase() || name }
+}
+
+/** Plants the catalog lacks, from identify and from members. */
 export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogSuggestions'] {
   return {
     async list(status = 'open') {
@@ -60,24 +70,42 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
       return (result.rows as Record<string, unknown>[]).map(rowOf)
     },
 
-    async suggest(input) {
-      const key = input.scientificName.trim().toLowerCase() || input.name.trim().toLowerCase()
-      if (!key) return
-      const existing = await pool.query(
-        `select id from catalog_suggestions
-         where status = 'open' and lower(case when scientific_name <> '' then scientific_name else name end) = $1
-         limit 1`,
-        [key],
+    async listFor(userId) {
+      const result = await pool.query(
+        `select * from catalog_suggestions where status = 'open' and $1 = any(suggested_by) order by created_at desc`,
+        [userId],
       )
-      const found = existing.rows[0] as { id: string } | undefined
-      if (found) {
-        await pool.query(`update catalog_suggestions set hits = hits + 1 where id = $1`, [found.id])
-        return
-      }
+      return (result.rows as Record<string, unknown>[]).map(rowOf)
+    },
+
+    async suggest(input) {
+      const { categoryId, key } = matchKey(input)
+      if (!key) return null
+      const userId = input.userId ?? ''
+      const note = input.note?.trim() ?? ''
+      const joined = await pool.query(
+        `update catalog_suggestions
+         set hits = hits + 1,
+             suggested_by = case when $3 = '' or $3 = any(suggested_by) then suggested_by else array_append(suggested_by, $3) end,
+             note = case when note = '' then $4 else note end
+         where id = (
+           select id from catalog_suggestions
+           where status = 'open'
+             and coalesce(draft ->> 'categoryId', '') = $2
+             and lower(case when $2 <> '' or scientific_name = '' then name else scientific_name end) = $1
+           order by created_at
+           limit 1
+         )
+         returning *`,
+        [key, categoryId, userId, note],
+      )
+      if (joined.rows[0]) return rowOf(joined.rows[0] as Record<string, unknown>)
       const id = `sug-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
-      await pool.query(
-        `insert into catalog_suggestions (id, name, scientific_name, genus, common_names, provider, draft)
-         values ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb)`,
+      const created = await pool.query(
+        `insert into catalog_suggestions
+           (id, name, scientific_name, genus, common_names, provider, draft, origin, suggested_by, note)
+         values ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, $8, $9::text[], $10)
+         returning *`,
         [
           id,
           input.name,
@@ -86,8 +114,19 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
           JSON.stringify(input.commonNames),
           input.provider,
           JSON.stringify(input.draft),
+          input.origin,
+          userId ? [userId] : [],
+          note,
         ],
       )
+      return rowOf(created.rows[0] as Record<string, unknown>)
+    },
+
+    async setDraft(id, draft) {
+      await pool.query(`update catalog_suggestions set draft = $2::jsonb where id = $1 and status = 'open'`, [
+        id,
+        JSON.stringify(draft),
+      ])
     },
 
     async dismiss(id) {

@@ -489,12 +489,17 @@ export type SuggestedProperty = {
 
 /** Category, subcategory, and properties proposed for one unmatched plant. */
 export type CatalogSuggestionDraft = {
+  /** A new variety of this existing category. The `category` fields are then only its display copy. */
+  categoryId?: string
   category: { name: string; nameHe: string; ticker: string; photo: string }
   subcategory: { name: string; nameHe: string; code: string; photo: string }
   properties: SuggestedProperty[]
 }
 
-/** A plant identify could not match. Only the admin catalog sees these. */
+/**
+ * A plant the catalog lacks: from a scan that matched no category (`identify`) or a member's
+ * Catalog form (`member`). Admins see every row; a member sees their own open rows as pending.
+ */
 export type CatalogSuggestion = {
   id: string
   createdAt: string
@@ -502,11 +507,28 @@ export type CatalogSuggestion = {
   scientificName: string
   genus: string
   commonNames: string[]
+  /** Admin only. Empty in a member's own list. */
   provider: string
   hits: number
   /** `open` is waiting. `added` joined the catalog. `dismissed` was declined. */
   status: 'open' | 'dismissed' | 'added'
+  origin: 'identify' | 'member'
+  /** User ids who suggested it. A member's own list holds only them. */
+  suggestedBy: string[]
+  /** What the member wrote for the admin. */
+  note: string
   draft: CatalogSuggestionDraft
+}
+
+/** The Catalog "Suggest a plant" form. */
+export type CatalogSuggestionInput = {
+  name: string
+  scientificName: string
+  /** An existing category this is a variety of. Empty means a new kind of plant. */
+  categoryId: string
+  note: string
+  /** JPEG data URL, optional. */
+  photo: string
 }
 
 export type Diagnosis = {

@@ -32,6 +32,10 @@ Gemini off, missing a key, or a gate that answers not a plant stops the pipeline
 - Admin playground (`POST /api/identify/test`) can target one provider, or `chain` with `stages` (gate, species, draft), each ready or mock plus a scenario. It ignores the saved switches. Mock uses the canned body. Ready calls the real API.
 - UI-mock mode has no server: `src/mock/identifyMock.ts` answers on the client. Never run `live` or `POST /api/identify` in automated checks.
 
+## Not in catalog → suggestion
+
+A plant answer with no catalog category is filed as a catalog suggestion (`catalog_suggestions`, `catalogSuggestionService.fromScan`). An Add Plant scan files it for the member who scanned (`suggested_by`, `origin = 'identify'`), live or mock, before identify answers, so it is already pending in their Catalog; the playground files only live answers, with no member. The row starts on the plain draft (`fallbackDraft`); on a live scan identify asks Gemini for the admin's draft afterwards and `setDraft` replaces it. Open rows for the same plant are joined (one more hit, one more suggester), never duplicated. Filing never fails the scan. UI-mock mode files in the browser (`noteMockScanSuggestion`). The member-facing flow is in plantx-views (Catalog suggestions).
+
 ## History
 
 Every request is saved to `identify_requests` (thumb, mode, source, diagnosis, steps, tried). History must never fail an identify call; a missing table is a warning. Admin reads `GET /api/identify/history?mode=`.

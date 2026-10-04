@@ -58,3 +58,22 @@ export const RowActions = styled.div`
   flex-wrap: wrap;
   gap: 8px;
 `
+
+export const Note = styled.p`
+  display: grid;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: ${theme.radii.md};
+  background: ${theme.colors.chipNeutral};
+  color: ${theme.colors.ink};
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  strong {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: ${theme.colors.moss};
+  }
+`
