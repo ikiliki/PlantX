@@ -1,8 +1,6 @@
 import styled, { css } from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
-const AI_BLUE = '#3B7CC9'
-
 export const Wrap = styled.span<{ $corner?: boolean }>`
   position: relative;
   display: inline-flex;
@@ -28,12 +26,12 @@ export const Stamp = styled.span<{ $changed?: boolean }>`
   font-weight: 800;
   line-height: 1;
   cursor: help;
-  background: ${({ $changed }) => ($changed ? 'rgba(154, 107, 31, 0.16)' : AI_BLUE)};
+  background: ${({ $changed }) => ($changed ? 'rgba(154, 107, 31, 0.16)' : theme.colors.aiBlue)};
   color: ${({ $changed }) => ($changed ? theme.colors.warn : '#fff')};
   outline: none;
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px ${theme.colors.creamCard}, 0 0 0 4px ${AI_BLUE};
+    box-shadow: 0 0 0 2px ${theme.colors.creamCard}, 0 0 0 4px ${theme.colors.aiBlue};
   }
 `
 

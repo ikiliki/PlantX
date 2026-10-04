@@ -426,6 +426,22 @@ export const CareDate = styled.span`
   }
 `
 
+/** Identity chips on the bottom of the photo; they leave room for the photo count at the end. */
+export const PhotoTags = styled.span<{ $count?: boolean }>`
+  position: absolute;
+  z-index: 1;
+  inset-block-end: 10px;
+  inset-inline-start: 10px;
+  display: flex;
+  max-width: ${({ $count }) => ($count ? 'calc(100% - 76px)' : 'calc(100% - 20px)')};
+  min-width: 0;
+
+  @container (max-width: 559px) {
+    inset-block-end: 8px;
+    inset-inline-start: 8px;
+  }
+`
+
 export const PhotoCount = styled.span`
   position: absolute;
   z-index: 1;

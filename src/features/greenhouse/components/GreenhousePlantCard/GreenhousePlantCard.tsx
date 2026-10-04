@@ -26,6 +26,7 @@ import {
   PassportMark,
   Photo,
   PhotoCount,
+  PhotoTags,
   PhotoLink,
   Root,
   StatusMark,
@@ -154,6 +155,14 @@ export function GreenhousePlantCard({
           <Photo $stale={isPhotoStale(plant, todos)}>
             <PlantImage src={photos[0]} alt="" />
             <StatusMark $tone={status.tone}>{status.label}</StatusMark>
+            {/* Who identified it sits on the photo, like the passport's AI stamp: AI, Edited, or Manual. */}
+            <PhotoTags $count={photos.length > 1}>
+              <IdentifyBadge
+                identification={plant.identification}
+                notInCatalog={plant.speciesId === OTHER_CATEGORY_ID}
+                compact
+              />
+            </PhotoTags>
             {photos.length > 1 ? (
               <PhotoCount title={t.addPlant.photosCount.replace('{n}', String(photos.length))}>
                 <span aria-hidden>▣</span> +{photos.length - 1}
@@ -194,10 +203,11 @@ export function GreenhousePlantCard({
             })}
           </CareActions>
         ) : (
-          <Tags>
-            <IdentifyBadge identification={plant.identification} notInCatalog={plant.speciesId === OTHER_CATEGORY_ID} compact />
-            {verified ? <PassportMark>✓ {t.greenhouse.passportOk}</PassportMark> : null}
-          </Tags>
+          verified ? (
+            <Tags>
+              <PassportMark>✓ {t.greenhouse.passportOk}</PassportMark>
+            </Tags>
+          ) : null
         )}
       </Details>
     </Root>

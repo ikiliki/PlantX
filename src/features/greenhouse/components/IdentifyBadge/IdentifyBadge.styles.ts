@@ -40,9 +40,9 @@ export const Root = styled.span<{ $source: PlantIdentificationSource; $compact?:
   gap: 8px;
   max-width: 100%;
   min-width: 0;
-  padding: ${({ $compact }) => ($compact ? '4px 9px 4px 5px' : '8px 14px 8px 8px')};
+  padding: ${({ $compact }) => ($compact ? '3px 8px' : '8px 14px 8px 8px')};
   border-radius: ${theme.radii.pill};
-  font-size: ${({ $compact }) => ($compact ? '11px' : '13px')};
+  font-size: ${({ $compact }) => ($compact ? '10px' : '13px')};
   font-weight: 800;
   line-height: 1.2;
 
@@ -77,8 +77,31 @@ export const Root = styled.span<{ $source: PlantIdentificationSource; $compact?:
   ${({ $compact }) =>
     $compact &&
     css`
+      gap: 5px;
       box-shadow: ${theme.shadow.soft};
       backdrop-filter: blur(6px);
+    `}
+
+  /* Compact AI chip: the passport's blue ✦, the same height as the Edited and Manual chips. */
+  ${({ $compact, $source }) =>
+    $compact &&
+    $source === 'ai' &&
+    css`
+      background: ${theme.colors.aiBlue};
+      color: #fff;
+    `}
+
+  /* In a chip the glyph sits in the text line, so every chip is the same height. */
+  ${({ $compact }) =>
+    $compact &&
+    css`
+      & > span[aria-hidden] {
+        width: auto;
+        height: auto;
+        background: none;
+        color: inherit;
+        font-size: 1em;
+      }
     `}
 `
 

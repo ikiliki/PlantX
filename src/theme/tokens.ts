@@ -22,6 +22,8 @@ export const theme = {
     danger: '#B4553D',
     warn: '#9A6B1F',
     info: '#3C6B8F',
+    /** AI provenance: the ✦ stamp and the AI chip. */
+    aiBlue: '#3B7CC9',
     /** Market direction tones, kept inside the botanical palette. */
     up: '#2F6B4A',
     down: '#B4553D',
