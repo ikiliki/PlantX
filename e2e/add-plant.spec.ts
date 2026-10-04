@@ -15,12 +15,15 @@ test.describe('Add Plant', () => {
     await signIn(page)
   })
 
-  test('asks for a photo first', async ({ page }) => {
+  test('photo is optional until save', async ({ page }) => {
     const dialog = await openAddPlant(page)
+    // The photo step still nudges for a photo, but it is not forced.
     await expect(dialog.getByText('Add a photo to continue')).toBeVisible()
+    // AI needs a photo; filling in by hand does not.
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
-    await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeDisabled()
-    await expect(dialog.getByRole('navigation').getByRole('button', { name: /Review/ })).toBeDisabled()
+    await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeEnabled()
+    // With no photo the manual flow is open, so Review is reachable; a photo is required only to save.
+    await expect(dialog.getByRole('navigation').getByRole('button', { name: /Review/ })).toBeEnabled()
   })
 
   test('a full AI answer is ready to save', async ({ page, identify }) => {
