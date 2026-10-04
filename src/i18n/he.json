@@ -575,13 +575,7 @@
     "bannerManual": "לא אומת ב־AI. אתם בוחרים את המחלקה בעצמכם.",
     "restoreAi": "חזרה לתשובת ה־AI",
     "searchCategories": "חיפוש קטגוריות",
-    "showMore": "הצג עוד",
     "choose": "בחירה",
-    "subcategoryFirst": "קודם בוחרים קטגוריה",
-    "sizeFirst": "קודם בוחרים גודל",
-    "stageFirst": "קודם בוחרים שלב",
-    "traitNotForVariety": "לא רלוונטי לזן הזה",
-    "showLess": "הצג פחות",
     "specsTitle": "גודל ושלב",
     "specsLead": "גודל ושלב קובעים את דרגת השוק של הצמח.",
     "gradeA": "מצב מעולה",
@@ -656,7 +650,8 @@
     "scanEntry": "סריקת AI",
     "scanNotAdded": "עוד לא נוסף",
     "scanAdded": "נוסף",
-    "photosCount": "{n} תמונות"
+    "photosCount": "{n} תמונות",
+    "aiPickNotOffered": "ה־AI הציע {value}, שלא קיים בגודל {parent}"
   },
   "sell": {
     "title": "מכירה / התרבה",
@@ -1286,7 +1281,9 @@
     "loading": "טוען…",
     "guestBlocked": "אורחים יכולים לצפות בלבד — בחרו דמות כדי לפעול",
     "serverDown": "השרת כבוי. השינויים לא יישמרו.",
-    "retry": "נסה שוב"
+    "retry": "נסה שוב",
+    "scrollBack": "גלילה אחורה",
+    "scrollForward": "גלילה קדימה"
   },
   "http": {
     "donePhoto": "התמונה נוספה · ‎+{xp} XP",

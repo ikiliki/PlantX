@@ -77,7 +77,6 @@ const STEPS = ['photo', 'identity', 'specs', 'details', 'review'] as const
 type StepId = (typeof STEPS)[number]
 
 const CATEGORY_SEARCH_MIN = 9
-const CHIP_PREVIEW = 4
 const AI_MARK = '✦ AI'
 
 function careTip(species: ReturnType<typeof catalogSpecies>, locale: string, light: string) {
@@ -88,40 +87,6 @@ function careTip(species: ReturnType<typeof catalogSpecies>, locale: string, lig
   return lines.length ? lines.join('\n') : undefined
 }
 
-function previewOptions<T extends { id: string }>(
-  options: T[],
-  value: string,
-  open: boolean,
-  pinId: string,
-  keepId?: string,
-) {
-  if (open || options.length <= CHIP_PREVIEW) return { shown: options, extra: 0 }
-  const pin = options.find((item) => item.id === pinId)
-  const pool = options.filter((item) => item.id !== pinId)
-  const shown = pool.slice(0, pin ? CHIP_PREVIEW - 1 : CHIP_PREVIEW)
-  const keep = (id?: string) => {
-    if (!id || id === pinId || shown.some((item) => item.id === id)) return
-    const item = options.find((option) => option.id === id)
-    if (item) shown.push(item)
-  }
-  keep(value)
-  keep(keepId)
-  if (pin) shown.push(pin)
-  return { shown, extra: options.length - shown.length }
-}
-
-function chipMore(
-  extra: number,
-  open: boolean,
-  total: number,
-  showMore: string,
-  showLess: string,
-  setOpen: (next: boolean) => void,
-) {
-  if (extra > 0) return { label: `${showMore} (${extra})`, onMore: () => setOpen(true) }
-  if (open && total > CHIP_PREVIEW) return { label: showLess, onMore: () => setOpen(false) }
-  return undefined
-}
 /** Place comes from greenhouse settings, so the catalog area trait is not asked or saved. */
 const AREA_PROPERTY_ID = 'area'
 const PLAIN_STEPS_PROPERTY_IDS = ['health', 'size', 'stage', AREA_PROPERTY_ID]
@@ -153,8 +118,6 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const appliedLead = useRef<string | undefined>(undefined)
   const [draft, setDraft] = useState<PlantClassDraft>(emptyClassDraft)
   const [categoryQuery, setCategoryQuery] = useState('')
-  const [categoriesOpen, setCategoriesOpen] = useState(false)
-  const [subsOpen, setSubsOpen] = useState(false)
   /** Category or subcategory chip being previewed from the catalog before it is chosen. */
   const [preview, setPreview] = useState<{ kind: 'category' | 'sub'; id: string } | null>(null)
   const phone = useMediaQuery(PHONE_MQ)
@@ -515,10 +478,18 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   }
 
   const chooseCategory = (value: string) => {
-    setSubsOpen(false)
     setClass({ categoryId: value, subcategoryId: '', quality: '', size: '', stage: '', traits: {} })
   }
-  const chooseSub = (value: string) => setClass({ subcategoryId: value, quality: '', size: '', stage: '' })
+  // Before a category, every variety is offered: picking one picks its category too.
+  // Within the same category, size and stage stay when the new variety still offers them.
+  const chooseSub = (value: string) => {
+    const parent = catalog.subcategories.find((item) => item.id === value)?.categoryId
+    if (parent && parent !== draft.categoryId) {
+      setClass({ categoryId: parent, subcategoryId: value, quality: '', size: '', stage: '', traits: {} })
+      return
+    }
+    setClass({ subcategoryId: value })
+  }
 
   const previewCategory = preview
     ? catalog.categories.find((item) =>
@@ -556,13 +527,6 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             ? []
             : [{ id: OTHER_CATEGORY_ID, label: t.addPlant.otherCategory }]),
         ]
-        const categoryList = previewOptions(
-          categoryOptions,
-          draft.categoryId,
-          categoriesOpen || searching,
-          OTHER_CATEGORY_ID,
-          aiDraft?.categoryId || (missingCatalog ? OTHER_CATEGORY_ID : undefined),
-        )
         const subOptions = draft.categoryId
           ? [
               ...varieties.map((item) => ({
@@ -579,14 +543,11 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               })),
               { id: OTHER_SUBCATEGORY_ID, label: t.addPlant.otherCategory },
             ]
-          : []
-        const subList = previewOptions(
-          subOptions,
-          draft.subcategoryId,
-          subsOpen,
-          OTHER_SUBCATEGORY_ID,
-          aiDraft?.categoryId === draft.categoryId ? aiDraft.subcategoryId : undefined,
-        )
+          : catalog.subcategories.flatMap((item) => {
+              const parent = catalog.categories.find((category) => category.id === item.categoryId)
+              if (!parent) return []
+              return [{ id: item.id, label: catalogName(item, locale), hint: catalogName(parent, locale), photo: item.photo }]
+            })
         return (
           <>
             <StepHead>
@@ -613,19 +574,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 value={draft.categoryId}
                 suggestedId={aiDraft?.categoryId || (missingCatalog ? OTHER_CATEGORY_ID : undefined)}
                 suggestedLabel={AI_MARK}
-                options={categoryList.shown}
-                more={
-                  searching
-                    ? undefined
-                    : chipMore(
-                        categoryList.extra,
-                        categoriesOpen,
-                        categoryOptions.length,
-                        t.addPlant.showMore,
-                        t.addPlant.showLess,
-                        setCategoriesOpen,
-                      )
-                }
+                options={categoryOptions}
+                scroll
                 onChange={chooseCategory}
                 onTip={(id) => {
                   if (id !== OTHER_CATEGORY_ID) setPreview({ kind: 'category', id })
@@ -637,7 +587,6 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 label={t.admin.subcategory}
                 required
                 missing={isMissing('subcategory') ? missingNote : undefined}
-                disabled={!draft.categoryId}
                 value={draft.subcategoryId}
                 suggestedId={
                   aiDraft?.categoryId === draft.categoryId
@@ -645,16 +594,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                     : undefined
                 }
                 suggestedLabel={AI_MARK}
-                options={subList.shown}
-                more={chipMore(
-                  subList.extra,
-                  subsOpen,
-                  subOptions.length,
-                  t.addPlant.showMore,
-                  t.addPlant.showLess,
-                  setSubsOpen,
-                )}
-                emptyLabel={t.addPlant.subcategoryFirst}
+                options={subOptions}
+                scroll
                 onChange={chooseSub}
                 onTip={(id) => {
                   if (id !== OTHER_SUBCATEGORY_ID) setPreview({ kind: 'sub', id })
@@ -665,21 +606,18 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         )
       }
       case 'specs': {
-        const traitOpen = (property: CatalogProperty) => {
-          if (!draft.stage || isOther) return false
+        // Only traits that apply to this category and variety; the rest are not shown at all.
+        const traitApplies = (property: CatalogProperty) => {
+          if (PLAIN_STEPS_PROPERTY_IDS.includes(property.id)) return false
           if (property.subcategoryIds.length > 0) return property.subcategoryIds.includes(draft.subcategoryId)
-          return property.categoryIds.length === 0 || property.categoryIds.includes(draft.categoryId)
+          return property.categoryIds.includes(draft.categoryId)
         }
-        const specTraits =
-          !draft.categoryId || isOther
-            ? []
-            : catalog.properties.filter((item) => {
-                if (PLAIN_STEPS_PROPERTY_IDS.includes(item.id)) return false
-                if (item.categoryIds.includes(draft.categoryId)) return true
-                return item.subcategoryIds.some((id) =>
-                  catalog.subcategories.some((sub) => sub.id === id && sub.categoryId === draft.categoryId),
-                )
-              })
+        const specTraits = !draft.categoryId || isOther ? [] : catalog.properties.filter(traitApplies)
+        const stageLabelOf = (stage: string) => STAGE_LABEL[stage as StageBand]?.[locale] ?? stage
+        // The AI's stage is not offered in the size picked since: say so instead of a bare "missing".
+        const aiStageGone = Boolean(
+          aiDraft?.stage && draft.size && !draft.stage && !stages.includes(aiDraft.stage as StageBand),
+        )
         return (
           <>
             <StepHead>
@@ -695,66 +633,46 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 suggestedId={aiDraft?.size || undefined}
                 suggestedLabel={AI_MARK}
                 options={sizes.map((size) => ({ id: size, label: size }))}
-                onChange={(value) => setClass({ size: value as SizeBand | '', stage: '' })}
+                scroll
+                onChange={(value) => setClass({ size: value as SizeBand | '' })}
               />
             </Section>
             <Section>
               <ChoiceChips
                 label={t.admin.stage}
                 required
-                missing={draft.size && isMissing('stage') ? missingNote : undefined}
-                disabled={!draft.size}
-                value={draft.size ? draft.stage : ''}
+                missing={
+                  aiStageGone
+                    ? t.addPlant.aiPickNotOffered
+                        .replace('{value}', stageLabelOf(aiDraft?.stage ?? ''))
+                        .replace('{parent}', draft.size)
+                    : isMissing('stage')
+                      ? missingNote
+                      : undefined
+                }
+                value={draft.stage}
                 suggestedId={aiDraft?.stage || undefined}
                 suggestedLabel={AI_MARK}
-                options={
-                  draft.size
-                    ? stages.map((stage) => ({
-                        id: stage,
-                        label: STAGE_LABEL[stage as StageBand]?.[locale] ?? stage,
-                      }))
-                    : []
-                }
-                emptyLabel={t.addPlant.sizeFirst}
+                options={stages.map((stage) => ({ id: stage, label: stageLabelOf(stage) }))}
+                scroll
                 onChange={(value) => setClass({ stage: value as StageBand | '' })}
               />
             </Section>
-            {specTraits.map((property) => {
-              const open = traitOpen(property)
-              return (
-                <Section key={property.id}>
-                  <ChoiceChips
-                    label={catalogName(property, locale)}
-                    required={property.required}
-                    missing={open && property.required && isMissing(property.id) ? missingNote : undefined}
-                    disabled={!open}
-                    value={open ? (draft.traits[property.id] ?? '') : ''}
-                    suggestedId={aiDraft?.traits?.[property.id]}
-                    suggestedLabel={AI_MARK}
-                    options={
-                      open
-                        ? property.options.map((option) => ({
-                            id: option.id,
-                            label: optionLabel(option, locale),
-                          }))
-                        : []
-                    }
-                    emptyLabel={
-                      !draft.size
-                        ? t.addPlant.sizeFirst
-                        : !draft.stage
-                          ? t.addPlant.stageFirst
-                          : t.addPlant.traitNotForVariety
-                    }
-                    onChange={(value) =>
-                      setClass({
-                        traits: { ...draft.traits, [property.id]: value },
-                      })
-                    }
-                  />
-                </Section>
-              )
-            })}
+            {specTraits.map((property) => (
+              <Section key={property.id}>
+                <ChoiceChips
+                  label={catalogName(property, locale)}
+                  required={property.required}
+                  missing={property.required && isMissing(property.id) ? missingNote : undefined}
+                  value={draft.traits[property.id] ?? ''}
+                  suggestedId={aiDraft?.traits?.[property.id]}
+                  suggestedLabel={AI_MARK}
+                  options={property.options.map((option) => ({ id: option.id, label: optionLabel(option, locale) }))}
+                  scroll
+                  onChange={(value) => setClass({ traits: { ...draft.traits, [property.id]: value } })}
+                />
+              </Section>
+            ))}
           </>
         )
       }

@@ -48,10 +48,69 @@ export const Group = styled.fieldset`
     gap: 8px;
   }
 
+  /* One sideways row: chips keep their size, the bar stays hidden, arrows page it. */
+  [role='radiogroup'][data-layout='row'] {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-block: 4px;
+    margin-block: -4px;
+    scroll-padding-inline: 36px;
+  }
+
+  [role='radiogroup'][data-layout='row']::-webkit-scrollbar {
+    display: none;
+  }
+
+  [role='radiogroup'][data-layout='row'] > * {
+    flex: none;
+  }
+
   [role='radiogroup'][data-layout='tiles'] {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(132px, 100%), 1fr));
     gap: 10px;
+  }
+`
+
+/** Holds a row and its arrows, so the arrows sit on the row's edges. */
+export const Rail = styled.div`
+  position: relative;
+  min-width: 0;
+`
+
+export const RowArrow = styled.button<{ $side: 'start' | 'end' }>`
+  ${pressable}
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 50%;
+  ${({ $side }) => ($side === 'start' ? 'inset-inline-start: 0;' : 'inset-inline-end: 0;')}
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.creamCard};
+  box-shadow: 0 2px 8px rgba(18, 60, 45, 0.16);
+  color: ${theme.colors.forest};
+  font: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: ${theme.colors.chipGreen};
+  }
+
+  /* The glyphs point along the reading direction. */
+  [dir='rtl'] & > span {
+    display: inline-block;
+    scale: -1 1;
   }
 `
 
