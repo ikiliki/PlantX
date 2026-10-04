@@ -3,7 +3,9 @@ import { Button } from '../../../../components/Button/Button'
 import { Field, FormGrid, FormRow, Input, Select } from '../../../../components/Form/Form'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { createCatalog } from '../../../../mock/catalog'
 import { defaultPlantPhoto } from '../../../../mock/images'
+import { useStore } from '../../../../mock/store'
 import type { CatalogSuggestion, CatalogSuggestionDraft, SuggestedProperty } from '../../../../mock/types'
 import { readPhotoFile } from '../../../../utils/readPhoto'
 import { normalizeSign } from '../../catalogMutations'
@@ -17,7 +19,7 @@ import {
   PhotoRow,
   Title,
 } from '../CatalogEditor/CatalogEditorDialog.styles'
-import { Card, Dialog, Lead, OptionRow, RowActions, Section, SectionTitle } from './SuggestionEditor.styles'
+import { Card, Dialog, Lead, Note, OptionRow, RowActions, Section, SectionTitle } from './SuggestionEditor.styles'
 
 function letters(value: string, max: number) {
   return value.toUpperCase().replace(/[^A-Za-z0-9]/g, '').slice(0, max)
@@ -62,10 +64,15 @@ export function SuggestionEditorDialog({
   onConfirm: (draft: CatalogSuggestionDraft) => boolean
 }) {
   const { t } = useI18n()
+  const { db } = useStore()
+  const catalog = db.catalog ?? createCatalog()
   const categoryPhoto = useRef<HTMLInputElement>(null)
   const subcategoryPhoto = useRef<HTMLInputElement>(null)
   const [draft, setDraft] = useState(() => draftFromSuggestion(suggestion))
   const [error, setError] = useState('')
+  /** Admin's own new entry: no suggestion behind it. */
+  const fresh = !suggestion.id
+  const variety = draft.categoryId ? catalog.categories.find((item) => item.id === draft.categoryId) : undefined
 
   const setCategory = (patch: Partial<CatalogSuggestionDraft['category']>) =>
     setDraft((current) => ({ ...current, category: { ...current.category, ...patch } }))
@@ -127,58 +134,79 @@ export function SuggestionEditorDialog({
 
   return (
     <Backdrop onClick={onClose}>
-      <Dialog role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+      <Dialog
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="suggestion-editor-title"
+        onClick={(event) => event.stopPropagation()}
+      >
         <Close type="button" onClick={onClose} aria-label={t.common.cancel}>
           ×
         </Close>
-        <Title>{t.admin.suggestedFormTitle}</Title>
+        <Title id="suggestion-editor-title">{fresh ? t.admin.newCatalogEntryTitle : t.admin.suggestedFormTitle}</Title>
         <Lead>
-          {t.admin.suggestedFormLead} {t.admin.suggestedBy.replace('{provider}', suggestion.provider)}
+          {fresh
+            ? t.admin.newCatalogEntryLead
+            : suggestion.origin === 'member'
+              ? t.admin.suggestedFormLeadMember
+              : `${t.admin.suggestedFormLead} ${t.admin.suggestedBy.replace('{provider}', suggestion.provider)}`}
           {suggestion.scientificName ? ` · ${suggestion.scientificName}` : ''}
         </Lead>
+        {suggestion.note ? (
+          <Note>
+            <strong>{t.admin.suggestedNote}</strong>
+            {suggestion.note}
+          </Note>
+        ) : null}
         <form onSubmit={submit}>
           <FormGrid>
-            <Section>
-              <SectionTitle>{t.admin.suggestedCategory}</SectionTitle>
-              <input
-                ref={categoryPhoto}
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(event) => readInto(event.target.files?.[0], (photo) => setCategory({ photo }))}
-              />
-              <PhotoRow type="button" onClick={() => categoryPhoto.current?.click()}>
-                <PhotoPreview>
-                  <PlantImage src={draft.category.photo} alt="" />
-                </PhotoPreview>
-                <PhotoCopy>
-                  <strong>{t.admin.categoryPhoto}</strong>
-                  <small>{t.greenhouse.addPhotoHint}</small>
-                </PhotoCopy>
-              </PhotoRow>
-              <FormRow>
-                <Field>
-                  {t.admin.nameEn}
-                  <Input
-                    value={draft.category.name}
-                    onChange={(event) => setCategory({ name: event.target.value })}
-                    required
-                  />
-                </Field>
-                <Field>
-                  {t.admin.nameHe}
-                  <Input value={draft.category.nameHe} onChange={(event) => setCategory({ nameHe: event.target.value })} />
-                </Field>
-                <Field>
-                  {t.admin.ticker}
-                  <Input
-                    value={draft.category.ticker}
-                    onChange={(event) => setCategory({ ticker: letters(event.target.value, 6) })}
-                    required
-                  />
-                </Field>
-              </FormRow>
-            </Section>
+            {variety ? (
+              <Section>
+                <SectionTitle>{t.admin.suggestedVarietyOf.replace('{category}', variety.name)}</SectionTitle>
+              </Section>
+            ) : (
+              <Section>
+                <SectionTitle>{t.admin.suggestedCategory}</SectionTitle>
+                <input
+                  ref={categoryPhoto}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(event) => readInto(event.target.files?.[0], (photo) => setCategory({ photo }))}
+                />
+                <PhotoRow type="button" onClick={() => categoryPhoto.current?.click()}>
+                  <PhotoPreview>
+                    <PlantImage src={draft.category.photo} alt="" />
+                  </PhotoPreview>
+                  <PhotoCopy>
+                    <strong>{t.admin.categoryPhoto}</strong>
+                    <small>{t.greenhouse.addPhotoHint}</small>
+                  </PhotoCopy>
+                </PhotoRow>
+                <FormRow>
+                  <Field>
+                    {t.admin.nameEn}
+                    <Input
+                      value={draft.category.name}
+                      onChange={(event) => setCategory({ name: event.target.value })}
+                      required
+                    />
+                  </Field>
+                  <Field>
+                    {t.admin.nameHe}
+                    <Input value={draft.category.nameHe} onChange={(event) => setCategory({ nameHe: event.target.value })} />
+                  </Field>
+                  <Field>
+                    {t.admin.ticker}
+                    <Input
+                      value={draft.category.ticker}
+                      onChange={(event) => setCategory({ ticker: letters(event.target.value, 6) })}
+                      required
+                    />
+                  </Field>
+                </FormRow>
+              </Section>
+            )}
 
             <Section>
               <SectionTitle>{t.admin.suggestedSubcategory}</SectionTitle>

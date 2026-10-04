@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { Button } from '../../../../components/Button/Button'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { createCatalog } from '../../../../mock/catalog'
 import { useStore } from '../../../../mock/store'
+import { useAuth } from '../../../auth/AuthProvider'
+import { PendingSuggestionCard } from '../../../catalog/components/PendingSuggestionCard/PendingSuggestionCard'
+import { SuggestPlantDialog } from '../../../catalog/components/SuggestPlantDialog/SuggestPlantDialog'
+import { useMySuggestions } from '../../../catalog/useCatalogSuggestions'
 import type { ComponentView } from '../../../../theme/view'
 import { catalogSpeciesList } from '../../catalogSpecies'
 import { speciesName } from '../../../market/categoryData'
@@ -10,7 +16,7 @@ import { wikiHref } from '../GuideLink/GuideLink'
 import { WikiCard } from '../WikiCard/WikiCard'
 import { WikiSection } from '../WikiSection/WikiSection'
 import { WikiToc } from '../WikiToc/WikiToc'
-import { Body, Empty, Grid, Layout, TocWrap } from './WikiIndex.styles'
+import { Body, Empty, Grid, Layout, SuggestRow, TocWrap } from './WikiIndex.styles'
 
 export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]; view?: ComponentView }) {
   const { db } = useStore()
@@ -23,7 +29,12 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
     // Each catalog group shows how many species it holds.
     title: `${wikiRarityTitle(group.rarity, t.plant)} (${group.items.length})`,
   }))
-  const [open, setOpen] = useState<Record<string, boolean>>({ common: true })
+  const [open, setOpen] = useState<Record<string, boolean>>({ common: true, suggestions: true })
+  const { signedIn, openAuth } = useAuth()
+  const { suggestions, submit } = useMySuggestions()
+  const [suggesting, setSuggesting] = useState(false)
+  // The full catalog page offers the form and the member's pending rows; a widget or a filtered list does not.
+  const withSuggestions = view === 'page' && !speciesIds
 
   useEffect(() => {
     const hash = loc.hash.replace('#', '')
@@ -34,8 +45,49 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
     })
   }, [loc.hash])
 
+  const suggest = () => {
+    if (signedIn) setSuggesting(true)
+    else openAuth('sensitive', () => setSuggesting(true))
+  }
+
+  const suggestRow = withSuggestions ? (
+    <SuggestRow>
+      <p>{t.suggest.ctaLead}</p>
+      <Button type="button" size="sm" variant="secondary" onClick={suggest}>
+        ＋ {t.suggest.cta}
+      </Button>
+    </SuggestRow>
+  ) : null
+
+  const pendingSection =
+    withSuggestions && suggestions.length > 0 ? (
+      <WikiSection
+        id="suggestions"
+        title={t.suggest.pendingTitle.replace('{count}', String(suggestions.length))}
+        open={Boolean(open.suggestions)}
+        onToggle={() => setOpen((current) => ({ ...current, suggestions: !current.suggestions }))}
+      >
+        <Grid>
+          {suggestions.map((item) => (
+            <PendingSuggestionCard key={item.id} suggestion={item} />
+          ))}
+        </Grid>
+      </WikiSection>
+    ) : null
+
+  const dialog = suggesting ? (
+    <SuggestPlantDialog catalog={db.catalog ?? createCatalog()} onSubmit={submit} onClose={() => setSuggesting(false)} />
+  ) : null
+
   if (rows.length === 0) {
-    return <Empty>{t.guide.empty}</Empty>
+    return (
+      <Body>
+        {suggestRow}
+        {pendingSection}
+        <Empty>{t.guide.empty}</Empty>
+        {dialog}
+      </Body>
+    )
   }
 
   return (
@@ -56,6 +108,8 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
         </TocWrap>
       ) : null}
       <Body>
+        {suggestRow}
+        {pendingSection}
         {groups.map((group) => (
           <WikiSection
             key={group.rarity}
@@ -72,6 +126,7 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
           </WikiSection>
         ))}
       </Body>
+      {dialog}
     </Layout>
   )
 }

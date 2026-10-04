@@ -48,6 +48,9 @@ const suggestions: CatalogSuggestion[] = [
     provider: 'gemini',
     hits: 2,
     status: 'open',
+    origin: 'member',
+    suggestedBy: ['u-maya'],
+    note: 'Seen at a nursery in Haifa.',
     draft,
   },
   {
@@ -60,6 +63,9 @@ const suggestions: CatalogSuggestion[] = [
     provider: 'plantnet',
     hits: 4,
     status: 'added',
+    origin: 'identify',
+    suggestedBy: [],
+    note: '',
     draft,
   },
   {
@@ -72,6 +78,9 @@ const suggestions: CatalogSuggestion[] = [
     provider: 'gemini',
     hits: 1,
     status: 'dismissed',
+    origin: 'identify',
+    suggestedBy: [],
+    note: '',
     draft,
   },
 ]

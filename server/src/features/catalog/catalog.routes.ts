@@ -1,8 +1,9 @@
 import { Hono } from 'hono'
 import type { Catalog } from '../../../../src/mock/types.ts'
 import { getStore } from '../../db/index.ts'
-import { requireAdmin } from '../../lib/session.ts'
+import { requireAdmin, requireUser } from '../../lib/session.ts'
 import { catalogService } from './catalog.service.ts'
+import { catalogSuggestionService } from './catalogSuggestion.service.ts'
 
 export const catalogRoutes = new Hono()
 
@@ -15,6 +16,19 @@ catalogRoutes.get('/suggestions', async (c) => {
     raw === 'all' || raw === 'open' || raw === 'dismissed' || raw === 'added' ? raw : 'open'
   const suggestions = await getStore().catalogSuggestions.list(status)
   return c.json({ suggestions })
+})
+
+/** The signed-in member's open suggestions, shown as pending in their Catalog. */
+catalogRoutes.get('/suggestions/mine', async (c) => {
+  const user = await requireUser(c)
+  return c.json({ suggestions: await catalogSuggestionService.mine(user.id) })
+})
+
+/** A member's "Suggest a plant" form. */
+catalogRoutes.post('/suggestions', async (c) => {
+  const user = await requireUser(c)
+  const body = await c.req.json().catch(() => ({}))
+  return c.json({ suggestion: await catalogSuggestionService.suggestFromMember(user.id, body) })
 })
 
 catalogRoutes.post('/suggestions/:id/dismiss', async (c) => {

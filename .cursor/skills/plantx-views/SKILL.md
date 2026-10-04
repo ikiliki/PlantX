@@ -15,6 +15,7 @@ description: >-
 - Each component has a sibling `*.styles.ts` (styled-components) and a story.
 - A landing mock, rail, or card uses the same component as the route. Do not draw a second fake version of a table, deck, feed, or catalog.
 - The catalog is the wiki route (`/wiki`, feature id `wiki`). The tab label is Catalog. Its menu lists All, then rarity headings collapsed until clicked. The catalog page has no title block. The contents table starts collapsed. Under it, Common starts open and the other rarities stay closed until clicked. Home `WikiRail` stays off the phone (hidden under 900px of the home shell) and on the wider rails. Its rows open `CatalogPreview` (photos, this season’s light and water); the full seasons stay on the article. On a phone that preview is a 75svh sheet with `SheetGrip`.
+- Catalog suggestions: the full catalog page (not the widget or a filtered list) opens with a dashed Suggest a plant row. A guest gets the sign-in popup; a member gets `SuggestPlantDialog`. The member's open suggestions (from that form and from Add Plant scans that matched no category) sit above the rarity groups under Your suggestions (n) as `PendingSuggestionCard`s, until an admin adds or declines them; then the row leaves (an added one is a real catalog entry). `GET /api/catalog/suggestions/mine` returns only the member's own rows with no provider and no other members. Admin → Requests approves, declines, or creates entries.
 
 ## View
 

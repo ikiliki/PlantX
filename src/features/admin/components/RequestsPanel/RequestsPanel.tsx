@@ -11,10 +11,36 @@ import {
 } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
 import type { CatalogSuggestion, CatalogSuggestionDraft, PendingUser } from '../../../../mock/types'
+import {
+  decideMockSuggestion,
+  readMockSuggestions,
+  useSuggestionsVersion,
+} from '../../../catalog/useCatalogSuggestions'
 import { applyCatalogSuggestion } from '../../catalogMutations'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { SuggestionEditorDialog } from '../CatalogSuggestions/SuggestionEditorDialog'
-import { ExpandActions, HeadMeta, Panel, Section, SectionHead } from './RequestsPanel.styles'
+import { ExpandActions, HeadMeta, IdeasBar, Panel, Section, SectionHead } from './RequestsPanel.styles'
+
+/** The admin's own new catalog entry: an empty suggestion with no row behind it. */
+const freshEntry: CatalogSuggestion = {
+  id: '',
+  createdAt: '',
+  name: '',
+  scientificName: '',
+  genus: '',
+  commonNames: [],
+  provider: '',
+  hits: 0,
+  status: 'open',
+  origin: 'member',
+  suggestedBy: [],
+  note: '',
+  draft: {
+    category: { name: '', nameHe: '', ticker: '', photo: '' },
+    subcategory: { name: '', nameHe: '', code: '', photo: '' },
+    properties: [],
+  },
+}
 
 function byNewest<T extends { createdAt: string }>(rows: T[]) {
   return rows.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -31,6 +57,7 @@ export function RequestsPanel({
 }) {
   const { t } = useI18n()
   const { db, plantxEnv, approvePendingUser, rejectPendingUser, commitCatalog } = useStore()
+  const suggestionsVersion = useSuggestionsVersion()
   const scripted = applications !== undefined || suggestions !== undefined
   const [remoteApps, setRemoteApps] = useState<PendingUser[]>([])
   const [remoteSuggestions, setRemoteSuggestions] = useState<CatalogSuggestion[]>([])
@@ -64,12 +91,12 @@ export function RequestsPanel({
     return () => {
       cancel = true
     }
-    // Mock and stories read local rows. Live loads once.
+    // Mock and stories read local rows. Live loads once, and again when a suggestion is filed here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scripted, plantxEnv])
+  }, [scripted, plantxEnv, suggestionsVersion])
 
   const apps = scripted ? storyApps : plantxEnv === 'mock' ? db.pendingUsers : remoteApps
-  const ideas = scripted ? storySuggestions : remoteSuggestions
+  const ideas = scripted ? storySuggestions : plantxEnv === 'mock' ? readMockSuggestions() : remoteSuggestions
   const openApps = byNewest(apps.filter((row) => row.status === 'pending'))
   const historyApps = byNewest(apps.filter((row) => row.status === 'approved' || row.status === 'rejected'))
   const openIdeas = ideas.filter((row) => row.status === 'open').sort((a, b) => b.hits - a.hits || b.createdAt.localeCompare(a.createdAt))
@@ -77,6 +104,14 @@ export function RequestsPanel({
 
   const appStatus = (status: PendingUser['status']) =>
     status === 'approved' ? t.admin.requestAdded : status === 'rejected' ? t.admin.requestDeclined : t.admin.statusPending
+
+  const originLabel = (row: CatalogSuggestion) =>
+    row.origin === 'member' ? t.admin.suggestedOriginMember : t.admin.suggestedOriginScan
+  const personName = (id: string) => {
+    const user = db.users.find((item) => item.id === id)
+    return user?.nickname || user?.name || id
+  }
+  const categoryName = (id: string) => db.catalog?.categories.find((item) => item.id === id)?.name ?? id
 
   const ideaStatus = (status: CatalogSuggestion['status']) =>
     status === 'added' ? t.admin.requestAdded : status === 'dismissed' ? t.admin.requestDeclined : t.admin.statusPending
@@ -108,6 +143,10 @@ export function RequestsPanel({
       setStorySuggestions((rows) => rows.map((row) => (row.id === id ? { ...row, status: 'dismissed' } : row)))
       return
     }
+    if (plantxEnv === 'mock') {
+      decideMockSuggestion(id, 'dismissed')
+      return
+    }
     setRemoteSuggestions((rows) => rows.map((row) => (row.id === id ? { ...row, status: 'dismissed' } : row)))
     void dismissCatalogSuggestion(id)
   }
@@ -121,9 +160,12 @@ export function RequestsPanel({
       return next
     })
     if (!saved) return false
-    if (scripted) {
+    // An empty id is the admin's own new entry: there is no suggestion row to mark.
+    if (id && scripted) {
       setStorySuggestions((rows) => rows.map((row) => (row.id === id ? { ...row, status: 'added', draft } : row)))
-    } else {
+    } else if (id && plantxEnv === 'mock') {
+      decideMockSuggestion(id, 'added', draft)
+    } else if (id) {
       setRemoteSuggestions((rows) => rows.map((row) => (row.id === id ? { ...row, status: 'added', draft } : row)))
       void acceptCatalogSuggestion(id)
     }
@@ -250,6 +292,14 @@ export function RequestsPanel({
           </HeadMeta>
         </SectionHead>
         {ideasOpen ? (
+          <IdeasBar>
+            <p>{t.admin.suggestedCategoriesLead}</p>
+            <Button type="button" size="sm" variant="secondary" onClick={() => setEditing(freshEntry)}>
+              ＋ {t.admin.newCatalogEntry}
+            </Button>
+          </IdeasBar>
+        ) : null}
+        {ideasOpen ? (
           <AdminTable
             rows={ideaRows}
             rowId={(row) => row.id}
@@ -263,6 +313,13 @@ export function RequestsPanel({
             columns={[
               { id: 'id', header: t.admin.serverColId, cell: (row) => row.id, muted: true },
               { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
+              {
+                id: 'origin',
+                header: t.admin.suggestedOrigin,
+                cell: (row) => (
+                  <Badge $tone={row.origin === 'member' ? 'info' : 'muted'}>{originLabel(row)}</Badge>
+                ),
+              },
               {
                 id: 'scientific',
                 header: t.addPlant.factScientific,
@@ -285,7 +342,19 @@ export function RequestsPanel({
                 <AdminDetailGrid
                   items={[
                     { label: t.addPlant.factScientific, value: row.scientificName || '—' },
-                    { label: t.admin.suggestedBy.replace('{provider}', row.provider), value: t.admin.suggestedHits.replace('{count}', String(row.hits)) },
+                    ...(row.draft.categoryId
+                      ? [{ label: t.admin.suggestedCategory, value: t.admin.suggestedVarietyOf.replace('{category}', categoryName(row.draft.categoryId)) }]
+                      : []),
+                    { label: t.admin.suggestedOrigin, value: originLabel(row) },
+                    {
+                      label: t.admin.suggestedPeople,
+                      value: row.suggestedBy.length ? row.suggestedBy.map(personName).join(', ') : '—',
+                    },
+                    ...(row.note ? [{ label: t.admin.suggestedNote, value: row.note }] : []),
+                    {
+                      label: row.provider ? t.admin.suggestedBy.replace('{provider}', row.provider) : t.admin.suggestedOrigin,
+                      value: t.admin.suggestedHits.replace('{count}', String(row.hits)),
+                    },
                     { label: t.admin.serverColStatus, value: ideaStatus(row.status) },
                     { label: t.admin.serverColWhen, value: when(row.createdAt) },
                   ]}
@@ -296,7 +365,7 @@ export function RequestsPanel({
                       {t.admin.dismiss}
                     </Button>
                     <Button type="button" size="sm" variant="growth" onClick={() => setEditing(row)}>
-                      {t.admin.suggestedReview}
+                      {t.admin.suggestedApprove}
                     </Button>
                   </ExpandActions>
                 ) : null}

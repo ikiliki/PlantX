@@ -61,9 +61,12 @@ export interface PlantxStore {
     get(): Promise<Catalog>
     save(catalog: Catalog): Promise<void>
   }
-  /** Identify hits that matched no category. Hidden from the grower. */
+  /** Plants the catalog lacks: identify hits that matched no category, and members' suggestions. */
   catalogSuggestions: {
     list(status?: CatalogSuggestion['status'] | 'all'): Promise<CatalogSuggestion[]>
+    /** Open rows this user suggested. */
+    listFor(userId: string): Promise<CatalogSuggestion[]>
+    /** Files a row, or joins an open row for the same plant (one more hit, one more suggester). */
     suggest(input: {
       name: string
       scientificName: string
@@ -71,7 +74,12 @@ export interface PlantxStore {
       commonNames: string[]
       provider: string
       draft: CatalogSuggestionDraft
-    }): Promise<void>
+      origin: CatalogSuggestion['origin']
+      userId?: string
+      note?: string
+    }): Promise<CatalogSuggestion | null>
+    /** Replace an open row's draft (the AI draft arrives after the row is filed). */
+    setDraft(id: string, draft: CatalogSuggestionDraft): Promise<void>
     dismiss(id: string): Promise<void>
     /** The suggestion was saved into the catalog. */
     accept(id: string): Promise<void>

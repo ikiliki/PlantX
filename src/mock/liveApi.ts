@@ -298,6 +298,20 @@ export function fetchCatalogSuggestions(status: 'open' | 'dismissed' | 'added' |
   )
 }
 
+/** The member's own open suggestions (pending in their Catalog). */
+export function fetchMyCatalogSuggestions() {
+  return request<{ suggestions: import('./types').CatalogSuggestion[] }>('/api/catalog/suggestions/mine').then(
+    (body) => body?.suggestions ?? null,
+  )
+}
+
+export function postCatalogSuggestion(input: import('./types').CatalogSuggestionInput) {
+  return requestOutcome<{ suggestion: import('./types').CatalogSuggestion }>('/api/catalog/suggestions', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
 export function dismissCatalogSuggestion(id: string) {
   return request<{ ok: boolean }>(`/api/catalog/suggestions/${encodeURIComponent(id)}/dismiss`, {
     method: 'POST',

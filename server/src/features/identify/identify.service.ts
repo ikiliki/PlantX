@@ -22,6 +22,7 @@ import { AppError, Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
 import { preprodEnabled } from '../../lib/preprod.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
+import { catalogSuggestionService } from '../catalog/catalogSuggestion.service.ts'
 import { IdentifyTimeoutError } from './http.ts'
 import { mapDiagnosis } from './mapDiagnosis.ts'
 import type { MockPlan } from './mock/applyPlan.ts'
@@ -143,8 +144,13 @@ async function statusOf(
   return { ...(await provider.status()), ...settingsFor(flags, provider.id) }
 }
 
-/** Add Plant and the admin playground share this on a live answer. Mock runs do not file a row. */
-function noteMissingCategory(raw: RawSuggestion, image: string, catalog: Catalog) {
+/**
+ * A plant answer with no catalog category. An Add Plant scan files it for the member (pending in their Catalog),
+ * live or mock, so PP can show it. The playground files only live answers, with no member.
+ */
+async function noteMissingCategory(raw: RawSuggestion, ctx: DiagnoseCtx, live: boolean) {
+  const member = ctx.requester?.source === 'addPlant' ? ctx.requester.userId : undefined
+  if (!member && !live) return
   const name = raw.commonNames.find(Boolean) || raw.scientificName || raw.genus || ''
   if (!name.trim()) return
   const hint: CatalogDraftHint = {
@@ -154,21 +160,10 @@ function noteMissingCategory(raw: RawSuggestion, image: string, catalog: Catalog
     commonNames: raw.commonNames.filter(Boolean).slice(0, 6),
     provider: raw.provider,
     cultivar: raw.cultivar,
-    photo: image,
-    takenSigns: catalog.properties.map((item) => item.sign).filter(Boolean),
+    photo: ctx.image,
+    takenSigns: ctx.catalog.properties.map((item) => item.sign).filter(Boolean),
   }
-  void draftCatalogEntry(image, hint)
-    .then((draft) =>
-      getStore().catalogSuggestions.suggest({
-        name: hint.name,
-        scientificName: hint.scientificName,
-        genus: hint.genus,
-        commonNames: hint.commonNames,
-        provider: hint.provider,
-        draft,
-      }),
-    )
-    .catch((err) => logger.warn('catalog suggestion skipped', undefined, err))
+  await catalogSuggestionService.fromScan(hint, member, live ? () => draftCatalogEntry(ctx.image, hint) : undefined)
 }
 
 type SettingsFlags = Partial<Record<IdentifyProviderId, IdentifyProviderSettings>>
@@ -179,6 +174,7 @@ type DiagnoseCtx = {
   run: IdentifyRun
   flags: SettingsFlags
   suggestionById: (id: string) => Promise<CatalogSuggestion | null>
+  requester?: IdentifyRequester
 }
 
 function wantsMock(run: IdentifyRun, settings: IdentifyProviderSettings) {
@@ -248,8 +244,8 @@ async function settle(
       diagnosis.draft.size = guessed as SizeBand
     }
   }
-  if (!useMock && raw.isPlant && !diagnosis.draft.categoryId) {
-    noteMissingCategory(raw, ctx.image, ctx.catalog)
+  if (raw.isPlant && !diagnosis.draft.categoryId) {
+    await noteMissingCategory(raw, ctx, !useMock)
   }
   return { diagnosis, scenario: useMock ? scenario : undefined }
 }
@@ -464,7 +460,11 @@ export const identifyService = {
     return statusOf(provider, await enabledFlags())
   },
 
-  async diagnose(image: string, run: IdentifyRun): Promise<{ diagnosis: Diagnosis; scenario?: IdentifyMockScenario }> {
+  async diagnose(
+    image: string,
+    run: IdentifyRun,
+    requester?: IdentifyRequester,
+  ): Promise<{ diagnosis: Diagnosis; scenario?: IdentifyMockScenario }> {
     const catalog = await catalogService.get()
     const flags = run.honorEnabled ? await enabledFlags() : {}
     let suggestions: Promise<CatalogSuggestion[]> | undefined
@@ -474,7 +474,7 @@ export const identifyService = {
       const rows = await suggestions
       return rows.find((row) => row.id === id) ?? null
     }
-    const ctx: DiagnoseCtx = { image, catalog, run, flags, suggestionById }
+    const ctx: DiagnoseCtx = { image, catalog, run, flags, suggestionById, requester }
     if (run.target === 'chain') return diagnosePipeline(ctx)
     return diagnoseOne(ctx)
   },
@@ -487,7 +487,7 @@ export const identifyService = {
     let tried: IdentifyTried[]
     let steps: IdentifyStep[] = []
     try {
-      const answered = await identifyService.diagnose(image, run)
+      const answered = await identifyService.diagnose(image, run, requester)
       diagnosis = answered.diagnosis
       answeredScenario = answered.scenario
       tried = diagnosis.tried
