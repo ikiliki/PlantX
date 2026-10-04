@@ -262,6 +262,7 @@ const asideStatTile = css`
   display: grid;
   gap: 2px;
   min-width: 0;
+  position: relative;
   padding: 10px 12px;
   border: 1px solid rgba(18, 60, 45, 0.1);
   border-radius: ${theme.radii.md};
@@ -333,6 +334,32 @@ export const AsideStatButton = styled.button`
     outline: 2px solid ${theme.colors.growth};
     outline-offset: 2px;
   }
+`
+
+/**
+ * Marks a detail the AI filled. Blue `✦` = the AI value was kept; muted `✎` = the owner changed it,
+ * and the tooltip then carries the AI's original value. `$corner` pins it to a stat tile; inline otherwise.
+ */
+export const AiStamp = styled.span<{ $changed?: boolean; $corner?: boolean }>`
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: ${theme.radii.pill};
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+  background: ${({ $changed }) => ($changed ? 'rgba(154, 107, 31, 0.16)' : '#3B7CC9')};
+  color: ${({ $changed }) => ($changed ? theme.colors.warn : '#fff')};
+  ${({ $corner }) =>
+    $corner &&
+    css`
+      position: absolute;
+      inset-block-start: 6px;
+      inset-inline-end: 6px;
+    `}
 `
 
 export const AsideLabel = styled.span`

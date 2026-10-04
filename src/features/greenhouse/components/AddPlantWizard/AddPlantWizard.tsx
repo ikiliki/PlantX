@@ -341,7 +341,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const isMissing = (id: string) => flagMissing && missing.some((item) => item.id === id)
   const flaggedSteps = flagMissing ? [...new Set(missing.map((item) => item.step))] : []
   // After a photo every step is open, except while the AI is still reading it.
-  const freeNav = scans.length > 0 && !(scanning && !ai)
+  // Navigation is open even with no photo (the manual flow); a photo is required only to approve.
+  const freeNav = !(scanning && !ai)
   const place = ownerGreenhousePlace(signedIn ? currentUser : null)
 
   // A plant is named like a plant ("Pothos Golden"), not by its class code; the code stays on the passport.
@@ -362,6 +363,11 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       return
     }
     if (!matched || !description.trim()) {
+      setSaveFailed(true)
+      return
+    }
+    // A photo is optional through the steps but required to approve the plant.
+    if (photos.length === 0) {
       setSaveFailed(true)
       return
     }
@@ -830,17 +836,31 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               </Banner>
             ) : null}
             <Review>
-              <ReviewPhoto>
-                {hero ? <PlantImage src={hero} alt="" /> : null}
-                {catalogPhoto ? (
-                  <CategoryMark>
-                    <PlantImage src={catalogPhoto} alt="" />
-                  </CategoryMark>
-                ) : null}
-                {/* Stamped on the photo, like the passport gallery. */}
-                <PhotoBadge>
-                  <IdentifyBadge identification={identification} notInCatalog={isOther} />
-                </PhotoBadge>
+              <ReviewPhoto $drop={!plantPhoto}>
+                {plantPhoto ? (
+                  <>
+                    <PlantImage src={hero} alt="" />
+                    {catalogPhoto ? (
+                      <CategoryMark>
+                        <PlantImage src={catalogPhoto} alt="" />
+                      </CategoryMark>
+                    ) : null}
+                    {/* Stamped on the photo, like the passport gallery. */}
+                    <PhotoBadge>
+                      <IdentifyBadge identification={identification} notInCatalog={isOther} />
+                    </PhotoBadge>
+                  </>
+                ) : (
+                  // No photo yet: the required photo is added here, in the same drop control, sized to the slot.
+                  <PhotoIdentify
+                    scans={scans}
+                    onScansChange={setScans}
+                    checks={identification.photos}
+                    max={ADD_PLANT_UPLOAD_LIMIT}
+                    analyze={withAi}
+                    showAnswer={false}
+                  />
+                )}
               </ReviewPhoto>
               <ReviewBody>
                 {photos.length > 1 ? <PhotoChecks photos={photos} checks={identification.photos} size="sm" /> : null}
@@ -904,7 +924,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       case 'review':
         return {
           label: t.greenhouse.savePlant,
-          disabled: !reviewReady,
+          disabled: !reviewReady || photos.length === 0,
           hint: saveFailed
             ? t.addPlant.saveFailed
             : !identityReady
@@ -913,7 +933,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 ? specsHint
                 : !detailsReady
                   ? t.addPlant.needDetails
-                  : '',
+                  : photos.length === 0
+                    ? t.addPlant.needReviewPhoto
+                    : '',
         }
     }
   })()
@@ -971,7 +993,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             <Button
               type="button"
               variant="secondary"
-              disabled={scans.length === 0}
+              disabled={scanning}
               onClick={() => {
                 // After a scan the answer stays; the grower edits it from here.
                 if (!aiUsed) setWithAi(false)

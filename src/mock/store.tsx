@@ -307,6 +307,8 @@ export function StoreProvider({
   const sliceJobs = useRef(new Map<ServerSlice, Promise<boolean>>())
   /** Slices whose rows came from the API. A later live payload must not clear them. */
   const sliceReady = useRef<Partial<Record<ServerSlice, boolean>>>({})
+  /** Only an admin may read the members list; kept current during render so loadSlice reads it without a dep. */
+  const isAdminRef = useRef(false)
   /** Drops a stale `/api/live` when React runs the boot effect twice. */
   const liveGen = useRef(0)
 
@@ -416,31 +418,34 @@ export function StoreProvider({
     if (existing) return existing
     const job = (async (): Promise<boolean> => {
       if (part === 'users') {
-        const members = await fetchMembersOutcome()
-        if (members.ok) {
-          noteSlice(part, null)
-          update((d) => {
-            d.users = members.data.users
-            return d
-          })
-          return true
-        }
-        // Growers and guests cannot read the admin members list. The public directory is theirs.
-        if (members.failure.status === 401 || members.failure.status === 403) {
-          const directory = await fetchDirectoryOutcome()
-          if (!directory.ok) {
-            noteSlice(part, directory.failure)
+        // Growers and guests never call the admin-only members list; the public directory is theirs.
+        // Admins read the full list, but still fall back to the directory on an unexpected 401/403.
+        if (isAdminRef.current) {
+          const members = await fetchMembersOutcome()
+          if (members.ok) {
+            noteSlice(part, null)
+            update((d) => {
+              d.users = members.data.users
+              return d
+            })
+            return true
+          }
+          if (members.failure.status !== 401 && members.failure.status !== 403) {
+            noteSlice(part, members.failure)
             return false
           }
-          noteSlice(part, null)
-          update((d) => {
-            d.users = directory.data.users
-            return d
-          })
-          return true
         }
-        noteSlice(part, members.failure)
-        return false
+        const directory = await fetchDirectoryOutcome()
+        if (!directory.ok) {
+          noteSlice(part, directory.failure)
+          return false
+        }
+        noteSlice(part, null)
+        update((d) => {
+          d.users = directory.data.users
+          return d
+        })
+        return true
       }
       if (part === 'plants') {
         const res = await fetchPlantsOutcome()
@@ -552,6 +557,8 @@ export function StoreProvider({
     [db],
   )
   const signedIn = Boolean(currentUser && currentUser.role !== 'guest')
+  // Kept current every render so a later loadSlice('users') reads the right role without re-creating the callback.
+  isAdminRef.current = currentUser?.role === 'admin'
   const liveWritable = !uiMocks && !offline && liveStatus === 'up'
 
   const api: StoreApi = {
