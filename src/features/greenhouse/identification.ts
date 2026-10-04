@@ -3,6 +3,7 @@ import type {
   Diagnosis,
   IdentifyFieldCheck,
   IdentifyFieldChecks,
+  IdentifyFieldMarks,
   PhotoCheck,
   PlantClassDraft,
   PlantIdentification,
@@ -129,6 +130,31 @@ export function fieldChecksFor(saved: SavedClass, diagnosis: Diagnosis, catalog:
 }
 
 /**
+ * Same per-field verdicts, each carrying the AI's suggested value so a `changed` field
+ * can show what the AI had answered. `category`'s AI value is the suggested category id.
+ * Stored on the plant's identification; resolved to labels at render time.
+ */
+export function fieldMarksFor(saved: SavedClass, diagnosis: Diagnosis, catalog: Catalog): IdentifyFieldMarks {
+  const checks = fieldChecksFor(saved, diagnosis, catalog)
+  const { draft } = diagnosis
+  const aiValues: Record<keyof IdentifyFieldChecks, string | undefined> = {
+    category: draft.categoryId || undefined,
+    subcategory: draft.subcategoryId || undefined,
+    quality: draft.quality || undefined,
+    size: draft.size || undefined,
+    stage: draft.stage || undefined,
+  }
+  const marks: IdentifyFieldMarks = {}
+  for (const key of Object.keys(checks) as (keyof IdentifyFieldChecks)[]) {
+    const check = checks[key]
+    // `manual` fields had no AI value and carry no stamp; keep the record lean.
+    if (!check || check === 'manual') continue
+    marks[key] = { check, aiValue: aiValues[key] }
+  }
+  return marks
+}
+
+/**
  * The first photo whose answer matches the saved class verifies the plant (`ai`).
  * With no match, the first plant answer marks it `edited`. With no plant answer it is `manual`.
  */
@@ -144,6 +170,9 @@ export function identificationFor(
   if (lead < 0) lead = scans.findIndex((scan) => scan?.diagnosis?.isPlant)
   const diagnosis = lead >= 0 ? scans[lead]?.diagnosis : undefined
   if (!diagnosis) return { source: 'manual', at, ...withPhotos }
+  // Per-field provenance so each saved detail can show an AI stamp and, when changed, the AI value.
+  const marks = saved && diagnosis.isPlant ? fieldMarksFor(saved, diagnosis, catalog) : {}
+  const withFields = Object.keys(marks).length > 0 ? { fields: marks } : {}
   return {
     source: photos[lead].result === 'match' ? 'ai' : 'edited',
     provider: diagnosis.provider,
@@ -154,6 +183,7 @@ export function identificationFor(
     requestId: scans[lead]?.requestId,
     at,
     ...withPhotos,
+    ...withFields,
   }
 }
 

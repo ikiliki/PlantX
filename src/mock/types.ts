@@ -190,6 +190,12 @@ export type PlantIdentification = {
   at: string
   /** One check per saved photo, in photo order. */
   photos?: PhotoCheck[]
+  /**
+   * Per class field: did the owner keep the AI value, change it, or fill it with none?
+   * `aiValue` is the AI's suggested option id, kept so a changed field can show the
+   * original AI answer in a tooltip. Absent on plants added before this was tracked.
+   */
+  fields?: IdentifyFieldMarks
 }
 
 /**
@@ -215,6 +221,18 @@ export type IdentifyFieldId = 'category' | 'subcategory' | 'quality' | 'size' | 
 export type IdentifyFieldCheck = 'kept' | 'changed' | 'manual'
 
 export type IdentifyFieldChecks = Partial<Record<IdentifyFieldId, IdentifyFieldCheck>>
+
+/**
+ * One field's provenance on a saved plant: the check plus the AI's suggested option id,
+ * so a `changed` field can reveal what the AI had answered. `aiValue` is a catalog option id
+ * (or `other` / category speciesId), resolved to a label at render time.
+ */
+export type IdentifyFieldMark = {
+  check: IdentifyFieldCheck
+  aiValue?: string
+}
+
+export type IdentifyFieldMarks = Partial<Record<IdentifyFieldId, IdentifyFieldMark>>
 
 export interface MarketClass {
   id: string

@@ -241,15 +241,23 @@ export const Review = styled.article`
   }
 `
 
-export const ReviewPhoto = styled.div`
+export const ReviewPhoto = styled.div<{ $drop?: boolean }>`
   position: relative;
   /* Stacked, a full-width square pushes the fields below the fold. */
   width: min(100%, 240px);
   justify-self: center;
-  aspect-ratio: 1;
   border-radius: ${theme.radii.md};
   overflow: hidden;
-  background: ${theme.colors.chipGreen};
+  /* With a photo it is a square tile; holding the drop it hugs the drop (no empty green zone). */
+  ${({ $drop }) =>
+    $drop
+      ? css`
+          background: transparent;
+        `
+      : css`
+          aspect-ratio: 1;
+          background: ${theme.colors.chipGreen};
+        `}
 
   > img {
     position: absolute;
