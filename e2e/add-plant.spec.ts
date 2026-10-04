@@ -15,12 +15,16 @@ test.describe('Add Plant', () => {
     await signIn(page)
   })
 
-  test('asks for a photo first', async ({ page }) => {
+  test('AI needs a photo; filling in by hand does not, but Save does', async ({ page }) => {
     const dialog = await openAddPlant(page)
     await expect(dialog.getByText('Add a photo to continue')).toBeVisible()
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
-    await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeDisabled()
-    await expect(dialog.getByRole('navigation').getByRole('button', { name: /Review/ })).toBeDisabled()
+    await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeEnabled()
+
+    // The manual path walks the steps with no photo; Review offers a compact drop and Save waits for it.
+    await dialog.getByRole('navigation').getByRole('button', { name: /Review/ }).click()
+    await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeDisabled()
+    await expect(dialog.locator('input[type=file]')).toHaveCount(2)
   })
 
   test('a full AI answer is ready to save', async ({ page, identify }) => {
