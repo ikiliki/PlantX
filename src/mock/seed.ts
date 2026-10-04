@@ -258,6 +258,20 @@ export function createSeed(): MockDb {
         createdAt: '2025-03-01',
         verifiedAt: '2026-08-20',
         verifiedBy: 'u-maya',
+        // AI verified, but the owner bumped the size by hand (M → L): shows the combined badge,
+        // a kept ✦ on the class fields, and a changed ✎ on size with the AI value in its tooltip.
+        identification: {
+          source: 'ai',
+          label: 'Golden pothos',
+          probability: 0.93,
+          at: '2025-03-01',
+          fields: {
+            category: { check: 'kept' },
+            subcategory: { check: 'kept' },
+            stage: { check: 'kept', aiValue: 'EST' },
+            size: { check: 'changed', aiValue: 'M' },
+          },
+        },
         history: [
           { at: '2025-03-01', label: 'Registered', labelHe: 'נרשם' },
           { at: '2025-11-12', label: 'Propagated 40 cuttings', labelHe: 'התרבה ל־40 ייחורים' },
@@ -291,6 +305,19 @@ export function createSeed(): MockDb {
         propagatedAt: '2026-07-01',
         status: 'listed',
         createdAt: '2026-07-01',
+        // AI verified and untouched: ✦ on every class field, no "Manually edited" tag.
+        identification: {
+          source: 'ai',
+          label: 'Golden pothos',
+          probability: 0.9,
+          at: '2026-07-01',
+          fields: {
+            category: { check: 'kept' },
+            subcategory: { check: 'kept' },
+            size: { check: 'kept', aiValue: 'M' },
+            stage: { check: 'kept', aiValue: 'ROOTED' },
+          },
+        },
         history: [
           { at: '2026-07-01', label: 'Propagated from mother', labelHe: 'הופרד מצמח האם' },
           { at: '2026-08-15', label: 'Listed as bundle', labelHe: 'פורסם כחבילה' },

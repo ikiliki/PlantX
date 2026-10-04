@@ -300,6 +300,11 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       setSaveFailed(true)
       return
     }
+    // A photo is optional through the steps but required to approve the plant.
+    if (photos.length === 0) {
+      setSaveFailed(true)
+      return
+    }
     const traits = traitsWithoutArea(draft.traits)
     if (isOther) {
       if (!draft.size || !draft.stage) {
@@ -729,17 +734,31 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <StepLead>{t.addPlant.reviewLead}</StepLead>
             </StepHead>
             <Review>
-              <ReviewPhoto>
-                {hero ? <PlantImage src={hero} alt="" /> : null}
-                {catalogPhoto ? (
-                  <CategoryMark>
-                    <PlantImage src={catalogPhoto} alt="" />
-                  </CategoryMark>
-                ) : null}
-                {/* Stamped on the photo, like the passport gallery. */}
-                <PhotoBadge>
-                  <IdentifyBadge identification={identification} notInCatalog={isOther} />
-                </PhotoBadge>
+              <ReviewPhoto $drop={!plantPhoto}>
+                {plantPhoto ? (
+                  <>
+                    <PlantImage src={hero} alt="" />
+                    {catalogPhoto ? (
+                      <CategoryMark>
+                        <PlantImage src={catalogPhoto} alt="" />
+                      </CategoryMark>
+                    ) : null}
+                    {/* Stamped on the photo, like the passport gallery. */}
+                    <PhotoBadge>
+                      <IdentifyBadge identification={identification} notInCatalog={isOther} />
+                    </PhotoBadge>
+                  </>
+                ) : (
+                  // No photo yet: the required photo is added here, in the same drop control, sized to the slot.
+                  <PhotoIdentify
+                    scans={scans}
+                    onScansChange={setScans}
+                    checks={identification.photos}
+                    max={ADD_PLANT_UPLOAD_LIMIT}
+                    analyze={withAi}
+                    showAnswer={false}
+                  />
+                )}
               </ReviewPhoto>
               <ReviewBody>
                 {photos.length > 1 ? <PhotoChecks photos={photos} checks={identification.photos} size="sm" /> : null}
@@ -801,7 +820,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       case 'review':
         return {
           label: t.greenhouse.savePlant,
-          disabled: !detailsReady || !specsReady || !identityReady,
+          disabled: !detailsReady || !specsReady || !identityReady || photos.length === 0,
           hint: saveFailed
             ? t.addPlant.saveFailed
             : !identityReady
@@ -810,7 +829,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 ? t.addPlant.needSpecs
                 : !detailsReady
                   ? t.addPlant.needDetails
-                  : '',
+                  : photos.length === 0
+                    ? t.addPlant.needReviewPhoto
+                    : '',
         }
     }
   })()
@@ -864,7 +885,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             <Button
               type="button"
               variant="secondary"
-              disabled={scans.length === 0}
+              disabled={scanning}
               onClick={() => {
                 setWithAi(false)
                 go(step + 1)

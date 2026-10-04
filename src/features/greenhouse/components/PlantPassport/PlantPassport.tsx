@@ -37,6 +37,7 @@ import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
 import {
   ActionRow,
   ActivityBody,
+  AiStamp,
   Aside,
   GreenhouseLabel,
   GreenhouseLink,
@@ -92,6 +93,52 @@ function stageName(stage: StageBand | undefined, labels: { mature: string; estab
   if (stage === 'ROOTED') return labels.rooted
   if (stage === 'CUT') return labels.cutting
   return undefined
+}
+
+type StampFieldId = 'category' | 'subcategory' | 'size' | 'stage'
+
+/** Human label for an AI-suggested value, so a changed field can name what the AI had answered. */
+function aiFieldLabel(
+  fieldId: StampFieldId,
+  aiValue: string | undefined,
+  catalog: ReturnType<typeof useStore>['db']['catalog'],
+  locale: Parameters<typeof catalogName>[1],
+  stageLabels: { mature: string; established: string; rooted: string; cutting: string },
+): string | undefined {
+  if (!aiValue) return undefined
+  if (fieldId === 'size') return aiValue
+  if (fieldId === 'stage') return stageName(aiValue as StageBand, stageLabels) ?? aiValue
+  if (fieldId === 'subcategory') {
+    const sub = catalog.subcategories.find((item) => item.id === aiValue)
+    return sub ? catalogName(sub, locale) : aiValue
+  }
+  const category = catalog.categories.find((item) => item.id === aiValue)
+  return category ? catalogName(category, locale) : aiValue
+}
+
+/** Blue ✦ when the AI value was kept; muted ✎ when the owner changed it (tooltip then shows the AI value). */
+function FieldStamp({
+  mark,
+  aiLabel,
+  corner,
+}: {
+  mark: { check: 'kept' | 'changed' | 'manual'; aiValue?: string }
+  aiLabel?: string
+  corner?: boolean
+}) {
+  const { t } = useI18n()
+  if (mark.check === 'manual') return null
+  const changed = mark.check === 'changed'
+  const tip = changed
+    ? aiLabel
+      ? t.passport.aiWas.replace('{value}', aiLabel)
+      : t.passport.aiChanged
+    : t.passport.aiFilled
+  return (
+    <AiStamp $changed={changed} $corner={corner} title={tip} aria-label={tip}>
+      {changed ? '✎' : '✦'}
+    </AiStamp>
+  )
 }
 
 export function PlantPassport({
@@ -196,9 +243,15 @@ export function PlantPassport({
     rooted: t.market.rooted,
     cutting: t.market.unitCutting,
   })
-  const traits = [
-    { label: t.market.size, value: plant.sizeBand ?? plant.sizeGrade },
-    ...(stage ? [{ label: t.market.stage, value: stage }] : []),
+  const stageLabels = {
+    mature: t.market.mature,
+    established: t.market.established,
+    rooted: t.market.rooted,
+    cutting: t.market.unitCutting,
+  }
+  const traits: { label: string; value: string; fieldId?: 'size' | 'stage' }[] = [
+    { label: t.market.size, value: plant.sizeBand ?? plant.sizeGrade, fieldId: 'size' },
+    ...(stage ? [{ label: t.market.stage, value: stage, fieldId: 'stage' as const }] : []),
     { label: t.sell.location, value: tr(plant.locationZone, plant.locationZoneHe) },
   ]
   const catalogCategory = categoryBySpeciesId(db.catalog, plant.speciesId)
@@ -209,6 +262,9 @@ export function PlantPassport({
     : plant.variety
       ? tr(plant.variety, plant.varietyHe ?? plant.variety)
       : ''
+
+  const categoryMark = plant.identification?.fields?.category
+  const subMark = plant.identification?.fields?.subcategory
 
   const communityGrade = aggregateCommunityGrade(plant.grades)
   const gradeLabel = communityGrade ? t.grade.community : t.grade.catalog
@@ -322,6 +378,10 @@ export function PlantPassport({
             ) : null}
           </PhotoIconButton>
           <NameBlock>
+            <Code>{plant.code}</Code>
+            <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
+              {title}
+            </Title>
             {(categoryLabel || subLabel) && (
               <TaxonomyRow>
                 <PlantCatalogMark plant={plant} size={24} />
@@ -333,14 +393,30 @@ export function PlantPassport({
                   ) : (
                     <CategoryName>{categoryLabel}</CategoryName>
                   ))}
+                {categoryLabel && categoryMark ? (
+                  <FieldStamp
+                    mark={categoryMark}
+                    aiLabel={
+                      categoryMark.check === 'changed'
+                        ? aiFieldLabel('category', categoryMark.aiValue, db.catalog, locale, stageLabels)
+                        : undefined
+                    }
+                  />
+                ) : null}
                 {categoryLabel && subLabel && <TaxonomySep aria-hidden>·</TaxonomySep>}
                 {subLabel && <SubName>{subLabel}</SubName>}
+                {subLabel && subMark ? (
+                  <FieldStamp
+                    mark={subMark}
+                    aiLabel={
+                      subMark.check === 'changed'
+                        ? aiFieldLabel('subcategory', subMark.aiValue, db.catalog, locale, stageLabels)
+                        : undefined
+                    }
+                  />
+                ) : null}
               </TaxonomyRow>
             )}
-            <Code>{plant.code}</Code>
-            <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
-              {title}
-            </Title>
           </NameBlock>
         </IdentityHead>
 
@@ -384,12 +460,20 @@ export function PlantPassport({
               </PriceTip>
             </AsideStatButton>
           )}
-          {traits.map((trait) => (
-            <AsideStat key={trait.label}>
-              <dt>{trait.label}</dt>
-              <dd>{trait.value}</dd>
-            </AsideStat>
-          ))}
+          {traits.map((trait) => {
+            const mark = trait.fieldId ? plant.identification?.fields?.[trait.fieldId] : undefined
+            const aiLabel =
+              mark?.check === 'changed' && trait.fieldId
+                ? aiFieldLabel(trait.fieldId, mark.aiValue, db.catalog, locale, stageLabels)
+                : undefined
+            return (
+              <AsideStat key={trait.label}>
+                <dt>{trait.label}</dt>
+                <dd>{trait.value}</dd>
+                {mark ? <FieldStamp mark={mark} aiLabel={aiLabel} corner /> : null}
+              </AsideStat>
+            )
+          })}
           <AsideStat>
             <dt>{t.market.quantity}</dt>
             <dd>×{plant.quantity}</dd>

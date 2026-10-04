@@ -270,12 +270,21 @@ export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
 
 export const NameRow = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   gap: 8px;
+  min-width: 0;
+
+  /* Category photo stays pinned to the start; a long name wraps beside it, not onto its own row. */
+  > :first-child {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
 `
 
 export const Name = styled(Link)`
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-family: ${theme.fonts.display};
   font-size: 20px;
   font-weight: 400;
@@ -293,6 +302,7 @@ export const Name = styled(Link)`
 `
 
 export const CareName = styled.span`
+  min-width: 0;
   font-family: ${theme.fonts.display};
   font-size: 20px;
   font-weight: 400;
