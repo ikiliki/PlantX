@@ -79,10 +79,13 @@ test.describe('catalog suggestions', () => {
     await dialog.getByPlaceholder(/where you found it/i).fill('Seen at a nursery.')
     await dialog.getByRole('button', { name: 'Send suggestion' }).click()
 
-    await expect(dialog.getByText("Thanks! It's waiting for review")).toBeVisible()
+    // The dialog is named by its heading, which becomes the thank-you once sent.
+    const thanks = page.getByRole('dialog', { name: "Thanks! It's waiting for review" })
+    await expect(thanks).toBeVisible()
     expect(sent?.name).toBe('E2E Marble Star')
     expect(sent?.categoryId).toBeTruthy()
-    await dialog.getByRole('button', { name: 'Done' }).click()
+    await thanks.getByRole('button', { name: 'Done' }).click()
+    await expect(thanks).toHaveCount(0)
 
     const card = page.getByTestId('pending-suggestion').filter({ hasText: 'E2E Marble Star' })
     await expect(card).toBeVisible()
