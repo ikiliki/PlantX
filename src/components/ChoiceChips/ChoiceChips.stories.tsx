@@ -131,3 +131,24 @@ export const ShowMore = () => {
     />
   )
 }
+
+const manyOptions = Array.from({ length: 14 }, (_, index) => ({ id: `o${index}`, label: `Option ${index + 1}` }))
+
+/** One sideways row with start / end arrows; resize the frame to see them come and go. */
+export const ScrollRow = () => {
+  const [value, setValue] = useState('o9')
+  return (
+    <div style={{ maxWidth: 360 }}>
+      <ChoiceChips
+        label="Growth form"
+        required
+        options={manyOptions}
+        value={value}
+        onChange={setValue}
+        suggestedId="o9"
+        suggestedLabel="✦ AI"
+        scroll
+      />
+    </div>
+  )
+}

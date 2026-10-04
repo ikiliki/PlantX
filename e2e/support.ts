@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, test as base, type Page } from '@playwright/test'
+import { emptyClassDraft, sizeChoices, stageChoices } from '../src/features/greenhouse/plantClass'
 import type { Catalog, Diagnosis } from '../src/mock/types'
 
 /** Admin exists on QA and PP. */
@@ -85,11 +86,16 @@ export async function catalogPick(page: Page) {
   throw new Error('No catalog category with a required trait')
 }
 
+/** `withSizeStage` (default on): the answer also names a size and stage valid for the pick. */
 export function diagnosisFor(
   pick: Awaited<ReturnType<typeof catalogPick>>,
-  { withTrait }: { withTrait: boolean },
+  { withTrait, withSizeStage = true }: { withTrait: boolean; withSizeStage?: boolean },
 ): IdentifyAnswer {
   const name = pick.category.name
+  const base = { ...emptyClassDraft, categoryId: pick.category.id, subcategoryId: pick.sub.id }
+  const sizeStage = withSizeStage
+    ? { size: sizeChoices(pick.catalog, base)[0], stage: stageChoices(pick.catalog, base)[0] }
+    : {}
   const diagnosis: Diagnosis = {
     provider: 'gemini',
     mode: 'mock',
@@ -101,6 +107,7 @@ export function diagnosisFor(
     draft: {
       categoryId: pick.category.id,
       subcategoryId: pick.sub.id,
+      ...sizeStage,
       traits: withTrait ? { [pick.trait.id]: pick.trait.options[0].id } : {},
     },
     tried: [],

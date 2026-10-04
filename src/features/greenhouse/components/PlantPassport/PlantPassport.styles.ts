@@ -210,6 +210,15 @@ export const TaxonomyRow = styled.div`
   line-height: 1.35;
 `
 
+/** A taxonomy name and its AI stamp: the stamp stays beside the name when the row wraps. */
+export const TaxonomyItem = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+`
+
 export const CategoryName = styled.span`
   font-weight: 700;
   color: ${theme.colors.forest};
@@ -334,32 +343,6 @@ export const AsideStatButton = styled.button`
     outline: 2px solid ${theme.colors.growth};
     outline-offset: 2px;
   }
-`
-
-/**
- * Marks a detail the AI filled. Blue `✦` = the AI value was kept; muted `✎` = the owner changed it,
- * and the tooltip then carries the AI's original value. `$corner` pins it to a stat tile; inline otherwise.
- */
-export const AiStamp = styled.span<{ $changed?: boolean; $corner?: boolean }>`
-  display: inline-grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  border-radius: ${theme.radii.pill};
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
-  cursor: help;
-  background: ${({ $changed }) => ($changed ? 'rgba(154, 107, 31, 0.16)' : '#3B7CC9')};
-  color: ${({ $changed }) => ($changed ? theme.colors.warn : '#fff')};
-  ${({ $corner }) =>
-    $corner &&
-    css`
-      position: absolute;
-      inset-block-start: 6px;
-      inset-inline-end: 6px;
-    `}
 `
 
 export const AsideLabel = styled.span`

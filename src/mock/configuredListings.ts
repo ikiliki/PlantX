@@ -1,6 +1,7 @@
 import { classPhotos } from './images'
 import { resolveArea } from './locations'
 import type { Listing, Plant, RootingStatus, StageBand } from './types'
+import type { CareDates } from '../features/todo/todoSchedule'
 
 type Spec = {
   id: string
@@ -201,11 +202,17 @@ export const configuredPlants: Plant[] = specs.map((spec) => {
     createdAt: '2026-09-20',
     verifiedAt: spec.verified ? '2026-09-20' : undefined,
     verifiedBy: spec.verified ? 'u-dana' : undefined,
-    photoAt: spec.verified ? '2026-09-28' : '2026-09-10',
-    wateredAt: spec.verified ? '2026-09-29' : '2026-09-18',
     history: [{ at: '2026-09-20', label: 'Listed from configuration', labelHe: 'פורסם לפי התצורה' }],
   }
 })
+
+/** Demo care dates for the configured plants; `seedCareTodos` turns them into todos. */
+export const configuredCareDates: CareDates = Object.fromEntries(
+  specs.map((spec) => [
+    `pl-cfg-${spec.id}`,
+    { photoAt: spec.verified ? '2026-09-28' : '2026-09-10', wateredAt: spec.verified ? '2026-09-29' : '2026-09-18' },
+  ]),
+)
 
 export const configuredListings: Listing[] = specs.map((spec) => {
   const area = located(spec)

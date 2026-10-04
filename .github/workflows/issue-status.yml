@@ -1,12 +1,12 @@
-# Moves the status label on the issues a PR references ("Refs #n", "Fixes #n").
-# Merged into preprod/ai-testers → status: in PP. Merged into master → status: in prod
-# (production is promoted by hand; the issue is closed after it is approved there).
+# Moves the status label on the issues a PR into master references ("Refs #n", "Fixes #n").
+# Opened → status: in PP (the branch's preview is its PP environment). Merged → status: in prod
+# (master deploys to production; the issue is closed after it is approved there).
 name: Issue status
 
 on:
   pull_request:
-    types: [closed]
-    branches: [preprod/ai-testers, master]
+    types: [opened, reopened, closed]
+    branches: [master]
 
 permissions:
   issues: write
@@ -14,16 +14,16 @@ permissions:
 
 jobs:
   label:
-    if: github.event.pull_request.merged == true
+    if: github.event.action != 'closed' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
       BODY: ${{ github.event.pull_request.body }}
       TITLE: ${{ github.event.pull_request.title }}
-      BASE: ${{ github.event.pull_request.base.ref }}
+      MERGED: ${{ github.event.pull_request.merged }}
     steps:
       - run: |
-          if [ "$BASE" = "master" ]; then next="status: in prod"; else next="status: in PP"; fi
+          if [ "$MERGED" = "true" ]; then next="status: in prod"; else next="status: in PP"; fi
           issues=$(printf '%s\n%s\n' "$TITLE" "$BODY" | grep -iE '(refs|fixes|closes|resolves)[^#]*#[0-9]+|\(#[0-9]+' | grep -oE '#[0-9]+' | tr -d '#' | sort -u)
           for n in $issues; do
             gh issue edit "$n" -R "$GITHUB_REPOSITORY" \

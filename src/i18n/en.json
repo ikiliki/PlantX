@@ -108,6 +108,16 @@
       "graded": "Graded"
     }
   },
+  "preprod": {
+    "label": "PP",
+    "signedInAs": "Signed in as {name}",
+    "token": "Test token",
+    "guest": "Guest",
+    "admin": "{name} (admin)",
+    "badToken": "Wrong test token.",
+    "failed": "Could not switch user. Try again.",
+    "switching": "Switching user… the page reloads when ready."
+  },
   "login": {
     "title": "Sign in to PlantX",
     "subtitle": "Continue with a demo greenhouse, or browse as a guest",
@@ -333,7 +343,8 @@
     "timeToday": "Today",
     "timeAgo": "{n}d ago",
     "averagePrice": "Average price",
-    "priceTip": "Other prices"
+    "priceTip": "Other prices",
+    "aiSuggested": "AI suggested"
   },
   "greenhouse": {
     "title": "Greenhouse",
@@ -565,13 +576,7 @@
     "bannerManual": "Not verified by AI. You're choosing the class yourself.",
     "restoreAi": "Use AI's answer",
     "searchCategories": "Search categories",
-    "showMore": "Show more",
     "choose": "Choose",
-    "subcategoryFirst": "Choose a category first",
-    "sizeFirst": "Pick a size first",
-    "stageFirst": "Pick a stage first",
-    "traitNotForVariety": "Doesn't apply to this variety",
-    "showLess": "Show less",
     "specsTitle": "Size and stage",
     "specsLead": "Size and stage set the market class of this plant.",
     "gradeA": "Top condition",
@@ -597,7 +602,6 @@
     "manualHint": "Saved as not verified by AI",
     "analyzeWithAi": "Analyze with AI",
     "continueWithAi": "Continue with AI",
-    "needPhoto": "Add a photo to continue",
     "photoReady": "Photo added",
     "photoReadyBody": "Continue with AI, or fill the form yourself.",
     "skipPhotoHint": "No photo? You can still fill it in by hand",
@@ -646,7 +650,8 @@
     "scanEntry": "AI scan",
     "scanNotAdded": "Not added yet",
     "scanAdded": "Added",
-    "photosCount": "{n} photos"
+    "photosCount": "{n} photos",
+    "aiPickNotOffered": "AI said {value}, which isn't offered in {parent}"
   },
   "sell": {
     "title": "Sell / Propagate",
@@ -1276,7 +1281,9 @@
     "loading": "Loading…",
     "guestBlocked": "Guests can browse only — pick a persona to act",
     "serverDown": "Server is offline. Changes won’t save.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "scrollBack": "Scroll back",
+    "scrollForward": "Scroll forward"
   },
   "http": {
     "donePhoto": "Photo added · +{xp} XP",

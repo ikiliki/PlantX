@@ -3,24 +3,6 @@ import type { CatalogSuggestion, CatalogSuggestionDraft } from '../../../../src/
 import { fallbackDraft } from '../../features/catalog/catalogDraft.ts'
 import type { PlantxStore } from '../store.ts'
 
-const ENSURE_SQL = `
-create table if not exists catalog_suggestions (
-  id text primary key,
-  created_at timestamptz not null default now(),
-  status text not null default 'open',
-  name text not null,
-  scientific_name text not null default '',
-  genus text not null default '',
-  common_names jsonb not null default '[]'::jsonb,
-  provider text not null default '',
-  hits integer not null default 1,
-  draft jsonb not null default '{}'::jsonb
-)`
-
-const DRAFT_SQL = `
-alter table catalog_suggestions
-  add column if not exists draft jsonb not null default '{}'::jsonb`
-
 function draftOf(row: Record<string, unknown>): CatalogSuggestionDraft {
   const stored = row.draft
   const parsed = typeof stored === 'string' ? safeJson(stored) : stored
@@ -64,21 +46,10 @@ function rowOf(row: Record<string, unknown>): CatalogSuggestion {
   }
 }
 
-/** Open category ideas from identify. A missing table is created once; a failure never surfaces to the grower. */
+/** Open category ideas from identify. */
 export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogSuggestions'] {
-  let ready: Promise<void> | undefined
-
-  function ensure() {
-    ready ??= pool
-      .query(ENSURE_SQL)
-      .then(() => pool.query(DRAFT_SQL))
-      .then(() => undefined)
-    return ready
-  }
-
   return {
     async list(status = 'open') {
-      await ensure()
       const result =
         status === 'all'
           ? await pool.query(`select * from catalog_suggestions order by created_at desc`)
@@ -90,7 +61,6 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
     },
 
     async suggest(input) {
-      await ensure()
       const key = input.scientificName.trim().toLowerCase() || input.name.trim().toLowerCase()
       if (!key) return
       const existing = await pool.query(
@@ -121,7 +91,6 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
     },
 
     async dismiss(id) {
-      await ensure()
       await pool.query(
         `update catalog_suggestions set status = 'dismissed' where id = $1 and status = 'open'`,
         [id],
@@ -129,7 +98,6 @@ export function supabaseCatalogSuggestions(pool: pg.Pool): PlantxStore['catalogS
     },
 
     async accept(id) {
-      await ensure()
       await pool.query(
         `update catalog_suggestions set status = 'added' where id = $1 and status = 'open'`,
         [id],

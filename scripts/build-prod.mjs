@@ -72,7 +72,8 @@ await writeFile(
     handler: 'index.js',
     launcherType: 'Nodejs',
     shouldAddHelpers: true,
-    regions: ['syd1'],
+    // Next to each database: production in Sydney, every preview (PP) next to PlantX-PP in Singapore.
+    regions: [process.env.VERCEL_ENV === 'production' ? 'syd1' : 'sin1'],
   }),
 )
 await writeFile(

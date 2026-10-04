@@ -79,17 +79,6 @@ export function GreenhouseLevelView({
           <Xp>
             {t.greenhouse.levelN.replace('{n}', String(summary.level))} ·{' '}
             {t.greenhouse.levelXp.replace('{xp}', summary.xp.toLocaleString())}
-            <How
-              type="button"
-              aria-label={t.greenhouse.levelHow}
-              title={t.greenhouse.levelHow}
-              aria-expanded={howOpen}
-              aria-controls={howId}
-              $on={howOpen}
-              onClick={() => setHowOpen((open) => !open)}
-            >
-              ?
-            </How>
           </Xp>
         </TopCopy>
       </Top>
@@ -102,6 +91,17 @@ export function GreenhouseLevelView({
           {t.greenhouse.levelToNext
             .replace('{left}', left.toLocaleString())
             .replace('{n}', String(summary.level + 1))}
+          <How
+            type="button"
+            aria-label={t.greenhouse.levelHow}
+            title={t.greenhouse.levelHow}
+            aria-expanded={howOpen}
+            aria-controls={howId}
+            $on={howOpen}
+            onClick={() => setHowOpen((open) => !open)}
+          >
+            ?
+          </How>
         </Next>
       </Progress>
 

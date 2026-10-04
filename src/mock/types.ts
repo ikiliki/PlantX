@@ -153,10 +153,6 @@ export interface Plant {
   propagatedAt?: string
   verifiedAt?: string
   verifiedBy?: string
-  /** Last time the owner refreshed the listing photo. Legacy — moved into todos. */
-  photoAt?: string
-  /** Last time the owner confirmed watering. Legacy — moved into todos. */
-  wateredAt?: string
   status: 'owned' | 'listed' | 'sold'
   /** Set by a greenhouse publish. Independent of an active market listing. */
   publishedAt?: string
@@ -232,7 +228,10 @@ export type IdentifyFieldMark = {
   aiValue?: string
 }
 
-export type IdentifyFieldMarks = Partial<Record<IdentifyFieldId, IdentifyFieldMark>>
+export type IdentifyFieldMarks = Partial<Record<IdentifyFieldId, IdentifyFieldMark>> & {
+  /** Catalog traits the AI filled (property id → mark), e.g. growth form or variegation. */
+  traits?: Record<string, IdentifyFieldMark>
+}
 
 export interface MarketClass {
   id: string

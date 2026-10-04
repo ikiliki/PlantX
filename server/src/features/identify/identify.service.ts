@@ -20,6 +20,7 @@ import type {
 import { getStore } from '../../db/index.ts'
 import { AppError, Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
+import { preprodEnabled } from '../../lib/preprod.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
 import { IdentifyTimeoutError } from './http.ts'
 import { mapDiagnosis } from './mapDiagnosis.ts'
@@ -181,6 +182,8 @@ type DiagnoseCtx = {
 }
 
 function wantsMock(run: IdentifyRun, settings: IdentifyProviderSettings) {
+  // Preprod never calls Gemini or Pl@ntNet. Each stage still answers with the admin's chosen mock scenario.
+  if (preprodEnabled()) return true
   if (run.stages || run.honorEnabled) return settings.response === 'mock'
   return run.mode === 'mock'
 }

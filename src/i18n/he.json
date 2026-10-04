@@ -108,6 +108,16 @@
       "graded": "מדורג"
     }
   },
+  "preprod": {
+    "label": "PP",
+    "signedInAs": "מחובר כ-{name}",
+    "token": "טוקן בדיקה",
+    "guest": "אורח",
+    "admin": "{name} (מנהל)",
+    "badToken": "טוקן בדיקה שגוי.",
+    "failed": "לא ניתן להחליף משתמש. נסו שוב.",
+    "switching": "מחליפים משתמש… העמוד ייטען מחדש כשמוכן."
+  },
   "login": {
     "title": "התחברות ל־PlantX",
     "subtitle": "המשיכו עם חממת הדגמה, או גלשו כאורחים",
@@ -333,7 +343,8 @@
     "timeToday": "היום",
     "timeAgo": "לפני {n} ימים",
     "averagePrice": "מחיר ממוצע",
-    "priceTip": "מחירים נוספים"
+    "priceTip": "מחירים נוספים",
+    "aiSuggested": "ה־AI הציע"
   },
   "greenhouse": {
     "title": "החממה",
@@ -565,13 +576,7 @@
     "bannerManual": "לא אומת ב־AI. אתם בוחרים את המחלקה בעצמכם.",
     "restoreAi": "חזרה לתשובת ה־AI",
     "searchCategories": "חיפוש קטגוריות",
-    "showMore": "הצג עוד",
     "choose": "בחירה",
-    "subcategoryFirst": "קודם בוחרים קטגוריה",
-    "sizeFirst": "קודם בוחרים גודל",
-    "stageFirst": "קודם בוחרים שלב",
-    "traitNotForVariety": "לא רלוונטי לזן הזה",
-    "showLess": "הצג פחות",
     "specsTitle": "גודל ושלב",
     "specsLead": "גודל ושלב קובעים את דרגת השוק של הצמח.",
     "gradeA": "מצב מעולה",
@@ -597,7 +602,6 @@
     "manualHint": "יישמר כלא מאומת ב־AI",
     "analyzeWithAi": "ניתוח עם AI",
     "continueWithAi": "המשך עם AI",
-    "needPhoto": "הוסיפו תמונה כדי להמשיך",
     "photoReady": "התמונה נוספה",
     "photoReadyBody": "המשיכו עם AI, או מלאו את הטופס בעצמכם.",
     "skipPhotoHint": "אין תמונה? אפשר למלא ידנית",
@@ -646,7 +650,8 @@
     "scanEntry": "סריקת AI",
     "scanNotAdded": "עוד לא נוסף",
     "scanAdded": "נוסף",
-    "photosCount": "{n} תמונות"
+    "photosCount": "{n} תמונות",
+    "aiPickNotOffered": "ה־AI הציע {value}, שלא קיים בגודל {parent}"
   },
   "sell": {
     "title": "מכירה / התרבה",
@@ -1276,7 +1281,9 @@
     "loading": "טוען…",
     "guestBlocked": "אורחים יכולים לצפות בלבד — בחרו דמות כדי לפעול",
     "serverDown": "השרת כבוי. השינויים לא יישמרו.",
-    "retry": "נסה שוב"
+    "retry": "נסה שוב",
+    "scrollBack": "גלילה אחורה",
+    "scrollForward": "גלילה קדימה"
   },
   "http": {
     "donePhoto": "התמונה נוספה · ‎+{xp} XP",

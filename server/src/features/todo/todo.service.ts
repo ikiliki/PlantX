@@ -244,84 +244,39 @@ export const todoService = {
     }
   },
 
-  /**
-   * One-time move from plant.wateredAt / plant.photoAt into todos.
-   * Clears those fields on the plant afterward.
-   */
-  async backfillFromPlants() {
+  /** Every unsold plant has a water todo and, once it has a photo, an open photo todo. */
+  async ensureCareTodos() {
     const store = getStore()
     const plants = await store.plants.list()
     const rows = await store.todos.list()
-    const plantsBefore = snapshot(plants)
     const before = snapshot(rows)
-    let changed = false
-    type LegacyPlant = (typeof plants)[number] & { wateredAt?: string; photoAt?: string }
-
-    for (const plant of plants as LegacyPlant[]) {
-      if (plant.status === 'sold') {
-        if (plant.wateredAt != null || plant.photoAt != null) {
-          delete plant.wateredAt
-          delete plant.photoAt
-          changed = true
-        }
-        continue
-      }
-
-      if (plant.wateredAt && !hasAnyWater(rows, plant.id)) {
-        const watered = plant.wateredAt.slice(0, 10)
+    let added = 0
+    for (const plant of plants) {
+      if (plant.status === 'sold') continue
+      if (!hasAnyWater(rows, plant.id)) {
         push(rows, {
           ownerId: plant.ownerId,
           plantId: plant.id,
           category: 'plant' satisfies TodoCategory,
           subcategory: 'water' satisfies TodoSubcategory,
-          dueOn: watered,
-          completedOn: watered,
-          createdAt: `${watered}T12:00:00.000Z`,
-        })
-        push(rows, {
-          ownerId: plant.ownerId,
-          plantId: plant.id,
-          category: 'plant',
-          subcategory: 'water',
-          dueOn: addDays(watered, WATER_GAP_DAYS),
-          completedOn: null,
-        })
-        changed = true
-      } else if (!hasAnyWater(rows, plant.id)) {
-        push(rows, {
-          ownerId: plant.ownerId,
-          plantId: plant.id,
-          category: 'plant',
-          subcategory: 'water',
           dueOn: null,
           completedOn: null,
         })
-        changed = true
+        added += 1
       }
-
-      if (!openOf(rows, plant.id, 'photo') && (plant.photoAt || plant.photos.length > 0)) {
-        const uploaded = (plant.photoAt ?? plant.createdAt).slice(0, 10)
+      if (!openOf(rows, plant.id, 'photo') && plant.photos.length > 0) {
         push(rows, {
           ownerId: plant.ownerId,
           plantId: plant.id,
           category: 'plant',
           subcategory: 'photo',
-          dueOn: addMonths(uploaded, PHOTO_GAP_MONTHS),
+          dueOn: addMonths(plant.createdAt.slice(0, 10), PHOTO_GAP_MONTHS),
           completedOn: null,
         })
-        changed = true
-      }
-
-      if (plant.wateredAt != null || plant.photoAt != null) {
-        delete plant.wateredAt
-        delete plant.photoAt
-        changed = true
+        added += 1
       }
     }
-
-    if (!changed) return { plants: 0, todos: rows.length }
-    await store.plants.upsert(changedSince(plantsBefore, plants))
-    await save(rows, before)
-    return { plants: plants.length, todos: rows.length }
+    if (added > 0) await save(rows, before)
+    return { added }
   },
 }

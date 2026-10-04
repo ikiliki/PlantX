@@ -1,4 +1,4 @@
-import { OTHER_CATEGORY_ID } from '../../plantClass'
+import { OTHER_CATEGORY_ID, OTHER_SUBCATEGORY_ID } from '../../plantClass'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { UNKNOWN_AREA } from '../../../../mock/locations'
@@ -29,6 +29,7 @@ import type { StageBand, TodoSubcategory } from '../../../../mock/types'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
+import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
 import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo'
@@ -38,7 +39,6 @@ import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
 import {
   ActionRow,
   ActivityBody,
-  AiStamp,
   Aside,
   GreenhouseLabel,
   GreenhouseLink,
@@ -71,6 +71,7 @@ import {
   CategoryName,
   SubName,
   Tab,
+  TaxonomyItem,
   TaxonomyRow,
   TaxonomySep,
   TabBar,
@@ -106,8 +107,10 @@ function aiFieldLabel(
   catalog: ReturnType<typeof useStore>['db']['catalog'],
   locale: Parameters<typeof catalogName>[1],
   stageLabels: { mature: string; established: string; rooted: string; cutting: string },
+  otherLabel: string,
 ): string | undefined {
   if (!aiValue) return undefined
+  if (aiValue === OTHER_CATEGORY_ID || aiValue === OTHER_SUBCATEGORY_ID) return otherLabel
   if (fieldId === 'size') return aiValue
   if (fieldId === 'stage') return stageName(aiValue as StageBand, stageLabels) ?? aiValue
   if (fieldId === 'subcategory') {
@@ -118,30 +121,6 @@ function aiFieldLabel(
   return category ? catalogName(category, locale) : aiValue
 }
 
-/** Blue ✦ when the AI value was kept; muted ✎ when the owner changed it (tooltip then shows the AI value). */
-function FieldStamp({
-  mark,
-  aiLabel,
-  corner,
-}: {
-  mark: { check: 'kept' | 'changed' | 'manual'; aiValue?: string }
-  aiLabel?: string
-  corner?: boolean
-}) {
-  const { t } = useI18n()
-  if (mark.check === 'manual') return null
-  const changed = mark.check === 'changed'
-  const tip = changed
-    ? aiLabel
-      ? t.passport.aiWas.replace('{value}', aiLabel)
-      : t.passport.aiChanged
-    : t.passport.aiFilled
-  return (
-    <AiStamp $changed={changed} $corner={corner} title={tip} aria-label={tip}>
-      {changed ? '✎' : '✦'}
-    </AiStamp>
-  )
-}
 
 export function PlantPassport({
   plantId,
@@ -289,11 +268,17 @@ export function PlantPassport({
         if (!propertyRelevant(db.catalog, property, catalogCategory.id, catalogSub?.id ?? '')) return []
         const raw = plantPropertyValue(plant, property.id)
         const option = raw ? property.options.find((item) => item.id === raw) : undefined
+        // A trait the AI filled carries its stamp; a changed one shows the AI's option in the tooltip.
+        const mark = plant.identification?.fields?.traits?.[property.id]
+        const aiOption =
+          mark?.check === 'changed' ? property.options.find((item) => item.id === mark.aiValue) : undefined
         return [
           {
             id: property.id,
             label: catalogName(property, locale),
             value: option ? optionLabel(option, locale) : raw || '—',
+            mark,
+            aiLabel: aiOption ? optionLabel(aiOption, locale) : mark?.aiValue,
           },
         ]
       })
@@ -396,35 +381,42 @@ export function PlantPassport({
             {(categoryLabel || subLabel) && (
               <TaxonomyRow>
                 <PlantCatalogMark plant={plant} size={24} />
-                {categoryLabel &&
-                  (species ? (
-                    <CategoryName as={Link} to={speciesHref(species.id)}>
-                      {categoryLabel}
-                    </CategoryName>
-                  ) : (
-                    <CategoryName>{categoryLabel}</CategoryName>
-                  ))}
-                {categoryLabel && categoryMark ? (
-                  <FieldStamp
-                    mark={categoryMark}
-                    aiLabel={
-                      categoryMark.check === 'changed'
-                        ? aiFieldLabel('category', categoryMark.aiValue, db.catalog, locale, stageLabels)
-                        : undefined
-                    }
-                  />
+                {categoryLabel ? (
+                  <TaxonomyItem>
+                    {species ? (
+                      <CategoryName as={Link} to={speciesHref(species.id)}>
+                        {categoryLabel}
+                      </CategoryName>
+                    ) : (
+                      <CategoryName>{categoryLabel}</CategoryName>
+                    )}
+                    {categoryMark ? (
+                      <AiFieldStamp
+                        mark={categoryMark}
+                        aiLabel={
+                          categoryMark.check === 'changed'
+                            ? aiFieldLabel('category', categoryMark.aiValue, db.catalog, locale, stageLabels, t.addPlant.otherCategory)
+                            : undefined
+                        }
+                      />
+                    ) : null}
+                  </TaxonomyItem>
                 ) : null}
                 {categoryLabel && subLabel && <TaxonomySep aria-hidden>·</TaxonomySep>}
-                {subLabel && <SubName>{subLabel}</SubName>}
-                {subLabel && subMark ? (
-                  <FieldStamp
-                    mark={subMark}
-                    aiLabel={
-                      subMark.check === 'changed'
-                        ? aiFieldLabel('subcategory', subMark.aiValue, db.catalog, locale, stageLabels)
-                        : undefined
-                    }
-                  />
+                {subLabel ? (
+                  <TaxonomyItem>
+                    <SubName>{subLabel}</SubName>
+                    {subMark ? (
+                      <AiFieldStamp
+                        mark={subMark}
+                        aiLabel={
+                          subMark.check === 'changed'
+                            ? aiFieldLabel('subcategory', subMark.aiValue, db.catalog, locale, stageLabels, t.addPlant.otherCategory)
+                            : undefined
+                        }
+                      />
+                    ) : null}
+                  </TaxonomyItem>
                 ) : null}
               </TaxonomyRow>
             )}
@@ -475,13 +467,13 @@ export function PlantPassport({
             const mark = trait.fieldId ? plant.identification?.fields?.[trait.fieldId] : undefined
             const aiLabel =
               mark?.check === 'changed' && trait.fieldId
-                ? aiFieldLabel(trait.fieldId, mark.aiValue, db.catalog, locale, stageLabels)
+                ? aiFieldLabel(trait.fieldId, mark.aiValue, db.catalog, locale, stageLabels, t.addPlant.otherCategory)
                 : undefined
             return (
               <AsideStat key={trait.label}>
                 <dt>{trait.label}</dt>
                 <dd>{trait.value}</dd>
-                {mark ? <FieldStamp mark={mark} aiLabel={aiLabel} corner /> : null}
+                {mark ? <AiFieldStamp mark={mark} aiLabel={aiLabel} corner /> : null}
               </AsideStat>
             )
           })}
@@ -494,6 +486,7 @@ export function PlantPassport({
               <AsideStat key={field.id}>
                 <dt>{field.label}</dt>
                 <dd>{field.value}</dd>
+                {field.mark ? <AiFieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
               </AsideStat>
             ))}
         </AsideStats>

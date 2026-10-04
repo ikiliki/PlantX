@@ -91,8 +91,6 @@ export const openApiDocument = {
           title: { type: 'string' },
           titleHe: { type: 'string' },
           ownerId: { type: 'string' },
-          wateredAt: { type: 'string' },
-          photoAt: { type: 'string' },
           identification: { $ref: '#/components/schemas/PlantIdentification' },
         },
         required: ['id', 'title'],
@@ -450,7 +448,7 @@ export const openApiDocument = {
       get: {
         tags: ['identify'],
         summary: 'Identify request history',
-        description: 'Admin only. Newest first. Empty when the identify_requests table is not migrated yet.',
+        description: 'Admin only. Newest first.',
         security: [{ cookieAuth: [] }],
         parameters: [
           { name: 'mode', in: 'query', schema: { type: 'string', enum: ['mock', 'live'] } },
@@ -568,10 +566,6 @@ export const openApiDocument = {
           },
           '403': {
             description: 'Not admin',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
-          },
-          '503': {
-            description: 'identify_provider_settings table not migrated',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
           },
         },

@@ -49,6 +49,11 @@ export const sessionService = {
     return user
   },
 
+  async listActive() {
+    const users = await getStore().users.list()
+    return users.filter((user) => user.role !== 'guest' && isActive(user))
+  },
+
   async requireById(userId: string) {
     const user = await sessionService.findById(userId)
     if (!user) throw Errors.unknown(`No user ${userId}`)

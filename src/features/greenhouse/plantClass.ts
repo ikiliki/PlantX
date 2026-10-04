@@ -1,4 +1,4 @@
-import { OTHER_SPECIES_ID } from './identification'
+import { OTHER_SPECIES_ID, OTHER_SUBCATEGORY_ID } from './identification'
 import { classDictionary, type DictClass, type DictPlant } from '../../mock/classDictionary'
 import { isHealth, isSize, isStage } from '../../mock/catalog'
 import { buildMarketCode, buildMarketDisplay } from '../../mock/marketNaming'
@@ -26,7 +26,7 @@ export type { PlantClassDraft }
 export const OTHER_CATEGORY_ID = OTHER_SPECIES_ID
 
 /** Subcategory choice when the variety is not in the catalog. Not stored on the plant. */
-export const OTHER_SUBCATEGORY_ID = 'other-sub'
+export { OTHER_SUBCATEGORY_ID }
 
 export const emptyClassDraft: PlantClassDraft = {
   categoryId: '',
@@ -264,8 +264,16 @@ export function otherClass(
   }
 }
 
-/** Keep only choices that still exist after an earlier field changes. */
-export function narrowDraft(catalog: Catalog, draft: PlantClassDraft): PlantClassDraft {
+/**
+ * Keep only choices that still exist after an earlier field changes.
+ * `fillSingle`: pick a size or stage when it has only one choice. Off on the AI path, where a value
+ * the AI did not suggest stays empty so the owner fills it by hand.
+ */
+export function narrowDraft(
+  catalog: Catalog,
+  draft: PlantClassDraft,
+  { fillSingle = true }: { fillSingle?: boolean } = {},
+): PlantClassDraft {
   const next = { ...draft, traits: { ...draft.traits } }
   if (next.categoryId === OTHER_CATEGORY_ID) {
     next.subcategoryId = OTHER_SUBCATEGORY_ID
@@ -277,11 +285,11 @@ export function narrowDraft(catalog: Catalog, draft: PlantClassDraft): PlantClas
   }
   const sizes = sizeChoices(catalog, next)
   if (!next.size || !sizes.includes(next.size)) {
-    next.size = sizes.length === 1 ? sizes[0] : ''
+    next.size = fillSingle && sizes.length === 1 ? sizes[0] : ''
   }
   const stages = stageChoices(catalog, next)
   if (!next.stage || !stages.includes(next.stage)) {
-    next.stage = stages.length === 1 ? stages[0] : ''
+    next.stage = fillSingle && stages.length === 1 ? stages[0] : ''
   }
   return next
 }

@@ -1,12 +1,12 @@
 # Required check for PRs into PP. Runs the UI regression against the QA stack built from the PR
 # (Docker Supabase + local API and web on this runner), so nothing touches PP or production.
-# Branch protection on preprod/ai-testers requires the "e2e" check to pass before merging.
+# Branch protection on master requires the "e2e" check to pass before merging.
 # Run it on any branch by hand with "Run workflow" (no PR comment then; the report is in the artifact).
 name: PR e2e
 
 on:
   pull_request:
-    branches: [preprod/ai-testers]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
