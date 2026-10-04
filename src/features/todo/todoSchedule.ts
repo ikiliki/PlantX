@@ -127,24 +127,20 @@ export function plantHasUpcomingPhoto(todos: Todo[], plantId: string, now = toda
   return upcomingTodos(todos, now).some((todo) => todo.plantId === plantId && todo.subcategory === 'photo')
 }
 
-type LegacyPlant = Plant & { wateredAt?: string; photoAt?: string }
+/** Seed-only care dates (mock demo), keyed by plant id. Plants themselves carry no care dates. */
+export type CareDates = Record<string, { wateredAt?: string; photoAt?: string }>
 
-/** Move legacy plant dates into todos and clear the dates. */
-export function backfillTodos(plants: Plant[], todos: Todo[]): { plants: Plant[]; todos: Todo[] } {
+/** Gives every unsold plant its water todo and, with a photo, an open photo todo; `care` dates the demo ones. */
+export function seedCareTodos(plants: Plant[], todos: Todo[], care: CareDates = {}): Todo[] {
   const rows = todos.slice()
   let changed = false
-  const nextPlants = plants.map((plant) => {
-    const legacy = plant as LegacyPlant
-    if (plant.status === 'sold') {
-      if (legacy.wateredAt == null && legacy.photoAt == null) return plant
-      changed = true
-      const { wateredAt: _w, photoAt: _p, ...rest } = legacy
-      return rest
-    }
+  for (const plant of plants) {
+    if (plant.status === 'sold') continue
+    const dates = care[plant.id] ?? {}
 
     const hasWater = rows.some((row) => row.plantId === plant.id && row.subcategory === 'water')
-    if (legacy.wateredAt && !hasWater) {
-      const watered = legacy.wateredAt.slice(0, 10)
+    if (dates.wateredAt && !hasWater) {
+      const watered = dates.wateredAt.slice(0, 10)
       rows.unshift({
         id: newId('todo'),
         ownerId: plant.ownerId,
@@ -180,8 +176,8 @@ export function backfillTodos(plants: Plant[], todos: Todo[]): { plants: Plant[]
       changed = true
     }
 
-    if (!openTodo(rows, plant.id, 'photo') && (legacy.photoAt || plant.photos.length > 0)) {
-      const uploaded = (legacy.photoAt ?? plant.createdAt).slice(0, 10)
+    if (!openTodo(rows, plant.id, 'photo') && (dates.photoAt || plant.photos.length > 0)) {
+      const uploaded = (dates.photoAt ?? plant.createdAt).slice(0, 10)
       rows.unshift({
         id: newId('todo'),
         ownerId: plant.ownerId,
@@ -194,16 +190,8 @@ export function backfillTodos(plants: Plant[], todos: Todo[]): { plants: Plant[]
       })
       changed = true
     }
-
-    if (legacy.wateredAt != null || legacy.photoAt != null) {
-      changed = true
-      const { wateredAt: _w, photoAt: _p, ...rest } = legacy
-      return rest
-    }
-    return plant
-  })
-
-  return changed ? { plants: nextPlants, todos: rows } : { plants, todos }
+  }
+  return changed ? rows : todos
 }
 
 export function ensureFirstWaterTodo(todos: Todo[], plant: Plant): Todo[] {

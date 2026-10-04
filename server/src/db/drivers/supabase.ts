@@ -463,12 +463,8 @@ export function createSupabaseStore(): PlantxStore {
     const history = await rows(client, 'select * from plant_history order by plant_id, position')
     const comps = await rows(client, 'select * from plant_comps order by plant_id, position')
     const grades = await rows(client, 'select * from plant_grades order by plant_id, position')
-    const identifications = (await hasIdentifications(client))
-      ? await rows(client, 'select * from plant_identifications')
-      : []
-    const checks = (await hasIdentifyLinks(client))
-      ? await rows(client, 'select * from plant_photo_checks order by plant_id, position')
-      : []
+    const identifications = await rows(client, 'select * from plant_identifications')
+    const checks = await rows(client, 'select * from plant_photo_checks order by plant_id, position')
     return plants.map((row) => {
       const plant = plantFrom(row, photos, traits, history, comps, grades)
       const found = identifications.find((item) => text(item, 'plant_id') === plant.id)
@@ -479,18 +475,6 @@ export function createSupabaseStore(): PlantxStore {
       }
       return plant
     })
-  }
-
-  /** Prod may not have the migration yet. A failed query would abort the transaction, so check first. */
-  async function hasIdentifications(client: PoolClient) {
-    const found = await rows(client, `select to_regclass('public.plant_identifications') as name`)
-    return Boolean(found[0]?.name)
-  }
-
-  /** `plant_photo_checks` ships with the request links and the `scan` / `added` activity kinds. */
-  async function hasIdentifyLinks(client: PoolClient) {
-    const found = await rows(client, `select to_regclass('public.plant_photo_checks') as name`)
-    return Boolean(found[0]?.name)
   }
 
   async function savePlants(client: PoolClient, plants: Plant[], mode: SaveMode = 'all') {
@@ -517,13 +501,13 @@ export function createSupabaseStore(): PlantxStore {
           subcategory_id, title, title_he, description, description_he, quantity, size_grade,
           size_band, quality, rooting, stage, pot_format, pot_format_he, pot_size_cm,
           stem_length_cm, leaf_count, location_zone, location_zone_he, lat, lng, parent_id,
-          batch_id, propagated_at, verified_at, verified_by, photo_at, watered_at, status,
+          batch_id, propagated_at, verified_at, verified_by, status,
           published_at, rarity, growth_time_en, growth_time_he, growth_light, growth_light_he,
           growth_water, growth_water_he, growth_note, growth_note_he, created_at
         ) values (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
           $21,$22,$23,$24,$25,$26,$27,$28,null,$29,$30,$31,$32,$33,$34,$35,$36,$37,
-          $38,$39,$40,$41,$42,$43,$44,$45,$46
+          $38,$39,$40,$41,$42,$43,$44
         )
         on conflict (id) do update set
           position = excluded.position,
@@ -557,8 +541,6 @@ export function createSupabaseStore(): PlantxStore {
           propagated_at = excluded.propagated_at,
           verified_at = excluded.verified_at,
           verified_by = excluded.verified_by,
-          photo_at = excluded.photo_at,
-          watered_at = excluded.watered_at,
           status = excluded.status,
           published_at = excluded.published_at,
           rarity = excluded.rarity,
@@ -620,77 +602,66 @@ export function createSupabaseStore(): PlantxStore {
         )
       }
     }
-    if (await hasIdentifications(client)) {
-      await client.query('delete from plant_identifications where plant_id = any($1::text[])', [kept])
-      const wanted = keptPlants.flatMap((plant) => (plant.identification?.requestId ? [plant.identification.requestId] : []))
-      const requestIds = new Set(
-        (await rows(client, 'select id from identify_requests where id = any($1::text[])', [wanted])).map((row) =>
-          String(row.id),
-        ),
+    await client.query('delete from plant_identifications where plant_id = any($1::text[])', [kept])
+    const wanted = keptPlants.flatMap((plant) => (plant.identification?.requestId ? [plant.identification.requestId] : []))
+    const requestIds = new Set(
+      (await rows(client, 'select id from identify_requests where id = any($1::text[])', [wanted])).map((row) =>
+        String(row.id),
+      ),
+    )
+    for (const plant of keptPlants) {
+      const found = plant.identification
+      if (!found) continue
+      await client.query(
+        `insert into plant_identifications (
+          plant_id, source, provider, mode, label, scientific_name, probability, request_id, identified_at, fields
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)`,
+        [
+          plant.id,
+          found.source,
+          found.provider ?? null,
+          found.mode ?? null,
+          found.label ?? null,
+          found.scientificName ?? null,
+          found.probability ?? null,
+          found.requestId && requestIds.has(found.requestId) ? found.requestId : null,
+          found.at,
+          found.fields ? JSON.stringify(found.fields) : null,
+        ],
       )
-      for (const plant of keptPlants) {
-        const found = plant.identification
-        if (!found) continue
+    }
+    await client.query('delete from plant_photo_checks where plant_id = any($1::text[])', [kept])
+    const checkIds = keptPlants.flatMap((plant) =>
+      (plant.identification?.photos ?? []).flatMap((check) => (check.requestId ? [check.requestId] : [])),
+    )
+    const knownChecks = new Set(
+      (await rows(client, 'select id from identify_requests where id = any($1::text[])', [checkIds])).map((row) =>
+        String(row.id),
+      ),
+    )
+    for (const plant of keptPlants) {
+      for (const check of plant.identification?.photos ?? []) {
         await client.query(
-          `insert into plant_identifications (
-            plant_id, source, provider, mode, label, scientific_name, probability, request_id, identified_at, fields
-          ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)`,
+          `insert into plant_photo_checks (
+            plant_id, position, result, request_id, provider, mode, label, probability
+          ) values ($1,$2,$3,$4,$5,$6,$7,$8)`,
           [
             plant.id,
-            found.source,
-            found.provider ?? null,
-            found.mode ?? null,
-            found.label ?? null,
-            found.scientificName ?? null,
-            found.probability ?? null,
-            found.requestId && requestIds.has(found.requestId) ? found.requestId : null,
-            found.at,
-            found.fields ? JSON.stringify(found.fields) : null,
+            check.position,
+            check.result,
+            check.requestId && knownChecks.has(check.requestId) ? check.requestId : null,
+            check.provider ?? null,
+            check.mode ?? null,
+            check.label ?? null,
+            check.probability ?? null,
           ],
         )
-      }
-      if (await hasIdentifyLinks(client)) {
-        await client.query('delete from plant_photo_checks where plant_id = any($1::text[])', [kept])
-        const checkIds = keptPlants.flatMap((plant) =>
-          (plant.identification?.photos ?? []).flatMap((check) => (check.requestId ? [check.requestId] : [])),
-        )
-        const knownChecks = new Set(
-          (await rows(client, 'select id from identify_requests where id = any($1::text[])', [checkIds])).map((row) =>
-            String(row.id),
-          ),
-        )
-        for (const plant of keptPlants) {
-          for (const check of plant.identification?.photos ?? []) {
-            await client.query(
-              `insert into plant_photo_checks (
-                plant_id, position, result, request_id, provider, mode, label, probability
-              ) values ($1,$2,$3,$4,$5,$6,$7,$8)`,
-              [
-                plant.id,
-                check.position,
-                check.result,
-                check.requestId && knownChecks.has(check.requestId) ? check.requestId : null,
-                check.provider ?? null,
-                check.mode ?? null,
-                check.label ?? null,
-                check.probability ?? null,
-              ],
-            )
-          }
-        }
       }
     }
     if (mode === 'all') await client.query('delete from plants where not (id = any($1::text[]))', [kept])
   }
 
-  /** Care todos. Missing until the todos migration runs. */
-  async function hasTodos(client: PoolClient) {
-    const found = await rows(client, `select to_regclass('public.todos') as name`)
-    return Boolean(found[0]?.name)
-  }
-
   async function listTodos(client: PoolClient): Promise<Todo[]> {
-    if (!(await hasTodos(client))) return []
     const found = await rows(client, 'select * from todos order by position, id')
     return found.map((row) => {
       const todo: Todo = {
@@ -708,7 +679,6 @@ export function createSupabaseStore(): PlantxStore {
   }
 
   async function saveTodos(client: PoolClient, items: Todo[], mode: SaveMode = 'all') {
-    if (!(await hasTodos(client))) return
     const userIds = await ids(client, 'select id from users')
     const plantIds = await ids(client, 'select id from plants')
     const kept = items.filter((item) => userIds.has(item.ownerId) && plantIds.has(item.plantId))
@@ -772,24 +742,18 @@ export function createSupabaseStore(): PlantxStore {
   async function saveActivities(client: PoolClient, items: Activity[], mode: SaveMode = 'all') {
     const userIds = await ids(client, 'select id from users')
     const plantIds = await ids(client, 'select id from plants')
-    const linked = await hasIdentifyLinks(client)
-    // Without the migration the kind check rejects scan / added, so they are not stored.
-    const kept = items.filter(
-      (item) => userIds.has(item.userId) && (linked || (item.kind !== 'scan' && item.kind !== 'added')),
-    )
+    const kept = items.filter((item) => userIds.has(item.userId))
     if (kept.length === 0) {
       if (mode === 'all') await client.query('delete from activities')
       return
     }
     const positionOf = await placer(client, 'activities', kept, mode, 'first')
     const wanted = kept.flatMap((item) => (item.identifyRequestId ? [item.identifyRequestId] : []))
-    const requestIds = linked
-      ? new Set(
-          (await rows(client, 'select id from identify_requests where id = any($1::text[])', [wanted])).map((row) =>
-            String(row.id),
-          ),
-        )
-      : new Set<string>()
+    const requestIds = new Set(
+      (await rows(client, 'select id from identify_requests where id = any($1::text[])', [wanted])).map((row) =>
+        String(row.id),
+      ),
+    )
     for (const [index, item] of kept.entries()) {
       const params = [
         item.id,
@@ -801,29 +765,9 @@ export function createSupabaseStore(): PlantxStore {
         item.bodyHe,
         item.createdAt,
       ]
-      if (linked) {
-        await client.query(
-          `insert into activities (id, position, kind, user_id, plant_id, body, body_he, created_at, identify_request_id)
-           values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-           on conflict (id) do update set
-             position = excluded.position,
-             kind = excluded.kind,
-             user_id = excluded.user_id,
-             plant_id = excluded.plant_id,
-             body = excluded.body,
-             body_he = excluded.body_he,
-             created_at = excluded.created_at,
-             identify_request_id = excluded.identify_request_id`,
-          [
-            ...params,
-            item.identifyRequestId && requestIds.has(item.identifyRequestId) ? item.identifyRequestId : null,
-          ],
-        )
-        continue
-      }
       await client.query(
-        `insert into activities (id, position, kind, user_id, plant_id, body, body_he, created_at)
-         values ($1,$2,$3,$4,$5,$6,$7,$8)
+        `insert into activities (id, position, kind, user_id, plant_id, body, body_he, created_at, identify_request_id)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
          on conflict (id) do update set
            position = excluded.position,
            kind = excluded.kind,
@@ -831,8 +775,9 @@ export function createSupabaseStore(): PlantxStore {
            plant_id = excluded.plant_id,
            body = excluded.body,
            body_he = excluded.body_he,
-           created_at = excluded.created_at`,
-        params,
+           created_at = excluded.created_at,
+           identify_request_id = excluded.identify_request_id`,
+        [...params, item.identifyRequestId && requestIds.has(item.identifyRequestId) ? item.identifyRequestId : null],
       )
     }
     if (mode === 'all') {
@@ -1036,9 +981,6 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.propagatedAt ?? null,
     plant.verifiedAt ?? null,
     plant.verifiedBy ?? null,
-    // Cleared after todo.backfillFromPlants. Still written while legacy dates exist.
-    plant.photoAt ?? null,
-    plant.wateredAt ?? null,
     plant.status,
     plant.publishedAt ?? null,
     plant.rarity ?? null,
@@ -1132,9 +1074,6 @@ function plantFrom(
   assign(plant, 'propagatedAt', optional(row, 'propagated_at'))
   assign(plant, 'verifiedAt', optional(row, 'verified_at'))
   assign(plant, 'verifiedBy', optional(row, 'verified_by'))
-  // Legacy care dates — todo.backfillFromPlants moves them into todos, then clears these.
-  assign(plant, 'photoAt', optional(row, 'photo_at'))
-  assign(plant, 'wateredAt', optional(row, 'watered_at'))
   assign(plant, 'publishedAt', optional(row, 'published_at'))
   assign(plant, 'rarity', optional(row, 'rarity') as Plant['rarity'])
   const growthEn = optional(row, 'growth_time_en')

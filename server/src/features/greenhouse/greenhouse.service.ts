@@ -127,15 +127,13 @@ export const greenhouseService = {
     )
     // Passport fields the owner may not set: verification, community grades, sale history, status and timeline.
     const {
-      wateredAt: _w,
-      photoAt: _p,
       verifiedAt: _va,
       verifiedBy: _vb,
       grades: _g,
       comps: _c,
       publishedAt: _pa,
       ...rest
-    } = plant as Plant & { wateredAt?: string; photoAt?: string }
+    } = plant
     const createdAt = today()
     const row: Plant = {
       ...withLocation({

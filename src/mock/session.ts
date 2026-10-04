@@ -8,7 +8,8 @@ import { ensureCatalog } from './catalog'
 import { personaFlags } from './personas'
 import { createSeed } from './seed'
 import { normalizeSystem } from '../theme/release'
-import { backfillTodos } from '../features/todo/todoSchedule'
+import { seedCareTodos, type CareDates } from '../features/todo/todoSchedule'
+import { configuredCareDates } from './configuredListings'
 import type { DemoScenarios, MarketClass, MockDb, User } from './types'
 
 const VISITOR_COOKIE = 'plantx_visitor'
@@ -250,13 +251,12 @@ export function ensureSession(db: MockDb) {
   }
   alignLiveCatalog(db)
   const stalePhotos = new Set(['pl-cfg-pot-gold-a-s-r', 'pl-cfg-pot-njoy-b-m-est', 'pl-maya-batch'])
+  const care: CareDates = { ...configuredCareDates }
   for (const plant of db.plants) {
-    if (plant.status !== 'listed' || plant.photoAt) continue
-    plant.photoAt = stalePhotos.has(plant.id) ? '2026-09-10' : '2026-09-28'
+    if (plant.status !== 'listed' || care[plant.id]?.photoAt) continue
+    care[plant.id] = { ...care[plant.id], photoAt: stalePhotos.has(plant.id) ? '2026-09-10' : '2026-09-28' }
   }
-  const filled = backfillTodos(db.plants, db.todos)
-  db.plants = filled.plants
-  db.todos = filled.todos
+  db.todos = seedCareTodos(db.plants, db.todos, care)
   // Demo: a few listed plants keep an overdue photo todo so Needs care has rows.
   for (const plant of db.plants) {
     if (!stalePhotos.has(plant.id)) continue

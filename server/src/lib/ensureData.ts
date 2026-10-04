@@ -240,12 +240,8 @@ export async function ensureDataFiles() {
     } catch (err) {
       logger.warn('activity backfill skipped', undefined, err)
     }
-    try {
-      const result = await todoService.backfillFromPlants()
-      if (result.plants > 0) logger.info('todo backfill applied', result)
-    } catch (err) {
-      logger.warn('todo backfill skipped', undefined, err)
-    }
+    const care = await todoService.ensureCareTodos()
+    if (care.added > 0) logger.info('care todos added', care)
   } catch (err) {
     throw explainDbError(err)
   }
