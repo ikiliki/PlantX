@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { requireUser } from '../../lib/session.ts'
-import { activityService } from '../activity/activity.service.ts'
+import { activityService, visibleTo } from '../activity/activity.service.ts'
 import { isFirstWaterTodo, todoService } from './todo.service.ts'
 
 export const todoRoutes = new Hono()
@@ -25,7 +25,7 @@ todoRoutes.post('/:id/complete', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { completedOn?: unknown }
   const completedOn = typeof body.completedOn === 'string' ? body.completedOn : undefined
   const result = await todoService.complete(c.req.param('id'), user.id, completedOn)
-  const activities = await activityService.list()
+  const activities = visibleTo(await activityService.list(), user)
   return c.json({
     todo: result.todo,
     todos: result.todos,

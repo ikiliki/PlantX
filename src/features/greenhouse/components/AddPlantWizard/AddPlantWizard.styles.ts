@@ -167,13 +167,6 @@ export const MissingActions = styled.div`
   gap: 6px;
 `
 
-/** Short note next to a field label that still needs a value. */
-export const MissingField = styled.span`
-  font-size: 12px;
-  font-weight: 800;
-  color: ${theme.colors.warn};
-`
-
 export const More = styled.details`
   display: grid;
   gap: 16px;
@@ -401,12 +394,51 @@ export const FooterHint = styled.span<{ $tone?: 'muted' | 'bad' }>`
   text-align: center;
 `
 
+/** Planted screen: the message fills the space, the buttons sit at the bottom. */
 export const Done = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 16px;
+  text-align: center;
+`
+
+export const DoneBody = styled.div`
+  flex: 1;
   display: grid;
+  align-content: center;
   justify-items: center;
   gap: 14px;
-  padding: 24px 0 8px;
-  text-align: center;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+`
+
+/** Identity chips in one centered row; past the width it scrolls sideways with no bar. */
+export const DoneTags = styled.div`
+  display: flex;
+  justify-content: safe center;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  & > * {
+    flex: none;
+    flex-wrap: nowrap;
+  }
+`
+
+export const DoneActions = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding-block-end: env(safe-area-inset-bottom);
 `
 
 export const Burst = styled.div`

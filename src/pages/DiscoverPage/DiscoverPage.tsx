@@ -20,49 +20,24 @@ import { useStore } from '../../mock/store'
 import { forAudience } from '../../theme/audience'
 import { isFeatureEnabled } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
-import type { FeedUpdateKind, Todo } from '../../mock/types'
+import type { Todo } from '../../mock/types'
 import { useCallback, useState } from 'react'
 import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
 import { RefreshButton } from '../../components/RefreshButton/RefreshButton'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
 import { useMediaQuery } from '../../lib/useMediaQuery'
-import { useSearchParams } from 'react-router-dom'
-import { FilterChips } from '../../components/FilterChips/FilterChips'
-import { IconToggle } from '../../components/IconToggle/IconToggle'
 import { Empty, Feed, FeedTools, Layout, Rail, RailLure, Shell, Widget } from './DiscoverPage.styles'
 
 const WIDGET_ITEMS = 2
 
-type HomeFeedFilter = 'all' | 'activities' | 'tasks'
-
-/** A new plant and completed care (water, photo) are tasks. Everything else is an activity. */
-const TASK_KINDS: FeedUpdateKind[] = ['added', 'water', 'photo']
-
-function homeFeedFilter(value: string | null): HomeFeedFilter {
-  if (value === 'all' || value === 'activities' || value === 'tasks') return value
-  return 'tasks'
-}
-
 function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) {
   const { t } = useI18n()
-  const { items: allItems } = useHomeFeed()
+  // For now the feed is only XP activities (a new plant, completed care), so it has no filter chips.
+  const { items } = useHomeFeed()
   const { db, signedIn, currentUser, completeTodo } = useStore()
   const [careTodo, setCareTodo] = useState<Todo | undefined>()
-  const [params, setParams] = useSearchParams()
-  const filter = view === 'page' ? homeFeedFilter(params.get('feed')) : 'all'
-  const isTask = (item: (typeof allItems)[number]) => TASK_KINDS.includes(item.update.kind)
-  const taskItems = allItems.filter(isTask)
-  const activityItems = allItems.filter((item) => !isTask(item))
-  const items = filter === 'tasks' ? taskItems : filter === 'activities' ? activityItems : allItems
-  const empty = filter === 'all' ? t.feed.empty : t.feed.filterEmpty
-  const setFilter = (next: HomeFeedFilter) => {
-    const nextParams = new URLSearchParams(params)
-    if (next === 'tasks') nextParams.delete('feed')
-    else nextParams.set('feed', next)
-    setParams(nextParams, { replace: true })
-  }
-  // Under 900px the three feed chips leave the top and float as icons above the bottom nav.
-  // Refresh is a pull on that shell, and the icon at the end of the chip row when it is wider.
+  const empty = t.feed.empty
+  // Refresh is a pull on the phone shell, and a button at the top of the feed when it is wider.
   const mobile = useMediaQuery('(max-width: 899px)')
   const { reloadSlice } = useStore()
   const [refreshing, setRefreshing] = useState(false)
@@ -74,7 +49,7 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   }, [reloadSlice, refreshing])
   const feed = useInfiniteList(items, {
     enabled: paged && view === 'page',
-    signature: `${filter}|${items.map((item) => item.id).join('|')}`,
+    signature: items.map((item) => item.id).join('|'),
   })
   const shown = view === 'widget' ? items.slice(0, WIDGET_ITEMS) : feed.shown
   const ownerId = signedIn && currentUser ? currentUser.id : null
@@ -122,30 +97,8 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   const memberFeed = (
     <FeatureGate placement="home.feed" title={t.nav.home}>
       <PullToRefresh enabled={mobile} busy={refreshing} label={t.feed.refreshing} onRefresh={refresh} />
-      {mobile ? (
-        <IconToggle
-          floating
-          label={t.feed.filterLabel}
-          value={filter}
-          onChange={setFilter}
-          options={[
-            { id: 'all', label: t.feed.filterAll, icon: 'home' },
-            { id: 'activities', label: t.feed.filterActivities, icon: 'greenhouse' },
-            { id: 'tasks', label: t.feed.filterTasks, icon: 'drop' },
-          ]}
-        />
-      ) : (
+      {mobile ? null : (
         <FeedTools>
-          <FilterChips
-            label={t.feed.filterLabel}
-            value={filter}
-            onChange={setFilter}
-            options={[
-              { id: 'all', label: t.feed.filterAll, count: allItems.length, icon: 'home' },
-              { id: 'activities', label: t.feed.filterActivities, count: activityItems.length, icon: 'greenhouse' },
-              { id: 'tasks', label: t.feed.filterTasks, count: taskItems.length, icon: 'drop' },
-            ]}
-          />
           <RefreshButton label={t.feed.refresh} busy={refreshing} onClick={refresh} />
         </FeedTools>
       )}

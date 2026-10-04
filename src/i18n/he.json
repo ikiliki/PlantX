@@ -610,7 +610,6 @@
     "needIdentity": "בחרו קטגוריה ותת־קטגוריה",
     "needSpecs": "בחרו גודל, שלב ומאפייני החובה",
     "needFields": "בחרו {fields}",
-    "needDetails": "הוסיפו תיאור",
     "needReviewPhoto": "הוסיפו תמונה כדי לסיים",
     "saveFailed": "השמירה נכשלה. נסו שוב.",
     "doneTitle": "נשתל!",
@@ -1227,13 +1226,8 @@
     "hoursAgo": "שע׳",
     "daysAgo": "ימים",
     "empty": "אין פעילות מהחממות עדיין.",
-    "filterLabel": "פיד",
     "refresh": "רענון",
     "refreshing": "מרענן",
-    "filterAll": "הכל",
-    "filterActivities": "פעילויות",
-    "filterTasks": "משימות",
-    "filterEmpty": "אין כאן עדיין כלום.",
     "friendsEmpty": "אין פעילות מחברים עדיין.",
     "everyone": "כולם",
     "friendsOnly": "חברים בלבד",
@@ -1248,7 +1242,8 @@
     "topGreenhouses": "חממות מובילות",
     "topEmpty": "אין חממות לדירוג עדיין.",
     "updateScan": "סריקת AI",
-    "updateAdded": "צמח חדש"
+    "updateAdded": "צמח חדש",
+    "xpEarned": "+{n} XP"
   },
   "guest": {
     "logIn": "התחברות",
@@ -1298,7 +1293,8 @@
     "send": "שליחת דיווח",
     "sending": "שולח…",
     "sendFailed": "לא הצלחנו לשלוח את הדיווח",
-    "cancel": "ביטול"
+    "cancel": "ביטול",
+    "donePlant": "נשתל · ‎+{xp} XP"
   },
   "roles": {
     "grower": "מגדל/ת ביתי/ת",

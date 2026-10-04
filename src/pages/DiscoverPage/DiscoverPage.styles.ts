@@ -92,6 +92,7 @@ export const Empty = styled.p`
 /** Feed filter chips with the refresh icon at the end of the same row. */
 export const FeedTools = styled.div`
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 10px;
   min-width: 0;

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { isPublicActivity } from './activityXp'
 import { useStore } from '../../mock/store'
 import type { FeedUpdate } from '../../mock/types'
 
@@ -10,6 +11,8 @@ export function useHomeFeed() {
   const items = useMemo(
     () =>
       (db.updates ?? [])
+        // For now the feed is the XP activities; the rest stays in each owner's greenhouse activity.
+        .filter((update) => isPublicActivity(update.kind))
         .map((update) => ({
           type: 'update' as const,
           id: update.id,

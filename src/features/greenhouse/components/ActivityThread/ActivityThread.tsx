@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { ActivityMoment, MomentGlyph, MomentPlay } from '../../../feed/components/ActivityMoment/ActivityMoment'
+import { XpChip } from '../../../feed/components/XpChip/XpChip'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { FeedUpdateKind } from '../../../../mock/types'
@@ -49,6 +50,7 @@ function ActivityMessage({ entry, onOpen }: { entry: ActivityEntry; onOpen?: () 
         <When>
           {entry.kind ? <MomentGlyph kind={entry.kind} /> : null}
           {entry.at}
+          <XpChip kind={entry.kind} />
           {entry.tag ? <Tag $pending={scan && !entry.plantId}>{entry.tag}</Tag> : null}
         </When>
       </Meta>

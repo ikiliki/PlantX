@@ -100,7 +100,12 @@ export function RequestNoticeStack({
               <Orb aria-hidden $tone="done" />
               <Copy>
                 <Title>
-                  {(item.care === 'photo' ? t.http.donePhoto : t.http.doneWater).replace('{xp}', String(item.xp))}
+                  {(item.care === 'photo'
+                    ? t.http.donePhoto
+                    : item.care === 'plant'
+                      ? t.http.donePlant
+                      : t.http.doneWater
+                  ).replace('{xp}', String(item.xp))}
                 </Title>
               </Copy>
               <Close type="button" aria-label={t.http.dismiss} onClick={() => onDismiss(item.id)}>
