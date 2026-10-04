@@ -6,12 +6,13 @@ The PP tooling lives in master like any other code.
 
 Flow:
 1. Work on a feature branch and push it. Vercel deploys a preview of it on PP.
-2. Test it there: the PP bar, and the e2e that runs on the preview (PP regression).
-3. Merge the feature into `preprod/ai-testers` (integration; the PR e2e must pass).
-4. Merge the feature into master.
+2. Open a PR into master. The PR e2e runs on a QA stack on the runner, and the PP regression runs on the
+   preview; both comment on the PR. Test it by hand on the preview with the PP bar.
+3. Merge into master. That deploys production, so apply the branch's migrations to production first.
 
 One PP database is shared by every preview. A branch with a migration needs it applied to PlantX-PP
-before its preview works, and other open branches may need to catch up (no backward compatibility).
+when it is pushed, and other open branches may need to catch up (no backward compatibility).
+AI testers get the preview URL of the branch they test.
 
 ## Users
 - **Admin:** `u-admin` (Omri).
