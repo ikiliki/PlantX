@@ -633,8 +633,8 @@ export function createSupabaseStore(): PlantxStore {
         if (!found) continue
         await client.query(
           `insert into plant_identifications (
-            plant_id, source, provider, mode, label, scientific_name, probability, request_id, identified_at
-          ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            plant_id, source, provider, mode, label, scientific_name, probability, request_id, identified_at, fields
+          ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)`,
           [
             plant.id,
             found.source,
@@ -645,6 +645,7 @@ export function createSupabaseStore(): PlantxStore {
             found.probability ?? null,
             found.requestId && requestIds.has(found.requestId) ? found.requestId : null,
             found.at,
+            found.fields ? JSON.stringify(found.fields) : null,
           ],
         )
       }
@@ -1064,6 +1065,8 @@ function identificationFrom(row: SqlRow): PlantIdentification {
   assign(found, 'scientificName', optional(row, 'scientific_name'))
   assign(found, 'probability', optionalNum(row, 'probability'))
   assign(found, 'requestId', optional(row, 'request_id'))
+  // jsonb comes back parsed; null on plants with no AI-filled field.
+  if (row.fields && typeof row.fields === 'object') found.fields = row.fields as PlantIdentification['fields']
   return found
 }
 

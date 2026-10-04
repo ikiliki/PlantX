@@ -52,6 +52,7 @@ Hard rules:
 - Layout: container queries, `min()` / `minmax(0, 1fr)`; never `transform: scale()` on a page. Check Hebrew RTL.
 - Never send API keys or provider names to the browser. Never run live identify in automated checks.
 - Keep business logic in services/feature logic, not in page components.
+- No backward compatibility: there are no real users yet. No guards for databases that lack a migration, no backfill scripts, no legacy columns or tables kept around. Change the schema directly; QA, PP and prod data may be reset or rearranged to fit it (migrations are applied to PP/prod only after the user approves QA).
 
 ## Verification
 
