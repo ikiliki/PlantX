@@ -581,7 +581,7 @@
     "searchCategories": "Search categories",
     "choose": "Choose",
     "specsTitle": "Size and stage",
-    "specsLead": "Size and stage set the market class of this plant.",
+    "specsLead": "Pick the size and growth stage of this plant.",
     "gradeA": "Top condition",
     "gradeB": "Healthy, small marks",
     "gradeC": "Needs some care",
@@ -655,8 +655,11 @@
     "photosCount": "{n} photos",
     "aiPickNotOffered": "AI said {value}, which isn't offered in {parent}",
     "guestAi": "Log in to use AI",
-    "guestSave": "Log in to save",
-    "guestPhotoLead": "Add a photo and fill in the details to see how it works. AI identify and saving need an account."
+    "guestSave": "Save on this device",
+    "guestPhotoLead": "Add a photo and fill in the details. Your plant is saved on this device until you log in; AI identify needs an account.",
+    "guestDoneBody": "{name} is saved on this device. Log in and it moves into your greenhouse.",
+    "guestKeep": "Log in to keep it",
+    "guestLimit": "A guest can keep {count} plants on this device. Log in to add more."
   },
   "sell": {
     "title": "Sell / Propagate",
@@ -1287,7 +1290,7 @@
     "introStep2Body": "It matches the photo to the catalog. You check it and change anything.",
     "introStep3Title": "Know what’s due",
     "introStep3Body": "Watering and photo reminders, and a passport that keeps every step.",
-    "introNote": "Trying it is free. Saving your plants needs an account.",
+    "introNote": "Try it now: your first plants are saved on this device. Log in to keep them in your greenhouse.",
     "introStageLabel": "Example: a plant photo that becomes a plant passport with care reminders",
     "introExample": "Example",
     "introStageScan": "Reading the photo…",
@@ -1295,7 +1298,8 @@
     "introStageAiName": "Golden pothos",
     "introStageCare": "Water in 3 days",
     "introPause": "Pause",
-    "introPlay": "Play"
+    "introPlay": "Play",
+    "savedNote": "Saved on this device only. Log in and they move into your greenhouse."
   },
   "common": {
     "ils": "₪",

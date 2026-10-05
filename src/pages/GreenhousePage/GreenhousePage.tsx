@@ -25,6 +25,7 @@ import { greenhouseLevel } from '../../features/greenhouse/greenhouseLevel'
 import { AddPlantDialog } from '../../features/greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { useI18n } from '../../i18n/I18nProvider'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
+import { guestPlantAsPlant } from '../../features/greenhouse/guestPlants'
 import { ownerActivity } from '../../features/greenhouse/ownerActivity'
 import { useStore } from '../../mock/store'
 import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
@@ -105,7 +106,7 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
 
 function GreenhouseOwner({ view }: { view: ComponentView }) {
   const fetching = useSectionFetch(true, ['plants', 'updates', 'todos'])
-  const { db, fullDb, currentUser, signedIn } = useStore()
+  const { db, fullDb, currentUser, signedIn, guestPlants } = useStore()
   const { t, tr } = useI18n()
   const [adding, setAdding] = useState(false)
   const [freshId, setFreshId] = useState<string>()
@@ -147,6 +148,8 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   }, [params, setParams, view])
 
   // A guest sees the same layout with placeholders (nothing is fetched) and the Add tile.
+  // A guest's own plants, kept in this browser until they sign in.
+  const guestShelf = guestPlants.map(guestPlantAsPlant)
   // Log in stays in the top bar and in Add Plant, so the board has no log-in card.
   const guestBody =
     scope === 'global' ? (
@@ -156,6 +159,8 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     ) : (
       <CollectionBoard
         skeleton="guest"
+        guestPlants={guestShelf}
+        freshId={freshId}
         plants={[]}
         sold={[]}
         activity={[]}

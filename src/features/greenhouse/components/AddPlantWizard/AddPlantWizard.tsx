@@ -8,6 +8,7 @@ import { useAuth } from '../../../auth/AuthProvider'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { createCatalog } from '../../../../mock/catalog'
 import { ownerGreenhousePlace } from '../../../../mock/locations'
+import { GUEST_PLANT_LIMIT } from '../../guestPlants'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { useStore } from '../../../../mock/store'
 import type { CatalogProperty, Diagnosis, IdentifyFieldMark, PlantClassDraft, SizeBand, StageBand } from '../../../../mock/types'
@@ -102,7 +103,7 @@ function traitsWithoutArea(traits: Record<string, string>) {
 const PHONE_MQ = `(max-width: ${theme.breakpoints.sm})`
 
 export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: string) => void; onClose?: () => void }) {
-  const { db, currentUser, signedIn, addGreenhousePlant } = useStore()
+  const { db, currentUser, signedIn, addGreenhousePlant, addGuestPlant, guestPlants } = useStore()
   const { openAuth } = useAuth()
   const { t, locale } = useI18n()
   const catalog = db.catalog ?? createCatalog()
@@ -317,71 +318,56 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     }
   })()
 
-  const save = () => {
-    if (!signedIn) {
-      openAuth('buy')
-      return
-    }
-    if (!matched) {
-      setSaveFailed(true)
-      return
-    }
-    // A photo is optional through the steps but required to approve the plant.
-    if (photos.length === 0) {
-      setSaveFailed(true)
-      return
-    }
-    const traits = traitsWithoutArea(draft.traits)
-    if (isOther) {
-      if (!draft.size || !draft.stage) {
-        setSaveFailed(true)
-        return
-      }
-      const id = addGreenhousePlant({
-        title: plantTitle.en,
-        titleHe: plantTitle.he,
-        description: descriptionTouched ? description : matched.observed,
-        descriptionHe: descriptionTouched ? description : matched.observedHe,
-        photos,
-        speciesId: OTHER_CATEGORY_ID,
-        variety: matched.variety,
-        varietyHe: matched.varietyHe,
-        quality: draft.quality,
-        sizeBand: draft.size,
-        stage: draft.stage,
-        code: matched.code,
-        traits,
-        location: place,
-        identification,
-        identifyRequestIds: withAi ? scans.map((scan) => scan.requestId) : [],
-      })
-      if (id) setSavedId(id)
-      else setSaveFailed(true)
-      return
-    }
-    const category = catalog.categories.find((item) => item.id === draft.categoryId)
-    const species = db.species.find((item) => item.id === category?.speciesId)
-    const sub = isOtherSub ? undefined : catalog.subcategories.find((item) => item.id === draft.subcategoryId)
-    if (!category || !draft.size || !draft.stage) {
-      setSaveFailed(true)
-      return
-    }
-    const id = addGreenhousePlant({
+  /** What the grower filled in, ready to save. Null when something required is still empty. */
+  const plantFields = () => {
+    if (!matched || photos.length === 0 || !draft.size || !draft.stage) return null
+    const shared = {
       title: plantTitle.en,
       titleHe: plantTitle.he,
       description: descriptionTouched ? description : matched.observed,
       descriptionHe: descriptionTouched ? description : matched.observedHe,
       photos,
-      speciesId: species?.id ?? category.speciesId,
-      variety: isOtherSub ? 'Other' : (sub?.name ?? category.name),
-      varietyHe: isOtherSub ? 'אחר' : (sub?.nameHe ?? category.nameHe),
       quality: draft.quality,
       sizeBand: draft.size,
       stage: draft.stage,
       code: matched.code,
-      marketClassId: db.marketClasses.find((item) => item.code === matched.code)?.id,
+      traits: traitsWithoutArea(draft.traits),
+    }
+    if (isOther) {
+      return { ...shared, speciesId: OTHER_CATEGORY_ID, variety: matched.variety, varietyHe: matched.varietyHe }
+    }
+    const category = catalog.categories.find((item) => item.id === draft.categoryId)
+    if (!category) return null
+    const species = db.species.find((item) => item.id === category.speciesId)
+    const sub = isOtherSub ? undefined : catalog.subcategories.find((item) => item.id === draft.subcategoryId)
+    return {
+      ...shared,
+      speciesId: species?.id ?? category.speciesId,
+      variety: isOtherSub ? 'Other' : (sub?.name ?? category.name),
+      varietyHe: isOtherSub ? 'אחר' : (sub?.nameHe ?? category.nameHe),
       subcategoryId: isOtherSub ? undefined : draft.subcategoryId || undefined,
-      traits,
+    }
+  }
+
+  const guestFull = !signedIn && guestPlants.length >= GUEST_PLANT_LIMIT
+
+  const save = () => {
+    // A photo is optional through the steps but required to approve the plant.
+    const fields = plantFields()
+    if (!fields) {
+      setSaveFailed(true)
+      return
+    }
+    if (!signedIn) {
+      // A guest keeps the plant in this browser, with only what they filled in (no place, no AI result).
+      const id = addGuestPlant(fields)
+      if (id) setSavedId(id)
+      else setSaveFailed(true)
+      return
+    }
+    const id = addGreenhousePlant({
+      ...fields,
+      marketClassId: isOther ? undefined : db.marketClasses.find((item) => item.code === fields.code)?.id,
       location: place,
       identification,
       identifyRequestIds: withAi ? scans.map((scan) => scan.requestId) : [],
@@ -418,15 +404,21 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               <Check>✓</Check>
             </Burst>
             <DoneTitle>{t.addPlant.doneTitle}</DoneTitle>
-            <StepLead>{t.addPlant.doneBody.replace('{name}', name)}</StepLead>
+            <StepLead>{(signedIn ? t.addPlant.doneBody : t.addPlant.guestDoneBody).replace('{name}', name)}</StepLead>
             <DoneTags>
               <IdentifyBadge identification={identification} notInCatalog={isOther} />
             </DoneTags>
           </DoneBody>
           <DoneActions>
-            <Button type="button" variant="secondary" onClick={reset}>
-              {t.addPlant.addAnother}
-            </Button>
+            {signedIn ? (
+              <Button type="button" variant="secondary" onClick={reset}>
+                {t.addPlant.addAnother}
+              </Button>
+            ) : (
+              <Button type="button" variant="secondary" onClick={() => openAuth('buy')}>
+                {t.addPlant.guestKeep}
+              </Button>
+            )}
             <Button type="button" variant="growth" onClick={() => (onSaved ? onSaved(savedId) : onClose?.())}>
               {t.addPlant.done}
             </Button>
@@ -854,10 +846,12 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         }
       case 'review':
         return {
-          // A guest walks the whole form; the last button says up front that saving needs an account.
+          // A guest saves on this device; the plant moves into the account at the next sign-in.
           label: signedIn ? t.greenhouse.savePlant : t.addPlant.guestSave,
-          disabled: signedIn ? !reviewReady || photos.length === 0 : false,
-          hint: saveFailed
+          disabled: !reviewReady || photos.length === 0 || guestFull,
+          hint: guestFull
+            ? t.addPlant.guestLimit.replace('{count}', String(GUEST_PLANT_LIMIT))
+            : saveFailed
             ? t.addPlant.saveFailed
             : !identityReady
               ? t.addPlant.needIdentity

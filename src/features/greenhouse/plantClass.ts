@@ -96,9 +96,11 @@ export function sizeChoices(catalog: Catalog, draft: PlantClassDraft): SizeBand[
   return FALLBACK_SIZES
 }
 
-export function stageChoices(catalog: Catalog, draft: PlantClassDraft): StageBand[] {
-  const fromClasses = uniqueBy(classesFor(draft, 'stage'), (item) => item.stage).map((item) => item.stage)
-  if (fromClasses.length > 0) return fromClasses.sort(byStage)
+/**
+ * Every stage the catalog offers, whatever the size or variety: an XL plant can still be juvenile,
+ * so size does not narrow stage, and the grower always picks it.
+ */
+export function stageChoices(catalog: Catalog, _draft?: PlantClassDraft): StageBand[] {
   const fromCatalog = optionIds(catalog, 'stage', isStage)
   if (fromCatalog.length > 0) return fromCatalog.sort(byStage)
   return FALLBACK_STAGES
@@ -287,9 +289,7 @@ export function narrowDraft(
   if (!next.size || !sizes.includes(next.size)) {
     next.size = fillSingle && sizes.length === 1 ? sizes[0] : ''
   }
-  const stages = stageChoices(catalog, next)
-  if (!next.stage || !stages.includes(next.stage)) {
-    next.stage = fillSingle && stages.length === 1 ? stages[0] : ''
-  }
+  // Stage is never picked for the grower, even when one option is left.
+  if (next.stage && !stageChoices(catalog, next).includes(next.stage)) next.stage = ''
   return next
 }
