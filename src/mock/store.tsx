@@ -10,7 +10,13 @@ import {
 } from 'react'
 import { createCatalog } from './catalog'
 import { saveCatalogFile } from './catalogFile'
-import { areaById, fieldsFromPlace, resolveArea, UNKNOWN_AREA } from './locations'
+import { areaById, fieldsFromPlace, ownerGreenhousePlace, resolveArea, UNKNOWN_AREA } from './locations'
+import {
+  GUEST_PLANT_LIMIT,
+  loadGuestPlants,
+  saveGuestPlants,
+  type GuestPlant,
+} from '../features/greenhouse/guestPlants'
 import { createSeed } from './seed'
 import type {
   Catalog,
@@ -235,7 +241,11 @@ interface StoreApi {
     identification?: PlantIdentification
     /** Per photo, the identify request that scanned it. */
     identifyRequestIds?: (string | undefined)[]
-  }) => string
+  }, onSaved?: (ok: boolean) => void) => string
+  /** A signed-out guest's plants, kept in this browser until the next sign-in sends them. */
+  guestPlants: GuestPlant[]
+  /** '' when the browser refused or the guest already has `GUEST_PLANT_LIMIT` plants. */
+  addGuestPlant: (input: Omit<GuestPlant, 'id' | 'createdAt'>) => string
   /** Merge one activity the server already saved (an Add Plant scan), or a local one in UI-mock mode. */
   noteActivity: (update: FeedUpdate) => void
   commitCatalog: (
@@ -560,6 +570,37 @@ export function StoreProvider({
   // Kept current every render so a later loadSlice('users') reads the right role without re-creating the callback.
   isAdminRef.current = currentUser?.role === 'admin'
   const liveWritable = !uiMocks && !offline && liveStatus === 'up'
+
+  // A guest's plants live in this browser. Storybook (`example`) never reads or writes them.
+  const [guestPlants, setGuestPlants] = useState<GuestPlant[]>(() => (example ? [] : loadGuestPlants()))
+  const keepGuestPlants = (next: GuestPlant[]) => {
+    if (!example && !saveGuestPlants(next)) return false
+    setGuestPlants(next)
+    return true
+  }
+  // On sign-in (or once a sign-up is approved and signs in), each browser plant is sent to the account,
+  // with the account's greenhouse place, and dropped from the browser once the server saved it.
+  const sendingGuest = useRef(new Set<string>())
+  const canSendGuest = signedIn && (uiMocks || liveWritable)
+  useEffect(() => {
+    if (!canSendGuest || guestPlants.length === 0) return
+    for (const item of guestPlants) {
+      if (sendingGuest.current.has(item.id)) continue
+      sendingGuest.current.add(item.id)
+      const { id: _id, createdAt: _at, ...fields } = item
+      const sent = api.addGreenhousePlant({ ...fields, location: ownerGreenhousePlace(currentUser) }, (ok) => {
+        sendingGuest.current.delete(item.id)
+        if (!ok) return
+        setGuestPlants((current) => {
+          const next = current.filter((row) => row.id !== item.id)
+          saveGuestPlants(next)
+          return next
+        })
+      })
+      if (!sent) sendingGuest.current.delete(item.id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canSendGuest, guestPlants])
 
   const api: StoreApi = {
     db: visible,
@@ -1014,7 +1055,14 @@ export function StoreProvider({
         })
       })
     },
-    addGreenhousePlant: (input) => {
+    guestPlants,
+    addGuestPlant: (input) => {
+      if (signedIn || guestPlants.length >= GUEST_PLANT_LIMIT) return ''
+      const id = `guest-${Date.now()}`
+      const row: GuestPlant = { ...input, id, createdAt: new Date().toISOString().slice(0, 10) }
+      return keepGuestPlants([row, ...guestPlants]) ? id : ''
+    },
+    addGreenhousePlant: (input, onSaved) => {
       const signedNow = db.users.find((user) => user.id === db.currentUserId && user.role !== 'guest')
       if (!signedNow) return ''
       const area = resolveArea(input.location.region)
@@ -1081,8 +1129,10 @@ export function StoreProvider({
       })
       // Same XP note as finished care; the success screen stays as it is.
       if (created) queueMicrotask(() => notifyCareDone(id, 'plant', PLANT_XP))
+      if (created && !liveWritable) onSaved?.(true)
       if (created && liveWritable) {
         void postPlant(created, input.identifyRequestIds).then((res) => {
+          onSaved?.(Boolean(res))
           if (!res) return
           update((d) => {
             const index = d.plants.findIndex((item) => item.id === res.plant.id)

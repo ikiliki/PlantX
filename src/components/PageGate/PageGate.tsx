@@ -20,5 +20,5 @@ export function PageGate({
 }) {
   const { db } = useStore()
   if (db.system.pages[pageId] === 'live') return <>{children}</>
-  return <HoldNotice mode="maintenance" cover />
+  return <HoldNotice mode="maintenance" pageId={pageId} cover />
 }

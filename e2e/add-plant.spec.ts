@@ -72,18 +72,15 @@ test.describe('Add Plant', () => {
     await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeEnabled()
   })
 
-  test('a size keeps only its stages; an AI stage it lacks is explained', async ({ page, identify }) => {
+  test('every size offers every stage; the AI stage stays and nothing else is picked for the owner', async ({ page, identify }) => {
     const pick = await catalogPick(page)
     const base = { ...emptyClassDraft, categoryId: pick.category.id, subcategoryId: pick.sub.id }
     const all = stageChoices(pick.catalog, base)
-    const size = sizeChoices(pick.catalog, base).find(
-      (band) => stageChoices(pick.catalog, { ...base, size: band }).length < all.length,
-    )
-    test.skip(!size, 'Every size of this variety offers every stage')
-    const narrowed = stageChoices(pick.catalog, { ...base, size })
-    const lost = all.find((stage) => !narrowed.includes(stage))
+    const sizes = sizeChoices(pick.catalog, base)
+    const size = sizes[sizes.length - 1]
     const answer = diagnosisFor(pick, { withTrait: true, withSizeStage: false })
-    ;(answer.body as { diagnosis: { draft: { stage?: string } } }).diagnosis.draft.stage = lost
+    // The earliest stage with the largest size: the pair the old size filter used to drop.
+    ;(answer.body as { diagnosis: { draft: { stage?: string } } }).diagnosis.draft.stage = all[0]
     identify.answer(answer)
 
     const dialog = await openAddPlant(page)
@@ -98,8 +95,24 @@ test.describe('Add Plant', () => {
     await expect(stages.getByRole('radio', { checked: true })).toHaveCount(1)
 
     await dialog.getByRole('group', { name: /^size/i }).getByRole('radio', { name: size, exact: true }).click()
-    await expect(stages.getByRole('radio')).toHaveCount(narrowed.length)
-    await expect(stages.getByText(new RegExp(`isn't offered in ${size}`))).toBeVisible()
+    await expect(stages.getByRole('radio')).toHaveCount(all.length)
+    await expect(stages.getByRole('radio', { checked: true })).toHaveCount(1)
+  })
+
+  test('a manual plant gets no stage picked for it, whatever the size', async ({ page }) => {
+    const pick = await catalogPick(page)
+    const all = stageChoices(pick.catalog, emptyClassDraft)
+    const sizes = sizeChoices(pick.catalog, emptyClassDraft)
+    const dialog = await openAddPlant(page)
+    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await dialog.getByRole('button', { name: 'Fill in manually' }).click()
+    await dialog.getByRole('navigation').getByRole('button', { name: /Specs/ }).click()
+    const stages = dialog.getByRole('group', { name: /^stage/i })
+    for (const size of sizes) {
+      await dialog.getByRole('group', { name: /^size/i }).getByRole('radio', { name: size, exact: true }).click({ force: true })
+      await expect(stages.getByRole('radio')).toHaveCount(all.length)
+      await expect(stages.getByRole('radio', { checked: true })).toHaveCount(0)
+    }
   })
 
   test('a field AI missed is flagged and can be filled from Review', async ({ page, identify }) => {

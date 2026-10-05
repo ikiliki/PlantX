@@ -24,6 +24,7 @@ export function LoginPage() {
             dialog
             titleId="login-page-title"
             onSuccess={() => navigate(next, { replace: true })}
+            onGuest={() => navigate('/greenhouse')}
           />
         </Popup>
       </Stack>

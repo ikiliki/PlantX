@@ -91,6 +91,7 @@ function envGoogleClientId() {
 /**
  * Google is the only sign-in. Log in and sign up are one flow: a new Google email
  * files a sign-up, and the account opens once an admin approves it.
+ * With Google off, the panel says sign-ups are paused and offers the guest path instead of an error.
  */
 export function AuthPanel({
   reason = 'buy',
@@ -98,8 +99,10 @@ export function AuthPanel({
   dialog = false,
   gate = false,
   titleId = 'auth-dialog-title',
+  headingLevel = 'h1',
   onSuccess,
   onContinue,
+  onGuest,
 }: {
   reason?: AuthReason
   start?: 'login' | 'register'
@@ -108,8 +111,12 @@ export function AuthPanel({
   /** Same card as login; primary CTA only (e.g. go to /login). */
   gate?: boolean
   titleId?: string
+  /** `h2` when the panel sits inside a page that already has its own h1 (the landing). */
+  headingLevel?: 'h1' | 'h2'
   onSuccess: () => void
   onContinue?: () => void
+  /** Browse without an account: shown when sign-in is paused. */
+  onGuest?: () => void
 }) {
   const { t, locale } = useI18n()
   const { loginWithGoogle, loginWithMockSso } = useStore()
@@ -118,6 +125,10 @@ export function AuthPanel({
   const [busy, setBusy] = useState(false)
   const [pending, setPending] = useState(false)
   const [googleClientId, setGoogleClientId] = useState<string | null>(() => envGoogleClientId())
+  // Until the server says whether Google is on, show neither the button nor "paused".
+  // Google is on but its script did not load (blocked or offline): an error, not "paused".
+  const [gisFailed, setGisFailed] = useState(false)
+  const [checking, setChecking] = useState(() => clientEnv() !== 'mock' && !envGoogleClientId())
   const googleRef = useRef<HTMLDivElement>(null)
   // Callers and the store pass fresh functions each render; read the latest from refs so Google
   // is initialized once per button, not on every render.
@@ -128,18 +139,23 @@ export function AuthPanel({
 
   const mockSso = clientEnv() === 'mock'
   const showGoogle = !gate && !pending && !mockSso && Boolean(googleClientId)
+  const paused = !gate && !pending && !mockSso && !checking && !googleClientId
   const googleLocale = locale === 'he' ? 'he' : 'en'
 
   const heading = gate
     ? t.auth.login
-    : pending
+    : paused
+      ? t.auth.pausedTitle
+      : pending
       ? t.auth.pendingTitle
       : mode === 'register'
         ? t.auth.register
         : t.auth.login
   const copy = gate
     ? ''
-    : pending
+    : paused
+      ? t.auth.pausedBody
+      : pending
       ? t.auth.pendingBody
       : mode === 'register'
         ? reasonBody(reason, t) || t.auth.registerBody
@@ -147,10 +163,12 @@ export function AuthPanel({
 
   useEffect(() => {
     if (mockSso) return
-    void fetchGoogleAuth().then((res) => {
-      if (res?.enabled && res.clientId) setGoogleClientId(res.clientId)
-      else if (!envGoogleClientId()) setGoogleClientId(null)
-    })
+    void fetchGoogleAuth()
+      .then((res) => {
+        if (res?.enabled && res.clientId) setGoogleClientId(res.clientId)
+        else if (!envGoogleClientId()) setGoogleClientId(null)
+      })
+      .finally(() => setChecking(false))
   }, [mockSso])
 
   const onMockSso = async () => {
@@ -209,7 +227,7 @@ export function AuthPanel({
           locale: googleLocale,
         })
       } catch {
-        if (!cancelled) setGoogleClientId(null)
+        if (!cancelled) setGisFailed(true)
       }
     })()
     return () => {
@@ -243,7 +261,7 @@ export function AuthPanel({
         </Brand>
 
         <Panel>
-          <Title id={titleId} $compact={dialog}>
+          <Title as={headingLevel} id={titleId} $compact={dialog}>
             {heading}
           </Title>
           {copy ? <Lead $compact={dialog}>{copy}</Lead> : null}
@@ -252,6 +270,12 @@ export function AuthPanel({
             <Submit type="button" onClick={() => onContinue?.()}>
               {t.profile.lockedAction}
             </Submit>
+          ) : paused ? (
+            onGuest ? (
+              <Submit type="button" onClick={onGuest}>
+                {t.auth.continueGuest}
+              </Submit>
+            ) : null
           ) : pending ? (
             <>
               <Pending>{t.auth.pendingHint}</Pending>
@@ -267,10 +291,12 @@ export function AuthPanel({
                 <Submit type="button" onClick={() => void onMockSso()} disabled={busy}>
                   {busy ? t.common.loading : t.auth.google}
                 </Submit>
+              ) : showGoogle && gisFailed ? (
+                <ErrorText>{t.auth.googleUnavailable}</ErrorText>
               ) : showGoogle ? (
                 <GoogleSlot ref={googleRef} aria-label={t.auth.google} aria-busy={busy} />
               ) : (
-                <ErrorText>{t.auth.googleUnavailable}</ErrorText>
+                <Pending aria-live="polite">{t.common.loading}</Pending>
               )}
               {error && <ErrorText>{error}</ErrorText>}
               <Foot>

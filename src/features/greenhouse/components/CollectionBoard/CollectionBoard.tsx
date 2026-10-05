@@ -66,6 +66,7 @@ export function CollectionBoard({
   skeleton,
   rail,
   addDisabled = false,
+  guestPlants = [],
 }: {
   /**
    * No data on the shelf: the Add tile, then placeholder cards. `loading` while a member's plants
@@ -76,6 +77,8 @@ export function CollectionBoard({
   rail?: ReactNode
   /** The add tile shows but waits (data or the session still loading). */
   addDisabled?: boolean
+  /** `guest`: plants saved in this browser, shown instead of the placeholders (they do not open a passport). */
+  guestPlants?: Plant[]
   plants: Plant[]
   sold: Plant[]
   activity: ActivityEntry[]
@@ -259,13 +262,20 @@ export function CollectionBoard({
           disabled={addDisabled}
         />
         {rail ? <PhoneRail>{rail}</PhoneRail> : null}
-        {/* A guest on a phone sees only the Add tile; the placeholder shelf is for wider screens. */}
-        <SkeletonCards $guest={skeleton === 'guest'}>
-          {Array.from({ length: SKELETON_CARDS }, (_, index) => (
-            <GreenhousePlantCardSkeleton key={index} blurred={skeleton === 'guest'} />
-          ))}
-        </SkeletonCards>
+        {skeleton === 'guest' && guestPlants.length > 0 ? (
+          guestPlants.map((plant) => (
+            <GreenhousePlantCard key={plant.id} plant={plant} fresh={plant.id === freshId} preview />
+          ))
+        ) : (
+          /* A guest on a phone sees only the Add tile; the placeholder shelf is for wider screens. */
+          <SkeletonCards $guest={skeleton === 'guest'}>
+            {Array.from({ length: SKELETON_CARDS }, (_, index) => (
+              <GreenhousePlantCardSkeleton key={index} blurred={skeleton === 'guest'} />
+            ))}
+          </SkeletonCards>
+        )}
       </CollectionGrid>
+      {skeleton === 'guest' && guestPlants.length > 0 ? <Empty role="note">{t.guest.savedNote}</Empty> : null}
     </Growing>
   ) : (
     <Growing>

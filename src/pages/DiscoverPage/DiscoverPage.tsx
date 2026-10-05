@@ -1,8 +1,8 @@
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { GuestCurtain } from '../../components/GuestCurtain/GuestCurtain'
-import { GuestView } from '../../components/GuestView/GuestView'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { GreenhouseLure } from '../../features/discover/components/GreenhouseLure/GreenhouseLure'
+import { GuestHomeIntro } from '../../features/discover/components/GuestHomeIntro/GuestHomeIntro'
 import { HomeMobileFloats } from '../../features/discover/components/HomeMobileFloats/HomeMobileFloats'
 import { FeedUpdate, FeedUpdateSkeleton, SKELETON_FEED_KINDS } from '../../features/feed/components/FeedUpdate/FeedUpdate'
 import { MarketRail } from '../../features/feed/components/MarketRail/MarketRail'
@@ -118,11 +118,8 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
     </FeatureGate>
   )
 
-  const guestFeed = (
-    <GuestCurtain card={<GuestView card title={t.guest.homeTitle} body={t.guest.homeBody} action={t.guest.logIn} />}>
-      {skeletonFeed}
-    </GuestCurtain>
-  )
+  // A guest gets a short explainer of what PlantX does, not a blurred feed behind a log-in card.
+  const guestFeed = <GuestHomeIntro />
 
   return (
     <Shell>

@@ -31,6 +31,8 @@ export function LandingJoin() {
               start="register"
               dialog
               titleId="landing-join-title"
+              headingLevel="h2"
+              onGuest={() => navigate('/greenhouse')}
               onSuccess={() => navigate('/greenhouse')}
             />
           )}
