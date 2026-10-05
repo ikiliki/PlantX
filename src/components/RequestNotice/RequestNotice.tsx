@@ -94,6 +94,20 @@ export function RequestNoticeStack({
   return (
     <Stack aria-live="polite">
       {items.map((item) => {
+        if (item.tone === 'info') {
+          return (
+            <Card key={item.id} role="status" $tone="done">
+              <Orb aria-hidden $tone="done" />
+              <Copy>
+                <Title>{item.title}</Title>
+                {item.detail ? <Hint>{item.detail}</Hint> : null}
+              </Copy>
+              <Close type="button" aria-label={t.http.dismiss} onClick={() => onDismiss(item.id)}>
+                ×
+              </Close>
+            </Card>
+          )
+        }
         if (item.tone === 'done') {
           return (
             <Card key={item.id} role="status" $tone="done">

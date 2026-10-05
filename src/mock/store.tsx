@@ -26,9 +26,13 @@ import type {
   PlantIdentification,
   DemoScenarios,
   MockDb,
+  Plant,
   ModerationStatus,
   PublishResult,
   QualityGrade,
+  ScanQuota,
+  ModerationTarget,
+  Visibility,
   SizeBand,
   Species,
   StageBand,
@@ -62,6 +66,9 @@ import {
   postGoogleSessionResult,
   patchAccount,
   postPlant,
+  fetchScanQuota,
+  patchPlant,
+  type PlantPatch,
   postTodoComplete,
   postRejectPending,
   postSession,
@@ -170,6 +177,17 @@ interface StoreApi {
   sliceFailures: Partial<Record<ServerSlice, ApiFailure>>
   /** True only when the server is up — live writes go through. */
   liveWritable: boolean
+  /** The signed-in member's AI scans today (#67). Null in mock mode, signed out, or until loaded. */
+  scanQuota: ScanQuota | null
+  refreshScanQuota: () => Promise<void>
+  /** A quota the server just sent (e.g. with a 429). */
+  noteScanQuota: (quota: ScanQuota) => void
+  /** Owner or admin edits a saved plant (#68). Resolves false when the server refused. */
+  editPlant: (plantId: string, patch: PlantPatch) => Promise<boolean>
+  /** Mirror an admin hide / show / delete / restore in the loaded data (#68). */
+  noteVisibility: (type: ModerationTarget, id: string, visibility: Visibility) => void
+  /** Mirror an admin edit of a member's profile. */
+  noteUser: (user: User) => void
   /** mock = browser UI, no server. qa = QA JSON files. prod = production files. */
   plantxEnv: ClientEnv
   plantxEnvLabel: string
@@ -571,6 +589,21 @@ export function StoreProvider({
   isAdminRef.current = currentUser?.role === 'admin'
   const liveWritable = !uiMocks && !offline && liveStatus === 'up'
 
+  // AI scans left today (#67): loaded once signed in on a live server, refreshed after every scan.
+  const [scanQuota, setScanQuota] = useState<ScanQuota | null>(null)
+  const quotaLive = signedIn && liveWritable
+  const refreshScanQuota = useCallback(async () => {
+    if (!quotaLive) {
+      setScanQuota(null)
+      return
+    }
+    const res = await fetchScanQuota()
+    if (res) setScanQuota(res.quota)
+  }, [quotaLive])
+  useEffect(() => {
+    void refreshScanQuota()
+  }, [refreshScanQuota, currentUser?.id])
+
   // A guest's plants live in this browser. Storybook (`example`) never reads or writes them.
   const [guestPlants, setGuestPlants] = useState<GuestPlant[]>(() => (example ? [] : loadGuestPlants()))
   const keepGuestPlants = (next: GuestPlant[]) => {
@@ -611,6 +644,43 @@ export function StoreProvider({
     liveFailure,
     sliceFailures,
     liveWritable,
+    scanQuota,
+    refreshScanQuota,
+    noteScanQuota: setScanQuota,
+    editPlant: async (plantId, patch) => {
+      const apply = (plant: Plant) =>
+        update((d) => {
+          const index = d.plants.findIndex((item) => item.id === plantId)
+          if (index >= 0) d.plants[index] = plant
+          return d
+        })
+      if (uiMocks) {
+        const current = db.plants.find((item) => item.id === plantId)
+        if (!current) return false
+        const next: Plant = { ...current, ...patch }
+        if (patch.sizeBand) next.sizeGrade = patch.sizeBand
+        if (patch.stage) next.rooting = patch.stage === 'CUT' ? 'unrooted' : patch.stage === 'ROOTED' ? 'rooted' : 'established'
+        apply(next)
+        return true
+      }
+      const outcome = await patchPlant(plantId, patch)
+      if (!outcome.ok) return false
+      apply(outcome.data.plant)
+      return true
+    },
+    noteVisibility: (type, id, visibility) =>
+      update((d) => {
+        const list = type === 'user' ? d.users : type === 'plant' ? d.plants : d.updates
+        const row = (list as { id: string; visibility?: Visibility }[]).find((item) => item.id === id)
+        if (row) row.visibility = visibility === 'visible' ? undefined : visibility
+        return d
+      }),
+    noteUser: (user) =>
+      update((d) => {
+        const index = d.users.findIndex((item) => item.id === user.id)
+        if (index >= 0) d.users[index] = { ...d.users[index], ...user }
+        return d
+      }),
     plantxEnv: runtimeEnv,
     plantxEnvLabel: runtimeEnvLabel,
     plantxSeed: runtimeSeed,
@@ -786,8 +856,8 @@ export function StoreProvider({
           regionHe: UNKNOWN_AREA.regionHe,
           lat: UNKNOWN_AREA.lat,
           lng: UNKNOWN_AREA.lng,
-          bio: 'Approved community grower.',
-          bioHe: 'מגדל קהילה מאושר.',
+          bio: '',
+          bioHe: '',
           rating: 0,
           completedOrders: 0,
           verificationRate: 0,

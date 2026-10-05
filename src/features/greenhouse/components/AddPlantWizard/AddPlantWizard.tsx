@@ -9,6 +9,9 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { createCatalog } from '../../../../mock/catalog'
 import { ownerGreenhousePlace } from '../../../../mock/locations'
 import { GUEST_PLANT_LIMIT } from '../../guestPlants'
+import { ScanQuotaNote } from '../ScanQuotaNote/ScanQuotaNote'
+import { SuggestPlantDialog } from '../../../catalog/components/SuggestPlantDialog/SuggestPlantDialog'
+import { useMySuggestions } from '../../../catalog/useCatalogSuggestions'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { useStore } from '../../../../mock/store'
 import type { CatalogProperty, Diagnosis, IdentifyFieldMark, PlantClassDraft, SizeBand, StageBand } from '../../../../mock/types'
@@ -69,6 +72,9 @@ import {
   Scroll,
   Section,
   StepBody,
+  SuggestNo,
+  SuggestOffer,
+  SuggestOfferActions,
   StepHead,
   StepLead,
   StepTitle,
@@ -103,7 +109,12 @@ function traitsWithoutArea(traits: Record<string, string>) {
 const PHONE_MQ = `(max-width: ${theme.breakpoints.sm})`
 
 export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: string) => void; onClose?: () => void }) {
-  const { db, currentUser, signedIn, addGreenhousePlant, addGuestPlant, guestPlants } = useStore()
+  const { db, currentUser, signedIn, addGreenhousePlant, addGuestPlant, guestPlants, scanQuota } = useStore()
+  const { submit: submitSuggestion } = useMySuggestions()
+  // No AI scans left today (#67): Continue with AI waits; Fill in manually still works.
+  const quotaOut = Boolean(signedIn && scanQuota && scanQuota.remaining <= 0)
+  // A scan recognized a plant the catalog lacks (#64): offer to suggest it, once per scan.
+  const [suggestOffer, setSuggestOffer] = useState<'ask' | 'open' | 'done'>('ask')
   const { openAuth } = useAuth()
   const { t, locale } = useI18n()
   const catalog = db.catalog ?? createCatalog()
@@ -262,7 +273,10 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const changeScans: typeof setScans = (update) => {
     const current = scansRef.current
     const next = typeof update === 'function' ? update(current) : update
-    if (next.some((scan) => !current.some((item) => item.id === scan.id))) setWithAi(false)
+    if (next.some((scan) => !current.some((item) => item.id === scan.id))) {
+      setWithAi(false)
+      setSuggestOffer('ask')
+    }
     setScans(update)
   }
 
@@ -380,6 +394,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
     setStep(0)
     setDirection(-1)
     setWithAi(false)
+    setSuggestOffer('ask')
     setScans([])
     appliedLead.current = undefined
     setDraft(emptyClassDraft)
@@ -914,6 +929,28 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             {next.hint}
           </FooterHint>
         ) : null}
+        {signedIn && missingCatalog && recognized && suggestOffer === 'ask' ? (
+          <SuggestOffer role="status" data-suggest-offer>
+            <span>{t.addPlant.suggestOffer.replace('{name}', otherName)}</span>
+            <SuggestOfferActions>
+              <BannerAction type="button" onClick={() => setSuggestOffer('open')}>
+                {t.addPlant.suggestYes}
+              </BannerAction>
+              <SuggestNo type="button" onClick={() => setSuggestOffer('done')}>
+                {t.addPlant.suggestNo}
+              </SuggestNo>
+            </SuggestOfferActions>
+          </SuggestOffer>
+        ) : null}
+        {suggestOffer === 'open' && recognized ? (
+          <SuggestPlantDialog
+            catalog={db.catalog ?? createCatalog()}
+            initial={{ name: otherName, scientificName: recognized.scientificName ?? '', photo: scans[0]?.photo ?? '' }}
+            onSubmit={submitSuggestion}
+            onClose={() => setSuggestOffer('done')}
+          />
+        ) : null}
+        {stepId === 'photo' && signedIn && scanQuota ? <ScanQuotaNote quota={scanQuota} /> : null}
         {stepId === 'photo' ? (
           <PhotoActions>
             <Button
@@ -932,7 +969,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
               type="button"
               variant="info"
               // A guest sees that AI needs an account before investing in a photo (#2).
-              disabled={signedIn ? scans.length === 0 || scanning || aiUsed : false}
+              disabled={signedIn ? scans.length === 0 || scanning || aiUsed || quotaOut : false}
               onClick={() => {
                 if (!signedIn) {
                   openAuth('buy')

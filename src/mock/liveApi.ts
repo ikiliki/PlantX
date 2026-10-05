@@ -11,9 +11,16 @@ import type {
   IdentifyRequestRecord,
   IdentifyTestRequest,
   IdentifyTried,
+  ModerationAction,
+  ModerationEntry,
+  ModerationImpact,
+  ModerationTarget,
   Plant,
+  ScanAdjustment,
+  ScanQuota,
   Todo,
   User,
+  Visibility,
 } from './types'
 import type { SystemConfig } from '../theme/release'
 
@@ -366,7 +373,15 @@ const IDENTIFY_TIMEOUT_MS = 60_000
 
 type IdentifyResult =
   | { ok: true; diagnosis: Diagnosis; record?: IdentifyRequestRecord; activity?: FeedUpdate }
-  | { ok: false; error: string; tried: IdentifyTried[]; record?: IdentifyRequestRecord; activity?: FeedUpdate }
+  | {
+      ok: false
+      /** `quota`: no AI scans left today (then `quota` is set). `rate_limited`: too many at once. */
+      error: string
+      tried: IdentifyTried[]
+      record?: IdentifyRequestRecord
+      activity?: FeedUpdate
+      quota?: ScanQuota
+    }
 
 /** Identify calls can walk three providers, so they get a longer timeout than `request`. */
 async function identifyRequest(path: string, body: unknown): Promise<IdentifyResult> {
@@ -386,6 +401,7 @@ async function identifyRequest(path: string, body: unknown): Promise<IdentifyRes
       activity?: FeedUpdate
       error?: string
       tried?: IdentifyTried[]
+      quota?: ScanQuota
     } | null
     if (res.ok && json?.diagnosis) {
       return { ok: true, diagnosis: json.diagnosis, record: json.record, activity: json.activity }
@@ -396,6 +412,7 @@ async function identifyRequest(path: string, body: unknown): Promise<IdentifyRes
       tried: json?.tried ?? [],
       record: json?.record,
       activity: json?.activity,
+      quota: json?.quota,
     }
   } catch {
     return { ok: false, error: 'offline', tried: [] }
@@ -457,4 +474,104 @@ export function fetchIdentifyHistoryOutcome(query?: { mode?: IdentifyMode; limit
   if (query?.limit != null) params.set('limit', String(query.limit))
   const qs = params.toString()
   return requestOutcome<{ requests: IdentifyRequestRecord[] }>(`/api/identify/history${qs ? `?${qs}` : ''}`)
+}
+
+// ── AI scan quota (#67) ─────────────────────────────────────────────────────
+
+export function fetchScanQuota() {
+  return request<{ quota: ScanQuota }>('/api/identify/quota')
+}
+
+export function fetchAdminScanQuotas() {
+  return requestOutcome<{ quotas: Record<string, ScanQuota> }>('/api/admin/scans')
+}
+
+export function fetchAdminScanDetail(userId: string) {
+  return requestOutcome<{ quota: ScanQuota; history: ScanAdjustment[] }>(`/api/admin/scans/${encodeURIComponent(userId)}`)
+}
+
+export function postAdminScans(
+  userId: string,
+  body: { kind: 'extra'; delta: number; reason: string } | { kind: 'limit'; limit: number | null; reason: string },
+) {
+  return requestOutcome<{ quota: ScanQuota; history: ScanAdjustment[] }>(`/api/admin/scans/${encodeURIComponent(userId)}`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+// ── Edit and moderation (#68, #69) ──────────────────────────────────────────
+
+export type PlantPatch = Partial<
+  Pick<Plant, 'title' | 'titleHe' | 'description' | 'descriptionHe' | 'sizeBand' | 'stage' | 'quality' | 'traits' | 'photos'>
+>
+
+export function patchPlant(plantId: string, patch: PlantPatch) {
+  return requestOutcome<{ plant: Plant; changed: string[] }>(`/api/plants/${encodeURIComponent(plantId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
+export type UserPatch = Partial<Pick<User, 'name' | 'nickname' | 'bio' | 'bioHe' | 'region' | 'regionHe'>>
+
+export function patchAdminUser(userId: string, patch: UserPatch) {
+  return requestOutcome<{ user: User; changed: string[] }>(`/api/admin/users/${encodeURIComponent(userId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
+export type ModerationItem = {
+  type: ModerationTarget
+  id: string
+  label: string
+  detail: string
+  ownerId: string
+  visibility: Visibility
+  effective: Visibility
+  changedAt?: string
+  changedBy?: string
+  reason?: string
+  createdAt?: string
+}
+
+export type ModerationState = 'all' | 'moderated' | Visibility
+
+export function fetchModerationItems(type: ModerationTarget, state: ModerationState, q = '') {
+  const params = new URLSearchParams({ type, state, q })
+  return requestOutcome<{ items: ModerationItem[] }>(`/api/admin/moderation/items?${params}`)
+}
+
+export function fetchModerationImpact(type: ModerationTarget, id: string) {
+  const params = new URLSearchParams({ type, id })
+  return requestOutcome<{ label: string; visibility: Visibility; impact: ModerationImpact }>(
+    `/api/admin/moderation/impact?${params}`,
+  )
+}
+
+export function postModeration(type: ModerationTarget, id: string, action: ModerationAction, reason: string) {
+  return requestOutcome<{ entry: ModerationEntry; impact: ModerationImpact; visibility: Visibility }>(
+    `/api/admin/moderation/${type}/${encodeURIComponent(id)}`,
+    { method: 'POST', body: JSON.stringify({ action, reason }) },
+  )
+}
+
+export function fetchModerationLog() {
+  return requestOutcome<{ entries: ModerationEntry[] }>('/api/admin/moderation/log')
+}
+
+// ── Scans not in the catalog (#64) ───────────────────────────────────────────
+
+export type NotInCatalogScan = {
+  name: string
+  scientificName: string
+  scans: number
+  members: number
+  lastAt: string
+  thumb?: string
+}
+
+export function fetchScansNotInCatalog() {
+  return requestOutcome<{ scans: NotInCatalogScan[] }>('/api/admin/scans-not-in-catalog')
 }

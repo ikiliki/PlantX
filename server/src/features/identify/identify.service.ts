@@ -145,12 +145,13 @@ async function statusOf(
 }
 
 /**
- * A plant answer with no catalog category. An Add Plant scan files it for the member (pending in their Catalog),
- * live or mock, so PP can show it. The playground files only live answers, with no member.
+ * A plant answer with no catalog category. An Add Plant scan files nothing (#64): the member is asked in
+ * the app and sends a suggestion only if they want; admins see unrequested scans read-only
+ * (GET /api/admin/scans-not-in-catalog). The admin playground still files live answers, with no member.
  */
 async function noteMissingCategory(raw: RawSuggestion, ctx: DiagnoseCtx, live: boolean) {
-  const member = ctx.requester?.source === 'addPlant' ? ctx.requester.userId : undefined
-  if (!member && !live) return
+  if (ctx.requester?.source === 'addPlant' || !live) return
+  const member = undefined
   const name = raw.commonNames.find(Boolean) || raw.scientificName || raw.genus || ''
   if (!name.trim()) return
   const hint: CatalogDraftHint = {

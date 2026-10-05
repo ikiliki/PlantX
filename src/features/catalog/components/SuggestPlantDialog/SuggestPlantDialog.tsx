@@ -34,16 +34,19 @@ export function SuggestPlantDialog({
   catalog,
   onSubmit,
   onClose,
+  initial,
 }: {
   catalog: Catalog
   onSubmit: (input: CatalogSuggestionInput) => Promise<SuggestResult>
   onClose: () => void
+  /** Prefilled from an Add Plant scan the catalog lacks (#64). */
+  initial?: Partial<CatalogSuggestionInput>
 }) {
   const { t, locale } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
   const nameRef = useRef<HTMLInputElement>(null)
   const [kind, setKind] = useState<Kind>('new')
-  const [input, setInput] = useState<CatalogSuggestionInput>(emptySuggestionInput)
+  const [input, setInput] = useState<CatalogSuggestionInput>({ ...emptySuggestionInput, ...initial })
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<Exclude<SuggestResult, { ok: true }>['problem'] | null>(null)
   const [sent, setSent] = useState<string | null>(null)

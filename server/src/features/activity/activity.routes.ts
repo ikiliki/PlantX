@@ -1,5 +1,4 @@
 import { Hono } from 'hono'
-import { canSeeActivity } from '../../../../src/features/feed/activityXp.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { signedIn, type SignedInEnv } from '../../lib/session.ts'
@@ -34,7 +33,7 @@ activityRoutes.get('/', async (c) => {
     userId: c.req.query('userId') || undefined,
     limit: readLimit(c.req.query('limit')),
   })
-  return c.json({ activities: visibleTo(activities, c.get('user')) })
+  return c.json({ activities: await visibleTo(activities, c.get('user')) })
 })
 
 /** Every kind for one person. */
@@ -43,13 +42,13 @@ activityRoutes.get('/user/:userId', async (c) => {
     userId: c.req.param('userId'),
     limit: readLimit(c.req.query('limit')),
   })
-  return c.json({ activities: visibleTo(activities, c.get('user')) })
+  return c.json({ activities: await visibleTo(activities, c.get('user')) })
 })
 
 /** One activity, plus the identify request when this row has one. */
 activityRoutes.get('/id/:id', async (c) => {
   const activity = await activityService.get(c.req.param('id'))
-  if (!activity || !canSeeActivity(activity, c.get('user'))) throw Errors.missing('Activity not found')
+  if (!activity || (await visibleTo([activity], c.get('user'))).length === 0) throw Errors.missing('Activity not found')
   return c.json({ activity, detail: await detailFor(activity) })
 })
 
@@ -62,7 +61,7 @@ activityRoutes.get('/:type/:userId', async (c) => {
     userId: c.req.param('userId'),
     limit: readLimit(c.req.query('limit')),
   })
-  return c.json({ activities: visibleTo(activities, c.get('user')) })
+  return c.json({ activities: await visibleTo(activities, c.get('user')) })
 })
 
 activityRoutes.get('/:type', async (c) => {
@@ -73,7 +72,7 @@ activityRoutes.get('/:type', async (c) => {
     userId: c.req.query('userId') || undefined,
     limit: readLimit(c.req.query('limit')),
   })
-  return c.json({ activities: visibleTo(activities, c.get('user')) })
+  return c.json({ activities: await visibleTo(activities, c.get('user')) })
 })
 
 /**
@@ -98,7 +97,7 @@ activityRoutes.post('/', async (c) => {
     body: body.body,
     bodyHe: body.bodyHe,
   })
-  return c.json({ activity, activities: visibleTo(await activityService.list(), user) })
+  return c.json({ activity, activities: await visibleTo(await activityService.list(), user) })
 })
 
 /** Linked identify request, without the photo thumb. Absent when the row has none. */

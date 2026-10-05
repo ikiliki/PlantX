@@ -1,0 +1,67 @@
+import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { useI18n } from '../../i18n/I18nProvider'
+import { Backdrop, Body, Close, Footer, Frame, Head, Lead, Title } from './ModalDialog.styles'
+
+/**
+ * Small form dialog: title, optional lead, body, footer actions. Portaled above other dialogs,
+ * Escape and the backdrop close it, the page behind does not scroll. A phone gets a bottom sheet.
+ */
+export function ModalDialog({
+  title,
+  lead,
+  children,
+  footer,
+  onClose,
+  width = 460,
+}: {
+  title: string
+  lead?: ReactNode
+  children?: ReactNode
+  footer?: ReactNode
+  onClose: () => void
+  width?: number
+}) {
+  const { t } = useI18n()
+  const titleId = useId()
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.stopImmediatePropagation()
+      closeRef.current()
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => {
+      document.body.style.overflow = previous
+      window.removeEventListener('keydown', onKey, true)
+    }
+  }, [])
+
+  return createPortal(
+    <Backdrop onClick={onClose}>
+      <Frame
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        $width={width}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <Close type="button" onClick={onClose} aria-label={t.common.cancel}>
+          ×
+        </Close>
+        <Head>
+          <Title id={titleId}>{title}</Title>
+          {lead ? <Lead>{lead}</Lead> : null}
+        </Head>
+        {children ? <Body>{children}</Body> : null}
+        {footer ? <Footer>{footer}</Footer> : null}
+      </Frame>
+    </Backdrop>,
+    document.body,
+  )
+}

@@ -353,6 +353,15 @@ export function TodoCalendar({
       </Toolbar>
     ) : null
 
+  const fullDate = (y: number, m: number, d: number) =>
+    new Date(Date.UTC(y, m, d, 12)).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    })
+
   return (
     <Root>
       {mobile ? null : toolbar}
@@ -366,11 +375,19 @@ export function TodoCalendar({
         ) : null}
 
         <Head>
-          <Nav type="button" onClick={() => onMonthChange(month === 0 ? year - 1 : year, month === 0 ? 11 : month - 1)}>
+          <Nav
+            type="button"
+            aria-label={t.todo.prevMonth}
+            onClick={() => onMonthChange(month === 0 ? year - 1 : year, month === 0 ? 11 : month - 1)}
+          >
             ‹
           </Nav>
           <Month>{label}</Month>
-          <Nav type="button" onClick={() => onMonthChange(month === 11 ? year + 1 : year, month === 11 ? 0 : month + 1)}>
+          <Nav
+            type="button"
+            aria-label={t.todo.nextMonth}
+            onClick={() => onMonthChange(month === 11 ? year + 1 : year, month === 11 ? 0 : month + 1)}
+          >
             ›
           </Nav>
         </Head>
@@ -398,10 +415,11 @@ export function TodoCalendar({
                 tabIndex={0}
                 aria-pressed={selected}
                 aria-expanded={many ? expanded : undefined}
+                // The full date, so screen readers and agents can tell the days apart (#44).
                 aria-label={
                   items.length > 0
-                    ? t.todo.dayTasks.replace('{day}', String(day)).replace('{n}', String(items.length))
-                    : undefined
+                    ? t.todo.dayTasksFull.replace('{date}', fullDate(year, month, day)).replace('{n}', String(items.length))
+                    : fullDate(year, month, day)
                 }
                 data-open={expanded ? 'true' : undefined}
                 onContextMenu={(event) => event.preventDefault()}

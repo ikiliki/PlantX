@@ -25,7 +25,7 @@ todoRoutes.post('/:id/complete', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { completedOn?: unknown }
   const completedOn = typeof body.completedOn === 'string' ? body.completedOn : undefined
   const result = await todoService.complete(c.req.param('id'), user.id, completedOn)
-  const activities = visibleTo(await activityService.list(), user)
+  const activities = await visibleTo(await activityService.list(), user)
   return c.json({
     todo: result.todo,
     todos: result.todos,

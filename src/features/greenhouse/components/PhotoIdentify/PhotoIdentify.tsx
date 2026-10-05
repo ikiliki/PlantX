@@ -10,7 +10,6 @@ import type { Catalog, Diagnosis, IdentifyTried, Locale, PhotoCheck } from '../.
 import { readPhoto, thumbPhoto } from '../../../../lib/readPhoto'
 import { catalogName } from '../../../catalog/catalog'
 import { MAX_PLANT_PHOTOS, scanActivityText } from '../../identification'
-import { noteMockScanSuggestion } from '../../../catalog/useCatalogSuggestions'
 import { AiScan, type AiScanFact, type AiScanState } from '../AiScan/AiScan'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import {
@@ -38,6 +37,10 @@ export type PhotoIdentifyPhase =
   | 'failed'
   | 'notPlant'
   | 'noAccess'
+  /** No AI scans left today (#67). The photo stays; the plant can be filled in by hand. */
+  | 'quota'
+  /** Too many scans in a short time (#57). */
+  | 'limited'
 
 /** One photo and its own identify answer. */
 export type PhotoScan = {
@@ -67,7 +70,7 @@ function scanState(phase: PhotoIdentifyPhase): AiScanState {
 
 /** A photo that went to the providers (or was refused before it could). */
 export function wasScanned(scan: PhotoScan) {
-  return scan.phase !== 'noAccess' && scan.phase !== 'held'
+  return scan.phase !== 'noAccess' && scan.phase !== 'held' && scan.phase !== 'quota' && scan.phase !== 'limited'
 }
 
 export function identifyFacts(
@@ -126,7 +129,7 @@ export function PhotoIdentify({
   showAnswer?: boolean
 }) {
   const { t, locale } = useI18n()
-  const { db, currentUser, signedIn, liveWritable, plantxEnv, noteActivity } = useStore()
+  const { db, currentUser, signedIn, liveWritable, plantxEnv, noteActivity, refreshScanQuota, noteScanQuota } = useStore()
   const fileRef = useRef<HTMLInputElement>(null)
   const started = useRef(new Set<string>())
   const [selectedId, setSelectedId] = useState<string>()
@@ -165,11 +168,21 @@ export function PhotoIdentify({
     }
 
     if (!result.ok) {
+      if (result.error === 'quota') {
+        if (result.quota) noteScanQuota(result.quota)
+        patch(id, { phase: 'quota' })
+        return
+      }
+      if (result.error === 'rate_limited') {
+        patch(id, { phase: 'limited' })
+        return
+      }
       patch(id, { phase: 'failed', tried: result.tried, requestId: result.record?.id })
+      void refreshScanQuota()
       return
     }
-    // The server files a not-in-catalog scan as the member's suggestion; mock mode does it here.
-    if (uiMock && currentUser && db.catalog) noteMockScanSuggestion(result.diagnosis, currentUser.id, db.catalog)
+    // A scan of a plant the catalog lacks files nothing: Add Plant asks the member (#64).
+    void refreshScanQuota()
     patch(id, {
       phase: phaseFromDiagnosis(result.diagnosis),
       diagnosis: result.diagnosis,
@@ -280,6 +293,10 @@ export function PhotoIdentify({
         return { title: t.addPlant.notPlantTitle, body: t.addPlant.notPlantBody }
       case 'noAccess':
         return { title: t.addPlant.noAccessTitle, body: t.addPlant.noAccessBody }
+      case 'quota':
+        return { title: t.addPlant.quotaOutTitle, body: t.addPlant.quotaOutBody }
+      case 'limited':
+        return { title: t.addPlant.limitedTitle, body: t.addPlant.limitedBody }
       default:
         return { title: t.addPlant.failedTitle, body: t.addPlant.failedBody }
     }

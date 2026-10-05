@@ -494,3 +494,46 @@ export const DoneTitle = styled.h3`
   font-size: 30px;
   color: ${theme.colors.forest};
 `
+
+/** A scan found a plant the catalog lacks (#64): a short offer to suggest it. Shown at every width. */
+export const SuggestOffer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: ${theme.radii.md};
+  background: ${theme.colors.chipGreen};
+  color: ${theme.colors.forest};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
+
+  > span {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+`
+
+export const SuggestOfferActions = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`
+
+export const SuggestNo = styled.button`
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: ${theme.colors.forest};
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+`

@@ -1,5 +1,5 @@
 import { OTHER_CATEGORY_ID } from '../../../greenhouse/plantClass'
-import { type ReactNode, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
@@ -9,9 +9,10 @@ import { Segmented } from '../../../../components/Segmented/Segmented'
 import { Button } from '../../../../components/Button/Button'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import type { FeedUpdate, FeedUpdateKind, ModerationItem, Plant, User } from '../../../../mock/types'
+import type { FeedUpdate, FeedUpdateKind, ModerationItem, Plant, ScanQuota, User } from '../../../../mock/types'
 import { formatApiFailure } from '../../../../lib/apiFailure'
-import type { ServerSlice } from '../../../../mock/liveApi'
+import { fetchAdminScanQuotas, type ServerSlice } from '../../../../mock/liveApi'
+import { ScanQuotaDialog } from '../ScanQuotaDialog/ScanQuotaDialog'
 import { useStore, type LiveStatus } from '../../../../mock/store'
 import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
@@ -514,6 +515,9 @@ export function ServerPanel() {
   const [categoryPopupId, setCategoryPopupId] = useState<string | null>(null)
   const [activityKind, setActivityKind] = useState<ActivityTypeFilter>('all')
   const [activityUserId, setActivityUserId] = useState('all')
+  // AI scans today per member (#67), shown in the users table; the Scans dialog changes them.
+  const [scanQuotas, setScanQuotas] = useState<Record<string, ScanQuota>>({})
+  const [scansUserId, setScansUserId] = useState<string | null>(null)
 
   const usersOpen = Boolean(openSections.users)
   const plantsOpen = Boolean(openSections.plants)
@@ -521,6 +525,15 @@ export function ServerPanel() {
   const catalogOpen = Boolean(openSections.catalog)
   const transactionsOpen = Boolean(openSections.transactions)
   const usersFetching = useSectionFetch(usersOpen, ['users'])
+  const loadScanQuotas = useCallback(() => {
+    if (plantxEnv === 'mock') return
+    void fetchAdminScanQuotas().then((outcome) => {
+      if (outcome.ok) setScanQuotas(outcome.data.quotas)
+    })
+  }, [plantxEnv])
+  useEffect(() => {
+    if (usersOpen) loadScanQuotas()
+  }, [usersOpen, loadScanQuotas])
   const plantsFetching = useSectionFetch(plantsOpen, ['plants'])
   const activitiesFetching = useSectionFetch(activitiesOpen, ['plants', 'updates'])
   const catalogFetching = useSectionFetch(catalogOpen, ['catalog'])
@@ -784,6 +797,16 @@ export function ServerPanel() {
             },
             { id: 'role', header: t.admin.serverColRole, cell: (row) => row.role },
             {
+              id: 'scans',
+              header: t.scans.column,
+              cell: (row) => {
+                if (row.role === 'admin') return t.scans.unlimited
+                const quota = scanQuotas[row.id]
+                return quota ? `${quota.used} / ${quota.limit + quota.extra}` : '—'
+              },
+              muted: true,
+            },
+            {
               id: 'status',
               header: t.admin.serverColStatus,
               cell: (row) => {
@@ -824,6 +847,7 @@ export function ServerPanel() {
             const verifiedIds = db.verifiedGreenhouseIds ?? []
             const verified = verifiedIds.includes(row.id)
             return [
+              { id: 'scans', label: t.moderation.scans, variant: 'ghost', onClick: () => setScansUserId(row.id) },
               {
                 id: 'verify',
                 label: verified ? t.admin.unverifyGreenhouse : t.admin.verifyGreenhouse,
@@ -1200,6 +1224,13 @@ export function ServerPanel() {
           }}
         />
       )}
+      {scansUserId && users.find((row) => row.id === scansUserId) ? (
+        <ScanQuotaDialog
+          user={users.find((row) => row.id === scansUserId)!}
+          onClose={() => setScansUserId(null)}
+          onChange={loadScanQuotas}
+        />
+      ) : null}
     </Panel>
   )
 }

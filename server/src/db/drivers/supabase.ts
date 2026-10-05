@@ -16,6 +16,7 @@ import { supabaseCatalogSuggestions } from './supabaseCatalogSuggestions.ts'
 import { supabaseIdentifyRequests } from './supabaseIdentifyRequests.ts'
 import { supabaseIssueReports } from './supabaseIssueReports.ts'
 import { supabaseIdentifySettings } from './supabaseIdentifySettings.ts'
+import { supabaseModeration, supabaseRateLimits, supabaseScanQuota, visibilityFrom } from './supabaseModeration.ts'
 
 const { Pool } = pg
 type PoolClient = pg.PoolClient
@@ -175,6 +176,9 @@ export function createSupabaseStore(): PlantxStore {
     },
     identifyRequests: supabaseIdentifyRequests(pool),
     issueReports: supabaseIssueReports(pool),
+    scanQuota: supabaseScanQuota(pool),
+    rateLimits: supabaseRateLimits(pool),
+    moderation: supabaseModeration(pool),
     identifySettings: supabaseIdentifySettings(pool),
     catalogSuggestions: supabaseCatalogSuggestions(pool),
   }
@@ -207,7 +211,10 @@ export function createSupabaseStore(): PlantxStore {
         friendIds: friends.filter((item) => text(item, 'user_id') === id).map((item) => text(item, 'friend_id')),
         accountStatus: text(row, 'account_status') as User['accountStatus'],
         preapproved: Boolean(row.preapproved),
+        ...visibilityFrom(row),
       }
+      const scanLimit = optionalNum(row, 'daily_scan_limit')
+      if (scanLimit != null) user.dailyScanLimit = scanLimit
       const businessName = optional(row, 'business_name')
       const businessNameHe = optional(row, 'business_name_he')
       const email = optional(row, 'email')
@@ -722,6 +729,7 @@ export function createSupabaseStore(): PlantxStore {
         body: text(row, 'body'),
         bodyHe: text(row, 'body_he'),
         createdAt: text(row, 'created_at'),
+        ...visibilityFrom(row),
       }
       const plantId = optional(row, 'plant_id')
       if (plantId) activity.plantId = plantId
@@ -1027,6 +1035,7 @@ function plantFrom(
 ): Plant {
   const id = text(row, 'id')
   const plant: Plant = {
+    ...visibilityFrom(row),
     id,
     code: text(row, 'code'),
     ownerId: text(row, 'owner_id'),

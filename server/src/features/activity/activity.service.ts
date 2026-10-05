@@ -3,6 +3,7 @@ import { addedActivityText, scanActivityText } from '../../../../src/features/gr
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
+import { loadVisibility, visibleActivities } from '../../lib/visibility.ts'
 import type { User } from '../../../../src/mock/types.ts'
 import type { Activity, ActivityInput, ActivityQuery } from './activity.types.ts'
 
@@ -14,9 +15,17 @@ function newestFirst(a: Activity, b: Activity) {
  * Generic activity log. UI actions (and later an event bus) call `record`.
  * Home feed and plant cards call `list` / `listForPlant`.
  */
-/** What this viewer may read: XP activities for everyone, the rest for their owner and admins. */
-export function visibleTo(activities: Activity[], viewer: Pick<User, 'id' | 'role'> | null | undefined) {
-  return activities.filter((activity) => canSeeActivity(activity, viewer))
+/**
+ * What this viewer may read: XP activities for everyone, the rest for their owner and admins — and
+ * nothing an admin hid, directly or through its plant or grower (lib/visibility.ts).
+ */
+export async function visibleTo(activities: Activity[], viewer: Pick<User, 'id' | 'role'> | null | undefined) {
+  const index = await loadVisibility()
+  return visibleActivities(
+    activities.filter((activity) => canSeeActivity(activity, viewer)),
+    index,
+    viewer,
+  )
 }
 
 export const activityService = {

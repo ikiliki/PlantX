@@ -16,9 +16,9 @@ function sessionSecret() {
   return 'plantx-qa-session-secret'
 }
 
-/** Disabled accounts cannot sign in or keep a session. */
+/** Disabled and deleted accounts cannot sign in or keep a session. A hidden account still can. */
 export function isActive(user: User) {
-  return (user.accountStatus ?? 'active') === 'active'
+  return (user.accountStatus ?? 'active') === 'active' && user.visibility !== 'deleted'
 }
 
 /**

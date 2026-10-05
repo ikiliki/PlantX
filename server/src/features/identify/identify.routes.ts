@@ -15,6 +15,9 @@ import { requireAdmin, requireUser } from '../../lib/session.ts'
 import { activityService } from '../activity/activity.service.ts'
 import type { Activity } from '../activity/activity.types.ts'
 import { identifyService, type IdentifyOutcome } from './identify.service.ts'
+import { assertPhoto } from '../../lib/images.ts'
+import { rateLimit } from '../../lib/rateLimit.ts'
+import { quotaService } from '../quota/quota.service.ts'
 
 const MODES: IdentifyMode[] = ['mock', 'live']
 const PROVIDERS: IdentifyProviderId[] = ['gemini', 'plantnet']
@@ -40,7 +43,7 @@ function readImage(body: Body) {
   if (!image || !/^data:image\//i.test(image)) {
     throw Errors.invalid('Body must include an image data URL')
   }
-  return image
+  return assertPhoto(image)
 }
 
 function readThumb(body: Body) {
@@ -84,8 +87,16 @@ async function recordScan(userId: string, outcome: IdentifyOutcome) {
 
 export const identifyRoutes = new Hono()
 
-identifyRoutes.post('/', async (c) => {
+/** The signed-in member's AI scans today (#67). */
+identifyRoutes.get('/quota', async (c) => {
   const user = await requireUser(c)
+  return c.json({ quota: await quotaService.forUser(user) })
+})
+
+/** Add Plant scan. Abuse limit per member (#57), then the member's daily AI scans (#67). */
+identifyRoutes.post('/', rateLimit({ name: 'identify', max: 20, windowSeconds: 600 }), async (c) => {
+  const user = await requireUser(c)
+  await quotaService.assertCanScan(user)
   const body = await readBody(c)
   const image = readImage(body)
   const outcome = await identifyService.identify(

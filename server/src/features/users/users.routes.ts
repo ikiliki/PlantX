@@ -5,13 +5,15 @@ import { usersService } from './users.service.ts'
 export const usersRoutes = new Hono()
 
 /** Members: every greenhouse's level, for the Global directory. Counts and XP only. */
-usersRoutes.get('/levels', signedIn, async (c) => c.json({ levels: await usersService.levels() }))
+usersRoutes.get('/levels', signedIn, async (c) => c.json({ levels: await usersService.levels(c.get('user')) }))
 
 /** Members' greenhouses. Other people do not receive the admin. The admin receives everyone, including himself. */
 usersRoutes.get('/directory', signedIn, async (c) => c.json({ users: await usersService.directory(c.get('user')) }))
 
 /** Members: a greenhouse's level for its public page. Counts and XP only. */
-usersRoutes.get('/:id/level', signedIn, async (c) => c.json({ level: await usersService.level(c.req.param('id')) }))
+usersRoutes.get('/:id/level', signedIn, async (c) =>
+  c.json({ level: await usersService.level(c.req.param('id'), c.get('user')) }),
+)
 
 usersRoutes.get('/pending', async (c) => {
   await requireAdmin(c)

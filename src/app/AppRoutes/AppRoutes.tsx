@@ -23,6 +23,7 @@ import { RankPage } from '../../pages/RankPage/RankPage'
 import { SellerProfilePage } from '../../pages/SellerProfilePage/SellerProfilePage'
 import { ApisPage } from '../../pages/ApisPage/ApisPage'
 import { RequestsPage } from '../../pages/RequestsPage/RequestsPage'
+import { ModerationPage } from '../../pages/ModerationPage/ModerationPage'
 import { ServerPage } from '../../pages/ServerPage/ServerPage'
 import { WikiPage } from '../../pages/WikiPage/WikiPage'
 import { TodoPage } from '../../pages/TodoPage/TodoPage'
@@ -131,6 +132,7 @@ export function AppRoutes() {
           <Route path="admin/system" element={<SystemPage />} />
           <Route path="admin/server" element={<ServerPage />} />
           <Route path="admin/requests" element={<RequestsPage />} />
+          <Route path="admin/moderation" element={<ModerationPage />} />
           <Route path="admin/apis" element={<ApisPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/greenhouse" replace />} />

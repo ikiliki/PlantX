@@ -45,7 +45,66 @@ export type OrderStatus =
   | 'cancelled'
 export type ModerationStatus = 'open' | 'resolved' | 'dismissed'
 
-export interface User {
+/** Admin moderation state. 'deleted' is a soft delete: the row stays and can be restored. */
+export type Visibility = 'visible' | 'hidden' | 'deleted'
+
+/** Who last hid, showed, deleted or restored a row, and why. Absent = never moderated. */
+export type VisibilityMeta = {
+  visibility?: Visibility
+  visibilityChangedBy?: string
+  visibilityChangedAt?: string
+  visibilityReason?: string
+}
+
+/** One admin change to a member's AI scans: extra scans for one day, or a new daily limit. */
+export type ScanAdjustment = {
+  id: string
+  userId: string
+  /** YYYY-MM-DD, Israel time. */
+  day: string
+  kind: 'extra' | 'limit'
+  /** 'extra': scans added (negative takes away). */
+  delta: number
+  /** 'limit': the new daily limit; null = back to the default. */
+  value: number | null
+  reason: string
+  createdBy?: string
+  createdByName?: string
+  createdAt: string
+}
+
+/** A member's AI scans today. */
+export type ScanQuota = {
+  used: number
+  /** Daily limit (override or default). */
+  limit: number
+  /** Admin extras for today (can be negative). */
+  extra: number
+  remaining: number
+  /** ISO time of the next reset (00:00 Israel time). */
+  resetsAt: string
+}
+
+export type ModerationTarget = 'user' | 'plant' | 'activity'
+export type ModerationAction = 'hide' | 'show' | 'delete' | 'restore' | 'edit'
+
+/** What a hide or delete also takes out of view (computed, nothing is rewritten). */
+export type ModerationImpact = { plants: number; activities: number; todos: number }
+
+export type ModerationEntry = {
+  id: string
+  actorId?: string
+  actorName?: string
+  targetType: ModerationTarget
+  targetId: string
+  targetLabel?: string
+  action: ModerationAction
+  reason: string
+  cascade: Partial<ModerationImpact>
+  createdAt: string
+}
+
+export interface User extends VisibilityMeta {
   id: string
   name: string
   nameHe: string
@@ -75,6 +134,8 @@ export interface User {
   accountStatus?: 'active' | 'disabled'
   /** Can enter while the public app flag is off. */
   preapproved?: boolean
+  /** Admin override of the daily AI scan limit. Absent = the default. */
+  dailyScanLimit?: number | null
 }
 
 export type PendingUserStatus = 'pending' | 'approved' | 'rejected'
@@ -116,7 +177,7 @@ export interface Species {
   conditions: GrowingConditions
 }
 
-export interface Plant {
+export interface Plant extends VisibilityMeta {
   id: string
   code: string
   ownerId: string

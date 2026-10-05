@@ -6,6 +6,8 @@ export type HttpNotice =
   | { id: number; tone: 'fail'; context: IssueContext }
   /** XP was earned (a care task done, a plant added): short success note with the XP. */
   | { id: number; tone: 'done'; care: XpEvent; xp: number }
+  /** A plain success note, e.g. what a moderation action changed (title, then an optional detail line). */
+  | { id: number; tone: 'info'; title: string; detail?: string }
 
 /** What earned the XP in a success note. */
 export type XpEvent = 'water' | 'photo' | 'plant'
@@ -79,6 +81,12 @@ export function notifyCareDone(taskId: string, care: XpEvent, xp: number) {
   if (notifiedDone.has(taskId)) return
   notifiedDone.add(taskId)
   items = [{ id: ++seq, tone: 'done' as const, care, xp }, ...items].slice(0, MAX_NOTICES)
+  emit()
+}
+
+/** Plain success note (admin actions, edits). */
+export function notifyInfo(title: string, detail?: string) {
+  items = [{ id: ++seq, tone: 'info' as const, title, detail }, ...items].slice(0, MAX_NOTICES)
   emit()
 }
 

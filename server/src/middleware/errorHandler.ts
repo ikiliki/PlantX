@@ -9,6 +9,8 @@ function requestMeta(c: { req: { method: string; path: string } }) {
 
 function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err
+  // Hono's bodyLimit throws an HTTPException with status 413.
+  if (err && typeof err === 'object' && (err as { status?: number }).status === 413) return Errors.tooLarge()
   if (err instanceof SyntaxError) return Errors.invalid('Malformed JSON')
   return Errors.internal(err instanceof Error ? err.message : 'Unexpected error')
 }
@@ -17,7 +19,11 @@ function toAppError(err: unknown): AppError {
 export const onError: ErrorHandler = (err, c) => {
   const appError = toAppError(err)
   logger.error(appError.message, { ...requestMeta(c), status: appError.status, error: appError.error }, err)
-  return c.json({ error: appError.error, message: appError.message.slice(0, 300) }, appError.status as ContentfulStatusCode)
+  if (appError.retryAfter) c.header('Retry-After', String(appError.retryAfter))
+  return c.json(
+    { error: appError.error, message: appError.message.slice(0, 300), ...appError.detail },
+    appError.status as ContentfulStatusCode,
+  )
 }
 
 export const onNotFound: NotFoundHandler = (c) => {
