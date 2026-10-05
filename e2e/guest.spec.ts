@@ -86,10 +86,22 @@ test.describe('guest', { tag: '@prod' }, () => {
   test('coming-soon market keeps sample listings out of the accessibility tree', async ({ page }) => {
     await page.goto('/market')
     await page.waitForLoadState('networkidle')
-    const pill = page.getByRole('status').filter({ hasText: /coming soon|under maintenance/i })
-    test.skip((await pill.count()) === 0, 'Market is open, or the page is under maintenance here')
-    await expect(pill.first()).toContainText('Sample listings, not real prices')
+    // The whole page can be under maintenance instead (QA): that hold has its own test below.
+    const pill = page.getByRole('status').filter({ hasText: 'Sample listings, not real prices' })
+    test.skip((await pill.count()) === 0, 'Market page is open or under maintenance here, not coming soon')
+    await expect(pill.first()).toContainText(/coming soon|under maintenance/i)
     await expect(page.locator('[inert][aria-hidden="true"]')).toHaveCount(1)
+  })
+
+  test('a page under maintenance names itself and links only to open pages', async ({ page }) => {
+    await page.goto('/market')
+    await page.waitForLoadState('networkidle')
+    const hold = page.getByText('Market is under maintenance')
+    test.skip((await hold.count()) === 0, 'Market page is not under maintenance here')
+    const links = page.getByRole('navigation', { name: 'Open pages' }).getByRole('link')
+    await expect(links.first()).toBeVisible()
+    await expect(links.filter({ hasText: /^Market$/ })).toHaveCount(0)
+    await expect(page.getByText('opens when PlantX launches')).toHaveCount(0)
   })
 
   test('catalog is open to guests', async ({ page }) => {
