@@ -21,10 +21,13 @@ sessionRoutes.get('/google', (c) =>
  * Sign out with `{ userId: null }`. Sign-in by id or email has no password, so it exists only on the
  * local QA database (verification scripts use it); production signs in through Google only.
  */
-/** Sign-in attempts per IP (#57). */
+/**
+ * Google sign-in attempts per IP (#57). Not on POST /: its passwordless sign-in exists only on local QA,
+ * where e2e signs in once per test and would hit the limit.
+ */
 const signInLimit = rateLimit({ name: 'session', max: 30, windowSeconds: 600, by: 'ip' })
 
-sessionRoutes.post('/', signInLimit, async (c) => {
+sessionRoutes.post('/', async (c) => {
   const body = (await c.req.json()) as { email?: string; userId?: string | null }
   if (body.userId === null || body.email === '') {
     await setSession(c, null)
