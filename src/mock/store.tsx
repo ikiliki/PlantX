@@ -1074,63 +1074,64 @@ export function StoreProvider({
         lat: input.location.lat,
         lng: input.location.lng,
       }
-      let created: MockDb['plants'][number] | null = null
+      // Built here, not inside `update`: React may run that updater later (always, from an effect), and the
+      // server request below must not depend on it having run.
+      const species =
+        db.species.find((item) => item.id === input.speciesId) ??
+        db.species.find((item) => item.ticker && input.code.startsWith(item.ticker))
+      const marketClassId =
+        input.marketClassId ?? db.marketClasses.find((item) => item.code === input.code)?.id
+      const created: MockDb['plants'][number] = {
+        id,
+        code: input.code,
+        ownerId: signedNow.id,
+        speciesId: species?.id ?? input.speciesId,
+        marketClassId,
+        variety: input.variety,
+        varietyHe: input.varietyHe,
+        subcategoryId: input.subcategoryId,
+        traits: input.traits,
+        title: input.title.trim(),
+        titleHe: input.titleHe.trim(),
+        description: input.description.trim(),
+        descriptionHe: input.descriptionHe.trim(),
+        photos: plantPhotos(input.photos),
+        quantity: 1,
+        sizeGrade: input.sizeBand,
+        sizeBand: input.sizeBand,
+        quality: input.quality,
+        stage: input.stage,
+        rooting: input.stage === 'CUT' ? 'unrooted' : input.stage === 'ROOTED' ? 'rooted' : 'established',
+        ...fieldsFromPlace(place),
+        status: 'owned',
+        identification: input.identification,
+        createdAt: new Date().toISOString().slice(0, 10),
+        history: [
+          {
+            at: new Date().toISOString().slice(0, 10),
+            label: 'Added to greenhouse',
+            labelHe: 'נוסף לחממה',
+          },
+        ],
+      }
       update((d) => {
         const signed = d.users.find((u) => u.id === d.currentUserId && u.role !== 'guest')
-        const ownerId = signed?.id ?? d.visitorId
         if (signed && !resolveArea(signed.region)) {
           signed.region = place.region
           signed.regionHe = place.regionHe
           signed.lat = place.lat
           signed.lng = place.lng
         }
-        const species =
-          d.species.find((item) => item.id === input.speciesId) ??
-          d.species.find((item) => item.ticker && input.code.startsWith(item.ticker))
-        const marketClassId =
-          input.marketClassId ?? d.marketClasses.find((item) => item.code === input.code)?.id
-        created = {
-          id,
-          code: input.code,
-          ownerId,
-          speciesId: species?.id ?? input.speciesId,
-          marketClassId,
-          variety: input.variety,
-          varietyHe: input.varietyHe,
-          subcategoryId: input.subcategoryId,
-          traits: input.traits,
-          title: input.title.trim(),
-          titleHe: input.titleHe.trim(),
-          description: input.description.trim(),
-          descriptionHe: input.descriptionHe.trim(),
-          photos: plantPhotos(input.photos),
-          quantity: 1,
-          sizeGrade: input.sizeBand,
-          sizeBand: input.sizeBand,
-          quality: input.quality,
-          stage: input.stage,
-          rooting: input.stage === 'CUT' ? 'unrooted' : input.stage === 'ROOTED' ? 'rooted' : 'established',
-          ...fieldsFromPlace(place),
-          status: 'owned',
-          identification: input.identification,
-          createdAt: new Date().toISOString().slice(0, 10),
-          history: [
-            {
-              at: new Date().toISOString().slice(0, 10),
-              label: 'Added to greenhouse',
-              labelHe: 'נוסף לחממה',
-            },
-          ],
-        }
-        d.plants.unshift(created)
-        d.todos = ensureFirstWaterTodo(d.todos ?? [], created)
-        if (created.photos.length > 0) d.todos = schedulePhotoTodo(d.todos, created)
+        const row = structuredClone(created)
+        d.plants.unshift(row)
+        d.todos = ensureFirstWaterTodo(d.todos ?? [], row)
+        if (row.photos.length > 0) d.todos = schedulePhotoTodo(d.todos, row)
         return d
       })
       // Same XP note as finished care; the success screen stays as it is.
-      if (created) queueMicrotask(() => notifyCareDone(id, 'plant', PLANT_XP))
-      if (created && !liveWritable) onSaved?.(true)
-      if (created && liveWritable) {
+      queueMicrotask(() => notifyCareDone(id, 'plant', PLANT_XP))
+      if (!liveWritable) onSaved?.(true)
+      else {
         void postPlant(created, input.identifyRequestIds).then((res) => {
           onSaved?.(Boolean(res))
           if (!res) return
