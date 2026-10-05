@@ -854,8 +854,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         }
       case 'review':
         return {
-          label: t.greenhouse.savePlant,
-          disabled: !reviewReady || photos.length === 0,
+          // A guest walks the whole form; the last button says up front that saving needs an account.
+          label: signedIn ? t.greenhouse.savePlant : t.addPlant.guestSave,
+          disabled: signedIn ? !reviewReady || photos.length === 0 : false,
           hint: saveFailed
             ? t.addPlant.saveFailed
             : !identityReady
@@ -897,7 +898,9 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
           />
           {/* Only before a photo: once added, the scan card says what to do next. */}
           {scans.length === 0 ? (
-            <PhotoNote>{ADD_PLANT_UPLOAD_LIMIT > 1 ? t.addPlant.photoLead : t.addPlant.photoLeadOne}</PhotoNote>
+            <PhotoNote>
+              {!signedIn ? t.addPlant.guestPhotoLead : ADD_PLANT_UPLOAD_LIMIT > 1 ? t.addPlant.photoLead : t.addPlant.photoLeadOne}
+            </PhotoNote>
           ) : null}
         </div>
       </Scroll>
@@ -934,7 +937,8 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             <Button
               type="button"
               variant="info"
-              disabled={scans.length === 0 || scanning || aiUsed}
+              // A guest sees that AI needs an account before investing in a photo (#2).
+              disabled={signedIn ? scans.length === 0 || scanning || aiUsed : false}
               onClick={() => {
                 if (!signedIn) {
                   openAuth('buy')
@@ -943,7 +947,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
                 setWithAi(true)
               }}
             >
-              {scanning ? t.addPlant.aiWorking : t.addPlant.continueWithAi}
+              {!signedIn ? t.addPlant.guestAi : scanning ? t.addPlant.aiWorking : t.addPlant.continueWithAi}
             </Button>
           </PhotoActions>
         ) : (

@@ -136,9 +136,9 @@
     "viewAll": "Full market",
     "lureEyebrow": "Your greenhouse",
     "lureTitle": "A quiet shelf for what you grow",
-    "lureBody": "One photo and a name is enough to begin. When a plant is ready, the market is a step away.",
+    "lureBody": "Add a photo and a few details, and each plant gets its own passport and care reminders.",
     "lureYours": "Your plants are waiting",
-    "lureYoursBody": "Open the greenhouse to add another, or list one when you want to sell.",
+    "lureYoursBody": "Open the greenhouse to add another plant or see what needs care.",
     "lureOpen": "Step inside",
     "viewDemand": "Demand board"
   },
@@ -653,7 +653,10 @@
     "scanNotAdded": "Not added yet",
     "scanAdded": "Added",
     "photosCount": "{n} photos",
-    "aiPickNotOffered": "AI said {value}, which isn't offered in {parent}"
+    "aiPickNotOffered": "AI said {value}, which isn't offered in {parent}",
+    "guestAi": "Log in to use AI",
+    "guestSave": "Log in to save",
+    "guestPhotoLead": "Add a photo and fill in the details to see how it works. AI identify and saving need an account."
   },
   "sell": {
     "title": "Sell / Propagate",
@@ -803,7 +806,10 @@
     "pendingHint": "Once approved, sign in again with the same Google account. You can browse as a guest meanwhile.",
     "tryAgain": "Back to sign in",
     "declined": "This account can't sign in right now.",
-    "googleUnavailable": "Google sign-in isn't available right now. Try again later."
+    "googleUnavailable": "Google sign-in isn't available right now. Try again later.",
+    "pausedTitle": "Sign-ups are paused",
+    "pausedBody": "PlantX is opening to members gradually, and signing in is paused right now. You can still browse the catalog and try adding a plant.",
+    "continueGuest": "Continue as a guest"
   },
   "seller": {
     "orders": "Completed orders",
@@ -1271,7 +1277,25 @@
     "homeTitle": "Log in to see what's growing",
     "homeBody": "The feed shows what growers water, photograph and add. Enjoy the catalog until you log in.",
     "passportTitle": "Log in to open this passport",
-    "passportBody": "A plant's passport belongs to its grower and is shared with members."
+    "passportBody": "A plant's passport belongs to its grower and is shared with members.",
+    "introEyebrow": "New to PlantX?",
+    "introTitle": "Every plant gets its own story",
+    "introLead": "Snap a photo, and PlantX helps you name the plant, keep its history and know what it needs next.",
+    "introStep1Title": "Snap a photo",
+    "introStep1Body": "One clear photo of the plant is enough to start.",
+    "introStep2Title": "AI suggests what it is",
+    "introStep2Body": "It matches the photo to the catalog. You check it and change anything.",
+    "introStep3Title": "Know what’s due",
+    "introStep3Body": "Watering and photo reminders, and a passport that keeps every step.",
+    "introNote": "Trying it is free. Saving your plants needs an account.",
+    "introStageLabel": "Example: a plant photo that becomes a plant passport with care reminders",
+    "introExample": "Example",
+    "introStageScan": "Reading the photo…",
+    "introStageAi": "AI suggests",
+    "introStageAiName": "Golden pothos",
+    "introStageCare": "Water in 3 days",
+    "introPause": "Pause",
+    "introPlay": "Play"
   },
   "common": {
     "ils": "₪",
@@ -1421,7 +1445,11 @@
     "marketOpens": "Buying, prices, and charts open with the market.",
     "maintenance": "Under maintenance",
     "maintenanceTitle": "This page is under maintenance",
-    "maintenanceBody": "We’re making improvements. Check back soon — nothing here is available right now."
+    "maintenanceBody": "We’re making improvements. Check back soon — nothing here is available right now.",
+    "pageMaintenanceTitle": "{page} is under maintenance",
+    "pageMaintenanceBody": "We’re improving this page. Everything else is open:",
+    "openPages": "Open pages",
+    "sampleData": "Sample listings, not real prices"
   },
   "landing": {
     "navTour": "Tour",

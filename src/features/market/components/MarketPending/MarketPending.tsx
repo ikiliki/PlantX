@@ -71,7 +71,7 @@ export function MarketPending({ view = 'page' }: { view?: ComponentView }) {
     <Root>
       <SoonPill role="status">
         <span aria-hidden>✦</span>
-        {banner}
+        {banner} · {t.release.sampleData}
       </SoonPill>
 
       {/* Filters show what is coming but do nothing yet; the list / map switch at the end works. */}
@@ -83,11 +83,14 @@ export function MarketPending({ view = 'page' }: { view?: ComponentView }) {
         end={<MarketViewToggle view={paneView} onChange={setPaneView} />}
       />
 
-      <MarketSplit
-        view={paneView}
-        list={<ListingTable listings={preview.listings} masked source={preview.source} />}
-        map={() => <ListingMap listings={preview.listings} tall masked source={preview.source} />}
-      />
+      {/* Sample rows and map prices are a picture of the market, not listings: hidden from screen readers and inert (#17). */}
+      <div inert aria-hidden="true">
+        <MarketSplit
+          view={paneView}
+          list={<ListingTable listings={preview.listings} masked source={preview.source} />}
+          map={() => <ListingMap listings={preview.listings} tall masked source={preview.source} />}
+        />
+      </div>
     </Root>
   )
 }

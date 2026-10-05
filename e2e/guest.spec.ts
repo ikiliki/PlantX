@@ -47,7 +47,7 @@ test.describe('guest', { tag: '@prod' }, () => {
     await expect(page.getByRole('dialog')).toBeVisible()
   })
 
-  test('Add Plant asks a guest to sign in before AI, without calling identify', async ({ page }) => {
+  test('Add Plant tells a guest up front that AI needs an account, without calling identify', async ({ page }) => {
     let identifyCalls = 0
     page.on('request', (request) => {
       if (request.method() === 'POST' && /\/api\/identify/.test(request.url())) identifyCalls += 1
@@ -55,10 +55,41 @@ test.describe('guest', { tag: '@prod' }, () => {
     await expectPage(page, '/greenhouse')
     await page.getByRole('button', { name: /try adding a plant/i }).first().click()
     const dialog = page.getByRole('dialog').first()
+    // Before any photo the button already says log in, and it works.
+    const ai = dialog.getByRole('button', { name: 'Log in to use AI' })
+    await expect(ai).toBeEnabled()
+    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toHaveCount(0)
     await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
-    await dialog.getByRole('button', { name: 'Continue with AI' }).click()
+    await ai.click()
     await expect(page.getByRole('dialog').filter({ hasText: /log in|sign in|google/i }).last()).toBeVisible()
     expect(identifyCalls).toBe(0)
+  })
+
+  test('guest Home explains PlantX in three steps instead of a blurred feed', async ({ page }) => {
+    await expectPage(page, '/home')
+    const intro = page.getByRole('region', { name: 'Every plant gets its own story' })
+    await expect(intro).toBeVisible()
+    for (const step of ['Snap a photo', 'AI suggests what it is', 'Know what’s due']) {
+      await expect(intro.getByRole('button', { name: new RegExp(step) })).toBeVisible()
+    }
+    await expect(page.getByText('Log in to see what’s growing')).toHaveCount(0)
+    // Picking a step holds it there.
+    const aiStep = intro.getByRole('button', { name: /AI suggests what it is/ })
+    await aiStep.click()
+    await expect(aiStep).toHaveAttribute('aria-current', 'step')
+    // Try adding a plant opens Add Plant on the greenhouse.
+    await intro.getByRole('button', { name: /try adding a plant/i }).click()
+    await expect(page).toHaveURL(/\/greenhouse/)
+    await expect(page.getByRole('dialog').first().locator('input[type=file]')).toBeAttached()
+  })
+
+  test('coming-soon market keeps sample listings out of the accessibility tree', async ({ page }) => {
+    await page.goto('/market')
+    await page.waitForLoadState('networkidle')
+    const pill = page.getByRole('status').filter({ hasText: /coming soon|under maintenance/i })
+    test.skip((await pill.count()) === 0, 'Market is open, or the page is under maintenance here')
+    await expect(pill.first()).toContainText('Sample listings, not real prices')
+    await expect(page.locator('[inert][aria-hidden="true"]')).toHaveCount(1)
   })
 
   test('catalog is open to guests', async ({ page }) => {

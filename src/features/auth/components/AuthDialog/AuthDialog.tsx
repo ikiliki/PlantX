@@ -44,7 +44,7 @@ export function AuthDialog({
         <Close type="button" onClick={onClose} aria-label={t.common.cancel}>
           ×
         </Close>
-        <AuthPanel reason={reason} start={mode} dialog onSuccess={onSuccess} />
+        <AuthPanel reason={reason} start={mode} dialog onSuccess={onSuccess} onGuest={onClose} />
       </Frame>
     </Backdrop>,
     document.body,
