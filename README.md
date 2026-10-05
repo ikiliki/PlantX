@@ -35,7 +35,7 @@ Serve the `dist/` client from the same host. `build:prod` bakes `VITE_PLANTX_ENV
 
 Storybook uses `StoreProvider source="example"` and does not read QA or production JSON.
 
-Bootstrap admin: `omri96david@gmail.com` — **Continue with Google** only when `GOOGLE_CLIENT_ID` is set (see `.env.example`). No password for the operator account.
+Bootstrap admin: the Google account in `PLANTX_BOOTSTRAP_ADMIN_EMAIL` — **Continue with Google** only when `GOOGLE_CLIENT_ID` is set (see `.env.example`). No password for the operator account.
 
 ## Demo controls
 

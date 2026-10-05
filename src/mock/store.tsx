@@ -72,7 +72,7 @@ import { projectDb } from './projectDb'
 import { ensureSession, normalizeScenarios } from './session'
 import { clientEnv, clientEnvLabel, type ClientEnv } from '../theme/plantxEnv'
 import { cleanNickname } from '../features/profile/avatarIcons'
-import { OPERATOR_EMAIL } from '../theme/operator'
+import { MOCK_OPERATOR_ID } from '../theme/operator'
 import {
   addDays,
   addMonths,
@@ -708,7 +708,7 @@ export function StoreProvider({
     loginWithMockSso: async () => {
       if (!uiMocks) return { ok: false as const, reason: 'offline' }
       const operator = db.users.find(
-        (user) => user.role === 'admin' && user.email?.trim().toLowerCase() === OPERATOR_EMAIL,
+        (user) => user.role === 'admin' && user.id === MOCK_OPERATOR_ID,
       )
       if (!operator) return { ok: false as const, reason: 'unknown' }
       update((d) => ({ ...d, currentUserId: operator.id, flags: personaFlags(operator.id) }))

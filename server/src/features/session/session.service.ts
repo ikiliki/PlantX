@@ -8,18 +8,16 @@ import type { User } from '../../../../src/mock/types.ts'
 import { getStore } from '../../db/index.ts'
 import { changedSince, snapshot } from '../../lib/changedRows.ts'
 import { Errors } from '../../lib/errors.ts'
-import { BOOTSTRAP_ADMIN } from '../../lib/ensureData.ts'
+import { bootstrapAdmin } from '../../lib/ensureData.ts'
+import { bootstrapAdminEmail } from '../../lib/env.ts'
 import { isActive } from '../../lib/session.ts'
 import type { GoogleProfile } from '../../lib/googleAuth.ts'
 import { usersService } from '../users/users.service.ts'
 
-function bootstrapEmail() {
-  return (BOOTSTRAP_ADMIN.email ?? '').toLowerCase()
-}
-
-/** Operator account — Google SSO only, never email/password. */
+/** Operator account — Google SSO only, never email/password. False when the env var is unset. */
 export function isBootstrapAdminEmail(email: string) {
-  return email.trim().toLowerCase() === bootstrapEmail()
+  const admin = bootstrapAdminEmail()
+  return Boolean(admin) && email.trim().toLowerCase() === admin
 }
 
 function ensureSoleAdmin(users: User[], adminId: string) {
@@ -75,12 +73,11 @@ export const sessionService = {
     const store = getStore()
     const users = await store.users.list()
     const before = snapshot(users)
-    const adminMail = bootstrapEmail()
     let user = users.find((item) => item.role !== 'guest' && item.email?.toLowerCase() === email)
 
-    if (email === adminMail) {
+    if (isBootstrapAdminEmail(email)) {
       if (!user) {
-        user = structuredClone(BOOTSTRAP_ADMIN)
+        user = bootstrapAdmin()
         user.name = profile.name || user.name
         user.email = email
         users.push(user)

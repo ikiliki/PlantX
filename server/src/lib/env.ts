@@ -37,6 +37,14 @@ export function plantxSeed(): PlantxSeed {
   return plantxEnv() === 'mock' ? 'demo' : 'empty'
 }
 
+/**
+ * The operator's Google account (`PLANTX_BOOTSTRAP_ADMIN_EMAIL`), the only one Google sign-in makes admin.
+ * Unset → Google never grants admin; the existing admin row keeps its role.
+ */
+export function bootstrapAdminEmail(): string | null {
+  return (process.env.PLANTX_BOOTSTRAP_ADMIN_EMAIL || '').trim().toLowerCase() || null
+}
+
 export function plantxEnvLabel(env: PlantxEnv = plantxEnv()): string {
   if (env === 'mock') return 'local · ui mocks'
   if (env === 'prod') return 'prod · hosted supabase'
