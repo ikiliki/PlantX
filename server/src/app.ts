@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { bodyLimit } from 'hono/body-limit'
 import { secureHeaders } from 'hono/secure-headers'
 import { swaggerUI } from '@hono/swagger-ui'
 import { ensureDataFiles } from './lib/ensureData.ts'
@@ -54,8 +53,9 @@ app.use(
   }),
 )
 
-/** Requests over this are refused before the handler (Vercel also caps a function body at 4.5 MB). */
-app.use('/api/*', bodyLimit({ maxSize: 10 * 1024 * 1024 }))
+// No global bodyLimit: it reads the raw body stream itself when a request has no content-length. With it,
+// POSTs on the Vercel function hung (PP sign-in never returned) while local QA was fine. Vercel caps a
+// function body at 4.5 MB, and photos are checked per route (lib/images.ts → 413 / 415).
 
 app.use('*', async (c, next) => {
   await boot()
