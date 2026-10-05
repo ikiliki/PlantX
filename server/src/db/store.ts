@@ -7,8 +7,12 @@ import type {
   IdentifyProviderId,
   IdentifyProviderSettings,
   IdentifyRequestRecord,
+  ModerationEntry,
+  ModerationTarget,
   Plant,
+  ScanAdjustment,
   User,
+  Visibility,
 } from '../../../src/mock/types.ts'
 import type { SystemConfig } from '../../../src/theme/release.ts'
 import type { IssueContext, IssueReport } from '../../../src/lib/issueReport.ts'
@@ -101,6 +105,35 @@ export interface PlantxStore {
     list(): Promise<IssueReport[]>
     add(input: { userId: string | null; note: string; context: IssueContext }): Promise<IssueReport>
     setStatus(id: string, status: 'resolved' | 'dismissed'): Promise<void>
+  }
+  /** AI scan quota (#67). Usage is counted from identify_requests. */
+  scanQuota: {
+    /** Add Plant scans by this user since `sinceIso`. */
+    countAddPlant(userId: string, sinceIso: string): Promise<number>
+    /** Admin changes for one user, newest first; `day` narrows to one day. */
+    adjustments(userId: string, day?: string): Promise<ScanAdjustment[]>
+    /** Sum of today's extra scans per user. */
+    extrasByUser(day: string): Promise<Record<string, number>>
+    /** Add Plant scans per user since `sinceIso`. */
+    usedByUser(sinceIso: string): Promise<Record<string, number>>
+    add(item: ScanAdjustment): Promise<void>
+    setLimit(userId: string, limit: number | null): Promise<void>
+  }
+  /** Abuse limits (#57): fixed-window counters. */
+  rateLimits: {
+    /** Counts one hit and returns the window's total. */
+    hit(key: string, windowStart: string): Promise<number>
+    prune(beforeIso: string): Promise<void>
+  }
+  /** Hide / show / soft delete (#68) and the audit log (#69). Saves never write these columns. */
+  moderation: {
+    setVisibility(
+      type: ModerationTarget,
+      id: string,
+      change: { visibility: Visibility; by: string; reason: string },
+    ): Promise<void>
+    log(entry: ModerationEntry): Promise<void>
+    list(limit: number): Promise<ModerationEntry[]>
   }
   identifySettings: {
     /** Saved admin switches. A provider without a row is enabled and ready. */

@@ -188,7 +188,7 @@ export const todoService = {
     const window = careFillWindow(todo.subcategory)
     if (at < window.min || at > window.max) throw Errors.invalid('Care day is outside this category’s window')
     if (firstWater && !completedOn) throw Errors.invalid('First watering needs a calendar day')
-    if (firstWater && completedOn > today()) throw Errors.invalid('First watering cannot be in the future')
+    if (firstWater && at > today()) throw Errors.invalid('First watering cannot be in the future')
     if (!firstWater && (todo.dueOn == null || todo.dueOn > today())) {
       throw Errors.invalid('Task can only be filled on or after its due day')
     }

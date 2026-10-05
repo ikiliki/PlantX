@@ -77,10 +77,16 @@ export const sessionService = {
 
     if (isBootstrapAdminEmail(email)) {
       if (!user) {
-        user = bootstrapAdmin()
+        // Google verified this address and it is the configured operator: it claims the existing admin row
+        // (whatever email that row had), or a fresh one on an empty database.
+        const adminId = bootstrapAdmin().id
+        user = users.find((item) => item.id === adminId)
+        if (!user) {
+          user = bootstrapAdmin()
+          users.push(user)
+        }
         user.name = profile.name || user.name
         user.email = email
-        users.push(user)
       } else {
         if (!isActive(user)) throw Errors.forbidden('Account disabled')
         user.email = email

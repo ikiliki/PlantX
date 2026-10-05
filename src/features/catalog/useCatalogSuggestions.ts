@@ -43,44 +43,6 @@ export function decideMockSuggestion(id: string, status: 'added' | 'dismissed', 
   )
 }
 
-/** Mock mode stands in for the server: a scan that matched no category is filed for the member who scanned. */
-export function noteMockScanSuggestion(diagnosis: Diagnosis, userId: string, catalog: Catalog) {
-  if (!diagnosis.isPlant || diagnosis.draft.categoryId) return
-  const name = diagnosis.commonNames.find(Boolean) || diagnosis.scientificName || diagnosis.label
-  if (!name.trim()) return
-  const rows = readMockSuggestions()
-  const key = (diagnosis.scientificName || name).trim().toLowerCase()
-  const open = rows.find(
-    (row) => row.status === 'open' && !row.draft.categoryId && (row.scientificName || row.name).trim().toLowerCase() === key,
-  )
-  if (open) {
-    writeMockSuggestions(
-      rows.map((row) =>
-        row === open
-          ? { ...row, hits: row.hits + 1, suggestedBy: row.suggestedBy.includes(userId) ? row.suggestedBy : [...row.suggestedBy, userId] }
-          : row,
-      ),
-    )
-    return
-  }
-  const input = { name: name.trim(), scientificName: diagnosis.scientificName.trim(), categoryId: '', note: '', photo: '' }
-  const suggestion: CatalogSuggestion = {
-    id: `sug-${Date.now().toString(36)}`,
-    createdAt: new Date().toISOString(),
-    name: input.name,
-    scientificName: input.scientificName,
-    genus: input.scientificName.split(/\s+/)[0] ?? '',
-    commonNames: diagnosis.commonNames.filter(Boolean).slice(0, 6),
-    provider: diagnosis.provider,
-    hits: 1,
-    status: 'open',
-    origin: 'identify',
-    suggestedBy: [userId],
-    note: '',
-    draft: memberDraft(catalog, input),
-  }
-  writeMockSuggestions([suggestion, ...rows])
-}
 
 export function useSuggestionsVersion() {
   const [version, setVersion] = useState(0)

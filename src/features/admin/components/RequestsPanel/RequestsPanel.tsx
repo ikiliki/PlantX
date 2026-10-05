@@ -8,7 +8,12 @@ import {
   dismissCatalogSuggestion,
   fetchCatalogSuggestions,
   fetchPendingUsers,
+  fetchScansNotInCatalog,
+  type NotInCatalogScan,
 } from '../../../../mock/liveApi'
+import { ModalDialog } from '../../../../components/ModalDialog/ModalDialog'
+import { Segmented } from '../../../../components/Segmented/Segmented'
+import { notifyInfo } from '../../../../lib/httpNotice'
 import { createCatalog } from '../../../../mock/catalog'
 import { useStore } from '../../../../mock/store'
 import type { CatalogSuggestion, CatalogSuggestionDraft, PendingUser } from '../../../../mock/types'
@@ -20,7 +25,7 @@ import {
 import { applyCatalogSuggestion } from '../../catalogMutations'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { SuggestionEditorDialog } from '../CatalogSuggestions/SuggestionEditorDialog'
-import { ExpandActions, HeadMeta, IdeasBar, Panel, Section, SectionHead } from './RequestsPanel.styles'
+import { ExpandActions, HeadMeta, IdeasBar, Panel, ReadOnlyNote, ScanThumb, Section, SectionHead } from './RequestsPanel.styles'
 
 /** The admin's own new catalog entry: an empty suggestion with no row behind it. */
 const freshEntry: CatalogSuggestion = {
@@ -73,13 +78,22 @@ export function RequestsPanel({
   const [selectedIdeas, setSelectedIdeas] = useState<string[]>([])
   const [expandedApps, setExpandedApps] = useState<string[]>([])
   const [expandedIdeas, setExpandedIdeas] = useState<string[]>([])
+  // #6: pending and decided applications are separate views, and Reject asks first.
+  const [appsView, setAppsView] = useState<'pending' | 'history'>('pending')
+  const [confirmReject, setConfirmReject] = useState<string[] | null>(null)
+  // #64: scans that recognized a plant the catalog lacks, read-only.
+  const [scans, setScans] = useState<NotInCatalogScan[]>([])
+  const [scansOpen, setScansOpen] = useState(true)
 
   const reload = () => {
     if (scripted || plantxEnv === 'mock') return Promise.resolve()
-    return Promise.all([fetchPendingUsers('all'), fetchCatalogSuggestions('all')]).then(([apps, ideas]) => {
-      setRemoteApps(apps?.pending ?? [])
-      setRemoteSuggestions(ideas ?? [])
-    })
+    return Promise.all([fetchPendingUsers('all'), fetchCatalogSuggestions('all'), fetchScansNotInCatalog()]).then(
+      ([apps, ideas, notInCatalog]) => {
+        setRemoteApps(apps?.pending ?? [])
+        setRemoteSuggestions(ideas ?? [])
+        if (notInCatalog.ok) setScans(notInCatalog.data.scans)
+      },
+    )
   }
 
   useEffect(() => {
@@ -104,7 +118,7 @@ export function RequestsPanel({
   const historyIdeas = byNewest(ideas.filter((row) => row.status === 'added' || row.status === 'dismissed'))
 
   const appStatus = (status: PendingUser['status']) =>
-    status === 'approved' ? t.admin.requestAdded : status === 'rejected' ? t.admin.requestDeclined : t.admin.statusPending
+    status === 'approved' ? t.admin.appActivated : status === 'rejected' ? t.admin.requestDeclined : t.admin.statusPending
 
   const originLabel = (row: CatalogSuggestion) =>
     row.origin === 'member' ? t.admin.suggestedOriginMember : t.admin.suggestedOriginScan
@@ -134,8 +148,12 @@ export function RequestsPanel({
       return
     }
     setBusyId(id)
+    const name = apps.find((row) => row.id === id)?.name ?? ''
     const ok = mode === 'approve' ? await approvePendingUser(id) : await rejectPendingUser(id)
-    if (ok) await reload()
+    if (ok) {
+      notifyInfo((mode === 'approve' ? t.admin.appActivatedNote : t.admin.appDeclinedNote).replace('{name}', name))
+      await reload()
+    }
     setBusyId(null)
   }
 
@@ -172,12 +190,12 @@ export function RequestsPanel({
 
   if (loading) return <LoaderShell busy />
 
-  const appRows = [...openApps, ...historyApps]
+  const appRows = appsView === 'pending' ? openApps : historyApps
   const ideaRows = [...openIdeas, ...historyIdeas]
   const when = (value: string) => value.slice(0, 16).replace('T', ' ')
 
   const bulkApps = async (ids: string[], mode: 'approve' | 'reject') => {
-    const pending = ids.filter((id) => appRows.find((row) => row.id === id)?.status === 'pending')
+    const pending = ids.filter((id) => openApps.find((row) => row.id === id))
     for (const id of pending) await runApp(id, mode)
     setSelectedApps([])
   }
@@ -195,9 +213,25 @@ export function RequestsPanel({
         <SectionHead type="button" $open={appsOpen} aria-expanded={appsOpen} onClick={() => setAppsOpen((open) => !open)}>
           <h2>{t.admin.pendingMembers}</h2>
           <HeadMeta>
-            <span>{appRows.length}</span>
+            <span>{t.admin.appsPendingCount.replace('{count}', String(openApps.length))}</span>
           </HeadMeta>
         </SectionHead>
+        {appsOpen ? (
+          <IdeasBar>
+            <Segmented
+              ariaLabel={t.admin.pendingMembers}
+              value={appsView}
+              onChange={(next) => {
+                setAppsView(next)
+                setSelectedApps([])
+              }}
+              options={[
+                { id: 'pending', label: t.admin.appsPending.replace('{count}', String(openApps.length)) },
+                { id: 'history', label: t.admin.appsDecided.replace('{count}', String(historyApps.length)) },
+              ]}
+            />
+          </IdeasBar>
+        ) : null}
         {appsOpen ? (
           <AdminTable
             rows={appRows}
@@ -210,7 +244,6 @@ export function RequestsPanel({
             expandedIds={expandedApps}
             onExpandedChange={setExpandedApps}
             columns={[
-              { id: 'id', header: t.admin.serverColId, cell: (row) => row.id, muted: true },
               { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
               { id: 'email', header: t.admin.serverColEmail, cell: (row) => row.email, muted: true },
               {
@@ -241,7 +274,7 @@ export function RequestsPanel({
                       size="sm"
                       variant="ghost"
                       disabled={busyId === row.id}
-                      onClick={() => void runApp(row.id, 'reject')}
+                      onClick={() => setConfirmReject([row.id])}
                     >
                       {t.admin.reject}
                     </Button>
@@ -252,7 +285,7 @@ export function RequestsPanel({
                       disabled={busyId === row.id}
                       onClick={() => void runApp(row.id, 'approve')}
                     >
-                      {t.admin.activate}
+                      {busyId === row.id ? t.common.loading : t.admin.activate}
                     </Button>
                   </ExpandActions>
                 ) : null}
@@ -263,7 +296,7 @@ export function RequestsPanel({
                 id: 'reject',
                 label: t.admin.reject,
                 variant: 'ghost',
-                onClick: (ids) => void bulkApps(ids, 'reject'),
+                onClick: (ids) => setConfirmReject(ids),
               },
               {
                 id: 'activate',
@@ -356,14 +389,19 @@ export function RequestsPanel({
                     { label: t.admin.serverColWhen, value: when(row.createdAt) },
                   ]}
                 />
+                {row.status === 'open' && row.origin !== 'member' ? (
+                  <ReadOnlyNote>{t.admin.scanReadOnly}</ReadOnlyNote>
+                ) : null}
                 {row.status === 'open' ? (
                   <ExpandActions>
                     <Button type="button" size="sm" variant="ghost" onClick={() => declineIdea(row.id)}>
                       {t.admin.dismiss}
                     </Button>
-                    <Button type="button" size="sm" variant="growth" onClick={() => setEditing(row)}>
-                      {t.admin.suggestedApprove}
-                    </Button>
+                    {row.origin === 'member' ? (
+                      <Button type="button" size="sm" variant="growth" onClick={() => setEditing(row)}>
+                        {t.admin.suggestedApprove}
+                      </Button>
+                    ) : null}
                   </ExpandActions>
                 ) : null}
               </>
@@ -379,6 +417,66 @@ export function RequestsPanel({
           />
         ) : null}
       </Section>
+
+      {plantxEnv !== 'mock' && !scripted ? (
+        <Section>
+          <SectionHead type="button" $open={scansOpen} aria-expanded={scansOpen} onClick={() => setScansOpen((open) => !open)}>
+            <h2>{t.admin.scansNotInCatalog}</h2>
+            <HeadMeta>
+              <span>{scans.length}</span>
+            </HeadMeta>
+          </SectionHead>
+          {scansOpen ? <ReadOnlyNote>{t.admin.scansNotInCatalogLead}</ReadOnlyNote> : null}
+          {scansOpen ? (
+            <AdminTable
+              rows={scans}
+              rowId={(row) => `${row.scientificName}|${row.name}`}
+              empty={t.admin.scansNotInCatalogEmpty}
+              columns={[
+                {
+                  id: 'photo',
+                  header: '',
+                  cell: (row) => (row.thumb ? <ScanThumb src={row.thumb} alt="" /> : null),
+                },
+                { id: 'name', header: t.admin.serverColName, cell: (row) => row.name },
+                { id: 'scientific', header: t.addPlant.factScientific, cell: (row) => row.scientificName || '—', muted: true },
+                {
+                  id: 'scans',
+                  header: t.admin.scansCount,
+                  cell: (row) => t.admin.scansCountValue.replace('{scans}', String(row.scans)).replace('{members}', String(row.members)),
+                },
+                { id: 'when', header: t.admin.serverColWhen, cell: (row) => when(row.lastAt), muted: true },
+              ]}
+            />
+          ) : null}
+        </Section>
+      ) : null}
+
+      {confirmReject ? (
+        <ModalDialog
+          title={t.admin.rejectConfirmTitle.replace('{count}', String(confirmReject.length))}
+          lead={t.admin.rejectConfirmLead}
+          onClose={() => setConfirmReject(null)}
+          footer={
+            <>
+              <Button type="button" variant="ghost" onClick={() => setConfirmReject(null)}>
+                {t.common.cancel}
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => {
+                  const ids = confirmReject
+                  setConfirmReject(null)
+                  void bulkApps(ids, 'reject')
+                }}
+              >
+                {t.admin.reject}
+              </Button>
+            </>
+          }
+        />
+      ) : null}
 
       {editing ? (
         <SuggestionEditorDialog

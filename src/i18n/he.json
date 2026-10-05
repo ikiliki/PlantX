@@ -525,7 +525,10 @@
       "ש׳",
       "א׳"
     ],
-    "dayTasks": "יום {day}, {n} משימות"
+    "dayTasks": "יום {day}, {n} משימות",
+    "prevMonth": "החודש הקודם",
+    "nextMonth": "החודש הבא",
+    "dayTasksFull": "{date}, {n} משימות"
   },
   "addPlant": {
     "title": "הוספת צמח",
@@ -659,7 +662,16 @@
     "guestPhotoLead": "הוסיפו תמונה ומלאו את הפרטים. הצמח נשמר במכשיר הזה עד שתתחברו; זיהוי AI דורש חשבון.",
     "guestDoneBody": "{name} נשמר במכשיר הזה. התחברו והוא יעבור לחממה שלכם.",
     "guestKeep": "התחברו כדי לשמור אותו",
-    "guestLimit": "אורח יכול לשמור {count} צמחים במכשיר הזה. התחברו כדי להוסיף עוד."
+    "guestLimit": "אורח יכול לשמור {count} צמחים במכשיר הזה. התחברו כדי להוסיף עוד.",
+    "suggestOffer": "{name} עדיין לא בקטלוג. להציע אותו?",
+    "suggestYes": "להציע",
+    "suggestNo": "לא עכשיו",
+    "quotaOutTitle": "נגמרו סריקות ה-AI להיום",
+    "quotaOutBody": "הסריקות חוזרות בחצות (שעון ישראל). עדיין אפשר להוסיף את הצמח בבחירה ידנית.",
+    "limitedTitle": "יותר מדי בקשות",
+    "limitedBody": "חכו דקה ונסו שוב.",
+    "quotaNone": "אין סריקות AI להיום. הן חוזרות בחצות (שעון ישראל).",
+    "quotaLeft": "נשארו {left} מתוך {total} סריקות AI להיום"
   },
   "sell": {
     "title": "מכירה / התרבה",
@@ -1228,7 +1240,22 @@
     "newCatalogEntry": "רשומה חדשה בקטלוג",
     "newCatalogEntryTitle": "רשומה חדשה בקטלוג",
     "newCatalogEntryLead": "צרו קטגוריה עם הזן הראשון שלה והמאפיינים. היא נכנסת לקטלוג מיד.",
-    "suggestedFormLeadMember": "חבר הציע את זה. מלאו את פרטי הקטלוג ואז הוסיפו."
+    "suggestedFormLeadMember": "חבר הציע את זה. מלאו את פרטי הקטלוג ואז הוסיפו.",
+    "moderation": "ניהול תוכן",
+    "appActivated": "הופעל",
+    "appActivatedNote": "{name} הופעל/ה ויכול/ה להתחבר.",
+    "appDeclinedNote": "הבקשה של {name} נדחתה.",
+    "appsPendingCount": "{count} ממתינים",
+    "appsPending": "ממתינים ({count})",
+    "appsDecided": "הוחלט ({count})",
+    "scanReadOnly": "מסריקה. למידע בלבד, אף אחד לא ביקש להוסיף.",
+    "scansNotInCatalog": "נסרקו ולא בקטלוג",
+    "scansNotInCatalogLead": "צמחים שחברים סרקו, שאינם בקטלוג ושאף אחד לא הציע. למידע בלבד.",
+    "scansNotInCatalogEmpty": "אין סריקות שלא התבקשו.",
+    "scansCount": "סריקות",
+    "scansCountValue": "{scans} סריקות · {members} חברים",
+    "rejectConfirmTitle": "לדחות {count} בקשות?",
+    "rejectConfirmLead": "הם לא יוכלו להתחבר. אפשר למצוא אותם אחר כך תחת \"הוחלט\"."
   },
   "settings": {
     "title": "הגדרות",
@@ -1236,7 +1263,8 @@
     "region": "מיקום",
     "placeHint": "צמחים חדשים ישתמשו במקום הזה.",
     "role": "סוג חשבון",
-    "logout": "יציאה לדמו"
+    "logout": "התנתקות",
+    "logoutDemo": "יציאה לדמו"
   },
   "feed": {
     "people": "בחממה",
@@ -1320,7 +1348,8 @@
     "serverDown": "השרת כבוי. השינויים לא יישמרו.",
     "retry": "נסה שוב",
     "scrollBack": "גלילה אחורה",
-    "scrollForward": "גלילה קדימה"
+    "scrollForward": "גלילה קדימה",
+    "close": "סגירה"
   },
   "http": {
     "donePhoto": "התמונה נוספה · ‎+{xp} XP",
@@ -1606,5 +1635,114 @@
     "fromScan": "מהסריקה שלכם",
     "fromForm": "הוצע על ידכם",
     "varietyOf": "זן של {category}"
+  },
+  "edit": {
+    "userTitle": "עריכת {name}",
+    "userSaved": "{name} נשמר.",
+    "accountName": "שם החשבון",
+    "nickname": "כינוי",
+    "bio": "ביו (אנגלית)",
+    "bioHe": "ביו (עברית)",
+    "region": "אזור",
+    "failed": "לא ניתן לשמור. נסו שוב.",
+    "plantTitle": "עריכת צמח",
+    "plantLead": "שם והערה. המין, הדירוג וההיסטוריה נשארים כמו שהם.",
+    "plantSaved": "{name} נשמר.",
+    "name": "שם",
+    "note": "הערה"
+  },
+  "scans": {
+    "title": "סריקות AI של {name}",
+    "lead": "לחברים יש מכסה יומית שמתאפסת בחצות שעון ישראל. אפשר לתת תוספת להיום או לשנות את המכסה היומית.",
+    "needsApi": "מכסות סריקה דורשות שרת (QA או פרודקשן).",
+    "reason": "סיבה",
+    "reasonPlaceholder": "רשות, מופיע בהיסטוריה",
+    "extraToday": "סריקות נוספות להיום",
+    "give": "לתת",
+    "extraDone": "{n} סריקות להיום ל{name}.",
+    "dailyLimit": "מכסה יומית",
+    "defaultLimit": "ברירת מחדל",
+    "setLimit": "קביעת מכסה",
+    "limitDone": "המכסה היומית של {name}: {n}.",
+    "failed": "לא ניתן לעדכן סריקות. נסו שוב.",
+    "history": "היסטוריית מכסות",
+    "historyExtra": "{n} תוספת ב-{day}",
+    "historyLimit": "מכסה יומית נקבעה ל-{n}",
+    "column": "סריקות AI היום",
+    "unlimited": "ללא הגבלה"
+  },
+  "moderation": {
+    "edit": "עריכה",
+    "scans": "סריקות",
+    "action": {
+      "hide": "הסתרה",
+      "show": "הצגה",
+      "delete": "מחיקה",
+      "restore": "שחזור"
+    },
+    "confirm": {
+      "hide": "להסתיר את {name}?",
+      "show": "להציג שוב את {name}?",
+      "delete": "למחוק את {name}?",
+      "restore": "לשחזר את {name}?"
+    },
+    "lead": {
+      "hide": "רק מנהלים יראו אותו. אפשר להציג שוב בכל זמן.",
+      "show": "הוא יחזור להיות גלוי לכל מי שראה אותו קודם.",
+      "delete": "הוא ייעלם לכולם. שום דבר לא נמחק לצמיתות, ומנהל יכול לשחזר.",
+      "restore": "הוא יחזור כפי שהיה לפני המחיקה."
+    },
+    "done": {
+      "hide": "{name} הוסתר.",
+      "show": "{name} גלוי שוב.",
+      "delete": "{name} נמחק.",
+      "restore": "{name} שוחזר."
+    },
+    "logLine": {
+      "hide": "{actor} הסתיר/ה את {target}",
+      "show": "{actor} הציג/ה את {target}",
+      "delete": "{actor} מחק/ה את {target}",
+      "restore": "{actor} שחזר/ה את {target}",
+      "edit": "{actor} ערך/ה את {target}"
+    },
+    "alsoHides": "זה גם מסתיר:",
+    "alsoBrings": "זה גם מחזיר:",
+    "nothingElse": "שום דבר אחר לא מושפע.",
+    "countPlants": "{n} צמחים",
+    "countActivities": "{n} פעילויות",
+    "countTodos": "{n} משימות",
+    "doneAlsoHidden": "הוסתרו גם: {list}.",
+    "doneAlsoBack": "חזרו גם: {list}.",
+    "reason": "סיבה",
+    "reasonPlaceholder": "רשות, נשמר ביומן",
+    "failed": "הפעולה נכשלה. נסו שוב.",
+    "loadFailed": "הטעינה נכשלה. נסו שוב.",
+    "search": "חיפוש לפי שם",
+    "empty": "אין תוצאות.",
+    "colName": "שם",
+    "colDetail": "פרטים",
+    "colState": "מצב",
+    "colChanged": "שונה",
+    "typeLabel": "סוג",
+    "types": {
+      "user": "משתמשים",
+      "plant": "צמחים",
+      "activity": "פעילויות"
+    },
+    "stateLabel": "מצב",
+    "filters": {
+      "all": "הכל",
+      "moderated": "שעברו טיפול",
+      "hidden": "מוסתרים",
+      "deleted": "נמחקו"
+    },
+    "state": {
+      "visible": "גלוי",
+      "hidden": "מוסתר",
+      "deleted": "נמחק",
+      "byParent": "מוסתר עם הבעלים"
+    },
+    "log": "יומן ניהול תוכן",
+    "logEmpty": "עדיין אין פעולות."
   }
 }

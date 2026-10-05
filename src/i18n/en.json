@@ -525,7 +525,10 @@
       "Sat",
       "Sun"
     ],
-    "dayTasks": "Day {day}, {n} tasks"
+    "dayTasks": "Day {day}, {n} tasks",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "dayTasksFull": "{date}, {n} tasks"
   },
   "addPlant": {
     "title": "Add a plant",
@@ -659,7 +662,16 @@
     "guestPhotoLead": "Add a photo and fill in the details. Your plant is saved on this device until you log in; AI identify needs an account.",
     "guestDoneBody": "{name} is saved on this device. Log in and it moves into your greenhouse.",
     "guestKeep": "Log in to keep it",
-    "guestLimit": "A guest can keep {count} plants on this device. Log in to add more."
+    "guestLimit": "A guest can keep {count} plants on this device. Log in to add more.",
+    "suggestOffer": "{name} is not in our catalog yet. Suggest it?",
+    "suggestYes": "Suggest it",
+    "suggestNo": "Not now",
+    "quotaOutTitle": "No AI scans left today",
+    "quotaOutBody": "Your scans come back at midnight (Israel time). You can still add the plant by picking it yourself.",
+    "limitedTitle": "Too many requests",
+    "limitedBody": "Wait a minute and try again.",
+    "quotaNone": "No AI scans left today. They come back at midnight (Israel time).",
+    "quotaLeft": "{left} of {total} AI scans left today"
   },
   "sell": {
     "title": "Sell / Propagate",
@@ -1228,7 +1240,22 @@
     "newCatalogEntry": "New catalog entry",
     "newCatalogEntryTitle": "New catalog entry",
     "newCatalogEntryLead": "Create a category with its first variety and properties. It joins the catalog right away.",
-    "suggestedFormLeadMember": "A member suggested this. Fill in the catalog details, then add it."
+    "suggestedFormLeadMember": "A member suggested this. Fill in the catalog details, then add it.",
+    "moderation": "Moderation",
+    "appActivated": "Activated",
+    "appActivatedNote": "{name} is activated and can sign in.",
+    "appDeclinedNote": "{name} was declined.",
+    "appsPendingCount": "{count} waiting",
+    "appsPending": "Pending ({count})",
+    "appsDecided": "Decided ({count})",
+    "scanReadOnly": "From a scan. Info only, nobody asked to add it.",
+    "scansNotInCatalog": "Scanned, not in the catalog",
+    "scansNotInCatalogLead": "Plants members scanned that the catalog does not know and nobody suggested. Info only.",
+    "scansNotInCatalogEmpty": "No unrequested scans.",
+    "scansCount": "Scans",
+    "scansCountValue": "{scans} scans · {members} members",
+    "rejectConfirmTitle": "Reject {count} applications?",
+    "rejectConfirmLead": "They will not be able to sign in. You can find them later under Decided."
   },
   "settings": {
     "title": "Settings",
@@ -1236,7 +1263,8 @@
     "region": "Location",
     "placeHint": "New plants use this place.",
     "role": "Account type",
-    "logout": "Exit to demo login"
+    "logout": "Log out",
+    "logoutDemo": "Exit to demo login"
   },
   "feed": {
     "people": "In the greenhouse",
@@ -1320,7 +1348,8 @@
     "serverDown": "Server is offline. Changes won’t save.",
     "retry": "Retry",
     "scrollBack": "Scroll back",
-    "scrollForward": "Scroll forward"
+    "scrollForward": "Scroll forward",
+    "close": "Close"
   },
   "http": {
     "donePhoto": "Photo added · +{xp} XP",
@@ -1606,5 +1635,114 @@
     "fromScan": "From your scan",
     "fromForm": "Suggested by you",
     "varietyOf": "Variety of {category}"
+  },
+  "edit": {
+    "userTitle": "Edit {name}",
+    "userSaved": "{name} saved.",
+    "accountName": "Account name",
+    "nickname": "Nickname",
+    "bio": "Bio (English)",
+    "bioHe": "Bio (Hebrew)",
+    "region": "Region",
+    "failed": "Could not save. Try again.",
+    "plantTitle": "Edit plant",
+    "plantLead": "Name and note. Species, grade and history stay as they are.",
+    "plantSaved": "{name} saved.",
+    "name": "Name",
+    "note": "Note"
+  },
+  "scans": {
+    "title": "AI scans for {name}",
+    "lead": "Members get a daily allowance that resets at midnight Israel time. Give extras for today or change their daily limit.",
+    "needsApi": "Scan quotas need the API (QA or production).",
+    "reason": "Reason",
+    "reasonPlaceholder": "Optional, shown in the history",
+    "extraToday": "Extra scans today",
+    "give": "Give",
+    "extraDone": "{n} scans today for {name}.",
+    "dailyLimit": "Daily limit",
+    "defaultLimit": "default",
+    "setLimit": "Set limit",
+    "limitDone": "Daily limit for {name}: {n}.",
+    "failed": "Could not update scans. Try again.",
+    "history": "Scan quota history",
+    "historyExtra": "{n} extra on {day}",
+    "historyLimit": "Daily limit set to {n}",
+    "column": "AI scans today",
+    "unlimited": "Unlimited"
+  },
+  "moderation": {
+    "edit": "Edit",
+    "scans": "Scans",
+    "action": {
+      "hide": "Hide",
+      "show": "Show",
+      "delete": "Delete",
+      "restore": "Restore"
+    },
+    "confirm": {
+      "hide": "Hide {name}?",
+      "show": "Show {name} again?",
+      "delete": "Delete {name}?",
+      "restore": "Restore {name}?"
+    },
+    "lead": {
+      "hide": "Nobody but admins will see it. You can show it again any time.",
+      "show": "It becomes visible again to everyone who could see it before.",
+      "delete": "It disappears for everyone. Nothing is erased, and an admin can restore it.",
+      "restore": "It comes back as it was before it was deleted."
+    },
+    "done": {
+      "hide": "{name} is hidden.",
+      "show": "{name} is visible again.",
+      "delete": "{name} is deleted.",
+      "restore": "{name} is restored."
+    },
+    "logLine": {
+      "hide": "{actor} hid {target}",
+      "show": "{actor} showed {target}",
+      "delete": "{actor} deleted {target}",
+      "restore": "{actor} restored {target}",
+      "edit": "{actor} edited {target}"
+    },
+    "alsoHides": "This also hides:",
+    "alsoBrings": "This also brings back:",
+    "nothingElse": "Nothing else is affected.",
+    "countPlants": "{n} plants",
+    "countActivities": "{n} activities",
+    "countTodos": "{n} tasks",
+    "doneAlsoHidden": "Also hidden: {list}.",
+    "doneAlsoBack": "Also back: {list}.",
+    "reason": "Reason",
+    "reasonPlaceholder": "Optional, kept in the moderation log",
+    "failed": "Could not apply. Try again.",
+    "loadFailed": "Could not load. Try again.",
+    "search": "Search by name",
+    "empty": "Nothing matches.",
+    "colName": "Name",
+    "colDetail": "Detail",
+    "colState": "State",
+    "colChanged": "Changed",
+    "typeLabel": "Type",
+    "types": {
+      "user": "Users",
+      "plant": "Plants",
+      "activity": "Activities"
+    },
+    "stateLabel": "State",
+    "filters": {
+      "all": "All",
+      "moderated": "Moderated",
+      "hidden": "Hidden",
+      "deleted": "Deleted"
+    },
+    "state": {
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "deleted": "Deleted",
+      "byParent": "Hidden with owner"
+    },
+    "log": "Moderation log",
+    "logEmpty": "No moderation yet."
   }
 }

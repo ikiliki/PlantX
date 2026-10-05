@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { clientEnv } from '../../theme/plantxEnv'
 import { PageHeader } from '../../app/AppShell/AppShell.styles'
 import { Avatar } from '../../components/Avatar/Avatar'
 import { Button } from '../../components/Button/Button'
@@ -64,7 +65,8 @@ export function SettingsPage() {
           navigate('/login')
         }}
       >
-        {t.settings.logout}
+        {/* Demo wording only where there are demo logins (#20). */}
+        {clientEnv() === 'mock' ? t.settings.logoutDemo : t.settings.logout}
       </Button>
     </div>
   )

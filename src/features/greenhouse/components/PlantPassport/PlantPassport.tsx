@@ -37,8 +37,12 @@ import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
+import { PlantEditDialog } from '../PlantEditDialog/PlantEditDialog'
+import { ModerationDialog, type ModerationRequest } from '../../../admin/components/ModerationDialog/ModerationDialog'
+import { Badge } from '../../../../components/Badge/Badge'
 import {
   ActionRow,
+  ManageRow,
   ActivityBody,
   Aside,
   GreenhouseLabel,
@@ -218,6 +222,9 @@ export function PlantPassport({
   const marketClass = db.marketClasses.find((item) => item.id === plant.marketClassId)
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
   const isOwner = plant.ownerId === ownerId
+  const isAdmin = signedIn && currentUser?.role === 'admin'
+  const [editing, setEditing] = useState(false)
+  const [moderating, setModerating] = useState<ModerationRequest | null>(null)
   const showBuy = Boolean(listing) && !isOwner
   const stage = stageName(plant.stage, {
     mature: t.market.mature,
@@ -423,6 +430,55 @@ export function PlantPassport({
             )}
           </NameBlock>
         </IdentityHead>
+
+          {/* Owner or admin: edit the plant (#68). Admin on someone else's plant: hide or delete it (#69). */}
+          {!embedded && (isOwner || isAdmin) ? (
+            <ManageRow>
+              {plant.visibility ? (
+                <Badge $tone={plant.visibility === 'deleted' ? 'danger' : 'warn'}>
+                  {plant.visibility === 'deleted' ? t.moderation.state.deleted : t.moderation.state.hidden}
+                </Badge>
+              ) : null}
+              <Button size="sm" variant="secondary" type="button" onClick={() => setEditing(true)}>
+                {t.moderation.edit}
+              </Button>
+              {isAdmin && !isOwner ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant={plant.visibility === 'hidden' ? 'growth' : 'ghost'}
+                    type="button"
+                    onClick={() =>
+                      setModerating({
+                        type: 'plant',
+                        id: plant.id,
+                        label: title,
+                        action: plant.visibility === 'hidden' ? 'show' : plant.visibility === 'deleted' ? 'restore' : 'hide',
+                      })
+                    }
+                  >
+                    {plant.visibility === 'hidden'
+                      ? t.moderation.action.show
+                      : plant.visibility === 'deleted'
+                        ? t.moderation.action.restore
+                        : t.moderation.action.hide}
+                  </Button>
+                  {plant.visibility !== 'deleted' ? (
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      type="button"
+                      onClick={() => setModerating({ type: 'plant', id: plant.id, label: title, action: 'delete' })}
+                    >
+                      {t.moderation.action.delete}
+                    </Button>
+                  ) : null}
+                </>
+              ) : null}
+            </ManageRow>
+          ) : null}
+          {editing ? <PlantEditDialog plant={plant} onClose={() => setEditing(false)} /> : null}
+          {moderating ? <ModerationDialog request={moderating} onClose={() => setModerating(null)} /> : null}
 
           {showBuy && !embedded && (
             <ActionRow>

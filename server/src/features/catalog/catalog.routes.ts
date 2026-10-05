@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 import type { Catalog } from '../../../../src/mock/types.ts'
 import { getStore } from '../../db/index.ts'
 import { requireAdmin, requireUser } from '../../lib/session.ts'
+import { assertPhoto } from '../../lib/images.ts'
+import { rateLimit } from '../../lib/rateLimit.ts'
 import { catalogService } from './catalog.service.ts'
 import { catalogSuggestionService } from './catalogSuggestion.service.ts'
 
@@ -25,9 +27,11 @@ catalogRoutes.get('/suggestions/mine', async (c) => {
 })
 
 /** A member's "Suggest a plant" form. */
-catalogRoutes.post('/suggestions', async (c) => {
+catalogRoutes.post('/suggestions', rateLimit({ name: 'suggest', max: 10, windowSeconds: 3600 }), async (c) => {
   const user = await requireUser(c)
   const body = await c.req.json().catch(() => ({}))
+  const photo = (body as { photo?: unknown }).photo
+  if (typeof photo === 'string' && photo) assertPhoto(photo)
   return c.json({ suggestion: await catalogSuggestionService.suggestFromMember(user.id, body) })
 })
 

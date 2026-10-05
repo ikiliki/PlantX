@@ -1,5 +1,5 @@
 import { resolveArea, UNKNOWN_AREA } from '../../../../src/mock/locations.ts'
-import type { IdentifyRequestRecord, Plant } from '../../../../src/mock/types.ts'
+import type { IdentifyRequestRecord, Plant, User } from '../../../../src/mock/types.ts'
 import {
   MAX_PLANT_PHOTOS,
   addedActivityText,
@@ -161,4 +161,91 @@ export const greenhouseService = {
     }
     return row
   },
+
+  /**
+   * Edit a saved plant (#68): the owner, or an admin on anyone's plant. Only these fields change;
+   * owner, status, history, grades and verification stay. A class field the AI had filled is
+   * re-marked kept or changed against the AI's answer, so the passport's ✦ / ✎ stay true.
+   */
+  async update(plantId: string, patch: PlantPatch, editor: Pick<User, 'id' | 'role'>) {
+    const store = getStore()
+    const plants = await store.plants.list()
+    const plant = plants.find((item) => item.id === plantId)
+    if (!plant) throw Errors.missing(`Plant ${plantId} not found`)
+    if (plant.ownerId !== editor.id && editor.role !== 'admin') throw Errors.forbidden('Plant is not yours')
+    const next: Plant = { ...plant }
+    const changed: string[] = []
+    const set = <K extends keyof Plant>(key: K, value: Plant[K] | undefined) => {
+      if (value === undefined || JSON.stringify(plant[key]) === JSON.stringify(value)) return
+      next[key] = value
+      changed.push(String(key))
+    }
+    if (patch.title !== undefined) {
+      const title = patch.title.trim()
+      if (!title) throw Errors.invalid('Title is required')
+      set('title', title.slice(0, 80))
+      set('titleHe', (patch.titleHe ?? title).trim().slice(0, 80) || title)
+    }
+    if (patch.description !== undefined) {
+      set('description', patch.description.trim().slice(0, 600))
+      set('descriptionHe', (patch.descriptionHe ?? patch.description).trim().slice(0, 600))
+    }
+    if (patch.sizeBand !== undefined) {
+      set('sizeBand', patch.sizeBand)
+      set('sizeGrade', patch.sizeBand)
+    }
+    if (patch.stage !== undefined) {
+      set('stage', patch.stage)
+      set('rooting', patch.stage === 'CUT' ? 'unrooted' : patch.stage === 'ROOTED' ? 'rooted' : 'established')
+    }
+    if (patch.quality !== undefined) set('quality', patch.quality)
+    if (patch.traits !== undefined) {
+      const traits = { ...patch.traits }
+      delete traits.area
+      set('traits', traits)
+    }
+    if (patch.photos !== undefined) {
+      const photos = patch.photos.filter(Boolean)
+      if (photos.length === 0) throw Errors.invalid('A plant keeps at least one photo')
+      if (photos.length > MAX_PLANT_PHOTOS) throw Errors.invalid(`A plant has at most ${MAX_PLANT_PHOTOS} photos`)
+      set('photos', photos)
+    }
+    if (changed.length === 0) return { plant, changed }
+    next.identification = remark(next, plant.identification)
+    await store.plants.upsert([next])
+    return { plant: next, changed }
+  },
+}
+
+export type PlantPatch = Partial<
+  Pick<
+    Plant,
+    'title' | 'titleHe' | 'description' | 'descriptionHe' | 'sizeBand' | 'stage' | 'quality' | 'traits' | 'photos'
+  >
+>
+
+/** Kept / changed against the AI's own answer, per field; a plant that drifted from the AI becomes "edited". */
+function remark(plant: Plant, identification: Plant['identification']): Plant['identification'] {
+  if (!identification?.fields) return identification
+  const fields = { ...identification.fields, traits: { ...(identification.fields.traits ?? {}) } }
+  const current: Partial<Record<'size' | 'stage' | 'quality', string | undefined>> = {
+    size: plant.sizeBand,
+    stage: plant.stage,
+    quality: plant.quality || undefined,
+  }
+  for (const key of ['size', 'stage', 'quality'] as const) {
+    const mark = fields[key]
+    if (mark?.aiValue) fields[key] = { ...mark, check: current[key] === mark.aiValue ? 'kept' : 'changed' }
+  }
+  for (const [id, mark] of Object.entries(fields.traits)) {
+    if (mark.aiValue) fields.traits[id] = { ...mark, check: plant.traits?.[id] === mark.aiValue ? 'kept' : 'changed' }
+  }
+  const drifted = [fields.size, fields.stage, fields.quality, ...Object.values(fields.traits)].some(
+    (mark) => mark?.check === 'changed',
+  )
+  return {
+    ...identification,
+    fields,
+    source: identification.source === 'ai' && drifted ? 'edited' : identification.source,
+  }
 }

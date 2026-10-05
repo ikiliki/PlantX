@@ -1,4 +1,5 @@
 import type { ErrorHandler, NotFoundHandler } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { AppError, Errors } from '../lib/errors.ts'
 import { logger } from '../lib/logger.ts'
 
@@ -8,6 +9,8 @@ function requestMeta(c: { req: { method: string; path: string } }) {
 
 function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err
+  // Hono's bodyLimit throws an HTTPException with status 413.
+  if (err && typeof err === 'object' && (err as { status?: number }).status === 413) return Errors.tooLarge()
   if (err instanceof SyntaxError) return Errors.invalid('Malformed JSON')
   return Errors.internal(err instanceof Error ? err.message : 'Unexpected error')
 }
@@ -16,11 +19,15 @@ function toAppError(err: unknown): AppError {
 export const onError: ErrorHandler = (err, c) => {
   const appError = toAppError(err)
   logger.error(appError.message, { ...requestMeta(c), status: appError.status, error: appError.error }, err)
-  return c.json({ error: appError.error, message: appError.message.slice(0, 300) }, appError.status)
+  if (appError.retryAfter) c.header('Retry-After', String(appError.retryAfter))
+  return c.json(
+    { error: appError.error, message: appError.message.slice(0, 300), ...appError.detail },
+    appError.status as ContentfulStatusCode,
+  )
 }
 
 export const onNotFound: NotFoundHandler = (c) => {
   const err = Errors.missing(`No route ${c.req.method} ${c.req.path}`)
   logger.error(err.message, { ...requestMeta(c), status: err.status, error: err.error }, err)
-  return c.json({ error: err.error }, err.status)
+  return c.json({ error: err.error }, err.status as ContentfulStatusCode)
 }

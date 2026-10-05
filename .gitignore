@@ -33,10 +33,6 @@ data/*.json
 !data/.gitkeep
 server/data/*.json
 !server/data/.gitkeep
-server/data-local/*.json
-!server/data-local/.gitkeep
-server/data-prod/*.json
-!server/data-prod/.gitkeep
 
 # Committed demo mock backup for local runs — keep
 !server/fixtures/
@@ -75,3 +71,7 @@ base44/
 # Playwright output
 playwright-report/
 test-results/
+# Old local JSON data (unused; the app reads Supabase only). Kept out of git.
+server/data*/
+.claude/worktrees/
+scripts/_*

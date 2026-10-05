@@ -1,7 +1,9 @@
+import type { VisibilityMeta } from '../../../../src/mock/types.ts'
+
 /** One greenhouse (or market) action that shows in the news feed and on a plant. */
 export type ActivityKind = 'photo' | 'water' | 'propagate' | 'grade' | 'passport' | 'listing' | 'scan' | 'added'
 
-export interface Activity {
+export interface Activity extends VisibilityMeta {
   id: string
   kind: ActivityKind
   userId: string

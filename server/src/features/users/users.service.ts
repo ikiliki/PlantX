@@ -3,6 +3,7 @@ import type { User } from '../../../../src/mock/types.ts'
 import { greenhouseLevel } from '../../../../src/features/greenhouse/greenhouseLevel.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
+import { canSee, stateOf, visibilityIndex, visiblePlants, visibleUsers } from '../../lib/visibility.ts'
 import {
   type AccountStatus,
   type ManagedUser,
@@ -104,8 +105,8 @@ export const usersService = {
       regionHe: UNKNOWN_AREA.regionHe,
       lat: UNKNOWN_AREA.lat,
       lng: UNKNOWN_AREA.lng,
-      bio: 'Approved community grower.',
-      bioHe: 'מגדל קהילה מאושר.',
+      bio: '',
+      bioHe: '',
       rating: 0,
       completedOrders: 0,
       verificationRate: 0,
@@ -142,13 +143,15 @@ export const usersService = {
    * Public greenhouse level: counts and XP only. Care tasks stay private; only how many were done is shared.
    * Same rules as the client (`greenhouseLevel`), so the owner's own card and the public one agree.
    */
-  async level(userId: string) {
+  async level(userId: string, viewer?: Pick<User, 'id' | 'role'>) {
     const store = getStore()
     const users = await store.users.list()
     const user = users.find((item) => item.id === userId && item.role !== 'guest')
-    if (!user) throw Errors.missing(`User ${userId} not found`)
+    if (!user || !canSee(stateOf(user), user.id, viewer)) throw Errors.missing(`User ${userId} not found`)
     const [plants, todos] = await Promise.all([store.plants.list(), store.todos.list()])
-    return greenhouseLevel(userId, plants, todos)
+    // Plants an admin hid do not count toward the public level.
+    const shown = visiblePlants(plants, visibilityIndex(users, plants), viewer)
+    return greenhouseLevel(userId, shown, todos)
   },
 
   /**
@@ -158,7 +161,7 @@ export const usersService = {
   async directory(viewer: User | null) {
     const users = await getStore().users.list()
     const adminView = viewer?.role === 'admin'
-    return users
+    return visibleUsers(users, viewer)
       .filter((user) => user.role !== 'guest')
       .filter((user) => (user.accountStatus ?? 'active') !== 'disabled')
       .filter((user) => adminView || user.role !== 'admin')
@@ -166,13 +169,15 @@ export const usersService = {
   },
 
   /** Every member's public level, keyed by user id. One read of plants and tasks for the whole directory. */
-  async levels() {
+  async levels(viewer?: Pick<User, 'id' | 'role'>) {
     const store = getStore()
     const [users, plants, todos] = await Promise.all([store.users.list(), store.plants.list(), store.todos.list()])
+    const index = visibilityIndex(users, plants)
+    const shown = visiblePlants(plants, index, viewer)
     const levels: Record<string, ReturnType<typeof greenhouseLevel>> = {}
-    for (const user of users) {
+    for (const user of visibleUsers(users, viewer)) {
       if (user.role === 'guest') continue
-      levels[user.id] = greenhouseLevel(user.id, plants, todos)
+      levels[user.id] = greenhouseLevel(user.id, shown, todos)
     }
     return levels
   },

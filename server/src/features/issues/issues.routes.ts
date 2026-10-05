@@ -3,10 +3,11 @@ import { ISSUE_NOTE_WORDS, sanitizeContext, wordCount } from '../../../../src/li
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { requireAdmin, userFromSession } from '../../lib/session.ts'
+import { rateLimit } from '../../lib/rateLimit.ts'
 
 export const issueRoutes = new Hono()
 
-issueRoutes.post('/', async (c) => {
+issueRoutes.post('/', rateLimit({ name: 'issue', max: 10, windowSeconds: 600 }), async (c) => {
   const user = await userFromSession(c)
   const body = (await c.req.json().catch(() => null)) as { note?: unknown; context?: unknown } | null
   const note = typeof body?.note === 'string' ? body.note.trim() : ''

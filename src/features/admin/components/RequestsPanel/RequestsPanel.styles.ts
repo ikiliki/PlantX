@@ -23,3 +23,18 @@ export const IdeasBar = styled.div`
     color: ${theme.colors.muted};
   }
 `
+
+/** A row that can be read but not approved (scan suggestions, #64). */
+export const ReadOnlyNote = styled.p`
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: ${theme.colors.muted};
+`
+
+export const ScanThumb = styled.img`
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: ${theme.radii.sm};
+  object-fit: cover;
+`

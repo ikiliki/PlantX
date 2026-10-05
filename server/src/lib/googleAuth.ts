@@ -1,4 +1,4 @@
-import { createPublicKey, verify, type JsonWebKey, type KeyObject } from 'node:crypto'
+import { createPublicKey, verify, type KeyObject } from 'node:crypto'
 import { Errors } from './errors.ts'
 import { logger } from './logger.ts'
 
@@ -84,7 +84,7 @@ async function fetchKeys() {
   lastFetchAt = Date.now()
   const res = await fetch(GOOGLE_CERTS_URL)
   if (!res.ok) throw new Error(`Google certs HTTP ${res.status}`)
-  const body = (await res.json()) as { keys?: (JsonWebKey & { kid?: string })[] }
+  const body = (await res.json()) as { keys?: (JsonWebKey & { kid?: string; kty?: string })[] }
   const next = new Map<string, KeyObject>()
   for (const jwk of body.keys ?? []) {
     if (jwk.kid && jwk.kty === 'RSA') next.set(jwk.kid, createPublicKey({ key: jwk, format: 'jwk' }))

@@ -974,3 +974,11 @@ export const SetPlace = styled(Link)`
   text-decoration: underline;
   text-underline-offset: 2px;
 `
+
+/** Owner / admin tools under the identity head: Edit, and the admin's Hide / Delete. */
+export const ManageRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+`

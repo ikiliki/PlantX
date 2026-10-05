@@ -5,6 +5,7 @@ import { googleAuthEnabled, googleClientId, verifyGoogleIdToken } from '../../li
 import { checkTestToken, preprodEnabled } from '../../lib/preprod.ts'
 import { requireUser, setSession } from '../../lib/session.ts'
 import { liveService } from '../live/live.service.ts'
+import { rateLimit } from '../../lib/rateLimit.ts'
 import { sessionService } from './session.service.ts'
 
 export const sessionRoutes = new Hono()
@@ -20,6 +21,12 @@ sessionRoutes.get('/google', (c) =>
  * Sign out with `{ userId: null }`. Sign-in by id or email has no password, so it exists only on the
  * local QA database (verification scripts use it); production signs in through Google only.
  */
+/**
+ * Google sign-in attempts per IP (#57). Not on POST /: its passwordless sign-in exists only on local QA,
+ * where e2e signs in once per test and would hit the limit.
+ */
+const signInLimit = rateLimit({ name: 'session', max: 30, windowSeconds: 600, by: 'ip' })
+
 sessionRoutes.post('/', async (c) => {
   const body = (await c.req.json()) as { email?: string; userId?: string | null }
   if (body.userId === null || body.email === '') {
@@ -76,7 +83,7 @@ sessionRoutes.get('/test-login', async (c) => {
   return c.redirect('/greenhouse', 302)
 })
 
-sessionRoutes.post('/google', async (c) => {
+sessionRoutes.post('/google', signInLimit, async (c) => {
   const body = (await c.req.json()) as { credential?: string }
   const profile = await verifyGoogleIdToken(body.credential ?? '')
   const user = await sessionService.loginWithGoogle(profile)
