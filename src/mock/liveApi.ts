@@ -57,12 +57,15 @@ export type LivePayload = {
 
 /** Cold production calls the hosted database across regions, so 4s was aborting a live answer. */
 const REQUEST_TIMEOUT_MS = 20000
+/**
+ * A write keeps going on the server after the browser gives up, so a short timeout reported
+ * "Something went wrong" for an approval that had succeeded (#7). Writes wait as long as the function can run.
+ */
+const WRITE_TIMEOUT_MS = 90_000
 
-async function requestOutcome<T>(
-  path: string,
-  init?: RequestInit,
-  timeoutMs = REQUEST_TIMEOUT_MS,
-): Promise<ApiOutcome<T>> {
+async function requestOutcome<T>(path: string, init?: RequestInit, timeout?: number): Promise<ApiOutcome<T>> {
+  const method = (init?.method ?? 'GET').toUpperCase()
+  const timeoutMs = timeout ?? (method === 'GET' || method === 'HEAD' ? REQUEST_TIMEOUT_MS : WRITE_TIMEOUT_MS)
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), timeoutMs)
   try {

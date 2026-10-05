@@ -1,4 +1,5 @@
 import type { ErrorHandler, NotFoundHandler } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { AppError, Errors } from '../lib/errors.ts'
 import { logger } from '../lib/logger.ts'
 
@@ -16,11 +17,11 @@ function toAppError(err: unknown): AppError {
 export const onError: ErrorHandler = (err, c) => {
   const appError = toAppError(err)
   logger.error(appError.message, { ...requestMeta(c), status: appError.status, error: appError.error }, err)
-  return c.json({ error: appError.error, message: appError.message.slice(0, 300) }, appError.status)
+  return c.json({ error: appError.error, message: appError.message.slice(0, 300) }, appError.status as ContentfulStatusCode)
 }
 
 export const onNotFound: NotFoundHandler = (c) => {
   const err = Errors.missing(`No route ${c.req.method} ${c.req.path}`)
   logger.error(err.message, { ...requestMeta(c), status: err.status, error: err.error }, err)
-  return c.json({ error: err.error }, err.status)
+  return c.json({ error: err.error }, err.status as ContentfulStatusCode)
 }

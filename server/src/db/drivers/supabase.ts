@@ -68,14 +68,6 @@ export function createSupabaseStore(): PlantxStore {
     ssl: local || url.includes('sslmode=') ? undefined : { rejectUnauthorized: false },
   })
 
-  void pool
-    .query(`
-      alter table plants drop constraint if exists plants_quality_check;
-      alter table plants alter column quality drop not null;
-      alter table plants add constraint plants_quality_check check (quality is null or quality in ('S', 'A', 'B', 'C', 'D'));
-    `)
-    .catch(() => undefined)
-
   async function rows(client: PoolClient, sql: string, params: unknown[] = []) {
     const result = await client.query(sql, params)
     return result.rows as SqlRow[]

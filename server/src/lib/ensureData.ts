@@ -141,7 +141,14 @@ export async function ensureBootstrapAdmin() {
   }
   row.role = 'admin'
   row.accountStatus = 'active'
-  if (email) row.email = email
+  // Never rewrite an existing admin email at startup: a typo in the env var would lock the operator out.
+  // Only a verified Google sign-in with the configured address claims the row (session.service.ts).
+  if (email && !row.email) row.email = email
+  else if (email && row.email?.toLowerCase() !== email) {
+    logger.warn('PLANTX_BOOTSTRAP_ADMIN_EMAIL does not match the admin account; leaving the account email as it is', {
+      adminId: row.id,
+    })
+  }
   if (!row.name) row.name = BOOTSTRAP_ADMIN.name
   if (!row.nameHe) row.nameHe = BOOTSTRAP_ADMIN.nameHe
 

@@ -26,6 +26,8 @@ concurrency:
 
 jobs:
   e2e:
+    # Its own check name, so "e2e" on a PR always means the PR suite (pr-e2e.yml).
+    name: pp-e2e
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.deployment_status.state == 'success' &&

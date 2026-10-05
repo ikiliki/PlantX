@@ -3,19 +3,6 @@ import type { IssueReport, IssueStatus } from '../../../../src/lib/issueReport.t
 import { sanitizeContext } from '../../../../src/lib/issueReport.ts'
 import type { PlantxStore } from '../store.ts'
 
-const ENSURE_TABLE = `
-create table if not exists issue_reports (
-  id text primary key,
-  created_at timestamptz not null default now(),
-  user_id text references users (id) on delete set null,
-  note text not null default '',
-  status text not null default 'open' check (status in ('open', 'resolved', 'dismissed')),
-  context jsonb not null
-)`
-
-const ENSURE_INDEX = `
-create index if not exists issue_reports_created_at_idx on issue_reports (created_at desc)`
-
 function rowOf(row: Record<string, unknown>): IssueReport | null {
   const context = sanitizeContext(row.context)
   if (!context) return null
@@ -33,16 +20,8 @@ function rowOf(row: Record<string, unknown>): IssueReport | null {
 }
 
 export function supabaseIssueReports(pool: pg.Pool): PlantxStore['issueReports'] {
-  let ready: Promise<void> | undefined
-
-  function ensure() {
-    ready ??= pool.query(ENSURE_TABLE).then(() => pool.query(ENSURE_INDEX)).then(() => undefined)
-    return ready
-  }
-
   return {
     async list() {
-      await ensure()
       const result = await pool.query(
         `select r.*, u.name as user_name
          from issue_reports r
@@ -54,7 +33,6 @@ export function supabaseIssueReports(pool: pg.Pool): PlantxStore['issueReports']
     },
 
     async add({ userId, note, context }) {
-      await ensure()
       const id = `issue-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
       const result = await pool.query(
         `insert into issue_reports (id, user_id, note, context)
@@ -73,7 +51,6 @@ export function supabaseIssueReports(pool: pg.Pool): PlantxStore['issueReports']
     },
 
     async setStatus(id, status) {
-      await ensure()
       await pool.query(`update issue_reports set status = $2 where id = $1 and status = 'open'`, [id, status])
     },
   }
