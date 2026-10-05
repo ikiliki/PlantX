@@ -118,7 +118,7 @@ export function createSeed(): MockDb {
         id: 'u-admin',
         name: 'Omri',
         nameHe: 'עומרי',
-        email: 'omri96david@gmail.com',
+        email: 'operator@plantx.dev',
         role: 'admin',
         region: 'Central Israel',
         regionHe: 'מרכז',

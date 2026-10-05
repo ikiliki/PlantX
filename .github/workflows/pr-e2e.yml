@@ -39,6 +39,9 @@ jobs:
         run: npm run qa:up
 
       - name: Start QA API and web
+        env:
+          # Not a real client: lets e2e/auth.spec.ts check that forged Google tokens are rejected.
+          GOOGLE_CLIENT_ID: plantx-e2e.apps.googleusercontent.com
         run: |
           nohup npm run dev:qa > qa.log 2>&1 &
           for i in $(seq 1 90); do

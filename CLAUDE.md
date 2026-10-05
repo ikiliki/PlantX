@@ -69,6 +69,5 @@ Hard rules:
 ## Known issues (follow-ups)
 
 - **Auth:** `POST /api/session` with `{ userId }` or `{ email }` still signs in without a password on QA (local Docker; verification scripts use it). Production rejects it (`server/src/features/session/session.routes.ts`).
-- **Auth:** Google token check falls back to unverified claims when tokeninfo is unreachable (`server/src/lib/googleAuth.ts`).
 - `.env.example` still mentions Plant.id / `KINDWISE_API_KEY` (removed). `scripts/smoke.mjs` visits routes that no longer exist.
 - Legacy JSON dirs (`data/`, `server/data*`) and root `mock/catalog.json` are unused. `esbuild` is used by `build-prod.mjs` but not declared.

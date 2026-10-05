@@ -1,4 +1,5 @@
-import { AppError, Errors } from './errors.ts'
+import { createPublicKey, verify, type JsonWebKey, type KeyObject } from 'node:crypto'
+import { Errors } from './errors.ts'
 import { logger } from './logger.ts'
 
 export type GoogleProfile = {
@@ -19,7 +20,14 @@ type GoogleClaims = {
   sub?: string
 }
 
+type JwtHeader = { alg?: string; kid?: string }
+
 const GOOGLE_ISSUERS = new Set(['accounts.google.com', 'https://accounts.google.com'])
+const GOOGLE_CERTS_URL = 'https://www.googleapis.com/oauth2/v3/certs'
+/** Used when Google sends no max-age. Google rotates keys about weekly and keeps old ones listed. */
+const DEFAULT_KEYS_TTL_MS = 60 * 60 * 1000
+/** A token signed with a key we have not seen refetches at most this often. */
+const REFETCH_GAP_MS = 60 * 1000
 
 /** Google OAuth Web client id (same value as VITE_GOOGLE_CLIENT_ID). */
 export function googleClientId() {
@@ -30,12 +38,18 @@ export function googleAuthEnabled() {
   return Boolean(googleClientId())
 }
 
-function decodeJwtPayload(credential: string): GoogleClaims {
-  const parts = credential.split('.')
-  if (parts.length !== 3) throw Errors.auth('Invalid Google credential')
+/**
+ * Local development only: a locked-down machine that cannot reach Google may skip the signature.
+ * Ignored on every Vercel deployment (production and PP previews).
+ */
+function insecureLocalAllowed() {
+  return process.env.PLANTX_GOOGLE_INSECURE_LOCAL === '1' && !process.env.VERCEL
+}
+
+function decodePart<T>(part: string | undefined): T {
+  if (!part) throw Errors.auth('Invalid Google credential')
   try {
-    const json = Buffer.from(parts[1]!, 'base64url').toString('utf8')
-    return JSON.parse(json) as GoogleClaims
+    return JSON.parse(Buffer.from(part, 'base64url').toString('utf8')) as T
   } catch {
     throw Errors.auth('Invalid Google credential')
   }
@@ -62,41 +76,70 @@ function profileFromClaims(payload: GoogleClaims, clientId: string): GoogleProfi
   }
 }
 
-async function verifyViaTokenInfo(credential: string, clientId: string): Promise<GoogleProfile> {
-  const url = new URL('https://oauth2.googleapis.com/tokeninfo')
-  url.searchParams.set('id_token', credential)
-  const res = await fetch(url)
-  if (!res.ok) throw Errors.auth('Invalid Google credential')
-  return profileFromClaims((await res.json()) as GoogleClaims, clientId)
+let keys = new Map<string, KeyObject>()
+let keysExpireAt = 0
+let lastFetchAt = 0
+
+async function fetchKeys() {
+  lastFetchAt = Date.now()
+  const res = await fetch(GOOGLE_CERTS_URL)
+  if (!res.ok) throw new Error(`Google certs HTTP ${res.status}`)
+  const body = (await res.json()) as { keys?: (JsonWebKey & { kid?: string })[] }
+  const next = new Map<string, KeyObject>()
+  for (const jwk of body.keys ?? []) {
+    if (jwk.kid && jwk.kty === 'RSA') next.set(jwk.kid, createPublicKey({ key: jwk, format: 'jwk' }))
+  }
+  if (next.size === 0) throw new Error('Google certs had no RSA keys')
+  const maxAge = Number(res.headers.get('cache-control')?.match(/max-age=(\d+)/)?.[1])
+  keys = next
+  keysExpireAt = Date.now() + (maxAge > 0 ? maxAge * 1000 : DEFAULT_KEYS_TTL_MS)
 }
 
-function isNetworkFailure(err: unknown) {
-  if (!(err instanceof Error)) return false
-  if (err instanceof AppError) return false
-  return /fetch failed|certificate|ECONN|ENOTFOUND|TLS|UNABLE_TO_VERIFY/i.test(
-    `${err.message} ${err.cause instanceof Error ? err.cause.message : ''}`,
-  )
+/** Google's signing key for `kid`. Unknown or unreachable → the sign-in fails. */
+async function signingKey(kid: string) {
+  const stale = Date.now() >= keysExpireAt
+  const unseen = !keys.has(kid) && Date.now() - lastFetchAt >= REFETCH_GAP_MS
+  if (stale || unseen) {
+    try {
+      await fetchKeys()
+    } catch (err) {
+      logger.warn('Google signing keys unreachable; refusing sign-in', undefined, err)
+      throw Errors.auth('Google sign-in is unavailable right now. Try again in a minute.')
+    }
+  }
+  const key = keys.get(kid)
+  if (!key) throw Errors.auth('Invalid Google credential')
+  return key
 }
 
 /**
- * Verify a Google Identity Services ID token.
- * Prefers Google tokeninfo; if TLS/network blocks Google (common on locked-down Windows),
- * falls back to local JWT claim checks (aud/iss/exp/email) for local development.
+ * Verify a Google Identity Services ID token: RS256 signature against Google's published keys,
+ * then audience, issuer, expiry and verified email. There is no unsigned fallback.
  */
 export async function verifyGoogleIdToken(credential: string): Promise<GoogleProfile> {
   const clientId = googleClientId()
   if (!clientId) throw Errors.invalid('Google sign-in is not configured')
-  if (!credential.trim()) throw Errors.invalid('Missing Google credential')
+  const token = credential.trim()
+  if (!token) throw Errors.invalid('Missing Google credential')
 
-  try {
-    return await verifyViaTokenInfo(credential, clientId)
-  } catch (err) {
-    if (err instanceof AppError) throw err
-    if (!isNetworkFailure(err)) throw Errors.auth('Invalid Google credential')
+  const parts = token.split('.')
+  if (parts.length !== 3) throw Errors.auth('Invalid Google credential')
+  const header = decodePart<JwtHeader>(parts[0])
+  const claims = decodePart<GoogleClaims>(parts[1])
 
-    logger.info('Google tokeninfo unreachable; validating ID token claims locally', {
-      reason: err instanceof Error ? err.message : 'network',
-    })
-    return profileFromClaims(decodeJwtPayload(credential), clientId)
+  if (insecureLocalAllowed()) {
+    logger.warn('PLANTX_GOOGLE_INSECURE_LOCAL=1: Google signature not checked (local only)')
+    return profileFromClaims(claims, clientId)
   }
+
+  if (header.alg !== 'RS256' || !header.kid) throw Errors.auth('Invalid Google credential')
+  const key = await signingKey(header.kid)
+  const signed = verify(
+    'RSA-SHA256',
+    Buffer.from(`${parts[0]}.${parts[1]}`),
+    key,
+    Buffer.from(parts[2]!, 'base64url'),
+  )
+  if (!signed) throw Errors.auth('Invalid Google credential')
+  return profileFromClaims(claims, clientId)
 }

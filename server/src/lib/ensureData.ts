@@ -9,15 +9,14 @@ import { activityService } from '../features/activity/activity.service.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
 import { todoService } from '../features/todo/todo.service.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
-import { plantxDb, plantxEnv, plantxEnvLabel, plantxSeed } from './env.ts'
+import { bootstrapAdminEmail, plantxDb, plantxEnv, plantxEnvLabel, plantxSeed } from './env.ts'
 import { logger } from './logger.ts'
 
-/** Default empty-live operator — Gmail SSO only (no password). */
-export const BOOTSTRAP_ADMIN: User = {
+/** Default empty-live operator — Gmail SSO only (no password). The email comes from env. */
+const BOOTSTRAP_ADMIN: User = {
   id: 'u-admin',
   name: 'Omri',
   nameHe: 'עומרי',
-  email: 'omri96david@gmail.com',
   role: 'admin',
   region: 'Central Israel',
   regionHe: 'מרכז',
@@ -32,6 +31,14 @@ export const BOOTSTRAP_ADMIN: User = {
   avatarColor: '#1FA85A',
   friendIds: [],
   accountStatus: 'active',
+}
+
+/** A fresh operator row, with `PLANTX_BOOTSTRAP_ADMIN_EMAIL` when it is set. */
+export function bootstrapAdmin(): User {
+  const user = structuredClone(BOOTSTRAP_ADMIN)
+  const email = bootstrapAdminEmail()
+  if (email) user.email = email
+  return user
 }
 
 /** One catalog photo so an empty world is not a blank catalog. */
@@ -64,7 +71,7 @@ function readFixture<T>(name: string): T {
 
 async function seedEmpty(store: PlantxStore) {
   await store.system.save(DEFAULT_SYSTEM)
-  await store.users.saveAll([structuredClone(BOOTSTRAP_ADMIN)])
+  await store.users.saveAll([bootstrapAdmin()])
   await store.catalog.save({
     categories: [EXAMPLE_CATEGORY],
     subcategories: [EXAMPLE_SUBCATEGORY],
@@ -107,37 +114,36 @@ async function ensureExampleCatalog(store: PlantxStore) {
   logger.info('Restored the example category and subcategory')
 }
 
-/** Always keep the bootstrap Gmail as the sole active admin (empty or demo). */
+/**
+ * Keep one active admin: the row with the bootstrap email (env), else `u-admin`.
+ * Without the env var the existing admin row keeps its role and email, and Google grants no admin.
+ */
 export async function ensureBootstrapAdmin() {
   const store = getStore()
   const users = await store.users.list()
   if (users.length === 0) {
-    await store.users.saveAll([structuredClone(BOOTSTRAP_ADMIN)])
+    await store.users.saveAll([bootstrapAdmin()])
     return
   }
-  const email = (BOOTSTRAP_ADMIN.email ?? '').toLowerCase()
-  let row = users.find((user) => user.email?.toLowerCase() === email)
+  const email = bootstrapAdminEmail()
+  let row = email ? users.find((user) => user.email?.toLowerCase() === email) : undefined
   if (!row) {
-    row = users.find((user) => user.id === 'u-admin')
-    if (row) {
+    row = users.find((user) => user.id === BOOTSTRAP_ADMIN.id)
+    if (row && email) {
       row.name = BOOTSTRAP_ADMIN.name
       row.nameHe = BOOTSTRAP_ADMIN.nameHe
-      row.email = BOOTSTRAP_ADMIN.email
-      row.role = 'admin'
-      row.accountStatus = 'active'
       row.bio = BOOTSTRAP_ADMIN.bio
       row.bioHe = BOOTSTRAP_ADMIN.bioHe
-    } else {
-      users.push(structuredClone(BOOTSTRAP_ADMIN))
+    } else if (!row) {
+      users.push(bootstrapAdmin())
       row = users[users.length - 1]
     }
-  } else {
-    row.role = 'admin'
-    row.accountStatus = 'active'
-    row.email = BOOTSTRAP_ADMIN.email
-    if (!row.name) row.name = BOOTSTRAP_ADMIN.name
-    if (!row.nameHe) row.nameHe = BOOTSTRAP_ADMIN.nameHe
   }
+  row.role = 'admin'
+  row.accountStatus = 'active'
+  if (email) row.email = email
+  if (!row.name) row.name = BOOTSTRAP_ADMIN.name
+  if (!row.nameHe) row.nameHe = BOOTSTRAP_ADMIN.nameHe
 
   if (plantxEnv() !== 'mock') {
     for (const user of users) {
