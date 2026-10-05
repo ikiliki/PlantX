@@ -43,13 +43,23 @@ export const test = base.extend<{ identify: { answer: (next: IdentifyAnswer) => 
 
 export { expect }
 
-/** QA: the session route. PP: the test-login route with the token. */
+/** Session cookies per user, kept for the worker: PP's firewall answers 403 after ~45 logins in a run. */
+const sessions = new Map<string, Awaited<ReturnType<ReturnType<Page['context']>['cookies']>>>()
+
+/** QA: the session route. PP: the test-login route with the token. Signs in once per user, then reuses the cookie. */
 export async function signIn(page: Page, userId = ADMIN) {
+  const cached = sessions.get(userId)
+  if (cached) {
+    await page.context().addCookies(cached)
+    return
+  }
   const token = process.env.PLANTX_TEST_TOKEN?.trim()
   const res = token
     ? await page.request.post('/api/session/test-login', { headers: { 'X-Test-Token': token }, data: { userId } })
     : await page.request.post('/api/session', { data: { userId } })
-  expect(res.ok(), `sign in as ${userId}: HTTP ${res.status()}`).toBeTruthy()
+  const detail = res.ok() ? '' : ` ${(await res.text().catch(() => '')).slice(0, 200)}`
+  expect(res.ok(), `sign in as ${userId}: HTTP ${res.status()}${detail}`).toBeTruthy()
+  sessions.set(userId, await page.context().cookies())
 }
 
 /** A route shows real content, not a blank page or the error boundary. */
