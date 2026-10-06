@@ -133,7 +133,7 @@ export function GreenhouseLevelView({
             onClick={() => toggle('info')}
             data-level-info
           >
-            !
+            ?
           </InfoButton>
         </TopActions>
       </Top>
