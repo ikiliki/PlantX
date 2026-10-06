@@ -21,14 +21,14 @@ export const Caret = styled.button<{ $open?: boolean }>`
   padding: 0;
   border: 0;
   background: transparent;
-  color: ${theme.colors.muted};
+  color: ${theme.surface.barMuted};
   cursor: pointer;
   transform: rotate(${({ $open }) => ($open ? 180 : 0)}deg);
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     color ${theme.motion.fast} ${theme.motion.ease};
   &:hover {
-    color: ${theme.colors.forest};
+    color: ${theme.surface.barInk};
   }
 `
 

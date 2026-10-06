@@ -15,13 +15,13 @@ export const Bell = styled.button<{ $open?: boolean }>`
   padding: 0;
   border: 0;
   border-radius: ${theme.radii.pill};
-  background: ${({ $open }) => ($open ? theme.colors.chipGreen : 'transparent')};
-  color: ${theme.colors.forest};
+  background: ${({ $open }) => ($open ? theme.surface.barActive : 'transparent')};
+  color: ${theme.surface.barInk};
   cursor: pointer;
-  box-shadow: ${({ $open }) => ($open ? `0 0 0 3px ${theme.colors.chipGreen}` : 'none')};
+  box-shadow: none;
 
   &:hover {
-    background: ${theme.colors.chipGreen};
+    background: ${theme.surface.barActive};
   }
 
   &:focus-visible {

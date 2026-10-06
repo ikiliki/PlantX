@@ -53,7 +53,7 @@ export const NavItems = styled.nav`
   @media (min-width: ${theme.breakpoints.md}) {
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 4px;
     min-width: 0;
     overflow: visible;
   }
@@ -78,29 +78,21 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 6px 0;
+  min-height: ${theme.control.sm};
+  padding: 0 14px;
+  border-radius: ${theme.radii.control};
+  background: ${({ $active }) => ($active ? theme.surface.barActive : 'transparent')};
   font-family: ${theme.fonts.body};
   font-size: 14px;
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
   white-space: nowrap;
   color: ${({ $active }) => ($active ? theme.surface.barInk : theme.surface.barMuted)};
-  transition: color ${theme.motion.fast} ${theme.motion.ease};
-  &::after {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: 2px;
-    border-radius: ${theme.radii.pill};
-    background: ${theme.surface.barInk};
-    transform: scaleX(${({ $active }) => ($active ? 1 : 0)});
-    transition: transform ${theme.motion.base} ${theme.motion.ease};
-  }
+  transition:
+    color ${theme.motion.fast} ${theme.motion.ease},
+    background ${theme.motion.fast} ${theme.motion.ease};
   &:hover {
     color: ${theme.surface.barInk};
-  }
-  &:hover::after {
-    transform: scaleX(1);
+    background: ${({ $active }) => ($active ? theme.surface.barActive : 'rgba(255, 255, 255, 0.06)')};
   }
 `
 
@@ -266,9 +258,9 @@ export const LoginButton = styled(Link)`
   justify-content: center;
   min-height: 40px;
   padding: 0 18px;
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.forest};
-  color: ${theme.colors.creamCard};
+  border-radius: ${theme.radii.control};
+  background: ${theme.colors.growth};
+  color: ${theme.colors.forest};
   font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
@@ -279,8 +271,7 @@ export const LoginButton = styled(Link)`
     box-shadow ${theme.motion.base} ${theme.motion.ease},
     transform ${theme.motion.fast} ${theme.motion.spring};
   &:hover {
-    background: ${theme.colors.forestMid};
-    box-shadow: ${theme.shadow.lift};
+    filter: brightness(1.06);
   }
   &:focus-visible {
     outline: 2px solid ${theme.colors.growth};
@@ -294,9 +285,9 @@ export const LoginLink = styled(Link)`
   border-radius: ${theme.radii.pill};
   font-size: 14px;
   font-weight: 700;
-  color: ${theme.colors.forest};
+  color: ${theme.surface.barInk};
   white-space: nowrap;
   &:hover {
-    background: ${theme.colors.chipGreen};
+    background: rgba(255, 255, 255, 0.08);
   }
 `
