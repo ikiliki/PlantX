@@ -33,6 +33,7 @@ const context: IssueContext = {
   network: '4g',
   online: true,
   at: '2026-10-02T09:00:00.000Z',
+  requestId: '',
 }
 
 const items: HttpNotice[] = [{ id: 1, tone: 'fail', context }]

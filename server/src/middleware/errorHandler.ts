@@ -1,10 +1,12 @@
-import type { ErrorHandler, NotFoundHandler } from 'hono'
+import type { Context, ErrorHandler, NotFoundHandler } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { AppError, Errors } from '../lib/errors.ts'
 import { logger } from '../lib/logger.ts'
+import { recordFailure } from '../lib/observability.ts'
 
-function requestMeta(c: { req: { method: string; path: string } }) {
-  return { method: c.req.method, path: c.req.path }
+function requestMeta(c: Context) {
+  const requestId = (c.get as (key: string) => unknown)('requestId') as string | undefined
+  return { method: c.req.method, path: c.req.path, requestId }
 }
 
 function toAppError(err: unknown): AppError {
@@ -15,10 +17,16 @@ function toAppError(err: unknown): AppError {
   return Errors.internal(err instanceof Error ? err.message : 'Unexpected error')
 }
 
-/** Logs once, maps to `{ error }` JSON. Handlers and services only throw. */
-export const onError: ErrorHandler = (err, c) => {
+/** Logs once, maps to `{ error }` JSON. Handlers and services only throw. A 5xx is counted and alerted (#56). */
+export const onError: ErrorHandler = async (err, c) => {
   const appError = toAppError(err)
-  logger.error(appError.message, { ...requestMeta(c), status: appError.status, error: appError.error }, err)
+  const meta = requestMeta(c)
+  if (appError.status >= 500) {
+    logger.error(appError.message, { ...meta, status: appError.status, error: appError.error }, err)
+    await recordFailure('server', appError.message, meta)
+  } else {
+    logger.warn(appError.message, { ...meta, status: appError.status, error: appError.error })
+  }
   if (appError.retryAfter) c.header('Retry-After', String(appError.retryAfter))
   return c.json(
     { error: appError.error, message: appError.message.slice(0, 300), ...appError.detail },
@@ -28,6 +36,6 @@ export const onError: ErrorHandler = (err, c) => {
 
 export const onNotFound: NotFoundHandler = (c) => {
   const err = Errors.missing(`No route ${c.req.method} ${c.req.path}`)
-  logger.error(err.message, { ...requestMeta(c), status: err.status, error: err.error }, err)
+  logger.warn(err.message, { ...requestMeta(c), status: err.status, error: err.error })
   return c.json({ error: err.error }, err.status as ContentfulStatusCode)
 }

@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
@@ -36,6 +36,31 @@ function siteSplitRoutes() {
 
 const siteSplit = siteSplitRoutes()
 
+/**
+ * Headers for the static site (#88). The API sets its own (secureHeaders in server/src/app.ts).
+ * The CSP only limits framing, <base> and plugins: it never blocks a script, style, font, image or tile host,
+ * so Google sign-in, Leaflet tiles and photo hosts keep working. Vercel serves static files with
+ * `Access-Control-Allow-Origin: *`; this narrows it to the app's own origin.
+ */
+function staticHeaders() {
+  const env = { ...loadEnv('production', root, 'VITE_'), ...process.env }
+  const origin = env.VITE_APP_URL ? new URL(env.VITE_APP_URL).origin : env.VERCEL_URL ? `https://${env.VERCEL_URL}` : null
+  return {
+    'Content-Security-Policy': "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+    'X-Frame-Options': 'DENY',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'geolocation=(), microphone=(), payment=()',
+    ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
+  }
+}
+
+/** The newest migration in the repo, baked into the function for Admin → System health (#56). */
+async function latestMigration() {
+  const files = (await readdir(path.join(root, 'supabase', 'migrations'))).filter((name) => name.endsWith('.sql')).sort()
+  return files.at(-1)?.split('_')[0] ?? ''
+}
+
 function run(command) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, {
@@ -63,6 +88,7 @@ await build({
   packages: 'bundle',
   external: ['pg-native'],
   logLevel: 'info',
+  define: { 'process.env.PLANTX_LATEST_MIGRATION': JSON.stringify(await latestMigration()) },
   footer: { js: 'module.exports = module.exports.default;' },
 })
 await writeFile(
@@ -81,6 +107,7 @@ await writeFile(
   JSON.stringify({
     version: 3,
     routes: [
+      { src: '/(?!api(?:/|$))(.*)', headers: staticHeaders(), continue: true },
       ...siteSplit.before,
       { handle: 'filesystem' },
       ...siteSplit.after,

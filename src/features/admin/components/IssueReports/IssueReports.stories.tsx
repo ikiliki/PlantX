@@ -37,6 +37,7 @@ const sample: IssueReport = {
     network: '4g',
     online: true,
     at: '2026-10-02T09:15:00.000Z',
+    requestId: '',
   },
 }
 

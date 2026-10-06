@@ -174,6 +174,19 @@ export function createSupabaseStore(): PlantxStore {
       get: () => withTx(getSystem),
       save: (system) => withTx((client) => saveSystem(client, system)),
     },
+    health: async () => {
+      const client = await pool.connect()
+      try {
+        await client.query('select 1')
+        // The Supabase CLI records applied migrations here; a database migrated another way has no row.
+        const applied = await client
+          .query('select version from supabase_migrations.schema_migrations order by version desc limit 1')
+          .catch(() => null)
+        return { migration: applied?.rows[0]?.version ? String(applied.rows[0].version) : null }
+      } finally {
+        client.release()
+      }
+    },
     identifyRequests: supabaseIdentifyRequests(pool),
     issueReports: supabaseIssueReports(pool),
     scanQuota: supabaseScanQuota(pool),

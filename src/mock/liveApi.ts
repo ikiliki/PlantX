@@ -104,8 +104,12 @@ export function fetchEnv() {
     env: 'mock' | 'qa' | 'prod'
     seed: 'empty' | 'demo'
     label: string
-    missing: EnvGap[]
   }>('/api/env')
+}
+
+/** Admin only: API, database, migrations, identify keys (set or not) and error counts (#56). */
+export function fetchSystemHealthOutcome() {
+  return requestOutcome<{ health: import('./types').SystemHealth }>('/api/system/health')
 }
 
 export function fetchLive() {

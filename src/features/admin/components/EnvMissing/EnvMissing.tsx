@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { fetchEnv } from '../../../../mock/liveApi'
+import { fetchSystemHealthOutcome } from '../../../../mock/liveApi'
 import type { EnvGap } from '../../../../mock/liveApi'
 import { Box } from './EnvMissing.styles'
 
@@ -18,10 +18,10 @@ export function EnvMissing({ names }: { names?: EnvGap[] }) {
   useEffect(() => {
     if (names) return
     let cancel = false
-    void fetchEnv().then((env) => {
-      if (cancel || !env) return
+    void fetchSystemHealthOutcome().then((res) => {
+      if (cancel || !res.ok) return
       const seen = new Set<string>()
-      const next = [...clientGaps(), ...(env.missing ?? [])].filter((gap) => {
+      const next = [...clientGaps(), ...res.data.health.missing].filter((gap) => {
         if (seen.has(gap.name)) return false
         seen.add(gap.name)
         return true

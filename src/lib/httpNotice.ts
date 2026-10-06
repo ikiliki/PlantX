@@ -1,3 +1,4 @@
+import { clientEnv } from '../theme/plantxEnv'
 import { sanitizeContext, type IssueContext, type IssueKind } from './issueReport'
 
 export type NoticeTone = 'fail' | 'done'
@@ -90,6 +91,9 @@ export function notifyInfo(title: string, detail?: string) {
   emit()
 }
 
+/** The API's id for the latest response, so a crash report can point at the last call before it. */
+let lastRequestId = ''
+
 function reportError(input: {
   kind: IssueKind
   status: number
@@ -98,8 +102,9 @@ function reportError(input: {
   message: string
   stack: string
   response: string
+  requestId?: string
 }) {
-  push({ ...browserFields(), ...input })
+  push({ ...browserFields(), ...input, requestId: input.requestId ?? lastRequestId })
 }
 
 function messageFromBody(raw: string) {
@@ -119,6 +124,8 @@ export function plantFetch(path: string, init?: RequestInit) {
   const clean = path.split('?')[0] || path
   return fetch(path, init).then(
     async (res) => {
+      const requestId = res.headers.get('x-request-id') ?? ''
+      if (requestId) lastRequestId = requestId
       if (res.status >= 500) {
         const raw = await res.clone().text().catch(() => '')
         reportError({
@@ -129,6 +136,7 @@ export function plantFetch(path: string, init?: RequestInit) {
           message: messageFromBody(raw),
           stack: new Error(`HTTP ${res.status} ${method} ${clean}`).stack ?? '',
           response: raw,
+          requestId,
         })
       }
       return res
@@ -150,9 +158,29 @@ export function plantFetch(path: string, init?: RequestInit) {
   )
 }
 
+const SENT_LIMIT = 5
+const sentCrashes = new Set<string>()
+
+/**
+ * A crash also goes to the API (#56), which logs it and alerts a human, without waiting for the grower to
+ * file a report. At most a few per page, each message once. Mock mode has no API.
+ */
+function sendClientError(message: string, stack: string, source: string) {
+  if (clientEnv() === 'mock' || sentCrashes.size >= SENT_LIMIT || sentCrashes.has(message)) return
+  sentCrashes.add(message)
+  void fetch('/api/health/client-error', {
+    method: 'POST',
+    credentials: 'include',
+    keepalive: true,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, stack: stack.slice(0, 2000), source, page: window.location.href, lastRequestId }),
+  }).catch(() => undefined)
+}
+
 function reportClient(message: string, stack: string, path: string) {
   if (/ResizeObserver loop/.test(message)) return
   if (message === 'Script error.' && !stack) return
+  sendClientError(message, stack, path)
   reportError({
     kind: 'client',
     status: 0,
