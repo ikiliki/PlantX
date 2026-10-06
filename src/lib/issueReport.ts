@@ -24,6 +24,8 @@ export type IssueContext = {
   network: string
   online: boolean
   at: string
+  /** The API's `x-request-id` for the failed call, or the last call before a crash; finds its log line (#56). */
+  requestId: string
 }
 
 export type IssueReport = {
@@ -85,5 +87,6 @@ export function sanitizeContext(input: unknown): IssueContext | null {
     network: text(row.network, 40),
     online: row.online === true,
     at: text(row.at, 40),
+    requestId: text(row.requestId, 80),
   }
 }

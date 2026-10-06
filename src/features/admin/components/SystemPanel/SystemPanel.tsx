@@ -16,6 +16,7 @@ import {
   type PlacementId,
   type ReleaseMode,
 } from '../../../../theme/release'
+import { SystemHealthCard } from '../SystemHealth/SystemHealth'
 import { PagePreview } from './PagePreview'
 import { RedirectPreview } from './RedirectPreview'
 import { PlacementPreview } from './PlacementPreview'
@@ -149,6 +150,7 @@ export function SystemPanel() {
 
   return (
     <Shell>
+      <SystemHealthCard />
       <Section>
         <Head>
           <HeadToggle type="button" aria-expanded={appOpen} onClick={() => setAppOpen((open) => !open)}>

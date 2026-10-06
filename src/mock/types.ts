@@ -793,3 +793,20 @@ export interface MockDb {
   /** Admin System: page maintenance and feature release status. */
   system: import('../theme/release').SystemConfig
 }
+
+/** Admin → System health (#56), from `GET /api/system/health`. Error counts are one API instance's since it started. */
+export type SystemHealth = {
+  checkedAt: string
+  api: { ok: boolean; version: string; env: 'mock' | 'qa' | 'prod'; region: string | null }
+  database: { ok: boolean; ms: number; error: string | null }
+  /** `applied` is null when the database does not record migrations (applied outside the Supabase CLI). */
+  migration: { applied: string | null; expected: string | null }
+  identify: { ready: boolean; missing: number }
+  missing: { name: string; need: 'app' | 'identify' }[]
+  errors: {
+    since: string
+    server: { count: number; lastAt: string | null; lastMessage: string | null }
+    client: { count: number; lastAt: string | null; lastMessage: string | null }
+  }
+  alerts: { configured: boolean }
+}

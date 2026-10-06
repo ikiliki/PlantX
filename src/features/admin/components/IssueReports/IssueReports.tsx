@@ -27,6 +27,7 @@ function ReportDetail({ row }: { row: IssueReport }) {
           },
           { label: t.admin.issuesPage, value: context.page || '—' },
           { label: t.admin.issuesRequest, value: [context.method, context.path].filter(Boolean).join(' ') || '—' },
+          { label: t.admin.issuesRequestId, value: context.requestId || '—' },
           { label: t.admin.issuesReferrer, value: context.referrer || '—' },
           { label: t.admin.issuesAgent, value: context.userAgent || '—' },
           { label: t.admin.issuesViewport, value: `${context.viewport} · ${context.screen}` },

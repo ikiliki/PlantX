@@ -12,8 +12,9 @@ import {
 } from './users.types.ts'
 
 /** Directory card. The account email and approval flag stay on the admin members list. */
+/** What other members get about a grower (#88): no email, no admin flags or scan overrides. */
 function publicCard(user: User): User {
-  const { email: _email, preapproved: _preapproved, ...rest } = user
+  const { email: _email, preapproved: _preapproved, dailyScanLimit: _limit, ...rest } = user
   return rest
 }
 

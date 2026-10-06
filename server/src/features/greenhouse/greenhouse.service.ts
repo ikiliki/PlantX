@@ -19,7 +19,10 @@ function today() {
   return new Date().toISOString().slice(0, 10)
 }
 
-/** Missing or unrecognized region is Unknown. The area trait is not stored. */
+/**
+ * Missing or unrecognized region is Unknown. The area trait is not stored. The point is always the
+ * region's own (#88): other growers see a plant's region, never a spot a client sent.
+ */
 function withLocation(plant: Plant): Plant {
   const area = resolveArea(plant.locationZone) ?? UNKNOWN_AREA
   const known = Boolean(resolveArea(plant.locationZone))
@@ -30,8 +33,8 @@ function withLocation(plant: Plant): Plant {
     traits,
     locationZone: area.region,
     locationZoneHe: known && plant.locationZoneHe?.trim() ? plant.locationZoneHe : area.regionHe,
-    lat: known && Number.isFinite(plant.lat) ? plant.lat : area.lat,
-    lng: known && Number.isFinite(plant.lng) ? plant.lng : area.lng,
+    lat: area.lat,
+    lng: area.lng,
   }
 }
 

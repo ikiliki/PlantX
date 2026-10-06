@@ -29,6 +29,8 @@ export interface PlantxStore {
   readonly driver: 'supabase'
   /** True once this environment has been seeded. */
   isReady(): Promise<boolean>
+  /** One round trip (`select 1`) and the newest applied migration, or null when it is not recorded. Throws when the database is down. */
+  health(): Promise<{ migration: string | null }>
   users: {
     list(): Promise<User[]>
     saveAll(users: User[]): Promise<void>
