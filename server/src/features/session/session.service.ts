@@ -12,6 +12,7 @@ import { bootstrapAdmin } from '../../lib/ensureData.ts'
 import { bootstrapAdminEmail } from '../../lib/env.ts'
 import { isActive } from '../../lib/session.ts'
 import type { GoogleProfile } from '../../lib/googleAuth.ts'
+import { notifySignIn } from '../../lib/events.ts'
 import { usersService } from '../users/users.service.ts'
 
 /** Operator account — Google SSO only, never email/password. False when the env var is unset. */
@@ -94,6 +95,7 @@ export const sessionService = {
       }
       ensureSoleAdmin(users, user.id)
       await store.users.upsert(changedSince(before, users))
+      await notifySignIn(user)
       return user
     }
 
@@ -105,6 +107,7 @@ export const sessionService = {
     if (!isActive(user)) throw Errors.declined('Account disabled')
     if (profile.name && !user.name) user.name = profile.name
     await store.users.upsert(changedSince(before, users))
+    await notifySignIn(user)
     return user
   },
 

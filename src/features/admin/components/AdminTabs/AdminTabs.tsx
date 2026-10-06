@@ -7,6 +7,7 @@ export const adminNav = [
   { id: 'moderation', to: '/admin/moderation' },
   { id: 'system', to: '/admin/system' },
   { id: 'apis', to: '/admin/apis' },
+  { id: 'webhooks', to: '/admin/webhooks' },
 ] as const
 
 export function AdminTabs({ current }: { current: (typeof adminNav)[number]['id'] }) {

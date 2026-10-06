@@ -1,4 +1,5 @@
-import { logger } from './logger.ts'
+import { postWebhook } from './webhook.ts'
+import { activeWebhookUrl } from './webhookSettings.ts'
 
 /**
  * Failures a human should hear about (#56): server 5xx and browser crashes. Each one is logged; when
@@ -17,7 +18,6 @@ const counters: Record<FailureSource, Counter> = {
 }
 
 const ALERT_EVERY_MS = 10 * 60_000
-const ALERT_TIMEOUT_MS = 2_000
 const sentAt = new Map<string, number>()
 
 function webhookUrl() {
@@ -29,23 +29,13 @@ export function alertsConfigured() {
 }
 
 async function sendAlert(text: string, key: string) {
-  const url = webhookUrl()
+  const url = await activeWebhookUrl('alerts')
   if (!url) return
   const now = Date.now()
   if (now - (sentAt.get(key) ?? 0) < ALERT_EVERY_MS) return
   sentAt.set(key, now)
   if (sentAt.size > 200) sentAt.clear()
-  try {
-    // `text` for Slack, `content` for Discord.
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, content: text }),
-      signal: AbortSignal.timeout(ALERT_TIMEOUT_MS),
-    })
-  } catch (err) {
-    logger.warn('alert webhook failed', { key }, err)
-  }
+  await postWebhook(url, text, 'alert')
 }
 
 /** Count a failure and alert a human. Awaited by the caller so a serverless function does not drop the post. */

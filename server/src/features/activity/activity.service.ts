@@ -2,6 +2,7 @@ import { canSeeActivity } from '../../../../src/features/feed/activityXp.ts'
 import { addedActivityText, scanActivityText } from '../../../../src/features/greenhouse/identification.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
+import { notifyActivity } from '../../lib/events.ts'
 import { logger } from '../../lib/logger.ts'
 import { loadVisibility, visibleActivities } from '../../lib/visibility.ts'
 import type { User } from '../../../../src/mock/types.ts'
@@ -50,6 +51,7 @@ export const activityService = {
   async record(input: ActivityInput): Promise<Activity> {
     const activity = activityFrom(input)
     await getStore().activities.upsert([activity])
+    await notifyActivity(activity)
     return activity
   },
 
@@ -63,6 +65,7 @@ export const activityService = {
     )
     for (const row of scans) row.plantId = input.plantId
     await getStore().activities.upsert([activity, ...scans])
+    await notifyActivity(activity)
     return activity
   },
 
