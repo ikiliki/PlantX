@@ -1,29 +1,31 @@
 export const theme = {
   colors: {
-    forest: '#123C2D',
-    forestMid: '#1B4A38',
-    forestSoft: '#24543F',
-    moss: '#5D7C4E',
-    growth: '#CFEA78',
+    /** Editorial ink: a green so deep it reads as black type. */
+    forest: '#1C2721',
+    forestMid: '#2A3730',
+    forestSoft: '#34433A',
+    moss: '#5F6F55',
+    /** Sage, not lime: the accent is a quiet highlight, like a marker on paper. */
+    growth: '#D7E2B0',
     warmth: '#F2C8A7',
     /** Legacy aliases kept so existing pages pick up the new palette. */
-    lime: '#CFEA78',
+    lime: '#D7E2B0',
     green: '#5D7C4E',
     greenDark: '#2F6B4A',
-    cream: '#F4F1E8',
-    creamCard: '#FFFEFA',
-    ink: '#173128',
-    muted: '#66756D',
-    border: '#DCE1D8',
+    cream: '#F7F4EC',
+    creamCard: '#FFFDF8',
+    ink: '#1A201C',
+    muted: '#59615B',
+    border: '#E3DED2',
     /** Stronger hairline for controls (inputs, segmented rows). */
-    borderStrong: '#C9D0C4',
-    chipGreen: '#E4EBD8',
-    chipWarm: '#FFF0D8',
-    chipNeutral: '#F4F1E8',
+    borderStrong: '#CFC8B8',
+    chipGreen: '#ECEFE0',
+    chipWarm: '#F6EBDD',
+    chipNeutral: '#F1EDE3',
     chipDanger: '#F6DED4',
     chipInfo: '#E8F1F7',
     chipAi: '#E8F1FB',
-    track: '#E7E3D6',
+    track: '#E8E3D6',
     danger: '#B4553D',
     warn: '#9A6B1F',
     info: '#3C6B8F',
@@ -39,30 +41,29 @@ export const theme = {
     overlay: 'rgba(23, 28, 26, 0.46)',
   },
   radii: {
-    sm: '10px',
-    md: '14px',
-    lg: '22px',
+    sm: '3px',
+    md: '4px',
+    lg: '6px',
     pill: '999px',
-    /** Buttons, chips and segmented items. */
-    control: '999px',
+    /** Buttons, chips and segmented items: square-cut, like set type. */
+    control: '3px',
   },
   /** Page and chrome backgrounds (CSS background values). */
   surface: {
-    page: `radial-gradient(1200px 500px at 10% -10%, rgba(207, 234, 120, 0.28), transparent 55%),
-    radial-gradient(900px 400px at 100% 0%, rgba(242, 200, 167, 0.30), transparent 50%),
-    #F4F1E8`,
-    bar: '#FFFEFA',
-    barScrolled: 'rgba(255, 254, 250, 0.86)',
-    barInk: '#123C2D',
-    barMuted: '#66756D',
-    barActive: '#E4EBD8',
-    nav: 'rgba(255, 254, 250, 0.94)',
-    barBorder: '#DCE1D8',
+    /** One paper from masthead to footer; an ink rule separates the chrome. */
+    page: '#F7F4EC',
+    bar: '#F7F4EC',
+    barScrolled: 'rgba(247, 244, 236, 0.94)',
+    barInk: '#1A201C',
+    barMuted: '#59615B',
+    barActive: '#ECEFE0',
+    nav: 'rgba(247, 244, 236, 0.97)',
+    barBorder: '#1A201C',
   },
   shadow: {
-    card: '0 14px 34px rgba(23, 49, 40, 0.10)',
-    soft: '0 2px 10px rgba(23, 49, 40, 0.06)',
-    lift: '0 18px 44px rgba(23, 49, 40, 0.14)',
+    card: '0 1px 0 rgba(26, 32, 28, 0.06), 0 12px 32px rgba(26, 32, 28, 0.08)',
+    soft: '0 1px 0 rgba(26, 32, 28, 0.08)',
+    lift: '0 10px 30px rgba(26, 32, 28, 0.10)',
     dialog: '0 24px 64px rgba(12, 32, 24, 0.24)',
     focus: '0 0 0 3px rgba(207, 234, 120, 0.9), 0 0 0 5px rgba(18, 60, 45, 0.55)',
   },
@@ -89,13 +90,12 @@ export const theme = {
     lg: '1280px',
   },
   fonts: {
-    // Inter has no Hebrew glyphs, so Rubik picks up body text in RTL.
-    body: "'Inter', 'Rubik', system-ui, sans-serif",
-    // DM Serif Display carries no Hebrew glyphs, so Frank Ruhl Libre picks up RTL text.
-    display: "'DM Serif Display', 'Frank Ruhl Libre', Georgia, serif",
-    /** DM Serif Display ships a single regular weight; bolding it would synthesise strokes. */
-    displayWeight: 400,
-    displayTracking: '-0.01em',
+    // Public Sans has no Hebrew glyphs, so Rubik picks up body text in RTL.
+    body: "'Public Sans', 'Rubik', system-ui, sans-serif",
+    // Libre Bodoni carries no Hebrew glyphs, so Frank Ruhl Libre picks up RTL text.
+    display: "'Libre Bodoni', 'Frank Ruhl Libre', Georgia, serif",
+    displayWeight: 500,
+    displayTracking: '-0.015em',
   },
   /** Type scale. Shared components pick from it instead of one-off sizes. */
   text: {
@@ -105,8 +105,8 @@ export const theme = {
     md: '16px',
     lg: '20px',
     xl: '24px',
-    xxl: '32px',
-    display: 'clamp(30px, 4vw, 42px)',
+    xxl: '36px',
+    display: 'clamp(36px, 5vw, 60px)',
   },
   /** Control heights: compact and touch. */
   control: {

@@ -33,7 +33,8 @@ export const Brand = styled(Link)`
   flex-shrink: 0;
   font-family: ${theme.fonts.display};
   font-weight: ${theme.fonts.displayWeight};
-  font-size: 24px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
   color: ${theme.surface.barInk};
 `
 
@@ -80,8 +81,10 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   align-items: center;
   padding: 6px 0;
   font-family: ${theme.fonts.body};
-  font-size: 14px;
-  font-weight: ${({ $active }) => ($active ? 700 : 500)};
+  font-size: ${theme.text.xs};
+  font-weight: ${({ $active }) => ($active ? 700 : 600)};
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   white-space: nowrap;
   color: ${({ $active }) => ($active ? theme.surface.barInk : theme.surface.barMuted)};
   transition: color ${theme.motion.fast} ${theme.motion.ease};
@@ -90,8 +93,8 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
     position: absolute;
     inset-inline: 0;
     bottom: 0;
-    height: 2px;
-    border-radius: ${theme.radii.pill};
+    height: 1px;
+    border-radius: 0;
     background: ${theme.surface.barInk};
     transform: scaleX(${({ $active }) => ($active ? 1 : 0)});
     transition: transform ${theme.motion.base} ${theme.motion.ease};
