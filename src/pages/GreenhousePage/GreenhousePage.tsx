@@ -8,7 +8,7 @@ import { CollectionBoard, greenhouseFilter } from '../../features/greenhouse/com
 import {
   GreenhouseDirectory,
   GreenhouseDirectorySkeleton,
-  isPublicGreenhouse,
+  canOpenGreenhouse,
 } from '../../features/greenhouse/components/GreenhouseDirectory/GreenhouseDirectory'
 import {
   CollectionGrid,
@@ -98,7 +98,7 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
   }
   const plants = <GreenhousePublic ownerId={ownerId} compact={compact} />
   if (compact) return plants
-  if (!usersLoading && (!user || !isPublicGreenhouse(user, currentUser))) {
+  if (!usersLoading && (!user || !canOpenGreenhouse(user, currentUser))) {
     return <Navigate to="/greenhouse?scope=global" replace />
   }
   return (

@@ -20,6 +20,15 @@ export function isPublicGreenhouse(user: User, viewer: User | null) {
   return true
 }
 
+/**
+ * Whether `/greenhouse/:ownerId` opens for this viewer. Unlike the Global list, your own greenhouse opens too:
+ * every greenhouse link (a passport's greenhouse row included) leads to the public page (#84).
+ */
+export function canOpenGreenhouse(user: User, viewer: User | null) {
+  if (viewer && user.id === viewer.id) return user.role !== 'guest'
+  return isPublicGreenhouse(user, viewer)
+}
+
 function livingCount(plants: Plant[], ownerId: string) {
   return plants.filter((plant) => plant.ownerId === ownerId && (plant.status === 'owned' || plant.status === 'listed')).length
 }

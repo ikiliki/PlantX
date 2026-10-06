@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
 type Size = { $size: 'sm' | 'md' }
@@ -32,12 +32,34 @@ export const RingNumber = styled.span<Size>`
   color: ${theme.colors.growth};
 `
 
-/** The grower's avatar, pinned to the ring. */
-export const OwnerBadge = styled.span<Size>`
+const pinned = css<Size>`
   position: absolute;
   inset-inline-end: ${({ $size }) => ($size === 'sm' ? -5 : -6)}px;
   bottom: ${({ $size }) => ($size === 'sm' ? -3 : -4)}px;
   display: grid;
   border-radius: 50%;
   box-shadow: 0 0 0 ${({ $size }) => ($size === 'sm' ? 2 : 3)}px ${theme.colors.creamCard};
+`
+
+/** The grower's avatar, pinned to the ring. */
+export const OwnerBadge = styled.span<Size>`
+  ${pinned}
+`
+
+/** The same pinned avatar as a button: on a grower's public greenhouse it opens their profile preview. */
+export const OwnerButton = styled.button<Size>`
+  ${pinned}
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 160ms ${theme.motion.ease};
+
+  &:hover {
+    transform: scale(1.08);
+  }
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.forest};
+    outline-offset: 2px;
+  }
 `
