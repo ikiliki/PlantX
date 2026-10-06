@@ -293,6 +293,20 @@ export const NameRow = styled.div`
   }
 `
 
+/** A private plant (only its owner and admins see it): a small lock after the name. */
+export const PrivateMark = styled.span`
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  margin-inline-start: auto;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.chipNeutral};
+  color: ${theme.colors.muted};
+`
+
 export const Name = styled(Link)`
   min-width: 0;
   overflow-wrap: anywhere;

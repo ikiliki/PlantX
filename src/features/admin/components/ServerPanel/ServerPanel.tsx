@@ -78,6 +78,8 @@ const ACTIVITY_KIND_KEY = {
   listing: 'updateListing',
   scan: 'updateScan',
   added: 'updateAdded',
+  edited: 'updateEdited',
+  deleted: 'updateDeleted',
 } as const satisfies Record<FeedUpdateKind, keyof ReturnType<typeof useI18n>['t']['feed']>
 
 function activityKindLabel(kind: FeedUpdateKind, feed: ReturnType<typeof useI18n>['t']['feed']) {

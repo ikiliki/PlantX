@@ -85,8 +85,8 @@ export const Side = styled.div`
 `
 
 /**
- * The owner's tiles (AI scans, set your place). Wide: a column at the end of the card. Narrow: one wrapping
- * row under the counts, past a hairline. `$loose`: shown on its own when the level card is switched off.
+ * The owner's tiles (AI scans, set your place). Wide: a column at the end of the card. Narrow (a phone) they
+ * live behind the top-row buttons instead (`Panel`). `$loose`: shown on its own when the level card is off.
  */
 export const End = styled.div<{ $loose?: boolean }>`
   grid-area: end;
@@ -100,6 +100,10 @@ export const End = styled.div<{ $loose?: boolean }>`
 
   & > * {
     flex: 1 1 200px;
+  }
+
+  @container (max-width: 639px) {
+    display: ${({ $loose }) => ($loose ? 'flex' : 'none')};
   }
 
   @container (min-width: 640px) {
@@ -230,6 +234,11 @@ export const Tally = styled.span<{ $tone: 'plant' | 'care' }>`
 /** Small circled (?) after the XP-to-next-level line; opens the level rules. */
 export const How = styled.button<{ $on: boolean }>`
   ${pressable}
+
+  /* On a phone the "!" in the top row covers the rules. */
+  @container (max-width: 639px) {
+    display: none;
+  }
   position: relative;
   flex: none;
   display: inline-grid;
@@ -270,4 +279,84 @@ export const HowList = styled.ul`
   font-size: 13px;
   color: ${theme.colors.ink};
   animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
+`
+
+/** Phone only: the top-row buttons, at the end of the level row. */
+export const TopActions = styled.div`
+  display: none;
+  align-self: flex-start;
+  gap: 6px;
+  margin-inline-start: auto;
+
+  @container (max-width: 639px) {
+    display: flex;
+  }
+`
+
+const roundButton = css`
+  ${pressable}
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: ${theme.radii.pill};
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: ${theme.shadow.focus};
+  }
+
+  /* A finger-sized target. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -7px;
+  }
+`
+
+/** "!": the AI scans left and the level rules. */
+export const InfoButton = styled.button<{ $on: boolean }>`
+  ${roundButton}
+  border: 1.5px solid ${({ $on }) => ($on ? theme.colors.forest : theme.colors.border)};
+  background: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.creamCard)};
+  color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.forest)};
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+`
+
+/** Orange pin, only while the greenhouse place is unknown: opens the Set your place tile. */
+export const PlaceButton = styled.button<{ $on: boolean }>`
+  ${roundButton}
+  border: 1.5px solid ${({ $on }) => ($on ? theme.colors.warn : 'rgba(154, 107, 31, 0.35)')};
+  background: ${({ $on }) => ($on ? theme.colors.warn : theme.colors.chipWarm)};
+  color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.warn)};
+`
+
+/** Phone only: what a top-row button opened, under the counts. */
+export const Panel = styled.div`
+  grid-area: end;
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid ${theme.colors.border};
+  animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
+
+  @container (min-width: 640px) {
+    display: none;
+  }
+`
+
+export const PanelRules = styled.ul`
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: ${theme.colors.ink};
 `

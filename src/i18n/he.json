@@ -281,7 +281,8 @@
     "noActivity": "עדיין אף אחד לא דירג את הצמח."
   },
   "passport": {
-    "setPlace": "לא ידוע · הגדירו מיקום",
+    "setPlace": "הגדרה",
+    "setPlaceHint": "צמחים מקבלים את מיקום החממה. הגדירו אותו בחשבון.",
     "title": "דרכון צמח",
     "lineage": "שושלת",
     "history": "היסטוריה",
@@ -346,6 +347,16 @@
     "priceTip": "מחירים נוספים",
     "aiSuggested": "ה־AI הציע",
     "editField": "עריכת {field}",
+    "privacyLabel": "מי רואה את הצמח",
+    "public": "ציבורי",
+    "private": "פרטי",
+    "publicHint": "כולם רואים את הצמח והפעילות שלו.",
+    "privateHint": "רק אתם רואים את הצמח והפעילות שלו.",
+    "deletePlant": "מחיקת צמח",
+    "deleteTitle": "למחוק את {name}?",
+    "deleteLead": "הצמח יוצא מהחממה והמשימות שלו נעצרות. הפעילות שלו נשארת ביומן שלכם.",
+    "deleteConfirm": "מחיקה",
+    "deleteFailed": "המחיקה נכשלה. נסו שוב.",
     "addNote": "הוסיפו הערה על הצמח"
   },
   "greenhouse": {
@@ -372,6 +383,7 @@
     "levelPlantsOne": "צמח אחד",
     "levelCareOne": "משימה אחת בוצעה",
     "levelHow": "איך עולים רמה",
+    "levelInfo": "רמה וסריקות AI",
     "levelEarnPlant": "+{xp} XP על כל צמח שמוסיפים",
     "levelEarnCare": "+{xp} XP על כל משימת טיפול שמסיימים",
     "levelRank1": "נבט",
@@ -1300,6 +1312,8 @@
     "topEmpty": "אין חממות לדירוג עדיין.",
     "updateScan": "סריקת AI",
     "updateAdded": "צמח חדש",
+    "updateEdited": "עריכה",
+    "updateDeleted": "צמח נמחק",
     "xpEarned": "+{n} XP"
   },
   "guest": {

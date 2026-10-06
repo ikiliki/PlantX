@@ -502,11 +502,11 @@ export function createSupabaseStore(): PlantxStore {
           stem_length_cm, leaf_count, location_zone, location_zone_he, lat, lng, parent_id,
           batch_id, propagated_at, verified_at, verified_by, status,
           published_at, rarity, growth_time_en, growth_time_he, growth_light, growth_light_he,
-          growth_water, growth_water_he, growth_note, growth_note_he, created_at
+          growth_water, growth_water_he, growth_note, growth_note_he, created_at, is_private
         ) values (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
           $21,$22,$23,$24,$25,$26,$27,$28,null,$29,$30,$31,$32,$33,$34,$35,$36,$37,
-          $38,$39,$40,$41,$42,$43,$44
+          $38,$39,$40,$41,$42,$43,$44,$45
         )
         on conflict (id) do update set
           position = excluded.position,
@@ -551,7 +551,8 @@ export function createSupabaseStore(): PlantxStore {
           growth_water_he = excluded.growth_water_he,
           growth_note = excluded.growth_note,
           growth_note_he = excluded.growth_note_he,
-          created_at = excluded.created_at`,
+          created_at = excluded.created_at,
+          is_private = excluded.is_private`,
         plantParams(plant, position, subIds),
       )
     }
@@ -993,6 +994,7 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.conditions?.note ?? null,
     plant.conditions?.noteHe ?? null,
     plant.createdAt,
+    plant.private === true,
   ]
 }
 
@@ -1036,6 +1038,7 @@ function plantFrom(
   const id = text(row, 'id')
   const plant: Plant = {
     ...visibilityFrom(row),
+    ...(row.is_private === true ? { private: true } : {}),
     id,
     code: text(row, 'code'),
     ownerId: text(row, 'owner_id'),

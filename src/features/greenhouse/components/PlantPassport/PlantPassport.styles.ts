@@ -200,26 +200,44 @@ export const NameBlock = styled.div`
 `
 
 
+/** Category and subcategory on one line, each with its catalog icon; a long name ends in an ellipsis. */
 export const TaxonomyRow = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   min-width: 0;
   font-size: 14px;
   line-height: 1.35;
 `
 
-/** A taxonomy name and its AI stamp: the stamp stays beside the name when the row wraps. */
+/** Icon, name, AI stamp. Both items shrink; the name truncates, icon and stamp keep their size. */
 export const TaxonomyItem = styled.span`
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
   max-width: 100%;
+
+  > * {
+    flex-shrink: 0;
+  }
+`
+
+/* `&&` beats the item's `> * { flex-shrink: 0 }`, so only the name shrinks. */
+const ellipsis = css`
+  && {
+    flex: 0 1 auto;
+  }
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 export const CategoryName = styled.span`
+  ${ellipsis}
   font-weight: 700;
   color: ${theme.colors.forest};
   text-decoration: none;
@@ -229,13 +247,9 @@ export const CategoryName = styled.span`
 `
 
 export const SubName = styled.span`
+  ${ellipsis}
   font-weight: 700;
   color: ${theme.colors.forest};
-`
-
-export const TaxonomySep = styled.span`
-  color: ${theme.colors.moss};
-  font-weight: 700;
 `
 
 export const ShowMore = styled.button`
@@ -423,18 +437,15 @@ export const Title = styled.h1`
   color: ${theme.colors.forest};
   white-space: normal;
   overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
+  /* Inline, so the edit pencil follows the last word instead of floating at the far edge. */
+  display: inline;
 
   ${stacked} {
     font-size: clamp(20px, 5.5cqi, 24px);
-    -webkit-line-clamp: 2;
   }
 `
 
-export const OwnerLink = styled(Link)`
+export const OwnerLink = styled(Link)<{ $wideOnly?: boolean }>`
   display: flex;
   align-items: center;
   gap: 10px;
@@ -449,6 +460,7 @@ export const OwnerLink = styled(Link)`
   transition: background ${theme.motion.fast} ${theme.motion.ease};
   ${stacked} {
     order: 1;
+    ${({ $wideOnly }) => ($wideOnly ? 'display: none;' : '')}
   }
   &:hover {
     background: ${theme.colors.creamCard};
@@ -991,12 +1003,24 @@ export const ManageRow = styled.div`
   gap: 8px;
 `
 
-/** The passport name and its edit pencil (#70). */
+/** The passport name and its edit pencil (#70): the pencil right after the last word. */
 export const TitleRow = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
   min-width: 0;
+  line-height: 1.12;
+`
+
+/** The name's last word and the pencil, kept on one line together. */
+export const TitleTail = styled.span`
+  white-space: nowrap;
+
+  > button {
+    display: inline-grid;
+    width: 26px;
+    height: 26px;
+    margin-inline-start: 4px;
+    vertical-align: 0.15em;
+    font-size: 13px;
+  }
 `
 
 export const NoteText = styled.span<{ $empty: boolean }>`

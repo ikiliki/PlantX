@@ -13,6 +13,8 @@ const ACTIVITY_KIND_KEY = {
   listing: 'updateListing',
   scan: 'updateScan',
   added: 'updateAdded',
+  edited: 'updateEdited',
+  deleted: 'updateDeleted',
 } as const satisfies Record<FeedUpdateKind, keyof Dict['feed']>
 
 /** The row already names the plant (or the kind); drop the same words from the start of its text ("Pothos — Pothos added…"). */

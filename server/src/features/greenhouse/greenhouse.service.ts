@@ -7,6 +7,7 @@ import {
   identificationFor,
   type SavedClass,
 } from '../../../../src/features/greenhouse/identification.ts'
+import { deletedActivityText, editedActivityText } from '../../../../src/features/greenhouse/plantActivity.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
@@ -171,7 +172,10 @@ export const greenhouseService = {
     const store = getStore()
     const plants = await store.plants.list()
     const plant = plants.find((item) => item.id === plantId)
-    if (!plant) throw Errors.missing(`Plant ${plantId} not found`)
+    // A deleted plant is gone for its owner; only an admin still reaches it.
+    if (!plant || (plant.visibility === 'deleted' && editor.role !== 'admin')) {
+      throw Errors.missing(`Plant ${plantId} not found`)
+    }
     if (plant.ownerId !== editor.id && editor.role !== 'admin') throw Errors.forbidden('Plant is not yours')
     const next: Plant = { ...plant }
     const changed: string[] = []
@@ -210,17 +214,66 @@ export const greenhouseService = {
       if (photos.length > MAX_PLANT_PHOTOS) throw Errors.invalid(`A plant has at most ${MAX_PLANT_PHOTOS} photos`)
       set('photos', photos)
     }
+    let privacy: 'private' | 'public' | undefined
+    if (patch.private !== undefined && Boolean(patch.private) !== Boolean(plant.private)) {
+      next.private = Boolean(patch.private)
+      changed.push('private')
+      privacy = next.private ? 'private' : 'public'
+    }
     if (changed.length === 0) return { plant, changed }
     next.identification = remark(next, plant.identification)
     await store.plants.upsert([next])
+    // The owner's private log (and the admin's): what changed, under the owner even when an admin edited.
+    try {
+      await activityService.record({
+        kind: 'edited',
+        userId: plant.ownerId,
+        plantId: plant.id,
+        ...editedActivityText(next.title, next.titleHe, changed, privacy),
+      })
+    } catch (err) {
+      logger.error('edit activity failed', { plantId: plant.id }, err)
+    }
     return { plant: next, changed }
+  },
+
+  /**
+   * The owner (or an admin) deletes a plant. Soft, like an admin delete: the row stays with visibility
+   * 'deleted', so an admin can restore it, and the owner no longer sees it or its tasks. The 'deleted'
+   * activity carries no plantId, so it stays in the owner's log after the plant is gone.
+   */
+  async remove(plantId: string, editor: Pick<User, 'id' | 'role'>) {
+    const store = getStore()
+    const plant = (await store.plants.list()).find((item) => item.id === plantId)
+    if (!plant || plant.visibility === 'deleted') throw Errors.missing(`Plant ${plantId} not found`)
+    if (plant.ownerId !== editor.id && editor.role !== 'admin') throw Errors.forbidden('Plant is not yours')
+    await store.moderation.setVisibility('plant', plant.id, {
+      visibility: 'deleted',
+      by: editor.id,
+      reason: editor.id === plant.ownerId ? 'Deleted by its owner' : '',
+    })
+    const activity = await activityService.record({
+      kind: 'deleted',
+      userId: plant.ownerId,
+      ...deletedActivityText(plant.title, plant.titleHe),
+    })
+    return { plant: { ...plant, visibility: 'deleted' as const }, activity }
   },
 }
 
 export type PlantPatch = Partial<
   Pick<
     Plant,
-    'title' | 'titleHe' | 'description' | 'descriptionHe' | 'sizeBand' | 'stage' | 'quality' | 'traits' | 'photos'
+    | 'title'
+    | 'titleHe'
+    | 'description'
+    | 'descriptionHe'
+    | 'sizeBand'
+    | 'stage'
+    | 'quality'
+    | 'traits'
+    | 'photos'
+    | 'private'
   >
 >
 

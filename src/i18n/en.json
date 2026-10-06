@@ -281,7 +281,8 @@
     "noActivity": "No one has graded this plant yet."
   },
   "passport": {
-    "setPlace": "Unknown · set your place",
+    "setPlace": "Set",
+    "setPlaceHint": "Plants take your greenhouse place. Set it in your account.",
     "title": "Plant passport",
     "lineage": "Lineage",
     "history": "History",
@@ -346,6 +347,16 @@
     "priceTip": "Other prices",
     "aiSuggested": "AI suggested",
     "editField": "Edit {field}",
+    "privacyLabel": "Who can see this plant",
+    "public": "Public",
+    "private": "Private",
+    "publicHint": "Everyone can see this plant and its activity.",
+    "privateHint": "Only you see this plant and its activity.",
+    "deletePlant": "Delete plant",
+    "deleteTitle": "Delete {name}?",
+    "deleteLead": "It leaves your greenhouse and its tasks stop. Its activity stays in your log.",
+    "deleteConfirm": "Delete",
+    "deleteFailed": "Could not delete. Try again.",
     "addNote": "Add a note about this plant"
   },
   "greenhouse": {
@@ -372,6 +383,7 @@
     "levelPlantsOne": "1 plant",
     "levelCareOne": "1 task done",
     "levelHow": "How to level up",
+    "levelInfo": "Level and AI scans",
     "levelEarnPlant": "+{xp} XP for every plant you add",
     "levelEarnCare": "+{xp} XP for every care task you complete",
     "levelRank1": "Seedling",
@@ -1300,6 +1312,8 @@
     "topEmpty": "No greenhouses to rank yet.",
     "updateScan": "AI scan",
     "updateAdded": "New plant",
+    "updateEdited": "Edited",
+    "updateDeleted": "Deleted plant",
     "xpEarned": "+{n} XP"
   },
   "guest": {

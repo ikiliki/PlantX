@@ -219,26 +219,21 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   // place yet, #20) a link to set it.
   const showScans = currentUser?.role === 'admin' || Boolean(scanQuota)
   const needsPlace = !resolveArea(currentUser?.region)
-  const headerAside =
-    showScans || needsPlace ? (
-      <>
-        {showScans ? <MyScanAllowance /> : null}
-        {needsPlace ? (
-          <PlacePrompt to={accountHref()}>
-            <PlaceIcon aria-hidden>📍</PlaceIcon>
-            <PlaceCopy>
-              <strong>{t.greenhouse.setPlaceShort}</strong>
-              <span>{t.greenhouse.setPlaceHint}</span>
-            </PlaceCopy>
-          </PlacePrompt>
-        ) : null}
-      </>
-    ) : null
+  const scansTile = showScans ? <MyScanAllowance /> : undefined
+  const placeTile = needsPlace ? (
+    <PlacePrompt to={accountHref()}>
+      <PlaceIcon aria-hidden>📍</PlaceIcon>
+      <PlaceCopy>
+        <strong>{t.greenhouse.setPlaceShort}</strong>
+        <span>{t.greenhouse.setPlaceHint}</span>
+      </PlaceCopy>
+    </PlacePrompt>
+  ) : undefined
 
   // A guest gets the real header with an empty greenhouse (level 1, no plants), not a blurred placeholder.
   const levelCard = forAudience(signedIn, {
     guest: <GreenhouseLevelView summary={greenhouseLevel('', [], [])} />,
-    signedIn: <GreenhouseLevelCard ownerId={ownerId} aside={headerAside} />,
+    signedIn: <GreenhouseLevelCard ownerId={ownerId} scans={scansTile} place={placeTile} />,
   })
 
   const board = (

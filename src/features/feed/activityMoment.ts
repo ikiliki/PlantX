@@ -9,7 +9,9 @@ const KIND_KEY = {
   listing: 'updateListing',
   scan: 'updateScan',
   added: 'updateAdded',
-} as const satisfies Record<FeedUpdateKind, keyof { updatePhoto: string; updateWater: string; updatePropagate: string; updateGrade: string; updatePassport: string; updateListing: string; updateScan: string; updateAdded: string }>
+  edited: 'updateEdited',
+  deleted: 'updateDeleted',
+} as const satisfies Record<FeedUpdateKind, keyof { updatePhoto: string; updateWater: string; updatePropagate: string; updateGrade: string; updatePassport: string; updateListing: string; updateScan: string; updateAdded: string; updateEdited: string; updateDeleted: string }>
 
 export function activityKindLabel(
   kind: FeedUpdateKind,
@@ -21,6 +23,6 @@ export function activityKindLabel(
 /** Added, grade, and passport open the plant passport. Every other kind opens the small tinted popup. */
 export function momentPassportTab(kind: FeedUpdateKind): 'grading' | 'activity' | null {
   if (kind === 'added' || kind === 'grade') return 'grading'
-  if (kind === 'passport') return 'activity'
+  if (kind === 'passport' || kind === 'edited') return 'activity'
   return null
 }

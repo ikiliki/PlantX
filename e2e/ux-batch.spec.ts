@@ -24,13 +24,30 @@ test.describe('member', () => {
     await expect(meter).toContainText('Resets at midnight')
   })
 
-  test('the greenhouse header holds the AI scan tile', async ({ page }) => {
+  test('the greenhouse header holds the AI scan tile (behind "!" on a phone)', async ({ page }, testInfo) => {
     await page.route('**/api/identify/quota', (route) =>
       route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt: resetsAt() } } }),
     )
     await expectPage(page, '/greenhouse')
     const header = page.getByRole('complementary', { name: /Greenhouse level/ })
-    await expect(header.locator('[data-scan-quota]')).toContainText('2 of 3 left')
+    if (testInfo.project.name === 'phone') {
+      // The tile waits behind the top-row "!", which also holds the level rules.
+      await expect(header.locator('[data-scan-quota]:visible')).toHaveCount(0)
+      await header.getByRole('button', { name: 'Level and AI scans' }).click()
+      await expect(header.getByText('How to level up')).toBeVisible()
+    }
+    await expect(header.locator('[data-scan-quota]:visible')).toContainText('2 of 3 left')
+  })
+
+  test('on a phone, an unknown place is an orange pin that opens Set your place', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'phone', 'phone layout only')
+    await expectPage(page, '/greenhouse')
+    const header = page.getByRole('complementary', { name: /Greenhouse level/ })
+    const pin = header.locator('[data-place-button]')
+    test.skip((await pin.count()) === 0, 'this member already has a greenhouse place')
+    await expect(header.getByRole('link', { name: /Set your place/ })).toBeHidden()
+    await pin.click()
+    await expect(header.getByRole('link', { name: /Set your place/ })).toBeVisible()
   })
 
   test('Global shows grower placeholders while the list loads, never the empty state first', async ({ page }) => {

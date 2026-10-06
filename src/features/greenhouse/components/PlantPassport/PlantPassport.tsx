@@ -1,6 +1,6 @@
 import { OTHER_CATEGORY_ID, OTHER_SUBCATEGORY_ID } from '../../plantClass'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UNKNOWN_AREA } from '../../../../mock/locations'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
@@ -29,7 +29,7 @@ import type { SizeBand, StageBand, TodoSubcategory } from '../../../../mock/type
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { canSeeActivity } from '../../../feed/activityXp'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
-import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
+import { CatalogMark } from '../CatalogMark/CatalogMark'
 import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
@@ -42,6 +42,7 @@ import { EditPencil, InlineEdit } from '../InlineEdit/InlineEdit'
 import { emptyClassDraft, sizeChoices, stageChoices } from '../../plantClass'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import type { PlantPatch } from '../../../../mock/liveApi'
+import { PlantDelete, PlantOwnerControls } from '../PlantOwnerControls/PlantOwnerControls'
 import { ModerationDialog, type ModerationRequest } from '../../../admin/components/ModerationDialog/ModerationDialog'
 import { Badge } from '../../../../components/Badge/Badge'
 import {
@@ -84,15 +85,18 @@ import {
   Tab,
   TaxonomyItem,
   TaxonomyRow,
-  TaxonomySep,
   TabBar,
   TipLine,
   Timeline,
   TimelineRow,
   Title,
+  TitleTail,
   Toast,
   SetPlace,
 } from './PlantPassport.styles'
+
+/** Longer names end in an ellipsis on the passport head (the tooltip has the full name). */
+const TITLE_MAX = 48
 
 type TabId = 'grading' | 'todo' | 'activity' | 'market'
 
@@ -170,6 +174,7 @@ export function PlantPassport({
   const [editField, setEditField] = useState<string | null>(null)
   const levels = useGreenhouseLevels()
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   // As a popup, the owner and greenhouse rows only make sense from Home and the market; elsewhere the grower is already known.
   const showOwner = !dialog || pathname === '/home' || pathname.startsWith('/market')
 
@@ -261,7 +266,9 @@ export function PlantPassport({
       // Unknown on the owner's own plant: say where to set it instead of leaving a dead end.
       value:
         isOwner && plant.locationZone === UNKNOWN_AREA.region ? (
-          <SetPlace to={accountHref()}>{t.passport.setPlace}</SetPlace>
+          <SetPlace to={accountHref()} title={t.passport.setPlaceHint}>
+            {t.passport.setPlace}
+          </SetPlace>
         ) : (
           tr(plant.locationZone, plant.locationZoneHe)
         ),
@@ -364,6 +371,11 @@ export function PlantPassport({
   const ownerName = owner ? publicGrowerName(owner, locale === 'he') : ''
 
   const title = titleWithoutQuantity(tr(plant.title, plant.titleHe))
+  // A very long name ends in an ellipsis (the full name is the tooltip); the edit pencil follows it.
+  const shownTitle = title.length > TITLE_MAX ? `${title.slice(0, TITLE_MAX - 1).trimEnd()}…` : title
+  const titleCut = shownTitle.lastIndexOf(' ')
+  const titleHead = titleCut > 0 ? shownTitle.slice(0, titleCut + 1) : ''
+  const titleLast = titleCut > 0 ? shownTitle.slice(titleCut + 1) : shownTitle
 
   return (
     <Frame>
@@ -407,10 +419,20 @@ export function PlantPassport({
           <NameBlock>
             <Code>{plant.code}</Code>
             <TitleRow>
-              <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
-                {title}
+              {/* The pencil is glued to the last word, so it sits right after the name and never on a line alone.
+                  The heading's name stays the plant's name (aria-label), not "… Edit Name". */}
+              <Title
+                id="plant-passport-title"
+                as={embedded ? 'h2' : 'h1'}
+                aria-label={title}
+                title={shownTitle === title ? undefined : title}
+              >
+                {titleHead}
+                <TitleTail>
+                  {titleLast}
+                  {canEdit ? <EditPencil label={t.edit.name} onClick={() => setEditField('title')} /> : null}
+                </TitleTail>
               </Title>
-              {canEdit ? <EditPencil label={t.edit.name} onClick={() => setEditField('title')} /> : null}
             </TitleRow>
             {editField === 'title' ? (
               <InlineEdit
@@ -425,9 +447,9 @@ export function PlantPassport({
             ) : null}
             {(categoryLabel || subLabel) && (
               <TaxonomyRow>
-                <PlantCatalogMark plant={plant} size={24} />
                 {categoryLabel ? (
-                  <TaxonomyItem>
+                  <TaxonomyItem title={categoryLabel}>
+                    <CatalogMark photo={catalogCategory?.photo} name={categoryLabel} size={22} />
                     {species ? (
                       <CategoryName as={Link} to={speciesHref(species.id)}>
                         {categoryLabel}
@@ -447,9 +469,9 @@ export function PlantPassport({
                     ) : null}
                   </TaxonomyItem>
                 ) : null}
-                {categoryLabel && subLabel && <TaxonomySep aria-hidden>·</TaxonomySep>}
                 {subLabel ? (
-                  <TaxonomyItem>
+                  <TaxonomyItem title={subLabel}>
+                    <CatalogMark photo={catalogSub?.photo} name={subLabel} size={22} />
                     <SubName>{subLabel}</SubName>
                     {subMark ? (
                       <AiFieldStamp
@@ -468,8 +490,11 @@ export function PlantPassport({
           </NameBlock>
         </IdentityHead>
 
-          {/* Owner or admin edit inline (#70). Admin on someone else's plant: hide or delete it (#69). */}
-          {!embedded && isAdmin && !isOwner ? (
+          {/* The owner: who sees the plant, and delete it. Admin on someone else's plant: hide or delete it (#69). */}
+          {canEdit && isOwner ? (
+            <PlantOwnerControls plant={plant} />
+          ) : null}
+          {canEdit && isAdmin && !isOwner ? (
             <ManageRow>
               {plant.visibility ? (
                 <Badge $tone={plant.visibility === 'deleted' ? 'danger' : 'warn'}>
@@ -641,8 +666,13 @@ export function PlantPassport({
 
         {owner && showOwner && (
           <>
-            <OwnerLabel>{t.passport.owner}</OwnerLabel>
-            <OwnerLink to={`/sellers/${owner.id}`} aria-label={`${t.passport.owner}: ${ownerName}`}>
+            <OwnerLabel data-owner-label>{t.passport.owner}</OwnerLabel>
+            {/* On a phone the greenhouse row stands for the grower; the owner row shows only without it. */}
+            <OwnerLink
+              to={`/sellers/${owner.id}`}
+              aria-label={`${t.passport.owner}: ${ownerName}`}
+              $wideOnly={Boolean(levels[owner.id])}
+            >
               <Avatar name={ownerName} color={owner.avatarColor} icon={owner.avatarIcon} size={38} />
               <OwnerMeta>
                 <OwnerName>{ownerName}</OwnerName>
@@ -676,6 +706,9 @@ export function PlantPassport({
             ) : null}
           </>
         )}
+        {canEdit && isOwner ? (
+          <PlantDelete plant={plant} onDeleted={() => navigate('/greenhouse', { replace: true })} />
+        ) : null}
       </Aside>
 
       <Main $embedded={embedded} $dialog={dialog}>
