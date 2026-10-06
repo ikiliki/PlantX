@@ -14,6 +14,10 @@ export function ActivityBell({ defaultOpen = false }: { defaultOpen?: boolean })
   const [open, setOpen] = useState(defaultOpen)
   const rootRef = useRef<HTMLDivElement>(null)
   const skipRouteClose = useRef(true)
+  // Set by a pointerdown that went through the bell's React tree. Popups opened from the thread
+  // (passport, water / photo moments) are portaled outside `Root` in the DOM, but React still
+  // bubbles their events here, so a tap inside them is not a tap outside the sheet.
+  const tapInside = useRef(false)
   const ownerId = currentUser?.id ?? ''
   const mine = db.plants.filter((plant) => plant.ownerId === ownerId)
   const activity = ownerActivity(fullDb, ownerId, mine, tr, t)
@@ -29,10 +33,15 @@ export function ActivityBell({ defaultOpen = false }: { defaultOpen?: boolean })
   useEffect(() => {
     if (!open) return
     const onPointer = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+      const inside = tapInside.current || rootRef.current?.contains(event.target as Node)
+      tapInside.current = false
+      if (!inside) setOpen(false)
     }
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key !== 'Escape') return
+      // Escape closes the popup on top first; the sheet stays for the next Escape.
+      if (document.querySelector('[aria-modal="true"]')) return
+      setOpen(false)
     }
     document.addEventListener('pointerdown', onPointer)
     document.addEventListener('keydown', onKey)
@@ -43,7 +52,12 @@ export function ActivityBell({ defaultOpen = false }: { defaultOpen?: boolean })
   }, [open])
 
   return (
-    <Root ref={rootRef}>
+    <Root
+      ref={rootRef}
+      onPointerDown={() => {
+        tapInside.current = true
+      }}
+    >
       <Bell
         type="button"
         aria-label={t.greenhouse.activityTitle}

@@ -54,7 +54,7 @@ test.describe('owner', () => {
     expect(activities.some((item) => item.id === 'e2e-private-added')).toBe(true)
   })
 
-  test('an edit writes a private "edited" activity in the owner's log', async ({ page }) => {
+  test("an edit writes a private 'edited' activity in the owner's log", async ({ page }) => {
     const one = await page.request.get(`/api/plants/${PRIVATE_PLANT}`)
     test.skip(!one.ok(), 'the private plant is seeded only on the CI QA stack')
     const title = `E2E private pothos ${Date.now()}`

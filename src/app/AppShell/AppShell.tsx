@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from 'react'
-import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Icon, type IconName } from '../../components/Icon/Icon'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { LiveBanner } from '../../components/LiveBanner/LiveBanner'
@@ -10,6 +10,7 @@ import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { theme } from '../../theme/tokens'
 import { TopBar } from '../TopBar/TopBar'
+import { usePageNavigationType } from '../pageNavigation'
 import { BottomIcon, BottomLink, BottomNav, Main, Shell } from './AppShell.styles'
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -29,7 +30,8 @@ export function AppShell() {
   const { db, currentUser } = useStore()
   const tasks = useTaskTabCount()
   const loc = useLocation()
-  const navType = useNavigationType()
+  // Not useNavigationType(): under <Routes location> it always says POP, and nothing would scroll to the top.
+  const navType = usePageNavigationType()
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
   const pathRef = useRef(loc.pathname)

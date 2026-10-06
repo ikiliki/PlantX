@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '../../../../components/Icon/Icon'
 import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
@@ -70,12 +71,15 @@ export function GreenhouseLevelView({
   celebrate = false,
   scans,
   place,
+  onOwner,
 }: {
   summary: GreenhouseLevel
   owner?: { name: string; color: string; icon?: string }
   celebrate?: boolean
   scans?: ReactNode
   place?: ReactNode
+  /** Tapping the pinned avatar (a grower's public greenhouse: their profile preview). */
+  onOwner?: () => void
 }) {
   const { t } = useI18n()
   const [howOpen, setHowOpen] = useState(false)
@@ -100,7 +104,7 @@ export function GreenhouseLevelView({
       {celebrate ? <Burst role="status">{t.greenhouse.levelUp}</Burst> : null}
       <Inner>
       <Top>
-        <LevelBadge level={summary.level} progress={summary.progress} owner={owner} />
+        <LevelBadge level={summary.level} progress={summary.progress} owner={owner} onOwner={onOwner} />
         <TopCopy>
           <Rank>{rankName}</Rank>
           <Xp>
@@ -245,6 +249,8 @@ export function GreenhouseLevelCard({
 }) {
   const { db } = useStore()
   const { locale } = useI18n()
+  const navigate = useNavigate()
+  const location = useLocation()
   const local = !publicView || clientEnv() === 'mock'
   const fetching = useSectionFetch(local, ['plants', 'todos'])
   const summary = greenhouseLevel(ownerId, db.plants, db.todos)
@@ -294,5 +300,22 @@ export function GreenhouseLevelCard({
   const owner = user
     ? { name: publicGrowerName(user, locale === 'he'), color: user.avatarColor, icon: user.avatarIcon }
     : undefined
-  return <GreenhouseLevelView summary={shown} owner={owner} celebrate={celebrate} scans={scans} place={place} />
+  // On a grower's public greenhouse the avatar opens the same user preview as a feed avatar (#84).
+  const openProfile = publicView
+    ? () =>
+        navigate(
+          { pathname: location.pathname, search: location.search, hash: location.hash },
+          { state: { profilePreview: ownerId } },
+        )
+    : undefined
+  return (
+    <GreenhouseLevelView
+      summary={shown}
+      owner={owner}
+      celebrate={celebrate}
+      scans={scans}
+      place={place}
+      onOwner={owner ? openProfile : undefined}
+    />
+  )
 }

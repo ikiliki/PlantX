@@ -29,6 +29,7 @@ export function PassportDialog({
 
   useLayoutEffect(() => {
     const y = window.scrollY
+    const openedOn = window.location.pathname
     const html = document.documentElement
     const body = document.body
     const previous = {
@@ -59,10 +60,15 @@ export function PassportDialog({
       body.style.left = previous.left
       body.style.right = previous.right
       body.style.width = previous.width
-      const behavior = html.style.scrollBehavior
-      html.style.scrollBehavior = 'auto'
-      window.scrollTo(0, y)
-      html.style.scrollBehavior = behavior
+      // Closing goes back to the same spot on the page. A link inside the passport went to a new page
+      // instead, which starts at the top (#83); a `/plants/:id` overlay closes back to its page either way.
+      const samePage = window.location.pathname === openedOn || openedOn.startsWith('/plants/')
+      if (samePage) {
+        const behavior = html.style.scrollBehavior
+        html.style.scrollBehavior = 'auto'
+        window.scrollTo(0, y)
+        html.style.scrollBehavior = behavior
+      }
       window.removeEventListener('keydown', onKey)
     }
   }, [onClose, plantId])

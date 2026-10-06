@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { matchPath, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams, type Location } from 'react-router-dom'
+import {
+  matchPath,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useNavigationType,
+  useParams,
+  type Location,
+} from 'react-router-dom'
 import { HoldNotice } from '../../components/HoldNotice/HoldNotice'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { NotLaunched } from '../../components/NotLaunched/NotLaunched'
@@ -8,6 +19,7 @@ import { siteRole } from '../../lib/siteUrls'
 import { useStore } from '../../mock/store'
 import { admitsWhenClosed } from '../../theme/operator'
 import { AppShell } from '../AppShell/AppShell'
+import { PageNavigationContext } from '../pageNavigation'
 import { PassportDialog } from '../../features/greenhouse/components/PassportDialog/PassportDialog'
 import { SellerDialog } from '../../features/sellers/components/SellerDialog/SellerDialog'
 import { accountHref } from '../../features/profile/components/AccountDialog/AccountDialog'
@@ -66,6 +78,7 @@ function ProductShell() {
 export function AppRoutes() {
   const location = useLocation()
   const navigate = useNavigate()
+  const navigationType = useNavigationType()
   const backRef = useRef<Location | null>(null)
   const plantId = matchPath('/plants/:id', location.pathname)?.params.id
   const sellerId = matchPath('/sellers/:id', location.pathname)?.params.id
@@ -97,7 +110,7 @@ export function AppRoutes() {
   }, [navigate])
 
   return (
-    <>
+    <PageNavigationContext.Provider value={navigationType}>
       <Routes location={overlay ? background : location}>
           {/* The app opens on the greenhouse. The marketing page is /landing, or the root of its own domain. */}
           <Route path="/" element={siteRole() === 'landing' ? <LandingPage /> : <Navigate to="/greenhouse" replace />} />
@@ -150,6 +163,6 @@ export function AppRoutes() {
           }
         />
       )}
-    </>
+    </PageNavigationContext.Provider>
   )
 }
