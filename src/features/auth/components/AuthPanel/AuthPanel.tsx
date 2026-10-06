@@ -230,7 +230,8 @@ export function AuthPanel({
           size: 'large',
           shape: 'pill',
           text: mode === 'register' ? 'signup_with' : 'continue_with',
-          width: 280,
+          // Google's button has a fixed width: fit it to a narrow card (it takes 200 and up).
+          width: Math.max(200, Math.min(280, Math.floor(googleRef.current.clientWidth))),
           locale: googleLocale,
         })
       } catch {

@@ -129,3 +129,20 @@ test('landing loads', async ({ page }) => {
   await page.goto('/landing', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 20_000 })
 })
+
+// The join card on a phone: an auto grid column grew to the Google button and the Terms line and cut them off.
+test('landing join card fits a phone', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone', 'Phone layout')
+  await page.goto('/landing', { waitUntil: 'domcontentloaded' })
+  const title = page.locator('#landing-join-title')
+  await title.scrollIntoViewIfNeeded()
+  await expect(title).toBeVisible({ timeout: 20_000 })
+  const overflow = await title.evaluate((el) => {
+    const shell = el.closest('h2')!.parentElement!.parentElement!.parentElement!
+    const box = shell.getBoundingClientRect()
+    return [...shell.querySelectorAll('*')]
+      .map((node) => node.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && (rect.right > box.right + 1 || rect.left < box.left - 1)).length
+  })
+  expect(overflow, 'elements wider than the join card').toBe(0)
+})

@@ -6,6 +6,8 @@ const onForest = (alpha: number) => `rgba(244, 241, 232, ${alpha})`
 
 export const Shell = styled.div<{ $dialog?: boolean }>`
   display: grid;
+  /* One column as wide as the card: an auto column grows to the Google button and consent line and clips them. */
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   min-width: 0;
   min-height: ${({ $dialog }) => ($dialog ? 'auto' : '100svh')};
@@ -34,6 +36,7 @@ export const Stack = styled.div<{ $dialog?: boolean }>`
   justify-items: center;
   gap: ${({ $dialog }) => ($dialog ? '18px' : '28px')};
   width: min(320px, 100%);
+  min-width: 0;
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} both;
 `
 
