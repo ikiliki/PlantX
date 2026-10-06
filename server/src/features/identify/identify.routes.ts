@@ -12,6 +12,7 @@ import type {
 import { scanActivityText } from '../../../../src/features/greenhouse/identification.ts'
 import { Errors } from '../../lib/errors.ts'
 import { logger } from '../../lib/logger.ts'
+import { recordFailure } from '../../lib/observability.ts'
 import { requireAdmin, requireUser } from '../../lib/session.ts'
 import { activityService } from '../activity/activity.service.ts'
 import type { Activity } from '../activity/activity.types.ts'
@@ -86,6 +87,17 @@ async function recordScan(userId: string, outcome: IdentifyOutcome) {
   }
 }
 
+/**
+ * A live Add Plant scan that ended with no answer (e.g. Gemini timed out). The route answers 503 itself,
+ * so the error handler never sees it: log and alert here, or nobody hears about it.
+ */
+async function reportUnavailable(outcome: IdentifyOutcome, path: string) {
+  if (outcome.ok || outcome.record.mode !== 'live') return
+  const why = outcome.tried.map((item) => `${item.provider} ${item.reason}`).join(', ') || 'no provider answered'
+  logger.error('identify unavailable', { id: outcome.record.id, tried: outcome.tried, durationMs: outcome.record.durationMs })
+  await recordFailure('server', `Add Plant scan failed: ${why}`, { path, requestId: outcome.record.id })
+}
+
 export const identifyRoutes = new Hono()
 
 /** The signed-in member's AI scans today (#67). */
@@ -108,6 +120,7 @@ identifyRoutes.post('/', rateLimit({ name: 'identify', max: 20, windowSeconds: 6
   await analyticsService.track('identify_result', user.id, {
     result: !outcome.ok ? 'failed' : outcome.diagnosis.isPlant === false ? 'not_plant' : 'plant',
   })
+  await reportUnavailable(outcome, c.req.path)
   return respond(c, outcome, await recordScan(user.id, outcome))
 })
 

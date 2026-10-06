@@ -143,6 +143,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const [descriptionTouched, setDescriptionTouched] = useState(false)
   const [savedId, setSavedId] = useState('')
   const [saveFailed, setSaveFailed] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [reviewSeen, setReviewSeen] = useState(false)
 
   const stepId: StepId = STEPS[step]
@@ -385,15 +386,27 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
       else setSaveFailed(true)
       return
     }
-    const id = addGreenhousePlant({
-      ...fields,
-      marketClassId: isOther ? undefined : db.marketClasses.find((item) => item.code === fields.code)?.id,
-      location: place,
-      identification,
-      identifyRequestIds: withAi ? scans.map((scan) => scan.requestId) : [],
-    })
-    if (id) setSavedId(id)
-    else setSaveFailed(true)
+    setSaveFailed(false)
+    setSaving(true)
+    // Done only once the server stored it: a failed save keeps the form so the grower can try again.
+    const id = addGreenhousePlant(
+      {
+        ...fields,
+        marketClassId: isOther ? undefined : db.marketClasses.find((item) => item.code === fields.code)?.id,
+        location: place,
+        identification,
+        identifyRequestIds: withAi ? scans.map((scan) => scan.requestId) : [],
+      },
+      (ok) => {
+        setSaving(false)
+        if (ok) setSavedId(id)
+        else setSaveFailed(true)
+      },
+    )
+    if (!id) {
+      setSaving(false)
+      setSaveFailed(true)
+    }
   }
 
   const reset = () => {
@@ -869,7 +882,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
         return {
           // A guest saves on this device; the plant moves into the account at the next sign-in.
           label: signedIn ? t.greenhouse.savePlant : t.addPlant.guestSave,
-          disabled: !reviewReady || photos.length === 0 || guestFull,
+          disabled: !reviewReady || photos.length === 0 || guestFull || saving,
           hint: guestFull
             ? t.addPlant.guestLimit.replace('{count}', String(GUEST_PLANT_LIMIT))
             : saveFailed

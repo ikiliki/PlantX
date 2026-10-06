@@ -63,6 +63,22 @@ test.describe('Add Plant', () => {
     await expect(dialog.getByText("AI couldn't fill these")).toHaveCount(0)
   })
 
+  test('a save the server did not store says so and keeps the form, not a done screen', async ({ page, identify }) => {
+    // support.ts aborts POST /api/plants, which is what a rejected or lost save looks like to the browser.
+    const pick = await catalogPick(page)
+    identify.answer(diagnosisFor(pick, { withTrait: true }))
+    const dialog = await openAddPlant(page)
+    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await dialog.getByRole('button', { name: 'Continue with AI' }).click()
+    const save = dialog.getByRole('button', { name: 'Save to the greenhouse' })
+    await expect(save).toBeEnabled({ timeout: 20_000 })
+    await save.click()
+
+    await expect(dialog.getByText("Couldn't save. Try again.")).toBeVisible()
+    await expect(dialog.locator('[data-add-done]')).toHaveCount(0)
+    await expect(save).toBeEnabled()
+  })
+
   test('the description is optional', async ({ page, identify }) => {
     const pick = await catalogPick(page)
     identify.answer(diagnosisFor(pick, { withTrait: true }))
