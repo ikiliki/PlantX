@@ -835,7 +835,7 @@
     "login": "Log in",
     "register": "Sign up",
     "pendingTitle": "Thanks for signing up",
-    "pendingBody": "Your account is being reviewed. We'll let you in as soon as it's approved.",
+    "pendingBody": "PlantX isn't open to everyone yet, so your account is being reviewed. We'll let you in as soon as it's approved.",
     "offline": "Could not reach the server. Try again in a moment.",
     "demo": "",
     "google": "Continue with Google",

@@ -37,6 +37,37 @@ function avatarColor(seed: string) {
   return palette[hash] ?? palette[0]
 }
 
+/** A new grower account from a sign-up: the name, email and the Terms they agreed to on the login page. */
+function newMember(input: { name: string; email: string } & TermsConsent, preapproved: boolean): ManagedUser {
+  return {
+    id: `u-${Date.now()}`,
+    name: input.name,
+    nameHe: input.name,
+    email: input.email,
+    role: 'grower',
+    region: UNKNOWN_AREA.region,
+    regionHe: UNKNOWN_AREA.regionHe,
+    lat: UNKNOWN_AREA.lat,
+    lng: UNKNOWN_AREA.lng,
+    bio: '',
+    bioHe: '',
+    rating: 0,
+    completedOrders: 0,
+    verificationRate: 0,
+    cancellations: 0,
+    specialties: [],
+    specialtiesHe: [],
+    avatarColor: avatarColor(input.email),
+    friendIds: [],
+    accountStatus: 'active',
+    preapproved,
+    // An older Terms version is asked again on the first visit.
+    ...(input.termsVersion && input.termsAcceptedAt
+      ? { termsVersion: input.termsVersion, termsAcceptedAt: input.termsAcceptedAt }
+      : {}),
+  }
+}
+
 export const usersService = {
   async listPending(status: PendingUser['status'] | 'all' = 'pending') {
     const rows = await getStore().pendingUsers.list()
@@ -90,18 +121,38 @@ export const usersService = {
     return row
   },
 
-  /** Google sign-up for a new email. Reuses an open application; a declined one stays declined. */
-  async signUpFromGoogle(input: { name: string; email: string } & TermsConsent) {
-    const pending = await getStore().pendingUsers.list()
-    const mine = pending.filter((item) => item.email.toLowerCase() === input.email)
-    if (mine.some((item) => item.status === 'pending')) return
+  /**
+   * Google sign-up for a new email; a declined application stays declined.
+   * App on (`launched`): the account opens now and is returned, not marked pre-approved. An application filed
+   * while the app was off is approved the same way.
+   * App off: files an application for the admin to pre-approve in Requests (or keeps the open one), returns null.
+   */
+  async signUpFromGoogle(input: { name: string; email: string } & TermsConsent, launched: boolean) {
+    const store = getStore()
+    const mine = (await store.pendingUsers.list()).filter((item) => item.email.toLowerCase() === input.email)
     if (mine.some((item) => item.status === 'rejected')) throw Errors.declined('Sign-up was declined')
-    await usersService.requestAccess(input)
+    const open = mine.find((item) => item.status === 'pending')
+    if (open) return launched ? (await usersService.approve(open.id, false)).user : null
+
+    let user: ManagedUser | null = null
+    if (launched) {
+      const users = await store.users.list()
+      if (users.some((item) => item.email?.toLowerCase() === input.email)) throw Errors.exists('Email already registered')
+      user = newMember(input, false)
+      await store.users.upsert([user])
+    } else {
+      await usersService.requestAccess(input)
+    }
     await notifySignUp(input.name, input.email)
     await analyticsService.track('signup_done', null)
+    return user
   },
 
-  async approve(id: string) {
+  /**
+   * Opens the account for an application. The admin approving in Requests pre-approves it, so it enters while
+   * the app is off; a sign-up approved automatically because the app is on passes `false`.
+   */
+  async approve(id: string, preapproved = true) {
     const store = getStore()
     const pending = await store.pendingUsers.list()
     const row = pending.find((item) => item.id === id)
@@ -113,33 +164,7 @@ export const usersService = {
       throw Errors.exists('Email already registered')
     }
 
-    const user: ManagedUser = {
-      id: `u-${Date.now()}`,
-      name: row.name,
-      nameHe: row.name,
-      email: row.email,
-      role: 'grower',
-      region: UNKNOWN_AREA.region,
-      regionHe: UNKNOWN_AREA.regionHe,
-      lat: UNKNOWN_AREA.lat,
-      lng: UNKNOWN_AREA.lng,
-      bio: '',
-      bioHe: '',
-      rating: 0,
-      completedOrders: 0,
-      verificationRate: 0,
-      cancellations: 0,
-      specialties: [],
-      specialtiesHe: [],
-      avatarColor: avatarColor(row.email),
-      friendIds: [],
-      accountStatus: 'active',
-      preapproved: true,
-      // The applicant agreed on the login page; an older version is asked again on the first visit.
-      ...(row.termsVersion && row.termsAcceptedAt
-        ? { termsVersion: row.termsVersion, termsAcceptedAt: row.termsAcceptedAt }
-        : {}),
-    }
+    const user = newMember(row, preapproved)
     await store.users.upsert([user])
 
     row.status = 'approved'

@@ -94,8 +94,8 @@ function envGoogleClientId() {
 }
 
 /**
- * Google is the only sign-in. Log in and sign up are one flow: a new Google email
- * files a sign-up, and the account opens once an admin approves it.
+ * Google is the only sign-in. Log in and sign up are one flow: a new Google email signs up. While the app is on
+ * the account opens and signs in at once; while it is off the card says thanks and the admin pre-approves it.
  * With Google off, the panel says sign-ups are paused and offers the guest path instead of an error.
  */
 export function AuthPanel({
@@ -230,7 +230,8 @@ export function AuthPanel({
           size: 'large',
           shape: 'pill',
           text: mode === 'register' ? 'signup_with' : 'continue_with',
-          width: 280,
+          // Google's button has a fixed width: fit it to a narrow card (it takes 200 and up).
+          width: Math.max(200, Math.min(280, Math.floor(googleRef.current.clientWidth))),
           locale: googleLocale,
         })
       } catch {
