@@ -692,7 +692,9 @@
     "quotaShortUnlimited": "Unlimited",
     "quotaResets": "Resets at midnight, Israel time",
     "quotaBack": "Back at midnight, Israel time",
-    "quotaAdmin": "Admins scan without a daily limit"
+    "quotaAdmin": "Admins scan without a daily limit",
+    "unreadableTitle": "This photo can’t be opened here",
+    "unreadableBody": "It’s a {format} photo, which this browser can’t show. Take a new photo, or pick another one. On many phones: Camera → Settings → turn off “High efficiency pictures” so new photos save as JPEG."
   },
   "sell": {
     "title": "Sell / Propagate",

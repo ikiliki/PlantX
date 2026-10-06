@@ -233,3 +233,21 @@ export const StripHint = styled.p`
   color: ${theme.colors.muted};
   text-align: center;
 `
+
+/** A picked photo the browser cannot decode (e.g. HEIC on Chrome): what happened and what to do. */
+export const Unreadable = styled.div`
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: ${theme.radii.md};
+  background: ${theme.colors.chipWarm};
+  color: ${theme.colors.ink};
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: start;
+
+  strong {
+    color: ${theme.colors.danger};
+  }
+`
