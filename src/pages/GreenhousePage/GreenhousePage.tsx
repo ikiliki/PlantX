@@ -30,8 +30,21 @@ import { ownerActivity } from '../../features/greenhouse/ownerActivity'
 import { useStore } from '../../mock/store'
 import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
+import { resolveArea } from '../../mock/locations'
+import { accountHref } from '../../features/profile/components/AccountDialog/AccountDialog'
+import { MyScanAllowance } from '../../features/greenhouse/components/ScanQuotaNote/ScanQuotaNote'
 import type { ComponentView } from '../../theme/view'
-import { HeadBlock, Heading, HeadingCopy, Page, PublicHeading, PublicPage } from './GreenhousePage.styles'
+import {
+  HeadBlock,
+  Heading,
+  HeadingCopy,
+  Page,
+  PlaceCopy,
+  PlaceIcon,
+  PlacePrompt,
+  PublicHeading,
+  PublicPage,
+} from './GreenhousePage.styles'
 
 const WIDGET_PLANTS = 2
 const PUBLIC_SKELETON_CARDS = 8
@@ -105,15 +118,16 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
 }
 
 function GreenhouseOwner({ view }: { view: ComponentView }) {
-  const fetching = useSectionFetch(true, ['plants', 'updates', 'todos'])
-  const { db, fullDb, currentUser, signedIn, guestPlants } = useStore()
+  const [params, setParams] = useSearchParams()
+  const scope: GreenhouseScopeId = view === 'page' && params.get('scope') === 'global' ? 'global' : 'mine'
+  // Mine waits on the member's own plants, activity and tasks. Global waits on its own list (#77).
+  const fetching = useSectionFetch(scope === 'mine', ['plants', 'updates', 'todos'])
+  const { db, fullDb, currentUser, signedIn, guestPlants, scanQuota } = useStore()
   const { t, tr } = useI18n()
   const [adding, setAdding] = useState(false)
   const [freshId, setFreshId] = useState<string>()
   const headerNav = useHeaderNav()
-  const [params, setParams] = useSearchParams()
   const filter = greenhouseFilter(params.get('tab'))
-  const scope: GreenhouseScopeId = view === 'page' && params.get('scope') === 'global' ? 'global' : 'mine'
   const ownerId = currentUser?.id ?? ''
 
   const mine = db.plants.filter((p) => p.ownerId === ownerId)
@@ -184,10 +198,10 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
       />
     )
 
-  const memberBody = fetching ? (
-    loadingBody
-  ) : scope === 'global' ? (
+  const memberBody = scope === 'global' ? (
     <GreenhouseDirectory />
+  ) : fetching ? (
+    loadingBody
   ) : (
     <CollectionBoard
       plants={view === 'widget' ? living.slice(0, WIDGET_PLANTS) : living}
@@ -201,10 +215,30 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     />
   )
 
+  // The owner's own tiles at the end of the level card: AI scans left today, and (a new account with no
+  // place yet, #20) a link to set it.
+  const showScans = currentUser?.role === 'admin' || Boolean(scanQuota)
+  const needsPlace = !resolveArea(currentUser?.region)
+  const headerAside =
+    showScans || needsPlace ? (
+      <>
+        {showScans ? <MyScanAllowance /> : null}
+        {needsPlace ? (
+          <PlacePrompt to={accountHref()}>
+            <PlaceIcon aria-hidden>📍</PlaceIcon>
+            <PlaceCopy>
+              <strong>{t.greenhouse.setPlaceShort}</strong>
+              <span>{t.greenhouse.setPlaceHint}</span>
+            </PlaceCopy>
+          </PlacePrompt>
+        ) : null}
+      </>
+    ) : null
+
   // A guest gets the real header with an empty greenhouse (level 1, no plants), not a blurred placeholder.
   const levelCard = forAudience(signedIn, {
     guest: <GreenhouseLevelView summary={greenhouseLevel('', [], [])} />,
-    signedIn: <GreenhouseLevelCard ownerId={ownerId} />,
+    signedIn: <GreenhouseLevelCard ownerId={ownerId} aside={headerAside} />,
   })
 
   const board = (

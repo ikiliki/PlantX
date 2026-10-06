@@ -10,6 +10,7 @@ import { admitsWhenClosed } from '../../theme/operator'
 import { AppShell } from '../AppShell/AppShell'
 import { PassportDialog } from '../../features/greenhouse/components/PassportDialog/PassportDialog'
 import { SellerDialog } from '../../features/sellers/components/SellerDialog/SellerDialog'
+import { accountHref } from '../../features/profile/components/AccountDialog/AccountDialog'
 import { CategoriesPage } from '../../pages/CategoriesPage/CategoriesPage'
 import { CategoryPage } from '../../pages/CategoryPage/CategoryPage'
 import { DiscoverPage } from '../../pages/DiscoverPage/DiscoverPage'
@@ -27,7 +28,6 @@ import { ModerationPage } from '../../pages/ModerationPage/ModerationPage'
 import { ServerPage } from '../../pages/ServerPage/ServerPage'
 import { WikiPage } from '../../pages/WikiPage/WikiPage'
 import { TodoPage } from '../../pages/TodoPage/TodoPage'
-import { SettingsPage } from '../../pages/SettingsPage/SettingsPage'
 import { SystemPage } from '../../pages/SystemPage/SystemPage'
 
 function staticLocation(pathname: string): Location {
@@ -124,7 +124,7 @@ export function AppRoutes() {
           <Route path="sellers/:id" element={<SellerProfilePage />} />
           <Route path="profile" element={<Navigate to="/greenhouse" replace />} />
           <Route path="profile/:id" element={<ProfileRedirect />} />
-          <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings" element={<Navigate to={accountHref()} replace />} />
         </Route>
         <Route element={<AdminGate />}>
           <Route path="admin" element={<Navigate to="/admin/server" replace />} />

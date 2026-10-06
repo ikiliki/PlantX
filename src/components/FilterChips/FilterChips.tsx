@@ -12,7 +12,7 @@ export type FilterChipOption<T extends string> = {
 }
 
 /**
- * Filter chips. On a narrow page they use the Tasks phone pill and wrap; wider, they stay one scrolling row.
+ * Filter chips: one sideways-scrolling row at every width (a phone gets the Tasks phone pill and an end fade).
  * Greenhouse filters and the Home feed filters share it.
  */
 export function FilterChips<T extends string>({

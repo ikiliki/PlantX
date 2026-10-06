@@ -344,7 +344,9 @@
     "timeAgo": "לפני {n} ימים",
     "averagePrice": "מחיר ממוצע",
     "priceTip": "מחירים נוספים",
-    "aiSuggested": "ה־AI הציע"
+    "aiSuggested": "ה־AI הציע",
+    "editField": "עריכת {field}",
+    "addNote": "הוסיפו הערה על הצמח"
   },
   "greenhouse": {
     "title": "החממה",
@@ -474,7 +476,9 @@
     "aiCount": "{n} מאומתים ב־AI",
     "activityShow": "הצגה",
     "activityXp": "XP",
-    "activityAll": "הכול"
+    "activityAll": "הכול",
+    "setPlaceShort": "הגדירו מיקום",
+    "setPlaceHint": "כדי שצמחים חדשים יידעו איפה הם גדלים"
   },
   "todo": {
     "cancel": "ביטול",
@@ -670,8 +674,13 @@
     "quotaOutBody": "הסריקות חוזרות בחצות (שעון ישראל). עדיין אפשר להוסיף את הצמח בבחירה ידנית.",
     "limitedTitle": "יותר מדי בקשות",
     "limitedBody": "חכו דקה ונסו שוב.",
-    "quotaNone": "אין סריקות AI להיום. הן חוזרות בחצות (שעון ישראל).",
-    "quotaLeft": "נשארו {left} מתוך {total} סריקות AI להיום"
+    "quotaLabel": "סריקות AI היום",
+    "quotaShort": "נשארו {left} מתוך {total}",
+    "quotaShortNone": "לא נשארו",
+    "quotaShortUnlimited": "ללא הגבלה",
+    "quotaResets": "מתאפס בחצות, שעון ישראל",
+    "quotaBack": "חוזרות בחצות, שעון ישראל",
+    "quotaAdmin": "מנהלים סורקים ללא מגבלה יומית"
   },
   "sell": {
     "title": "מכירה / התרבה",
@@ -787,7 +796,8 @@
     "privateMark": "פרטי",
     "iconLabel": "אייקון",
     "iconSeed": "זרע",
-    "iconHint": "מתחילים מזרע. אייקונים נוספים נפתחים עם רמת החממה."
+    "iconHint": "מתחילים מזרע. אייקונים נוספים נפתחים עם רמת החממה.",
+    "placeLabel": "מיקום החממה"
   },
   "auth": {
     "buyTitle": "כדי לרכוש צריך חשבון",
@@ -1255,16 +1265,12 @@
     "scansCount": "סריקות",
     "scansCountValue": "{scans} סריקות · {members} חברים",
     "rejectConfirmTitle": "לדחות {count} בקשות?",
-    "rejectConfirmLead": "הם לא יוכלו להתחבר. אפשר למצוא אותם אחר כך תחת \"הוחלט\"."
+    "rejectConfirmLead": "הם לא יוכלו להתחבר. אפשר למצוא אותם אחר כך תחת \"הוחלט\".",
+    "manageInModeration": "ניהול במודרציה"
   },
   "settings": {
-    "title": "הגדרות",
-    "profile": "פרופיל",
     "region": "מיקום",
-    "placeHint": "צמחים חדשים ישתמשו במקום הזה.",
-    "role": "סוג חשבון",
-    "logout": "התנתקות",
-    "logoutDemo": "יציאה לדמו"
+    "placeHint": "צמחים חדשים ישתמשו במקום הזה."
   },
   "feed": {
     "people": "בחממה",
@@ -1645,9 +1651,6 @@
     "bioHe": "ביו (עברית)",
     "region": "אזור",
     "failed": "לא ניתן לשמור. נסו שוב.",
-    "plantTitle": "עריכת צמח",
-    "plantLead": "שם והערה. המין, הדירוג וההיסטוריה נשארים כמו שהם.",
-    "plantSaved": "{name} נשמר.",
     "name": "שם",
     "note": "הערה"
   },

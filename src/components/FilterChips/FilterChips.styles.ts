@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { pressable } from '../../theme/motion'
 import { theme } from '../../theme/tokens'
 
-/** Sized by the page container: full chips wide, tighter chips edge to edge on a phone. */
+/** Sized by the page container: always one sideways-scrolling row; tighter pills on a phone. */
 export const Bar = styled.div`
   display: flex;
   flex: 1 1 auto;
@@ -27,15 +27,17 @@ export const Bar = styled.div`
     padding-inline-end: 2px;
   }
 
-  /* Same pill row as the Tasks phone filters: full size, wrapping, lined up with the cards. */
+  /* Phone: still one row (never wraps), swiped sideways freely; the end fades so more chips read as "keep going". */
   @container (max-width: 559px) {
-    flex-wrap: wrap;
     gap: 8px;
-    overflow: visible;
     scroll-snap-type: none;
-    width: auto;
-    margin-inline: 0;
-    padding-inline: 0;
+    padding-block: 4px;
+    padding-inline-end: 28px;
+    mask-image: linear-gradient(to left, transparent 0, #000 28px);
+
+    [dir='rtl'] & {
+      mask-image: linear-gradient(to right, transparent 0, #000 28px);
+    }
   }
 `
 

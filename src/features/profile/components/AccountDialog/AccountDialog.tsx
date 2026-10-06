@@ -10,6 +10,8 @@ import { canChooseLocale } from '../../../../i18n/locales'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isOperator } from '../../../../theme/operator'
+import { GreenhousePlace } from '../../../greenhouse/components/GreenhousePlace/GreenhousePlace'
+import { MyScanAllowance } from '../../../greenhouse/components/ScanQuotaNote/ScanQuotaNote'
 import {
   AVATAR_ICONS,
   avatarIconId,
@@ -51,7 +53,11 @@ function Privacy({ kind, label }: { kind: 'public' | 'private'; label: string })
   )
 }
 
-/** Signed-in account card. The nickname and icon are public. The account name and email stay here. */
+/**
+ * Signed-in account card, and the only settings surface (there is no Settings page): nickname, icon and
+ * greenhouse place (public), account name and email (private), AI scans left, language, sign out.
+ * Open it from anywhere with `?account=1` (`accountHref`); the top bar owns it.
+ */
 export function AccountDialog({ onClose }: { onClose: () => void }) {
   const { currentUser, db, loginAs, setAccount, setLocale } = useStore()
   const { t, locale } = useI18n()
@@ -198,9 +204,18 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
             </IconRow>
             <Hint>{t.profile.iconHint}</Hint>
           </Block>
+
+          <Block>
+            <LabelRow>
+              <FieldLabel htmlFor="account-place">{t.profile.placeLabel}</FieldLabel>
+              <Privacy kind="public" label={t.profile.publicMark} />
+            </LabelRow>
+            <GreenhousePlace id="account-place" />
+          </Block>
         </Rows>
 
         <Footer>
+          <MyScanAllowance />
           {isOperator(currentUser) && (
             <FooterLink to="/admin/server" onClick={onClose}>
               {t.admin.title}
@@ -224,4 +239,12 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
     </Backdrop>,
     document.body,
   )
+}
+
+/** Query flag the top bar reads to open the account dialog (there is no Settings page). */
+export const ACCOUNT_PARAM = 'account'
+
+/** A link that opens the account dialog over `pathname` (default: the greenhouse). */
+export function accountHref(pathname = '/greenhouse') {
+  return `${pathname}?${ACCOUNT_PARAM}=1`
 }

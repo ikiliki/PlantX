@@ -1,4 +1,4 @@
-import { expect, expectPage, openAddPlant, plantPhoto, signIn, test } from './support'
+import { MEMBER, expect, expectPage, openAddPlant, plantPhoto, signIn, test } from './support'
 
 /** W0 / W4 pieces of PR #65: scan quota (#67), moderation (#69), wording (#20), calendar names (#44). */
 test.describe('signed in', () => {
@@ -14,30 +14,9 @@ test.describe('signed in', () => {
     expect(typeof quota.resetsAt).toBe('string')
   })
 
-  test('Add Plant: no scans left says so and keeps AI off', async ({ page }) => {
-    const resetsAt = new Date(Date.now() + 3_600_000).toISOString()
-    await page.route('**/api/identify/quota', (route) =>
-      route.fulfill({ json: { quota: { used: 3, limit: 3, extra: 0, remaining: 0, resetsAt } } }),
-    )
-    const dialog = await openAddPlant(page)
-    await expect(dialog.locator('[data-scan-quota]')).toContainText('No AI scans left today')
-    await dialog.locator('input[type=file]').first().setInputFiles(plantPhoto())
-    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
-    await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeEnabled()
-  })
-
-  test('Add Plant: scans left are counted', async ({ page }) => {
-    const resetsAt = new Date(Date.now() + 3_600_000).toISOString()
-    await page.route('**/api/identify/quota', (route) =>
-      route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt } } }),
-    )
-    const dialog = await openAddPlant(page)
-    await expect(dialog.locator('[data-scan-quota]')).toContainText('2 of 3 AI scans left today')
-  })
-
-  test('settings signs out without demo wording', async ({ page }) => {
+  test('the account popup signs out without demo wording', async ({ page }) => {
     await expectPage(page, '/settings')
-    await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Account' }).getByRole('button', { name: 'Sign out' })).toBeVisible()
     await expect(page.getByText('Exit to demo login')).toHaveCount(0)
   })
 
@@ -55,5 +34,33 @@ test.describe('signed in', () => {
       await expect(page.getByRole('radio', { name: type }).or(page.getByRole('button', { name: type })).first()).toBeVisible()
     }
     await expect(page.getByRole('searchbox', { name: 'Search by name' })).toBeVisible()
+  })
+})
+
+/** The admin is not scan-limited (#72), so the allowance UI is checked as a plain member. */
+test.describe('member scan allowance', () => {
+  test.beforeEach(async ({ page }) => {
+    await signIn(page, MEMBER)
+  })
+
+  test('Add Plant: no scans left says so and keeps AI off', async ({ page }) => {
+    const resetsAt = new Date(Date.now() + 3_600_000).toISOString()
+    await page.route('**/api/identify/quota', (route) =>
+      route.fulfill({ json: { quota: { used: 3, limit: 3, extra: 0, remaining: 0, resetsAt } } }),
+    )
+    const dialog = await openAddPlant(page)
+    await expect(dialog.locator('[data-scan-quota]')).toContainText('None left')
+    await dialog.locator('input[type=file]').first().setInputFiles(plantPhoto())
+    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
+    await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeEnabled()
+  })
+
+  test('Add Plant: scans left are counted', async ({ page }) => {
+    const resetsAt = new Date(Date.now() + 3_600_000).toISOString()
+    await page.route('**/api/identify/quota', (route) =>
+      route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt } } }),
+    )
+    const dialog = await openAddPlant(page)
+    await expect(dialog.locator('[data-scan-quota]')).toContainText('2 of 3 left')
   })
 })

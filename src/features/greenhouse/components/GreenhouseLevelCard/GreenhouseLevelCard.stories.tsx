@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { I18nProvider } from '../../../../i18n/I18nProvider'
 import { StoreProvider } from '../../../../mock/store'
 import { greenhouseLevel } from '../../greenhouseLevel'
+import { ScanQuotaNote } from '../ScanQuotaNote/ScanQuotaNote'
 import { GreenhouseLevelSkeleton, GreenhouseLevelView } from './GreenhouseLevelCard'
 
 const withApp = (Story: () => ReactNode) => (
@@ -29,3 +30,9 @@ export const LevelUp = () => <GreenhouseLevelView summary={greenhouseLevel('u', 
 export const Loading = () => <GreenhouseLevelSkeleton />
 export const GuestBlurred = () => <GreenhouseLevelSkeleton blurred />
 export const MasterGrower =() => <GreenhouseLevelView summary={greenhouseLevel('u', plants(120), done(400))} />
+export const WithOwnerTiles = () => (
+  <GreenhouseLevelView
+    summary={greenhouseLevel('u', plants(6), done(4))}
+    aside={<ScanQuotaNote quota={{ used: 2, limit: 3, extra: 0, remaining: 1, resetsAt: '2026-10-06T21:00:00.000Z' }} />}
+  />
+)

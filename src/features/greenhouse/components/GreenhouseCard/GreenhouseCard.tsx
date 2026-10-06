@@ -27,14 +27,15 @@ export function greenhouseShelf(plants: Plant[], ownerId: string) {
 }
 
 /** The same row with a bare ring, bars and empty tiles. Not a link; no data. */
+/** Same shape as a loaded card (#77): the 44px level ring, name, level line, region and count, shelf. */
 export function GreenhouseCardSkeleton() {
   return (
-    <CardShell aria-hidden $compact={false}>
-      <SkeletonBar width="48px" height={48} round />
+    <CardShell aria-hidden $compact={false} data-greenhouse-skeleton>
+      <SkeletonBar width="44px" height={44} round />
       <Copy $stamp={false}>
         <SkeletonBar width="55%" height={16} />
-        <SkeletonBar width="40%" height={11} />
-        <SkeletonBar width="65%" height={11} />
+        <SkeletonBar width="35%" height={12} />
+        <SkeletonBar width="60%" height={12} />
       </Copy>
       <Shelf aria-hidden>
         {Array.from({ length: SHELF }, (_, index) => (

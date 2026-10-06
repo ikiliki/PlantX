@@ -13,8 +13,11 @@ import {
 import { useStore } from '../../../../mock/store'
 import type { ModerationEntry, ModerationTarget, Visibility } from '../../../../mock/types'
 import { useServerSlices } from '../../../../mock/useServerSlices'
-import { PlantEditDialog } from '../../../greenhouse/components/PlantEditDialog/PlantEditDialog'
-import { AdminTable } from '../AdminTable/AdminTable'
+import { PassportDialog } from '../../../greenhouse/components/PassportDialog/PassportDialog'
+import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
+import { useSearchParams } from 'react-router-dom'
+import { HeadMeta, Section as TableSection, SectionHead } from '../ServerPanel/ServerPanel.styles'
 import { ModerationDialog, type ModerationRequest } from '../ModerationDialog/ModerationDialog'
 import { ScanQuotaDialog } from '../ScanQuotaDialog/ScanQuotaDialog'
 import { UserEditDialog } from '../UserEditDialog/UserEditDialog'
@@ -27,12 +30,19 @@ import { Changed, Controls, Empty, Log, LogRow, Root, Section, SectionTitle } fr
  */
 export function ModerationPanel() {
   const { t, locale } = useI18n()
-  const { db, plantxEnv } = useStore()
+  const { db, plantxEnv, disableUser, enableUser, setPreapproved, setVerifiedGreenhouses } = useStore()
   useServerSlices(['users', 'plants', 'updates'])
   const mock = plantxEnv === 'mock'
-  const [type, setType] = useState<ModerationTarget>('user')
+  // Server's previews link here with ?type=&q= (Server is read-only, #71).
+  const [params] = useSearchParams()
+  const initialType = params.get('type')
+  const [type, setType] = useState<ModerationTarget>(
+    initialType === 'plant' || initialType === 'activity' ? initialType : 'user',
+  )
   const [state, setState] = useState<ModerationState>('all')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(params.get('q') ?? '')
+  const [expanded, setExpanded] = useState<string[]>([])
+  const [busyId, setBusyId] = useState<string | null>(null)
   const [items, setItems] = useState<ModerationItem[] | null>(null)
   const [log, setLog] = useState<ModerationEntry[]>([])
   const [failed, setFailed] = useState(false)
@@ -70,6 +80,48 @@ export function ModerationPanel() {
   const plant = db.plants.find((item) => item.id === editPlantId)
   const fmt = (iso?: string) =>
     iso ? new Date(iso).toLocaleString(locale === 'he' ? 'he-IL' : 'en-GB', { dateStyle: 'short', timeStyle: 'short' }) : ''
+
+  /** Account actions (disable, preapproved) answer from the store; reload the rows after. */
+  const run = async (id: string, action: () => Promise<boolean>) => {
+    setBusyId(id)
+    await action()
+    setBusyId(null)
+    void load()
+  }
+
+  /** The expanded row, Server-style: the facts behind the row. */
+  const detailItems = (row: ModerationItem) => {
+    if (row.type === 'user') {
+      const member = user(row.id)
+      return [
+        { label: t.admin.serverColEmail, value: member?.email ?? row.detail ?? '—' },
+        { label: t.admin.serverColRole, value: member ? t.roles[member.role] : '—' },
+        { label: t.admin.serverColRegion, value: member ? (locale === 'he' ? member.regionHe : member.region) : '—' },
+        {
+          label: t.admin.accountStatus,
+          value: member
+            ? `${(member.accountStatus ?? 'active') === 'disabled' ? t.admin.statusDisabled : t.admin.statusActive}${member.preapproved ? ` · ${t.admin.preapproved}` : ''}`
+            : '—',
+        },
+        { label: t.admin.serverColPlants, value: db.plants.filter((plant) => plant.ownerId === row.id).length },
+        { label: t.admin.serverColId, value: row.id },
+      ]
+    }
+    if (row.type === 'plant') {
+      const found = db.plants.find((plant) => plant.id === row.id)
+      return [
+        { label: t.moderation.colDetail, value: row.detail || '—' },
+        { label: t.admin.serverColCode, value: found?.code ?? '—' },
+        { label: t.admin.serverColWhen, value: row.createdAt ?? '—' },
+        { label: t.admin.serverColId, value: row.id },
+      ]
+    }
+    return [
+      { label: t.moderation.colDetail, value: row.detail || '—' },
+      { label: t.admin.serverColWhen, value: fmt(row.createdAt) || '—' },
+      { label: t.admin.serverColId, value: row.id },
+    ]
+  }
 
   const stateBadge = (row: ModerationItem) => {
     if (row.visibility === 'deleted') return <Badge $tone="danger">{t.moderation.state.deleted}</Badge>
@@ -112,13 +164,27 @@ export function ModerationPanel() {
       </Controls>
 
       {failed ? <Empty role="alert">{t.moderation.loadFailed}</Empty> : null}
+      <TableSection>
+      <SectionHead as="div" $open>
+        <h2>{t.moderation.types[type]}</h2>
+        <HeadMeta>
+          <span>{shown === null ? '…' : shown.length}</span>
+        </HeadMeta>
+      </SectionHead>
       {shown === null ? (
-        <Empty>{t.common.loading}</Empty>
+        <LoaderShell busy />
       ) : (
         <AdminTable
           rows={shown}
           rowId={(row) => row.id}
           empty={t.moderation.empty}
+          onRowClick={(row) =>
+            setExpanded((ids) => (ids.includes(row.id) ? ids.filter((id) => id !== row.id) : [...ids, row.id]))
+          }
+          expandable
+          expandedIds={expanded}
+          onExpandedChange={setExpanded}
+          renderExpand={(row) => <AdminDetailGrid items={detailItems(row)} />}
           columns={[
             { id: 'label', header: t.moderation.colName, cell: (row) => row.label },
             { id: 'detail', header: t.moderation.colDetail, cell: (row) => row.detail || '—', muted: true },
@@ -145,6 +211,36 @@ export function ModerationPanel() {
             if (row.type === 'user') {
               list.push({ id: 'edit', label: t.moderation.edit, variant: 'ghost' as const, onClick: () => setEditUserId(row.id) })
               list.push({ id: 'scans', label: t.moderation.scans, variant: 'ghost' as const, onClick: () => setScansUserId(row.id) })
+              const member = user(row.id)
+              if (member && member.role !== 'admin') {
+                const disabled = (member.accountStatus ?? 'active') === 'disabled'
+                const verifiedIds = db.verifiedGreenhouseIds ?? []
+                const verified = verifiedIds.includes(member.id)
+                list.push({
+                  id: 'account',
+                  label: disabled ? t.admin.enable : t.admin.disable,
+                  variant: disabled ? ('growth' as const) : ('ghost' as const),
+                  disabled: busyId === member.id,
+                  onClick: () => void run(member.id, () => (disabled ? enableUser(member.id) : disableUser(member.id))),
+                })
+                list.push({
+                  id: 'preapproved',
+                  label: member.preapproved ? t.admin.unmarkPreapproved : t.admin.markPreapproved,
+                  variant: 'ghost' as const,
+                  disabled: busyId === member.id,
+                  onClick: () => void run(member.id, () => setPreapproved(member.id, !member.preapproved)),
+                })
+                list.push({
+                  id: 'verify',
+                  label: verified ? t.admin.unverifyGreenhouse : t.admin.verifyGreenhouse,
+                  variant: verified ? ('growth' as const) : ('ghost' as const),
+                  disabled: !verified && verifiedIds.length >= 3,
+                  onClick: () =>
+                    setVerifiedGreenhouses(
+                      verified ? verifiedIds.filter((id) => id !== member.id) : [...verifiedIds, member.id].slice(0, 3),
+                    ),
+                })
+              }
             }
             if (row.type === 'plant') {
               list.push({
@@ -170,6 +266,7 @@ export function ModerationPanel() {
           }}
         />
       )}
+      </TableSection>
 
       {!mock ? (
         <Section>
@@ -210,8 +307,8 @@ export function ModerationPanel() {
         />
       ) : null}
       {plant ? (
-        <PlantEditDialog
-          plant={plant}
+        <PassportDialog
+          plantId={plant.id}
           onClose={() => {
             setEditPlantId(null)
             void load()

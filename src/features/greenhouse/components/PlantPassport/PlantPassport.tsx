@@ -25,7 +25,7 @@ import { LevelBadge } from '../LevelBadge/LevelBadge'
 import { greenhouseHref } from '../GreenhouseCard/GreenhouseCard'
 import { useGreenhouseLevels } from '../../useGreenhouseLevels'
 import { isPlacementEnabled } from '../../../../theme/release'
-import type { StageBand, TodoSubcategory } from '../../../../mock/types'
+import type { SizeBand, StageBand, TodoSubcategory } from '../../../../mock/types'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { canSeeActivity } from '../../../feed/activityXp'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
@@ -37,12 +37,18 @@ import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
-import { PlantEditDialog } from '../PlantEditDialog/PlantEditDialog'
+import { accountHref } from '../../../profile/components/AccountDialog/AccountDialog'
+import { EditPencil, InlineEdit } from '../InlineEdit/InlineEdit'
+import { emptyClassDraft, sizeChoices, stageChoices } from '../../plantClass'
+import { STAGE_LABEL } from '../../../../mock/marketNaming'
+import type { PlantPatch } from '../../../../mock/liveApi'
 import { ModerationDialog, type ModerationRequest } from '../../../admin/components/ModerationDialog/ModerationDialog'
 import { Badge } from '../../../../components/Badge/Badge'
 import {
   ActionRow,
   ManageRow,
+  NoteText,
+  TitleRow,
   ActivityBody,
   Aside,
   GreenhouseLabel,
@@ -145,7 +151,7 @@ export function PlantPassport({
   /** Care assignment stamp after watering / photo. */
   careMark?: TodoSubcategory
 }) {
-  const { db, currentUser, signedIn, reserveListing } = useStore()
+  const { db, currentUser, signedIn, reserveListing, editPlant } = useStore()
   const { openAuth } = useAuth()
   const { t, tr, formatMoney, locale } = useI18n()
   const plant = db.plants.find((item) => item.id === plantId)
@@ -159,6 +165,9 @@ export function PlantPassport({
   const [toast, setToast] = useState('')
   const [photoIndex, setPhotoIndex] = useState(0)
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false)
+  const [moderating, setModerating] = useState<ModerationRequest | null>(null)
+  // The passport field being edited (#70); one at a time.
+  const [editField, setEditField] = useState<string | null>(null)
   const levels = useGreenhouseLevels()
   const { pathname } = useLocation()
   // As a popup, the owner and greenhouse rows only make sense from Home and the market; elsewhere the grower is already known.
@@ -223,8 +232,14 @@ export function PlantPassport({
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
   const isOwner = plant.ownerId === ownerId
   const isAdmin = signedIn && currentUser?.role === 'admin'
-  const [editing, setEditing] = useState(false)
-  const [moderating, setModerating] = useState<ModerationRequest | null>(null)
+  // Inline edit (#70): the owner and the admin edit a value where it is shown, one field at a time. The
+  // passport popup is embedded too, so only the inert admin previews (embedded, not a dialog) stay read-only.
+  const canEdit = (!embedded || dialog) && (isOwner || isAdmin)
+  const saveField = async (patch: PlantPatch) => {
+    const ok = await editPlant(plant.id, patch)
+    if (ok) setEditField(null)
+    return ok
+  }
   const showBuy = Boolean(listing) && !isOwner
   const stage = stageName(plant.stage, {
     mature: t.market.mature,
@@ -246,12 +261,18 @@ export function PlantPassport({
       // Unknown on the owner's own plant: say where to set it instead of leaving a dead end.
       value:
         isOwner && plant.locationZone === UNKNOWN_AREA.region ? (
-          <SetPlace to="/settings">{t.passport.setPlace}</SetPlace>
+          <SetPlace to={accountHref()}>{t.passport.setPlace}</SetPlace>
         ) : (
           tr(plant.locationZone, plant.locationZoneHe)
         ),
     },
   ]
+  const classDraft = { ...emptyClassDraft, categoryId: plant.speciesId, subcategoryId: plant.subcategoryId ?? '' }
+  const sizeOptions = sizeChoices(db.catalog, classDraft).map((id) => ({ id, label: id }))
+  const stageOptions = stageChoices(db.catalog, classDraft).map((id) => ({
+    id,
+    label: STAGE_LABEL[id]?.[locale] ?? id,
+  }))
   const catalogCategory = categoryBySpeciesId(db.catalog, plant.speciesId)
   const catalogSub = subcategoryOfPlant(db.catalog, plant)
   const categoryLabel = catalogCategory ? catalogName(catalogCategory, locale) : ''
@@ -285,6 +306,8 @@ export function PlantPassport({
             id: property.id,
             label: catalogName(property, locale),
             value: option ? optionLabel(option, locale) : raw || '—',
+            raw: raw ?? '',
+            options: property.options.map((item) => ({ id: item.id, label: optionLabel(item, locale) })),
             mark,
             aiLabel: aiOption ? optionLabel(aiOption, locale) : mark?.aiValue,
           },
@@ -383,9 +406,23 @@ export function PlantPassport({
           </PhotoIconButton>
           <NameBlock>
             <Code>{plant.code}</Code>
-            <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
-              {title}
-            </Title>
+            <TitleRow>
+              <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
+                {title}
+              </Title>
+              {canEdit ? <EditPencil label={t.edit.name} onClick={() => setEditField('title')} /> : null}
+            </TitleRow>
+            {editField === 'title' ? (
+              <InlineEdit
+                label={t.edit.name}
+                kind="text"
+                value={tr(plant.title, plant.titleHe)}
+                required
+                maxLength={80}
+                onSave={(next) => saveField({ title: next, titleHe: next })}
+                onCancel={() => setEditField(null)}
+              />
+            ) : null}
             {(categoryLabel || subLabel) && (
               <TaxonomyRow>
                 <PlantCatalogMark plant={plant} size={24} />
@@ -431,17 +468,14 @@ export function PlantPassport({
           </NameBlock>
         </IdentityHead>
 
-          {/* Owner or admin: edit the plant (#68). Admin on someone else's plant: hide or delete it (#69). */}
-          {!embedded && (isOwner || isAdmin) ? (
+          {/* Owner or admin edit inline (#70). Admin on someone else's plant: hide or delete it (#69). */}
+          {!embedded && isAdmin && !isOwner ? (
             <ManageRow>
               {plant.visibility ? (
                 <Badge $tone={plant.visibility === 'deleted' ? 'danger' : 'warn'}>
                   {plant.visibility === 'deleted' ? t.moderation.state.deleted : t.moderation.state.hidden}
                 </Badge>
               ) : null}
-              <Button size="sm" variant="secondary" type="button" onClick={() => setEditing(true)}>
-                {t.moderation.edit}
-              </Button>
               {isAdmin && !isOwner ? (
                 <>
                   <Button
@@ -477,7 +511,6 @@ export function PlantPassport({
               ) : null}
             </ManageRow>
           ) : null}
-          {editing ? <PlantEditDialog plant={plant} onClose={() => setEditing(false)} /> : null}
           {moderating ? <ModerationDialog request={moderating} onClose={() => setModerating(null)} /> : null}
 
           {showBuy && !embedded && (
@@ -526,11 +559,27 @@ export function PlantPassport({
               mark?.check === 'changed' && trait.fieldId
                 ? aiFieldLabel(trait.fieldId, mark.aiValue, db.catalog, locale, stageLabels, t.addPlant.otherCategory)
                 : undefined
+            const field = trait.fieldId
             return (
               <AsideStat key={trait.label}>
                 <dt>{trait.label}</dt>
-                <dd>{trait.value}</dd>
+                <dd>
+                  {trait.value}
+                  {canEdit && field ? <EditPencil label={trait.label} onClick={() => setEditField(field)} /> : null}
+                </dd>
                 {mark ? <AiFieldStamp mark={mark} aiLabel={aiLabel} corner /> : null}
+                {field && editField === field ? (
+                  <InlineEdit
+                    label={trait.label}
+                    kind="choice"
+                    value={(field === 'size' ? plant.sizeBand : plant.stage) ?? ''}
+                    options={field === 'size' ? sizeOptions : stageOptions}
+                    onSave={(next) =>
+                      saveField(field === 'size' ? { sizeBand: next as SizeBand } : { stage: next as StageBand })
+                    }
+                    onCancel={() => setEditField(null)}
+                  />
+                ) : null}
               </AsideStat>
             )
           })}
@@ -542,10 +591,47 @@ export function PlantPassport({
             customFields.map((field) => (
               <AsideStat key={field.id}>
                 <dt>{field.label}</dt>
-                <dd>{field.value}</dd>
+                <dd>
+                  {field.value}
+                  {canEdit && field.options.length > 0 ? (
+                    <EditPencil label={field.label} onClick={() => setEditField(`trait:${field.id}`)} />
+                  ) : null}
+                </dd>
                 {field.mark ? <AiFieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
+                {editField === `trait:${field.id}` ? (
+                  <InlineEdit
+                    label={field.label}
+                    kind="choice"
+                    value={field.raw}
+                    options={field.options}
+                    onSave={(next) => saveField({ traits: { ...(plant.traits ?? {}), [field.id]: next } })}
+                    onCancel={() => setEditField(null)}
+                  />
+                ) : null}
               </AsideStat>
             ))}
+          {/* The plant's note: the owner can add one here; others see it when there is one. */}
+          {plant.description || canEdit ? (
+            <AsideStat $wide>
+              <dt>{t.edit.note}</dt>
+              <dd>
+                <NoteText $empty={!plant.description}>
+                  {plant.description ? tr(plant.description, plant.descriptionHe ?? plant.description) : t.passport.addNote}
+                </NoteText>
+                {canEdit ? <EditPencil label={t.edit.note} onClick={() => setEditField('note')} /> : null}
+              </dd>
+              {editField === 'note' ? (
+                <InlineEdit
+                  label={t.edit.note}
+                  kind="textarea"
+                  value={tr(plant.description ?? '', plant.descriptionHe ?? plant.description ?? '')}
+                  maxLength={600}
+                  onSave={(next) => saveField({ description: next, descriptionHe: next })}
+                  onCancel={() => setEditField(null)}
+                />
+              ) : null}
+            </AsideStat>
+          ) : null}
         </AsideStats>
         {customFields.length > 0 && crowded && (
           <ShowMore type="button" onClick={() => setCustomsOpen((open) => !open)}>

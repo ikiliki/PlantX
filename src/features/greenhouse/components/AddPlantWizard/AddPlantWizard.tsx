@@ -9,7 +9,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { createCatalog } from '../../../../mock/catalog'
 import { ownerGreenhousePlace } from '../../../../mock/locations'
 import { GUEST_PLANT_LIMIT } from '../../guestPlants'
-import { ScanQuotaNote } from '../ScanQuotaNote/ScanQuotaNote'
+import { MyScanAllowance } from '../ScanQuotaNote/ScanQuotaNote'
 import { SuggestPlantDialog } from '../../../catalog/components/SuggestPlantDialog/SuggestPlantDialog'
 import { useMySuggestions } from '../../../catalog/useCatalogSuggestions'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
@@ -112,7 +112,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const { db, currentUser, signedIn, addGreenhousePlant, addGuestPlant, guestPlants, scanQuota } = useStore()
   const { submit: submitSuggestion } = useMySuggestions()
   // No AI scans left today (#67): Continue with AI waits; Fill in manually still works.
-  const quotaOut = Boolean(signedIn && scanQuota && scanQuota.remaining <= 0)
+  const quotaOut = Boolean(signedIn && currentUser?.role !== 'admin' && scanQuota && scanQuota.remaining <= 0)
   // A scan recognized a plant the catalog lacks (#64): offer to suggest it, once per scan.
   const [suggestOffer, setSuggestOffer] = useState<'ask' | 'open' | 'done'>('ask')
   const { openAuth } = useAuth()
@@ -950,7 +950,7 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
             onClose={() => setSuggestOffer('done')}
           />
         ) : null}
-        {stepId === 'photo' && signedIn && scanQuota ? <ScanQuotaNote quota={scanQuota} /> : null}
+        {stepId === 'photo' ? <MyScanAllowance /> : null}
         {stepId === 'photo' ? (
           <PhotoActions>
             <Button
