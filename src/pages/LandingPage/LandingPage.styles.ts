@@ -26,3 +26,12 @@ export const Foot = styled.footer`
   font-size: 12px;
   color: ${theme.colors.muted};
 `
+
+export const FootLinks = styled.span`
+  display: inline-flex;
+  gap: 14px;
+
+  a {
+    color: inherit;
+  }
+`

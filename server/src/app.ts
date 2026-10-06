@@ -20,12 +20,22 @@ import { todoRoutes } from './features/todo/todo.routes.ts'
 import { usersRoutes } from './features/users/users.routes.ts'
 import { adminRoutes } from './features/admin/admin.routes.ts'
 import { healthRoutes } from './features/health/health.routes.ts'
+import { analyticsRoutes } from './features/analytics/analytics.routes.ts'
 
 let booted: Promise<void> | null = null
 
-/** Seed the active store once. Safe to call from the process entry and the first request. */
+/**
+ * Seed the active store once. Safe to call from the process entry and the first request. A failed boot is
+ * not kept: a warm function retries on the next request, so applying a missing migration fixes it without a
+ * redeploy.
+ */
 export function boot() {
-  if (!booted) booted = ensureDataFiles()
+  if (!booted) {
+    booted = ensureDataFiles().catch((err) => {
+      booted = null
+      throw err
+    })
+  }
   return booted
 }
 
@@ -110,3 +120,4 @@ app.route('/api/activities', activityRoutes)
 app.route('/api/todos', todoRoutes)
 app.route('/api/plants', greenhouseRoutes)
 app.route('/api/admin', adminRoutes)
+app.route('/api/events', analyticsRoutes)

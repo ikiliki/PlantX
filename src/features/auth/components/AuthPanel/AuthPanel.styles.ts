@@ -182,3 +182,38 @@ export const TextButton = styled.button`
     color: ${theme.colors.cream};
   }
 `
+
+/** The Terms checkbox above the sign-in button. */
+export const Consent = styled.label`
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.5;
+  color: ${theme.colors.cream};
+  cursor: pointer;
+  text-align: start;
+
+  input {
+    flex: none;
+    inline-size: 18px;
+    block-size: 18px;
+    margin: 1px 0 0;
+    accent-color: ${theme.colors.growth};
+    cursor: pointer;
+  }
+
+  a {
+    color: ${theme.colors.growth};
+    font-weight: 600;
+  }
+`
+
+/** Google's button is an iframe: until the box is ticked, it cannot be clicked. */
+export const GoogleGate = styled.div<{ $locked: boolean }>`
+  display: grid;
+  justify-items: center;
+  transition: opacity ${theme.motion.fast} ${theme.motion.ease};
+  opacity: ${({ $locked }) => ($locked ? 0.45 : 1)};
+  pointer-events: ${({ $locked }) => ($locked ? 'none' : 'auto')};
+`

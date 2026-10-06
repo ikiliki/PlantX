@@ -1,6 +1,8 @@
+import { analyticsService } from '../analytics/analytics.service.ts'
 import { UNKNOWN_AREA } from '../../../../src/mock/locations.ts'
-import type { User } from '../../../../src/mock/types.ts'
+import type { TermsConsent, User } from '../../../../src/mock/types.ts'
 import { greenhouseLevel } from '../../../../src/features/greenhouse/greenhouseLevel.ts'
+import { sharedGrowerName } from '../../../../src/features/profile/avatarIcons.ts'
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { canSee, stateOf, visibilityIndex, visiblePlants, visibleUsers } from '../../lib/visibility.ts'
@@ -12,11 +14,23 @@ import {
   withAccountStatus,
 } from './users.types.ts'
 
-/** Directory card. The account email and approval flag stay on the admin members list. */
-/** What other members get about a grower (#88): no email, no admin flags or scan overrides. */
-function publicCard(user: User): User {
-  const { email: _email, preapproved: _preapproved, dailyScanLimit: _limit, ...rest } = user
-  return rest
+/**
+ * What other members get about a grower (#88): no email, no admin flags, scan overrides or consent record.
+ * The account name is private too (#95): others get the nickname or "Grower 4F2A". The admin and the grower
+ * themselves keep the real name.
+ */
+function publicCard(user: User, viewer: User | null): User {
+  const {
+    email: _email,
+    preapproved: _preapproved,
+    dailyScanLimit: _limit,
+    termsVersion: _terms,
+    termsAcceptedAt: _termsAt,
+    ...rest
+  } = user
+  if (viewer?.role === 'admin' || viewer?.id === user.id) return rest
+  const name = sharedGrowerName(user)
+  return { ...rest, name, nameHe: name }
 }
 
 function avatarColor(seed: string) {
@@ -49,7 +63,7 @@ export const usersService = {
     return row
   },
 
-  async requestAccess(input: { name: string; email: string; note?: string }) {
+  async requestAccess(input: { name: string; email: string; note?: string } & TermsConsent) {
     const name = input.name.trim()
     const email = input.email.trim().toLowerCase()
     if (!name || !email.includes('@')) throw Errors.invalid('Name and email are required')
@@ -71,19 +85,23 @@ export const usersService = {
       note: input.note?.trim() || undefined,
       createdAt: new Date().toISOString(),
       status: 'pending',
+      ...(input.termsVersion && input.termsAcceptedAt
+        ? { termsVersion: input.termsVersion, termsAcceptedAt: input.termsAcceptedAt }
+        : {}),
     }
     await store.pendingUsers.upsert([row])
     return row
   },
 
   /** Google sign-up for a new email. Reuses an open application; a declined one stays declined. */
-  async signUpFromGoogle(input: { name: string; email: string }) {
+  async signUpFromGoogle(input: { name: string; email: string } & TermsConsent) {
     const pending = await getStore().pendingUsers.list()
     const mine = pending.filter((item) => item.email.toLowerCase() === input.email)
     if (mine.some((item) => item.status === 'pending')) return
     if (mine.some((item) => item.status === 'rejected')) throw Errors.declined('Sign-up was declined')
     await usersService.requestAccess(input)
     await notifySignUp(input.name, input.email)
+    await analyticsService.track('signup_done', null)
   },
 
   async approve(id: string) {
@@ -120,6 +138,10 @@ export const usersService = {
       friendIds: [],
       accountStatus: 'active',
       preapproved: true,
+      // The applicant agreed on the login page; an older version is asked again on the first visit.
+      ...(row.termsVersion && row.termsAcceptedAt
+        ? { termsVersion: row.termsVersion, termsAcceptedAt: row.termsAcceptedAt }
+        : {}),
     }
     await store.users.upsert([user])
 
@@ -169,7 +191,7 @@ export const usersService = {
       .filter((user) => user.role !== 'guest')
       .filter((user) => (user.accountStatus ?? 'active') !== 'disabled')
       .filter((user) => adminView || user.role !== 'admin')
-      .map(publicCard)
+      .map((user) => publicCard(user, viewer))
   },
 
   /** Every member's public level, keyed by user id. One read of plants and tasks for the whole directory. */

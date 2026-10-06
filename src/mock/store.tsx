@@ -65,6 +65,8 @@ import {
   postEnableUser,
   postPreapproved,
   postGoogleSessionResult,
+  postConsent,
+  deleteMyAccount,
   patchAccount,
   postPlant,
   fetchScanQuota,
@@ -87,6 +89,7 @@ import { projectDb } from './projectDb'
 import { ensureSession, normalizeScenarios } from './session'
 import { clientEnv, clientEnvLabel, type ClientEnv } from '../theme/plantxEnv'
 import { cleanNickname } from '../features/profile/avatarIcons'
+import { LEGAL_VERSION } from '../features/legal/legalVersion'
 import { MOCK_OPERATOR_ID } from '../theme/operator'
 import {
   addDays,
@@ -213,7 +216,11 @@ interface StoreApi {
   loginAs: (userId: string | null) => void
   loginByEmail: (email: string) => Promise<boolean>
   /** Google Identity Services ID token → session. */
-  loginWithGoogle: (credential: string) => Promise<{ ok: true } | { ok: false; reason: string }>
+  loginWithGoogle: (credential: string, termsVersion?: string) => Promise<{ ok: true } | { ok: false; reason: string }>
+  /** The signed-in member agrees to the current Terms and Privacy Policy. */
+  acceptTerms: () => Promise<boolean>
+  /** Erases the signed-in member's account (not the admin) and signs out. */
+  deleteAccount: () => Promise<boolean>
   /** Local UI only. Any admin SSO click signs in the operator. No server. */
   loginWithMockSso: () => Promise<{ ok: true } | { ok: false; reason: string }>
   approvePendingUser: (id: string) => Promise<boolean>
@@ -878,12 +885,54 @@ export function StoreProvider({
       update((d) => ({ ...d, currentUserId: operator.id, flags: personaFlags(operator.id) }))
       return { ok: true as const }
     },
-    loginWithGoogle: async (credential) => {
-      const result = await postGoogleSessionResult(credential)
+    loginWithGoogle: async (credential, termsVersion) => {
+      const result = await postGoogleSessionResult(credential, termsVersion)
       if (!result.ok) return { ok: false as const, reason: result.error }
       applyLive(result.live)
       setLiveStatus('up')
       return { ok: true as const }
+    },
+    acceptTerms: async () => {
+      const ownerId = db.currentUserId
+      if (!ownerId) return false
+      if (liveWritable) {
+        const saved = await postConsent(LEGAL_VERSION)
+        if (!saved) return false
+        update((d) => {
+          const index = d.users.findIndex((item) => item.id === saved.user.id)
+          if (index >= 0) d.users[index] = { ...d.users[index], ...saved.user }
+          return d
+        })
+        return true
+      }
+      update((d) => {
+        const user = d.users.find((item) => item.id === ownerId)
+        if (user) Object.assign(user, { termsVersion: LEGAL_VERSION, termsAcceptedAt: new Date().toISOString() })
+        return d
+      })
+      return true
+    },
+    deleteAccount: async () => {
+      const ownerId = db.currentUserId
+      const me = db.users.find((item) => item.id === ownerId)
+      if (!ownerId || !me || me.role === 'admin') return false
+      if (liveWritable) {
+        const live = await deleteMyAccount()
+        if (!live) return false
+        applyLive(live)
+        return true
+      }
+      update((d) => {
+        const plantIds = new Set(d.plants.filter((plant) => plant.ownerId === ownerId).map((plant) => plant.id))
+        d.plants = d.plants.filter((plant) => plant.ownerId !== ownerId)
+        d.todos = d.todos.filter((todo) => todo.ownerId !== ownerId && !plantIds.has(todo.plantId))
+        d.updates = d.updates.filter((item) => item.userId !== ownerId && !(item.plantId && plantIds.has(item.plantId)))
+        d.users = d.users.filter((user) => user.id !== ownerId)
+        d.currentUserId = null
+        d.flags = personaFlags(null)
+        return d
+      })
+      return true
     },
     approvePendingUser: async (id) => {
       if (liveWritable) {

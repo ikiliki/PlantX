@@ -37,6 +37,7 @@ import {
   synthesizeClass,
 } from '../../plantClass'
 import { useMediaQuery } from '../../../../lib/useMediaQuery'
+import { track } from '../../../../lib/track'
 import { theme } from '../../../../theme/tokens'
 import { CatalogPreview } from '../../../species/components/CatalogPreview/CatalogPreview'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
@@ -113,6 +114,11 @@ export function AddPlantWizard({ onSaved, onClose }: { onSaved?: (plantId: strin
   const { submit: submitSuggestion } = useMySuggestions()
   // No AI scans left today (#67): Continue with AI waits; Fill in manually still works.
   const quotaOut = Boolean(signedIn && currentUser?.role !== 'admin' && scanQuota && scanQuota.remaining <= 0)
+
+  // Funnel (#59), once per open: a guest trying Add Plant is the guest start; a member starts adding a plant.
+  useEffect(() => {
+    track(signedIn ? 'plant_add_start' : 'guest_start')
+  }, [])
   // A scan recognized a plant the catalog lacks (#64): offer to suggest it, once per scan.
   const [suggestOffer, setSuggestOffer] = useState<'ask' | 'open' | 'done'>('ask')
   const { openAuth } = useAuth()

@@ -11,6 +11,7 @@ import { theme } from './theme/tokens'
 import { DocumentDirection } from './app/DocumentDirection'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { SellProvider } from './features/sell/SellProvider'
+import { ConsentDialog } from './features/legal/components/ConsentDialog/ConsentDialog'
 
 /** Demo controls only on the local UI mocks — not QA or production. */
 function DemoBarGate() {
@@ -33,6 +34,7 @@ export default function App() {
               <SellProvider>
                 <AppRoutes />
                 <RequestNotice />
+                <ConsentDialog />
               </SellProvider>
             </AuthProvider>
           </BrowserRouter>

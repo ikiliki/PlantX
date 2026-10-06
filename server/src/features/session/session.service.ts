@@ -14,6 +14,12 @@ import { isActive } from '../../lib/session.ts'
 import type { GoogleProfile } from '../../lib/googleAuth.ts'
 import { notifySignIn } from '../../lib/events.ts'
 import { usersService } from '../users/users.service.ts'
+import { LEGAL_VERSION } from '../../../../src/features/legal/legalVersion.ts'
+
+/** The consent fields for agreeing to the current Terms now, or nothing for any other version. */
+function consentNow(version: unknown) {
+  return version === LEGAL_VERSION ? { termsVersion: LEGAL_VERSION, termsAcceptedAt: new Date().toISOString() } : {}
+}
 
 /** Operator account — Google SSO only, never email/password. False when the env var is unset. */
 export function isBootstrapAdminEmail(email: string) {
@@ -68,8 +74,12 @@ export const sessionService = {
     return user
   },
 
-  /** Sign in from a verified Google profile. Bootstrap Gmail is the sole admin. */
-  async loginWithGoogle(profile: GoogleProfile) {
+  /**
+   * Sign in from a verified Google profile. Bootstrap Gmail is the sole admin. `termsVersion` is the version
+   * the person ticked on the login page: required to sign up, recorded for a member when it is current.
+   */
+  async loginWithGoogle(profile: GoogleProfile, termsVersion?: unknown) {
+    const consent = consentNow(termsVersion)
     const email = profile.email.toLowerCase()
     const store = getStore()
     const users = await store.users.list()
@@ -94,21 +104,46 @@ export const sessionService = {
         if (profile.name) user.name = profile.name
       }
       ensureSoleAdmin(users, user.id)
+      Object.assign(user, consent)
       await store.users.upsert(changedSince(before, users))
       await notifySignIn(user)
       return user
     }
 
     if (!user) {
-      // The first Google sign-in is the sign-up: file it for admin approval.
-      await usersService.signUpFromGoogle({ name: profile.name || email.split('@')[0], email })
+      // The first Google sign-in is the sign-up: file it for admin approval, with the Terms agreed.
+      if (!consent.termsVersion) throw Errors.invalid('Agree to the Terms of Use and Privacy Policy to sign up')
+      await usersService.signUpFromGoogle({ name: profile.name || email.split('@')[0], email, ...consent })
       throw Errors.pending('Your account is waiting for approval')
     }
     if (!isActive(user)) throw Errors.declined('Account disabled')
     if (profile.name && !user.name) user.name = profile.name
+    Object.assign(user, consent)
     await store.users.upsert(changedSince(before, users))
     await notifySignIn(user)
     return user
+  },
+
+  /** The signed-in member agrees to the current Terms and Privacy Policy. Only the current version counts. */
+  async acceptTerms(userId: string, version: unknown) {
+    if (version !== LEGAL_VERSION) throw Errors.invalid('That is not the current version of the Terms')
+    const store = getStore()
+    const user = (await store.users.list()).find((item) => item.id === userId && item.role !== 'guest')
+    if (!user || !isActive(user)) throw Errors.auth()
+    Object.assign(user, consentNow(version))
+    await store.users.upsert([user])
+    return user
+  },
+
+  /**
+   * The member deletes their own account: the account, plants, photos, activity, tasks and scans are erased,
+   * not hidden, and cannot be restored. The operator account cannot delete itself.
+   */
+  async deleteAccount(userId: string) {
+    const user = await sessionService.findById(userId)
+    if (!user || user.role === 'guest') throw Errors.auth()
+    if (user.role === 'admin') throw Errors.forbidden('The admin account cannot be deleted')
+    await getStore().accounts.erase(userId)
   },
 
   /** The signed-in account only. The nickname is what others see. The icon must already be unlocked. */

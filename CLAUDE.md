@@ -29,6 +29,7 @@ PlantX is a bilingual (English + Hebrew) marketplace for living plants.
 - `npm run qa:reset` reapplies migrations. `npm run seed:fixtures` regenerates `server/fixtures/demo` from `src/mock`.
 - Deploy: `npm run build:prod` builds the client and bundles the API into Vercel Build Output (`/api/*` → function). With `VITE_LANDING_URL` / `VITE_APP_URL` set it also adds the two-domain host redirects (`src/lib/siteUrls.ts` is the client side). Production needs `SESSION_SECRET` (signed session cookie).
 - Env: see `.env.example`. Never commit `.env` / `.env.local`.
+- Backups: nightly encrypted `pg_dump` (`.github/workflows/backup.yml`), restore drill in `docs/backup.md`.
 
 ## Key files
 

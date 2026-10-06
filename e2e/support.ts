@@ -1,6 +1,8 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { expect, test as base, type Page } from '@playwright/test'
 import { emptyClassDraft, sizeChoices, stageChoices } from '../src/features/greenhouse/plantClass'
+import { LEGAL_VERSION } from '../src/features/legal/legalVersion'
+import { SESSION_DIR } from './sessionDir'
 import type { Catalog, Diagnosis } from '../src/mock/types'
 
 /** Admin exists on QA and PP. */
@@ -46,12 +48,25 @@ export const test = base.extend<{ identify: { answer: (next: IdentifyAnswer) => 
 
 export { expect }
 
-/** Session cookies per user, kept for the worker: PP's firewall answers 403 after ~45 logins in a run. */
-const sessions = new Map<string, Awaited<ReturnType<ReturnType<Page['context']>['cookies']>>>()
+type Cookies = Awaited<ReturnType<ReturnType<Page['context']>['cookies']>>
 
-/** QA: the session route. PP: the test-login route with the token. Signs in once per user, then reuses the cookie. */
+/**
+ * Session cookies per user, kept on disk for the whole run (#96): PP's firewall answers 403 after ~45 logins,
+ * and the phone project starts a new worker, so an in-memory cache signed everyone in again.
+ * `e2e/global-setup.ts` empties the folder when a run starts.
+ */
+function cachedSession(userId: string): Cookies | null {
+  const file = `${SESSION_DIR}/${userId}.json`
+  return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Cookies) : null
+}
+
+/**
+ * QA: the session route. PP: the test-login route with the token. Signs in once per user and run, then
+ * reuses the cookie. A fresh sign-in also accepts the current Terms, so a test meets the consent dialog
+ * only when it asks for it.
+ */
 export async function signIn(page: Page, userId = ADMIN) {
-  const cached = sessions.get(userId)
+  const cached = cachedSession(userId)
   if (cached) {
     await page.context().addCookies(cached)
     return
@@ -62,7 +77,10 @@ export async function signIn(page: Page, userId = ADMIN) {
     : await page.request.post('/api/session', { data: { userId } })
   const detail = res.ok() ? '' : ` ${(await res.text().catch(() => '')).slice(0, 200)}`
   expect(res.ok(), `sign in as ${userId}: HTTP ${res.status()}${detail}`).toBeTruthy()
-  sessions.set(userId, await page.context().cookies())
+  const consent = await page.request.post('/api/session/consent', { data: { version: LEGAL_VERSION } })
+  expect(consent.ok(), `accept terms as ${userId}: HTTP ${consent.status()}`).toBeTruthy()
+  mkdirSync(SESSION_DIR, { recursive: true })
+  writeFileSync(`${SESSION_DIR}/${userId}.json`, JSON.stringify(await page.context().cookies()))
 }
 
 /** A route shows real content, not a blank page or the error boundary. */

@@ -29,6 +29,7 @@ import { DiscoverPage } from '../../pages/DiscoverPage/DiscoverPage'
 import { GreenhousePage } from '../../pages/GreenhousePage/GreenhousePage'
 import { LandingPage } from '../../pages/LandingPage/LandingPage'
 import { LandingStillsPage } from '../../pages/LandingStills/LandingStills'
+import { LegalPage } from '../../pages/LegalPage/LegalPage'
 import { LoginPage } from '../../pages/LoginPage/LoginPage'
 import { MarketClassPage } from '../../pages/MarketClassPage/MarketClassPage'
 import { MarketPage } from '../../pages/MarketPage/MarketPage'
@@ -118,6 +119,9 @@ export function AppRoutes() {
           <Route path="landing" element={<LandingPage />} />
           <Route path="stills" element={<LandingStillsPage />} />
           <Route path="not-launched" element={<NotLaunched />} />
+          {/* Public for everyone, outside the product shell (SURFACE_GUEST.legal = browse). */}
+          <Route path="privacy" element={<LegalPage doc="privacy" />} />
+          <Route path="terms" element={<LegalPage doc="terms" />} />
         <Route element={<ProductShell />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="home" element={<DiscoverPage />} />

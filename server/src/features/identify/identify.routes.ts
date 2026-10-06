@@ -1,3 +1,4 @@
+import { analyticsService } from '../analytics/analytics.service.ts'
 import { Hono, type Context } from 'hono'
 import { identifySettingsPatch } from '../../../../src/mock/identifySettings.ts'
 import type {
@@ -104,6 +105,9 @@ identifyRoutes.post('/', rateLimit({ name: 'identify', max: 20, windowSeconds: 6
     { mode: 'live', target: 'chain', honorEnabled: true },
     { userId: user.id, source: 'addPlant', thumb: readThumb(body) },
   )
+  await analyticsService.track('identify_result', user.id, {
+    result: !outcome.ok ? 'failed' : outcome.diagnosis.isPlant === false ? 'not_plant' : 'plant',
+  })
   return respond(c, outcome, await recordScan(user.id, outcome))
 })
 

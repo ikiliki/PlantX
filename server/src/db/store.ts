@@ -1,7 +1,10 @@
 import type {
+  AnalyticsEventName,
+  AnalyticsProps,
   Catalog,
   CatalogSuggestion,
   CatalogSuggestionDraft,
+  FunnelDay,
   IdentifyFieldChecks,
   IdentifyMode,
   IdentifyProviderId,
@@ -41,6 +44,20 @@ export interface PlantxStore {
     saveAll(users: User[]): Promise<void>
     /** Insert or update only these rows. Never deletes. */
     upsert(users: User[]): Promise<void>
+  }
+  /** A member deleting their own account: the row and everything that cascades from it. */
+  accounts: {
+    erase(userId: string): Promise<void>
+  }
+  /** Funnel analytics (#59). */
+  analytics: {
+    add(event: { name: AnalyticsEventName; userId?: string | null; props?: AnalyticsProps }): Promise<void>
+    /** This user already has an event with this name. */
+    has(name: AnalyticsEventName, userId: string): Promise<boolean>
+    /** When this user last had an event with this name, or null. */
+    lastAt(name: AnalyticsEventName, userId: string): Promise<string | null>
+    /** Days since `sinceIso`, oldest first. */
+    funnel(sinceIso: string): Promise<FunnelDay[]>
   }
   pendingUsers: {
     list(): Promise<PendingUser[]>

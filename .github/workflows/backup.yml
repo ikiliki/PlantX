@@ -1,0 +1,97 @@
+# Nightly database backup (#58). pg_dump of the hosted Postgres (photos live in it as text, so this is
+# everything), encrypted with BACKUP_PASSPHRASE and kept as a run artifact for 30 days. The repo is public:
+# the artifact is only ever the encrypted file. Restore with scripts/restore-backup.mjs (docs/backup.md).
+#
+# Secrets: PROD_DATABASE_URL (session pooler or direct connection, not the transaction pooler),
+# BACKUP_PASSPHRASE, and PP_DATABASE_URL for a by-hand PP run.
+#
+# A failed run opens a "Backup failed (<target>)" issue (or comments on the open one), and the next good run
+# closes it, so the GitHub-issues Discord channel hears about failures and recoveries only.
+name: Backup
+
+on:
+  schedule:
+    - cron: '30 0 * * *' # 03:30 Israel (summer), 02:30 (winter)
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Database to back up
+        type: choice
+        options: [prod, pp]
+        default: prod
+
+permissions:
+  contents: read
+  issues: write # the Backup failed issue
+
+concurrency:
+  group: backup-${{ inputs.target || 'prod' }}
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TARGET: ${{ inputs.target || 'prod' }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      DATABASE_URL: ${{ (inputs.target || 'prod') == 'pp' && secrets.PP_DATABASE_URL || secrets.PROD_DATABASE_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check secrets
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::Database URL secret for $TARGET is not set"; exit 1; }
+          test ${#BACKUP_PASSPHRASE} -ge 24 || { echo "::error::BACKUP_PASSPHRASE is missing or shorter than 24 characters"; exit 1; }
+
+      - name: Dump
+        run: |
+          name="plantx-$TARGET-$(date -u +%Y%m%dT%H%MZ)"
+          echo "NAME=$name" >> "$GITHUB_ENV"
+          # Same major version as the database (Postgres 17), so pg_dump never refuses a newer server.
+          docker run --rm -e DATABASE_URL -v "$PWD:/out" postgres:17 \
+            sh -c 'pg_dump "$DATABASE_URL" --format=custom --no-owner --no-privileges \
+              --schema=public --schema=supabase_migrations --file=/out/plantx.dump'
+          size=$(stat -c %s plantx.dump)
+          echo "Dump: $size bytes"
+          test "$size" -gt 10000 || { echo "::error::Dump is suspiciously small ($size bytes)"; exit 1; }
+
+      - name: Encrypt
+        run: |
+          gpg --batch --yes --symmetric --cipher-algo AES256 --pinentry-mode loopback \
+            --passphrase-fd 0 --output "$NAME.dump.gpg" plantx.dump <<< "$BACKUP_PASSPHRASE"
+          shred -u plantx.dump
+          sha256sum "$NAME.dump.gpg" | tee "$NAME.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: |
+            ${{ env.NAME }}.dump.gpg
+            ${{ env.NAME }}.sha256
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Report failure
+        if: failure()
+        run: |
+          export TITLE="Backup failed ($TARGET)"
+          open=$(gh issue list --state open --search "in:title Backup failed" --json number,title \
+            | jq -r '.[] | select(.title == env.TITLE) | .number' | head -1)
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "Failed again: $RUN_URL"
+          else
+            printf 'The nightly %s backup failed: %s\n\nCheck the run log, fix the cause, then run **Actions → Backup → Run workflow**. The next good run closes this issue. Runbook: `docs/backup.md`.\n' \
+              "$TARGET" "$RUN_URL" > body.md
+            gh issue create --title "$TITLE" --body-file body.md
+          fi
+
+      - name: Close failure issue
+        if: success()
+        run: |
+          export TITLE="Backup failed ($TARGET)"
+          gh issue list --state open --search "in:title Backup failed" --json number,title \
+            | jq -r '.[] | select(.title == env.TITLE) | .number' \
+            | while read -r number; do gh issue close "$number" --comment "Backup OK again: $RUN_URL"; done
