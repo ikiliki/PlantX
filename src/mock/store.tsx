@@ -1309,11 +1309,20 @@ export function StoreProvider({
       })
       // Same XP note as finished care; the success screen stays as it is.
       queueMicrotask(() => notifyCareDone(id, 'plant', PLANT_XP))
-      if (!liveWritable) onSaved?.(true)
+      // Always after this returns, so the caller already holds the id when it hears back.
+      if (!liveWritable) queueMicrotask(() => onSaved?.(true))
       else {
         void postPlant(created, input.identifyRequestIds).then((res) => {
           onSaved?.(Boolean(res))
-          if (!res) return
+          if (!res) {
+            // The server never stored it: drop the local copy so it does not vanish only on the next refresh.
+            update((d) => {
+              d.plants = d.plants.filter((item) => item.id !== id)
+              d.todos = (d.todos ?? []).filter((todo) => todo.plantId !== id)
+              return d
+            })
+            return
+          }
           update((d) => {
             const index = d.plants.findIndex((item) => item.id === res.plant.id)
             if (index >= 0) d.plants[index] = res.plant
