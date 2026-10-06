@@ -60,6 +60,14 @@ test.describe('member', () => {
     expect(agreed).toEqual({ version: LEGAL_VERSION })
   })
 
+  test('a member who agreed is not asked again on the greenhouse, which loads the directory', async ({ page }) => {
+    await page.goto('/greenhouse')
+    await page.waitForLoadState('networkidle')
+    // Before the fix, the directory card (without consent) replaced the member's user and the dialog came back.
+    await expect(page.locator('main')).toBeVisible()
+    await expect(page.getByRole('dialog', { name: /Updated Terms/ })).toHaveCount(0)
+  })
+
   test('Delete my account confirms, then signs out', async ({ page }) => {
     let deleted = false
     await page.route('**/api/session/account', async (route) => {
@@ -83,8 +91,12 @@ test.describe('member', () => {
     const { users } = (await res.json()) as { users: Record<string, unknown>[] }
     for (const user of users) {
       expect(user.email, 'no email').toBeUndefined()
+      // Your own card keeps your consent (the app replaces your user with it); nobody else's does.
+      if (user.id === MEMBER) {
+        expect(user.termsVersion).toBe(LEGAL_VERSION)
+        continue
+      }
       expect(user.termsVersion, 'no consent record').toBeUndefined()
-      if (user.id === MEMBER) continue
       const nickname = typeof user.nickname === 'string' ? user.nickname.trim() : ''
       if (nickname) expect(user.name).toBe(nickname)
       else expect(user.name).toMatch(/^Grower [A-Z0-9]{1,4}$/)

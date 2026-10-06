@@ -481,7 +481,14 @@ export function StoreProvider({
         }
         noteSlice(part, null)
         update((d) => {
-          d.users = directory.data.users
+          // The directory is everyone's public card. The signed-in member keeps what only the session
+          // knows about them (consent, email), or the consent dialog would come back after every load.
+          const me = d.users.find((user) => user.id === d.currentUserId)
+          d.users = directory.data.users.map((user) =>
+            me && user.id === me.id
+              ? { ...user, email: me.email, termsVersion: me.termsVersion, termsAcceptedAt: me.termsAcceptedAt }
+              : user,
+          )
           return d
         })
         return true

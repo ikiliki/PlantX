@@ -20,15 +20,12 @@ import {
  * themselves keep the real name.
  */
 function publicCard(user: User, viewer: User | null): User {
-  const {
-    email: _email,
-    preapproved: _preapproved,
-    dailyScanLimit: _limit,
-    termsVersion: _terms,
-    termsAcceptedAt: _termsAt,
-    ...rest
-  } = user
-  if (viewer?.role === 'admin' || viewer?.id === user.id) return rest
+  const { email: _email, preapproved: _preapproved, dailyScanLimit: _limit, ...card } = user
+  // Your own card keeps your consent: the app replaces your user with it, and without it the consent
+  // dialog would come back after every directory load.
+  if (viewer?.id === user.id) return card
+  const { termsVersion: _terms, termsAcceptedAt: _termsAt, ...rest } = card
+  if (viewer?.role === 'admin') return rest
   const name = sharedGrowerName(user)
   return { ...rest, name, nameHe: name }
 }
