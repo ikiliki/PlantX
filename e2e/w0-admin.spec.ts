@@ -49,7 +49,7 @@ test.describe('member scan allowance', () => {
       route.fulfill({ json: { quota: { used: 3, limit: 3, extra: 0, remaining: 0, resetsAt } } }),
     )
     const dialog = await openAddPlant(page)
-    await expect(dialog.locator('[data-scan-quota]')).toContainText('No AI scans left today')
+    await expect(dialog.locator('[data-scan-quota]')).toContainText('None left')
     await dialog.locator('input[type=file]').first().setInputFiles(plantPhoto())
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
     await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeEnabled()
@@ -61,6 +61,6 @@ test.describe('member scan allowance', () => {
       route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt } } }),
     )
     const dialog = await openAddPlant(page)
-    await expect(dialog.locator('[data-scan-quota]')).toContainText('2 of 3 AI scans left today')
+    await expect(dialog.locator('[data-scan-quota]')).toContainText('2 of 3 left')
   })
 })

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { publicGrowerName } from '../../../profile/avatarIcons'
@@ -13,6 +13,7 @@ import {
   BarFill,
   Blurred,
   Burst,
+  End,
   How,
   HowList,
   Inner,
@@ -52,15 +53,18 @@ function writeSeen(ownerId: string, level: number) {
 /**
  * Presentational card. `GreenhouseLevelCard` feeds it the owner's live numbers.
  * `owner` puts the grower's avatar on the level ring; the card is the page's header, so no name is shown.
+ * `aside`: the owner's own tiles (AI scans left, set your place) at the end of the card, under the counts on a phone.
  */
 export function GreenhouseLevelView({
   summary,
   owner,
   celebrate = false,
+  aside,
 }: {
   summary: GreenhouseLevel
   owner?: { name: string; color: string; icon?: string }
   celebrate?: boolean
+  aside?: ReactNode
 }) {
   const { t } = useI18n()
   const [howOpen, setHowOpen] = useState(false)
@@ -118,6 +122,8 @@ export function GreenhouseLevelView({
       </TallyRow>
       </Side>
 
+      {aside ? <End>{aside}</End> : null}
+
       {howOpen ? (
         <HowList id={howId}>
           <li>
@@ -165,7 +171,15 @@ export function GreenhouseLevelSkeleton({ blurred = false }: { blurred?: boolean
  * `publicView`: another grower's page. Their tasks never reach this browser, so outside mock mode the
  * numbers come from `GET /api/users/:id/level`, and there is no level-up burst.
  */
-export function GreenhouseLevelCard({ ownerId, publicView = false }: { ownerId: string; publicView?: boolean }) {
+export function GreenhouseLevelCard({
+  ownerId,
+  publicView = false,
+  aside,
+}: {
+  ownerId: string
+  publicView?: boolean
+  aside?: ReactNode
+}) {
   const { db } = useStore()
   const { locale } = useI18n()
   const local = !publicView || clientEnv() === 'mock'
@@ -203,7 +217,7 @@ export function GreenhouseLevelCard({ ownerId, publicView = false }: { ownerId: 
     return undefined
   }, [ownerId, publicView, fetching, summary.level])
 
-  if (!isPlacementEnabled(db.system, 'greenhouse.level')) return null
+  if (!isPlacementEnabled(db.system, 'greenhouse.level')) return aside ? <End $loose>{aside}</End> : null
   const waiting = local ? fetching : !remoteSettled
   if (waiting) return <GreenhouseLevelSkeleton />
   const shown = local ? summary : remote
@@ -212,5 +226,5 @@ export function GreenhouseLevelCard({ ownerId, publicView = false }: { ownerId: 
   const owner = user
     ? { name: publicGrowerName(user, locale === 'he'), color: user.avatarColor, icon: user.avatarIcon }
     : undefined
-  return <GreenhouseLevelView summary={shown} owner={owner} celebrate={celebrate} />
+  return <GreenhouseLevelView summary={shown} owner={owner} celebrate={celebrate} aside={aside} />
 }

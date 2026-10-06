@@ -90,12 +90,57 @@ export const GuestAuth = styled.div`
   }
 `
 
-/** A new account with no greenhouse place: a link to Settings (#20). */
+/** A new account with no greenhouse place: a quiet tile in the level card that opens Settings (#20). */
 export const PlacePrompt = styled(Link)`
-  justify-self: start;
-  font-size: 13px;
-  font-weight: 700;
-  color: ${theme.colors.warn};
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+  box-sizing: border-box;
+  padding: 8px 12px 8px 8px;
+  border: 1px dashed ${theme.colors.border};
+  border-radius: ${theme.radii.md};
+  color: ${theme.colors.ink};
+  text-decoration: none;
+  transition: border-color ${theme.motion.fast} ${theme.motion.ease}, background ${theme.motion.fast} ${theme.motion.ease};
+
+  &:hover {
+    border-style: solid;
+    border-color: ${theme.colors.moss};
+    background: rgba(228, 235, 216, 0.4);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: ${theme.shadow.focus};
+  }
+`
+
+export const PlaceIcon = styled.span`
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: ${theme.radii.sm};
+  background: ${theme.colors.chipGreen};
+  font-size: 14px;
+  line-height: 1;
+`
+
+export const PlaceCopy = styled.span`
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+
+  strong {
+    font-size: 13px;
+    font-weight: 750;
+    color: ${theme.colors.forest};
+  }
+
+  span {
+    font-size: 11px;
+    font-weight: 550;
+    color: ${theme.colors.muted};
+  }
 `

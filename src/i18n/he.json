@@ -477,7 +477,8 @@
     "activityShow": "הצגה",
     "activityXp": "XP",
     "activityAll": "הכול",
-    "setPlacePrompt": "הגדירו את מיקום החממה כדי שצמחים חדשים יידעו איפה הם גדלים"
+    "setPlaceShort": "הגדירו מיקום",
+    "setPlaceHint": "כדי שצמחים חדשים יידעו איפה הם גדלים"
   },
   "todo": {
     "cancel": "ביטול",
@@ -673,9 +674,13 @@
     "quotaOutBody": "הסריקות חוזרות בחצות (שעון ישראל). עדיין אפשר להוסיף את הצמח בבחירה ידנית.",
     "limitedTitle": "יותר מדי בקשות",
     "limitedBody": "חכו דקה ונסו שוב.",
-    "quotaNone": "אין סריקות AI להיום. הן חוזרות בחצות (שעון ישראל).",
-    "quotaLeft": "נשארו {left} מתוך {total} סריקות AI להיום · מתאפס בחצות (שעון ישראל)",
-    "quotaUnlimited": "סריקות AI ללא הגבלה (מנהל)"
+    "quotaLabel": "סריקות AI היום",
+    "quotaShort": "נשארו {left} מתוך {total}",
+    "quotaShortNone": "לא נשארו",
+    "quotaShortUnlimited": "ללא הגבלה",
+    "quotaResets": "מתאפס בחצות, שעון ישראל",
+    "quotaBack": "חוזרות בחצות, שעון ישראל",
+    "quotaAdmin": "מנהלים סורקים ללא מגבלה יומית"
   },
   "sell": {
     "title": "מכירה / התרבה",

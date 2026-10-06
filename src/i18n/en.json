@@ -477,7 +477,8 @@
     "activityShow": "Show",
     "activityXp": "XP",
     "activityAll": "All",
-    "setPlacePrompt": "Set your greenhouse place so new plants know where they grow"
+    "setPlaceShort": "Set your place",
+    "setPlaceHint": "So new plants know where they grow"
   },
   "todo": {
     "cancel": "Cancel",
@@ -673,9 +674,13 @@
     "quotaOutBody": "Your scans come back at midnight (Israel time). You can still add the plant by picking it yourself.",
     "limitedTitle": "Too many requests",
     "limitedBody": "Wait a minute and try again.",
-    "quotaNone": "No AI scans left today. They come back at midnight (Israel time).",
-    "quotaLeft": "{left} of {total} AI scans left today · resets at midnight (Israel time)",
-    "quotaUnlimited": "Unlimited AI scans (admin)"
+    "quotaLabel": "AI scans today",
+    "quotaShort": "{left} of {total} left",
+    "quotaShortNone": "None left",
+    "quotaShortUnlimited": "Unlimited",
+    "quotaResets": "Resets at midnight, Israel time",
+    "quotaBack": "Back at midnight, Israel time",
+    "quotaAdmin": "Admins scan without a daily limit"
   },
   "sell": {
     "title": "Sell / Propagate",

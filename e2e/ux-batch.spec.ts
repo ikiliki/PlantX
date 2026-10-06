@@ -14,8 +14,20 @@ test.describe('member', () => {
       route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt: resetsAt() } } }),
     )
     await expectPage(page, '/settings')
-    await expect(page.locator('[data-scan-quota]').first()).toContainText('2 of 3 AI scans left today')
-    await expect(page.locator('[data-scan-quota]').first()).toContainText('resets at midnight')
+    const meter = page.locator('[data-scan-quota]').first()
+    await expect(meter).toContainText('2 of 3 left')
+    // Tapping the tile says when the scans reset.
+    await meter.click()
+    await expect(meter).toContainText('Resets at midnight')
+  })
+
+  test('the greenhouse header holds the AI scan tile', async ({ page }) => {
+    await page.route('**/api/identify/quota', (route) =>
+      route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt: resetsAt() } } }),
+    )
+    await expectPage(page, '/greenhouse')
+    const header = page.getByRole('complementary', { name: /Greenhouse level/ })
+    await expect(header.locator('[data-scan-quota]')).toContainText('2 of 3 left')
   })
 
   test('Global shows grower placeholders while the list loads, never the empty state first', async ({ page }) => {

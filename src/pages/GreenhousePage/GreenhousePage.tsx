@@ -33,7 +33,17 @@ import { forAudience } from '../../theme/audience'
 import { resolveArea } from '../../mock/locations'
 import { MyScanAllowance } from '../../features/greenhouse/components/ScanQuotaNote/ScanQuotaNote'
 import type { ComponentView } from '../../theme/view'
-import { HeadBlock, Heading, HeadingCopy, Page, PlacePrompt, PublicHeading, PublicPage } from './GreenhousePage.styles'
+import {
+  HeadBlock,
+  Heading,
+  HeadingCopy,
+  Page,
+  PlaceCopy,
+  PlaceIcon,
+  PlacePrompt,
+  PublicHeading,
+  PublicPage,
+} from './GreenhousePage.styles'
 
 const WIDGET_PLANTS = 2
 const PUBLIC_SKELETON_CARDS = 8
@@ -111,7 +121,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   const scope: GreenhouseScopeId = view === 'page' && params.get('scope') === 'global' ? 'global' : 'mine'
   // Mine waits on the member's own plants, activity and tasks. Global waits on its own list (#77).
   const fetching = useSectionFetch(scope === 'mine', ['plants', 'updates', 'todos'])
-  const { db, fullDb, currentUser, signedIn, guestPlants } = useStore()
+  const { db, fullDb, currentUser, signedIn, guestPlants, scanQuota } = useStore()
   const { t, tr } = useI18n()
   const [adding, setAdding] = useState(false)
   const [freshId, setFreshId] = useState<string>()
@@ -204,10 +214,30 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     />
   )
 
+  // The owner's own tiles at the end of the level card: AI scans left today, and (a new account with no
+  // place yet, #20) a link to set it.
+  const showScans = currentUser?.role === 'admin' || Boolean(scanQuota)
+  const needsPlace = !resolveArea(currentUser?.region)
+  const headerAside =
+    showScans || needsPlace ? (
+      <>
+        {showScans ? <MyScanAllowance /> : null}
+        {needsPlace ? (
+          <PlacePrompt to="/settings">
+            <PlaceIcon aria-hidden>📍</PlaceIcon>
+            <PlaceCopy>
+              <strong>{t.greenhouse.setPlaceShort}</strong>
+              <span>{t.greenhouse.setPlaceHint}</span>
+            </PlaceCopy>
+          </PlacePrompt>
+        ) : null}
+      </>
+    ) : null
+
   // A guest gets the real header with an empty greenhouse (level 1, no plants), not a blurred placeholder.
   const levelCard = forAudience(signedIn, {
     guest: <GreenhouseLevelView summary={greenhouseLevel('', [], [])} />,
-    signedIn: <GreenhouseLevelCard ownerId={ownerId} />,
+    signedIn: <GreenhouseLevelCard ownerId={ownerId} aside={headerAside} />,
   })
 
   const board = (
@@ -219,11 +249,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
           <h1>{t.greenhouse.title}</h1>
         </HeadingCopy>
         {view === 'page' && scope === 'mine' ? levelCard : null}
-        {view === 'page' && scope === 'mine' && signedIn ? <MyScanAllowance /> : null}
-        {/* No place yet (a new account): say where to set it, once, under the level card (#20). */}
-        {view === 'page' && scope === 'mine' && signedIn && !resolveArea(currentUser?.region) ? (
-          <PlacePrompt to="/settings">{t.greenhouse.setPlacePrompt}</PlacePrompt>
-        ) : null}
         </Heading>
       </HeadBlock>
 

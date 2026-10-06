@@ -53,17 +53,18 @@ export const Inner = styled.div`
     'top'
     'bar'
     'tally'
+    'end'
     'rules';
   gap: 12px 14px;
   align-items: center;
   min-width: 0;
 
   @container (min-width: 640px) {
-    grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
+    grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) auto;
     grid-template-areas:
-      'top side'
-      'bar side'
-      'rules rules';
+      'top side end'
+      'bar side end'
+      'rules rules rules';
     column-gap: 28px;
     row-gap: 8px;
   }
@@ -80,6 +81,41 @@ export const Side = styled.div`
     justify-content: flex-start;
     gap: 18px;
     padding-inline-start: 48px;
+  }
+`
+
+/**
+ * The owner's tiles (AI scans, set your place). Wide: a column at the end of the card. Narrow: one wrapping
+ * row under the counts, past a hairline. `$loose`: shown on its own when the level card is switched off.
+ */
+export const End = styled.div<{ $loose?: boolean }>`
+  grid-area: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding-top: ${({ $loose }) => ($loose ? 0 : '12px')};
+  border-top: ${({ $loose }) => ($loose ? 'none' : `1px solid ${theme.colors.border}`)};
+
+  & > * {
+    flex: 1 1 200px;
+  }
+
+  @container (min-width: 640px) {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-self: stretch;
+    padding-top: 0;
+    padding-inline-start: 18px;
+    border-top: none;
+    border-inline-start: 1px solid ${theme.colors.border};
+
+    & > * {
+      flex: none;
+      width: min(240px, 100%);
+    }
   }
 `
 
