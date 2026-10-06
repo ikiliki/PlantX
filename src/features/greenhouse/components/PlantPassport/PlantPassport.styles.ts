@@ -423,18 +423,15 @@ export const Title = styled.h1`
   color: ${theme.colors.forest};
   white-space: normal;
   overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
+  /* Inline, so the edit pencil follows the last word instead of floating at the far edge. */
+  display: inline;
 
   ${stacked} {
     font-size: clamp(20px, 5.5cqi, 24px);
-    -webkit-line-clamp: 2;
   }
 `
 
-export const OwnerLink = styled(Link)`
+export const OwnerLink = styled(Link)<{ $wideOnly?: boolean }>`
   display: flex;
   align-items: center;
   gap: 10px;
@@ -449,6 +446,7 @@ export const OwnerLink = styled(Link)`
   transition: background ${theme.motion.fast} ${theme.motion.ease};
   ${stacked} {
     order: 1;
+    ${({ $wideOnly }) => ($wideOnly ? 'display: none;' : '')}
   }
   &:hover {
     background: ${theme.colors.creamCard};
@@ -991,12 +989,19 @@ export const ManageRow = styled.div`
   gap: 8px;
 `
 
-/** The passport name and its edit pencil (#70). */
+/** The passport name and its edit pencil (#70): the full name, the pencil right after its last word. */
 export const TitleRow = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
   min-width: 0;
+  line-height: 1.12;
+
+  > button {
+    display: inline-grid;
+    width: 26px;
+    height: 26px;
+    margin-inline-start: 4px;
+    vertical-align: 0.15em;
+    font-size: 13px;
+  }
 `
 
 export const NoteText = styled.span<{ $empty: boolean }>`

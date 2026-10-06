@@ -42,7 +42,7 @@ import { EditPencil, InlineEdit } from '../InlineEdit/InlineEdit'
 import { emptyClassDraft, sizeChoices, stageChoices } from '../../plantClass'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import type { PlantPatch } from '../../../../mock/liveApi'
-import { PlantOwnerControls } from '../PlantOwnerControls/PlantOwnerControls'
+import { PlantDelete, PlantOwnerControls } from '../PlantOwnerControls/PlantOwnerControls'
 import { ModerationDialog, type ModerationRequest } from '../../../admin/components/ModerationDialog/ModerationDialog'
 import { Badge } from '../../../../components/Badge/Badge'
 import {
@@ -263,7 +263,9 @@ export function PlantPassport({
       // Unknown on the owner's own plant: say where to set it instead of leaving a dead end.
       value:
         isOwner && plant.locationZone === UNKNOWN_AREA.region ? (
-          <SetPlace to={accountHref()}>{t.passport.setPlace}</SetPlace>
+          <SetPlace to={accountHref()} title={t.passport.setPlaceHint}>
+            {t.passport.setPlace}
+          </SetPlace>
         ) : (
           tr(plant.locationZone, plant.locationZoneHe)
         ),
@@ -472,7 +474,7 @@ export function PlantPassport({
 
           {/* The owner: who sees the plant, and delete it. Admin on someone else's plant: hide or delete it (#69). */}
           {canEdit && isOwner ? (
-            <PlantOwnerControls plant={plant} onDeleted={() => navigate('/greenhouse', { replace: true })} />
+            <PlantOwnerControls plant={plant} />
           ) : null}
           {canEdit && isAdmin && !isOwner ? (
             <ManageRow>
@@ -646,8 +648,13 @@ export function PlantPassport({
 
         {owner && showOwner && (
           <>
-            <OwnerLabel>{t.passport.owner}</OwnerLabel>
-            <OwnerLink to={`/sellers/${owner.id}`} aria-label={`${t.passport.owner}: ${ownerName}`}>
+            <OwnerLabel data-owner-label>{t.passport.owner}</OwnerLabel>
+            {/* On a phone the greenhouse row stands for the grower; the owner row shows only without it. */}
+            <OwnerLink
+              to={`/sellers/${owner.id}`}
+              aria-label={`${t.passport.owner}: ${ownerName}`}
+              $wideOnly={Boolean(levels[owner.id])}
+            >
               <Avatar name={ownerName} color={owner.avatarColor} icon={owner.avatarIcon} size={38} />
               <OwnerMeta>
                 <OwnerName>{ownerName}</OwnerName>
@@ -681,6 +688,9 @@ export function PlantPassport({
             ) : null}
           </>
         )}
+        {canEdit && isOwner ? (
+          <PlantDelete plant={plant} onDeleted={() => navigate('/greenhouse', { replace: true })} />
+        ) : null}
       </Aside>
 
       <Main $embedded={embedded} $dialog={dialog}>

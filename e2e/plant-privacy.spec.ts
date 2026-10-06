@@ -130,7 +130,8 @@ test.describe('owner', () => {
 
     await privacy.getByRole('radio', { name: 'Private' }).click()
     await expect(privacy.getByRole('radio', { name: 'Private' })).toHaveAttribute('aria-checked', 'true')
-    await expect(passport.getByText('Only you see this plant and its activity.')).toBeVisible()
+    // What each side means is its tooltip, not a line of text.
+    await expect(privacy.getByRole('radio', { name: 'Private' })).toHaveAttribute('title', 'Only you see this plant and its activity.')
     expect(patched).toEqual({ private: true })
 
     // Delete asks first; Cancel keeps the plant.

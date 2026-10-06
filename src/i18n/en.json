@@ -281,7 +281,8 @@
     "noActivity": "No one has graded this plant yet."
   },
   "passport": {
-    "setPlace": "Unknown · set your place",
+    "setPlace": "Set",
+    "setPlaceHint": "Plants take your greenhouse place. Set it in your account.",
     "title": "Plant passport",
     "lineage": "Lineage",
     "history": "History",

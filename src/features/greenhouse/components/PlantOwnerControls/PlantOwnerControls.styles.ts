@@ -2,14 +2,30 @@ import styled from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-/** One quiet row on the passport: who can see the plant, then Delete at the end. */
+/** Who can see the plant, under its name. */
 export const Row = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
+`
+
+/**
+ * Delete sits at the very bottom of the passport side column (pushed down by `margin-top: auto`); stacked
+ * on a phone it comes last, after the owner and greenhouse rows.
+ */
+export const DeleteSlot = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  margin-top: auto;
+  padding-top: 8px;
+  order: 3;
+
+  /* Under the owner rows, which already take the free space above them. */
+  [data-owner-label] ~ & {
+    margin-top: 0;
+  }
 `
 
 /** Public / Private as one two-way pill; the chosen side is filled. */
@@ -77,10 +93,9 @@ export const Delete = styled.button`
   }
 `
 
-/** Fixed line under the switch: what the choice means, or a refused save. */
+/** A refused save, under the switch (or in the delete popup). */
 export const Note = styled.p<{ $error?: boolean }>`
   flex-basis: 100%;
-  min-height: 18px;
   margin: 0;
   font-size: 12px;
   line-height: 18px;
