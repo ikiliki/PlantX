@@ -55,6 +55,16 @@ test.describe('admin', () => {
     await signIn(page, ADMIN)
   })
 
+  test('greenhouse filters stay one sideways row on a phone', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'phone', 'phone layout only')
+    await expectPage(page, '/greenhouse')
+    const row = page.getByRole('tablist', { name: 'Greenhouse', exact: true })
+    test.skip((await row.count()) === 0, 'no plants, so no filters')
+    const tops = await row.getByRole('tab').evaluateAll((tabs) => tabs.map((tab) => Math.round(tab.getBoundingClientRect().top)))
+    expect(new Set(tops).size, 'every filter chip on one row').toBe(1)
+    expect(await row.evaluate((el) => getComputedStyle(el).overflowX)).toBe('auto')
+  })
+
   test('the admin sees unlimited AI scans', async ({ page }) => {
     await expectPage(page, '/settings')
     await expect(page.getByRole('dialog', { name: 'Account' }).locator('[data-scan-quota="unlimited"]')).toBeVisible()
@@ -74,7 +84,7 @@ test.describe('admin', () => {
     }
   })
 
-  test('the owner edits a passport value inline: Save under the field, Cancel restores it', async ({ page }) => {
+  test('the owner edits a passport value in a popup: Cancel keeps it, Save updates it', async ({ page }) => {
     const plant = {
       id: 'e2e-inline-plant',
       code: 'POT-GOLD-M-EST',
@@ -121,19 +131,23 @@ test.describe('admin', () => {
     const dialog = page.getByRole('dialog').first()
     await expect(dialog.getByText(plant.title).first()).toBeVisible()
 
-    // Cancel restores the value and saves nothing.
+    // Edit opens a popup; the passport keeps showing the value behind it. Cancel saves nothing.
     await dialog.getByRole('button', { name: 'Edit Name' }).click()
-    const editor = dialog.locator('[data-inline-editor="Name"]')
-    await editor.getByRole('textbox', { name: 'Name' }).fill('Renamed and cancelled')
-    await expect(editor.getByRole('button', { name: 'Save' })).toBeVisible()
-    await editor.getByRole('button', { name: 'Cancel' }).click()
+    const popup = page.getByRole('dialog', { name: 'Edit Name' })
+    await expect(popup).toBeVisible()
+    await expect(dialog.getByText(plant.title).first()).toBeVisible()
+    await popup.getByRole('textbox', { name: 'Name' }).fill('Renamed and cancelled')
+    await expect(popup.getByRole('button', { name: 'Save' })).toBeEnabled()
+    await popup.getByRole('button', { name: 'Cancel' }).click()
+    await expect(popup).toHaveCount(0)
     await expect(dialog.getByText(plant.title).first()).toBeVisible()
     expect(patched).toBeNull()
 
-    // Save sends only that field and shows the new value in place.
+    // Save sends only that field, closes the popup, and shows the new value.
     await dialog.getByRole('button', { name: 'Edit Name' }).click()
-    await dialog.locator('[data-inline-editor="Name"]').getByRole('textbox', { name: 'Name' }).fill('E2E renamed pothos')
-    await dialog.locator('[data-inline-editor="Name"]').getByRole('button', { name: 'Save' }).click()
+    await popup.getByRole('textbox', { name: 'Name' }).fill('E2E renamed pothos')
+    await popup.getByRole('button', { name: 'Save' }).click()
+    await expect(popup).toHaveCount(0)
     await expect(dialog.getByText('E2E renamed pothos').first()).toBeVisible()
     expect(patched).toMatchObject({ title: 'E2E renamed pothos' })
   })

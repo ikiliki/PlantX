@@ -405,6 +405,12 @@ export function PlantPassport({
           </PhotoIconButton>
           <NameBlock>
             <Code>{plant.code}</Code>
+            <TitleRow>
+              <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
+                {title}
+              </Title>
+              {canEdit ? <EditPencil label={t.edit.name} onClick={() => setEditField('title')} /> : null}
+            </TitleRow>
             {editField === 'title' ? (
               <InlineEdit
                 label={t.edit.name}
@@ -415,14 +421,7 @@ export function PlantPassport({
                 onSave={(next) => saveField({ title: next, titleHe: next })}
                 onCancel={() => setEditField(null)}
               />
-            ) : (
-              <TitleRow>
-                <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
-                  {title}
-                </Title>
-                {canEdit ? <EditPencil label={t.edit.name} onClick={() => setEditField('title')} /> : null}
-              </TitleRow>
-            )}
+            ) : null}
             {(categoryLabel || subLabel) && (
               <TaxonomyRow>
                 <PlantCatalogMark plant={plant} size={24} />
@@ -560,10 +559,15 @@ export function PlantPassport({
                 ? aiFieldLabel(trait.fieldId, mark.aiValue, db.catalog, locale, stageLabels, t.addPlant.otherCategory)
                 : undefined
             const field = trait.fieldId
-            if (field && editField === field) {
-              return (
-                <AsideStat key={trait.label} $wide>
-                  <dt>{trait.label}</dt>
+            return (
+              <AsideStat key={trait.label}>
+                <dt>{trait.label}</dt>
+                <dd>
+                  {trait.value}
+                  {canEdit && field ? <EditPencil label={trait.label} onClick={() => setEditField(field)} /> : null}
+                </dd>
+                {mark ? <AiFieldStamp mark={mark} aiLabel={aiLabel} corner /> : null}
+                {field && editField === field ? (
                   <InlineEdit
                     label={trait.label}
                     kind="choice"
@@ -574,17 +578,7 @@ export function PlantPassport({
                     }
                     onCancel={() => setEditField(null)}
                   />
-                </AsideStat>
-              )
-            }
-            return (
-              <AsideStat key={trait.label}>
-                <dt>{trait.label}</dt>
-                <dd>
-                  {trait.value}
-                  {canEdit && field ? <EditPencil label={trait.label} onClick={() => setEditField(field)} /> : null}
-                </dd>
-                {mark ? <AiFieldStamp mark={mark} aiLabel={aiLabel} corner /> : null}
+                ) : null}
               </AsideStat>
             )
           })}
@@ -593,10 +587,17 @@ export function PlantPassport({
             <dd>×{plant.quantity}</dd>
           </AsideStat>
           {(customsOpen || !crowded) &&
-            customFields.map((field) =>
-              editField === `trait:${field.id}` ? (
-                <AsideStat key={field.id} $wide>
-                  <dt>{field.label}</dt>
+            customFields.map((field) => (
+              <AsideStat key={field.id}>
+                <dt>{field.label}</dt>
+                <dd>
+                  {field.value}
+                  {canEdit && field.options.length > 0 ? (
+                    <EditPencil label={field.label} onClick={() => setEditField(`trait:${field.id}`)} />
+                  ) : null}
+                </dd>
+                {field.mark ? <AiFieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
+                {editField === `trait:${field.id}` ? (
                   <InlineEdit
                     label={field.label}
                     kind="choice"
@@ -605,34 +606,11 @@ export function PlantPassport({
                     onSave={(next) => saveField({ traits: { ...(plant.traits ?? {}), [field.id]: next } })}
                     onCancel={() => setEditField(null)}
                   />
-                </AsideStat>
-              ) : (
-                <AsideStat key={field.id}>
-                  <dt>{field.label}</dt>
-                  <dd>
-                    {field.value}
-                    {canEdit && field.options.length > 0 ? (
-                      <EditPencil label={field.label} onClick={() => setEditField(`trait:${field.id}`)} />
-                    ) : null}
-                  </dd>
-                  {field.mark ? <AiFieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
-                </AsideStat>
-              ),
-            )}
+                ) : null}
+              </AsideStat>
+            ))}
           {/* The plant's note: the owner can add one here; others see it when there is one. */}
-          {editField === 'note' ? (
-            <AsideStat $wide>
-              <dt>{t.edit.note}</dt>
-              <InlineEdit
-                label={t.edit.note}
-                kind="textarea"
-                value={tr(plant.description ?? '', plant.descriptionHe ?? plant.description ?? '')}
-                maxLength={600}
-                onSave={(next) => saveField({ description: next, descriptionHe: next })}
-                onCancel={() => setEditField(null)}
-              />
-            </AsideStat>
-          ) : plant.description || canEdit ? (
+          {plant.description || canEdit ? (
             <AsideStat $wide>
               <dt>{t.edit.note}</dt>
               <dd>
@@ -641,6 +619,16 @@ export function PlantPassport({
                 </NoteText>
                 {canEdit ? <EditPencil label={t.edit.note} onClick={() => setEditField('note')} /> : null}
               </dd>
+              {editField === 'note' ? (
+                <InlineEdit
+                  label={t.edit.note}
+                  kind="textarea"
+                  value={tr(plant.description ?? '', plant.descriptionHe ?? plant.description ?? '')}
+                  maxLength={600}
+                  onSave={(next) => saveField({ description: next, descriptionHe: next })}
+                  onCancel={() => setEditField(null)}
+                />
+              ) : null}
             </AsideStat>
           ) : null}
         </AsideStats>

@@ -28,21 +28,23 @@ export const Pencil = styled.button`
 
 export const Editor = styled.div`
   display: grid;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
   width: 100%;
+
+  textarea {
+    resize: none;
+  }
 `
 
-/** Save and Cancel sit right under the field being edited, at the field's end edge. */
-export const Actions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-`
-
-export const ErrorText = styled.p`
+/** One fixed line under the field: the character count, or a refused save's error. Never changes height. */
+export const Status = styled.p<{ $error: boolean }>`
+  min-height: 18px;
   margin: 0;
-  font-size: 13px;
-  font-weight: 650;
-  color: ${theme.colors.danger};
+  font-size: 12px;
+  font-weight: ${({ $error }) => ($error ? 650 : 500)};
+  line-height: 18px;
+  text-align: end;
+  color: ${({ $error }) => ($error ? theme.colors.danger : theme.colors.muted)};
+  font-variant-numeric: tabular-nums;
 `
