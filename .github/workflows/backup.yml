@@ -50,8 +50,9 @@ jobs:
         run: |
           name="plantx-$TARGET-$(date -u +%Y%m%dT%H%MZ)"
           echo "NAME=$name" >> "$GITHUB_ENV"
-          # Same major version as the database (Postgres 17), so pg_dump never refuses a newer server.
-          docker run --rm -e DATABASE_URL -v "$PWD:/out" postgres:17 \
+          # Same major version as the database (Postgres 17), so pg_dump never refuses a newer server. It runs as
+          # the runner user: a root-owned dump could not be removed by the next step.
+          docker run --rm --user "$(id -u):$(id -g)" -e DATABASE_URL -v "$PWD:/out" postgres:17 \
             sh -c 'pg_dump "$DATABASE_URL" --format=custom --no-owner --no-privileges \
               --schema=public --schema=supabase_migrations --file=/out/plantx.dump'
           size=$(stat -c %s plantx.dump)
@@ -62,7 +63,7 @@ jobs:
         run: |
           gpg --batch --yes --symmetric --cipher-algo AES256 --pinentry-mode loopback \
             --passphrase-fd 0 --output "$NAME.dump.gpg" plantx.dump <<< "$BACKUP_PASSPHRASE"
-          shred -u plantx.dump
+          rm -f plantx.dump
           sha256sum "$NAME.dump.gpg" | tee "$NAME.sha256"
 
       - uses: actions/upload-artifact@v4
