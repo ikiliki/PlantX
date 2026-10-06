@@ -13,6 +13,7 @@ import { bootstrapAdminEmail } from '../../lib/env.ts'
 import { isActive } from '../../lib/session.ts'
 import type { GoogleProfile } from '../../lib/googleAuth.ts'
 import { notifySignIn } from '../../lib/events.ts'
+import { systemService } from '../system/system.service.ts'
 import { usersService } from '../users/users.service.ts'
 import { LEGAL_VERSION } from '../../../../src/features/legal/legalVersion.ts'
 
@@ -111,10 +112,17 @@ export const sessionService = {
     }
 
     if (!user) {
-      // The first Google sign-in is the sign-up: file it for admin approval, with the Terms agreed.
+      // The first Google sign-in is the sign-up, with the Terms agreed. App on: the account opens and signs in.
+      // App off: it waits for the admin to pre-approve it.
       if (!consent.termsVersion) throw Errors.invalid('Agree to the Terms of Use and Privacy Policy to sign up')
-      await usersService.signUpFromGoogle({ name: profile.name || email.split('@')[0], email, ...consent })
-      throw Errors.pending('Your account is waiting for approval')
+      const { launched } = await systemService.get()
+      const created = await usersService.signUpFromGoogle(
+        { name: profile.name || email.split('@')[0], email, ...consent },
+        launched,
+      )
+      if (!created) throw Errors.pending('Your account is waiting for approval')
+      await notifySignIn(created)
+      return created
     }
     if (!isActive(user)) throw Errors.declined('Account disabled')
     if (profile.name && !user.name) user.name = profile.name
