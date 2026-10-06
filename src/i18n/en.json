@@ -383,6 +383,7 @@
     "levelPlantsOne": "1 plant",
     "levelCareOne": "1 task done",
     "levelHow": "How to level up",
+    "levelInfo": "Level and AI scans",
     "levelEarnPlant": "+{xp} XP for every plant you add",
     "levelEarnCare": "+{xp} XP for every care task you complete",
     "levelRank1": "Seedling",

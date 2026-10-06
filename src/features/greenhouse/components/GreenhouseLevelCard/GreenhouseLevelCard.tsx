@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
+import { Icon } from '../../../../components/Icon/Icon'
 import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { publicGrowerName } from '../../../profile/avatarIcons'
@@ -16,6 +17,11 @@ import {
   End,
   How,
   HowList,
+  InfoButton,
+  Panel,
+  PanelRules,
+  PlaceButton,
+  TopActions,
   Inner,
   Next,
   Progress,
@@ -53,22 +59,39 @@ function writeSeen(ownerId: string, level: number) {
 /**
  * Presentational card. `GreenhouseLevelCard` feeds it the owner's live numbers.
  * `owner` puts the grower's avatar on the level ring; the card is the page's header, so no name is shown.
- * `aside`: the owner's own tiles (AI scans left, set your place) at the end of the card, under the counts on a phone.
+ * The owner's own tiles: `scans` (AI scans left) and `place` (set your greenhouse place, only when it is unknown).
+ * Wide, they stand in a column at the end of the card. On a phone they wait behind two buttons in the top row:
+ * "!" opens the scans and the level rules (it replaces the (?) after the XP line), and an orange pin, only
+ * when the place is missing, opens the place tile.
  */
 export function GreenhouseLevelView({
   summary,
   owner,
   celebrate = false,
-  aside,
+  scans,
+  place,
 }: {
   summary: GreenhouseLevel
   owner?: { name: string; color: string; icon?: string }
   celebrate?: boolean
-  aside?: ReactNode
+  scans?: ReactNode
+  place?: ReactNode
 }) {
   const { t } = useI18n()
   const [howOpen, setHowOpen] = useState(false)
+  const [panel, setPanel] = useState<'info' | 'place' | null>(null)
   const howId = useId()
+  const panelId = useId()
+  const toggle = (next: 'info' | 'place') => setPanel((open) => (open === next ? null : next))
+  const rules = (
+    <>
+      <li>
+        <strong>{t.greenhouse.levelHow}</strong>
+      </li>
+      <li>{t.greenhouse.levelEarnPlant.replace('{xp}', String(PLANT_XP))}</li>
+      <li>{t.greenhouse.levelEarnCare.replace('{xp}', String(CARE_XP))}</li>
+    </>
+  )
   const rankName = t.greenhouse[`levelRank${summary.rank}` as keyof typeof t.greenhouse] as string
   const left = summary.nextLevelXp - summary.xp
 
@@ -85,6 +108,34 @@ export function GreenhouseLevelView({
             {t.greenhouse.levelXp.replace('{xp}', summary.xp.toLocaleString())}
           </Xp>
         </TopCopy>
+        <TopActions>
+          {place ? (
+            <PlaceButton
+              type="button"
+              aria-label={t.greenhouse.setPlaceShort}
+              title={t.greenhouse.setPlaceShort}
+              aria-expanded={panel === 'place'}
+              aria-controls={panelId}
+              $on={panel === 'place'}
+              onClick={() => toggle('place')}
+              data-place-button
+            >
+              <Icon name="pin" size={16} />
+            </PlaceButton>
+          ) : null}
+          <InfoButton
+            type="button"
+            aria-label={t.greenhouse.levelInfo}
+            title={t.greenhouse.levelInfo}
+            aria-expanded={panel === 'info'}
+            aria-controls={panelId}
+            $on={panel === 'info'}
+            onClick={() => toggle('info')}
+            data-level-info
+          >
+            !
+          </InfoButton>
+        </TopActions>
       </Top>
 
       <Progress>
@@ -122,17 +173,27 @@ export function GreenhouseLevelView({
       </TallyRow>
       </Side>
 
-      {aside ? <End>{aside}</End> : null}
-
-      {howOpen ? (
-        <HowList id={howId}>
-          <li>
-            <strong>{t.greenhouse.levelHow}</strong>
-          </li>
-          <li>{t.greenhouse.levelEarnPlant.replace('{xp}', String(PLANT_XP))}</li>
-          <li>{t.greenhouse.levelEarnCare.replace('{xp}', String(CARE_XP))}</li>
-        </HowList>
+      {scans || place ? (
+        <End>
+          {scans}
+          {place}
+        </End>
       ) : null}
+
+      {panel ? (
+        <Panel id={panelId}>
+          {panel === 'place' ? (
+            place
+          ) : (
+            <>
+              {scans}
+              <PanelRules>{rules}</PanelRules>
+            </>
+          )}
+        </Panel>
+      ) : null}
+
+      {howOpen ? <HowList id={howId}>{rules}</HowList> : null}
       </Inner>
     </Root>
   )
@@ -174,11 +235,13 @@ export function GreenhouseLevelSkeleton({ blurred = false }: { blurred?: boolean
 export function GreenhouseLevelCard({
   ownerId,
   publicView = false,
-  aside,
+  scans,
+  place,
 }: {
   ownerId: string
   publicView?: boolean
-  aside?: ReactNode
+  scans?: ReactNode
+  place?: ReactNode
 }) {
   const { db } = useStore()
   const { locale } = useI18n()
@@ -217,7 +280,12 @@ export function GreenhouseLevelCard({
     return undefined
   }, [ownerId, publicView, fetching, summary.level])
 
-  if (!isPlacementEnabled(db.system, 'greenhouse.level')) return aside ? <End $loose>{aside}</End> : null
+  if (!isPlacementEnabled(db.system, 'greenhouse.level')) return scans || place ? (
+      <End $loose>
+        {scans}
+        {place}
+      </End>
+    ) : null
   const waiting = local ? fetching : !remoteSettled
   if (waiting) return <GreenhouseLevelSkeleton />
   const shown = local ? summary : remote
@@ -226,5 +294,5 @@ export function GreenhouseLevelCard({
   const owner = user
     ? { name: publicGrowerName(user, locale === 'he'), color: user.avatarColor, icon: user.avatarIcon }
     : undefined
-  return <GreenhouseLevelView summary={shown} owner={owner} celebrate={celebrate} aside={aside} />
+  return <GreenhouseLevelView summary={shown} owner={owner} celebrate={celebrate} scans={scans} place={place} />
 }

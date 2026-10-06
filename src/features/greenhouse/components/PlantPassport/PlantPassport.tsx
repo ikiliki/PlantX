@@ -29,7 +29,7 @@ import type { SizeBand, StageBand, TodoSubcategory } from '../../../../mock/type
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { canSeeActivity } from '../../../feed/activityXp'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
-import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
+import { CatalogMark } from '../CatalogMark/CatalogMark'
 import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
@@ -85,15 +85,18 @@ import {
   Tab,
   TaxonomyItem,
   TaxonomyRow,
-  TaxonomySep,
   TabBar,
   TipLine,
   Timeline,
   TimelineRow,
   Title,
+  TitleTail,
   Toast,
   SetPlace,
 } from './PlantPassport.styles'
+
+/** Longer names end in an ellipsis on the passport head (the tooltip has the full name). */
+const TITLE_MAX = 48
 
 type TabId = 'grading' | 'todo' | 'activity' | 'market'
 
@@ -368,6 +371,11 @@ export function PlantPassport({
   const ownerName = owner ? publicGrowerName(owner, locale === 'he') : ''
 
   const title = titleWithoutQuantity(tr(plant.title, plant.titleHe))
+  // A very long name ends in an ellipsis (the full name is the tooltip); the edit pencil follows it.
+  const shownTitle = title.length > TITLE_MAX ? `${title.slice(0, TITLE_MAX - 1).trimEnd()}…` : title
+  const titleCut = shownTitle.lastIndexOf(' ')
+  const titleHead = titleCut > 0 ? shownTitle.slice(0, titleCut + 1) : ''
+  const titleLast = titleCut > 0 ? shownTitle.slice(titleCut + 1) : shownTitle
 
   return (
     <Frame>
@@ -411,10 +419,20 @@ export function PlantPassport({
           <NameBlock>
             <Code>{plant.code}</Code>
             <TitleRow>
-              <Title id="plant-passport-title" as={embedded ? 'h2' : 'h1'}>
-                {title}
+              {/* The pencil is glued to the last word, so it sits right after the name and never on a line alone.
+                  The heading's name stays the plant's name (aria-label), not "… Edit Name". */}
+              <Title
+                id="plant-passport-title"
+                as={embedded ? 'h2' : 'h1'}
+                aria-label={title}
+                title={shownTitle === title ? undefined : title}
+              >
+                {titleHead}
+                <TitleTail>
+                  {titleLast}
+                  {canEdit ? <EditPencil label={t.edit.name} onClick={() => setEditField('title')} /> : null}
+                </TitleTail>
               </Title>
-              {canEdit ? <EditPencil label={t.edit.name} onClick={() => setEditField('title')} /> : null}
             </TitleRow>
             {editField === 'title' ? (
               <InlineEdit
@@ -429,9 +447,9 @@ export function PlantPassport({
             ) : null}
             {(categoryLabel || subLabel) && (
               <TaxonomyRow>
-                <PlantCatalogMark plant={plant} size={24} />
                 {categoryLabel ? (
-                  <TaxonomyItem>
+                  <TaxonomyItem title={categoryLabel}>
+                    <CatalogMark photo={catalogCategory?.photo} name={categoryLabel} size={22} />
                     {species ? (
                       <CategoryName as={Link} to={speciesHref(species.id)}>
                         {categoryLabel}
@@ -451,9 +469,9 @@ export function PlantPassport({
                     ) : null}
                   </TaxonomyItem>
                 ) : null}
-                {categoryLabel && subLabel && <TaxonomySep aria-hidden>·</TaxonomySep>}
                 {subLabel ? (
-                  <TaxonomyItem>
+                  <TaxonomyItem title={subLabel}>
+                    <CatalogMark photo={catalogSub?.photo} name={subLabel} size={22} />
                     <SubName>{subLabel}</SubName>
                     {subMark ? (
                       <AiFieldStamp

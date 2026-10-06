@@ -33,6 +33,15 @@ export const MasterGrower =() => <GreenhouseLevelView summary={greenhouseLevel('
 export const WithOwnerTiles = () => (
   <GreenhouseLevelView
     summary={greenhouseLevel('u', plants(6), done(4))}
-    aside={<ScanQuotaNote quota={{ used: 2, limit: 3, extra: 0, remaining: 1, resetsAt: '2026-10-06T21:00:00.000Z' }} />}
+    scans={<ScanQuotaNote quota={{ used: 2, limit: 3, extra: 0, remaining: 1, resetsAt: '2026-10-06T21:00:00.000Z' }} />}
   />
+)
+export const PhoneWithPlaceMissing = () => (
+  <div style={{ width: 360 }}>
+    <GreenhouseLevelView
+      summary={greenhouseLevel('u', plants(6), done(4))}
+      scans={<ScanQuotaNote quota={{ used: 2, limit: 3, extra: 0, remaining: 1, resetsAt: '2026-10-06T21:00:00.000Z' }} />}
+      place={<a href="#place">Set your place</a>}
+    />
+  </div>
 )
