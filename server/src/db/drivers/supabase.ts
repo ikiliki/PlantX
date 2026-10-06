@@ -16,6 +16,7 @@ import { supabaseCatalogSuggestions } from './supabaseCatalogSuggestions.ts'
 import { supabaseIdentifyRequests } from './supabaseIdentifyRequests.ts'
 import { supabaseIssueReports } from './supabaseIssueReports.ts'
 import { supabaseIdentifySettings } from './supabaseIdentifySettings.ts'
+import { supabaseWebhookSettings } from './supabaseWebhookSettings.ts'
 import { supabaseModeration, supabaseRateLimits, supabaseScanQuota, visibilityFrom } from './supabaseModeration.ts'
 
 const { Pool } = pg
@@ -187,6 +188,7 @@ export function createSupabaseStore(): PlantxStore {
         client.release()
       }
     },
+    webhookSettings: supabaseWebhookSettings(pool),
     identifyRequests: supabaseIdentifyRequests(pool),
     issueReports: supabaseIssueReports(pool),
     scanQuota: supabaseScanQuota(pool),

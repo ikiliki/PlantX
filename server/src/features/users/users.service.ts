@@ -4,6 +4,7 @@ import { greenhouseLevel } from '../../../../src/features/greenhouse/greenhouseL
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { canSee, stateOf, visibilityIndex, visiblePlants, visibleUsers } from '../../lib/visibility.ts'
+import { notifyApproved, notifySignUp } from '../../lib/events.ts'
 import {
   type AccountStatus,
   type ManagedUser,
@@ -82,6 +83,7 @@ export const usersService = {
     if (mine.some((item) => item.status === 'pending')) return
     if (mine.some((item) => item.status === 'rejected')) throw Errors.declined('Sign-up was declined')
     await usersService.requestAccess(input)
+    await notifySignUp(input.name, input.email)
   },
 
   async approve(id: string) {
@@ -125,6 +127,7 @@ export const usersService = {
     row.approvedAt = new Date().toISOString()
     row.userId = user.id
     await store.pendingUsers.upsert([row])
+    await notifyApproved(row.name)
     return { pending: row, user }
   },
 

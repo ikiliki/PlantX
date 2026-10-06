@@ -3,6 +3,7 @@ import type { ModerationAction, ModerationTarget, User, Visibility } from '../..
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import { requireAdmin } from '../../lib/session.ts'
+import { isWebhookId, sendWebhookTest, setWebhookEnabled, webhookStatuses } from '../../lib/webhookSettings.ts'
 import { moderationService } from '../moderation/moderation.service.ts'
 import { quotaService } from '../quota/quota.service.ts'
 
@@ -21,6 +22,35 @@ function readType(value: string | undefined): ModerationTarget {
 function text(value: unknown, max: number) {
   return typeof value === 'string' ? value.trim().slice(0, max) : undefined
 }
+
+// ── Webhooks ────────────────────────────────────────────────────────────────
+
+/** Each outgoing webhook: its env name, whether that is set (never the URL), and its on/off switch. */
+adminRoutes.get('/webhooks', async (c) => {
+  await requireAdmin(c)
+  return c.json({ webhooks: await webhookStatuses() })
+})
+
+adminRoutes.put('/webhooks/:id', async (c) => {
+  await requireAdmin(c)
+  const id = c.req.param('id')
+  if (!isWebhookId(id)) throw Errors.invalid('Unknown webhook')
+  const body = (await c.req.json().catch(() => null)) as { enabled?: unknown } | null
+  if (typeof body?.enabled !== 'boolean') throw Errors.invalid('enabled must be true or false')
+  await setWebhookEnabled(id, body.enabled)
+  return c.json({ webhooks: await webhookStatuses() })
+})
+
+/** Posts one test line, even while switched off. 409 when its env URL is not set. */
+adminRoutes.post('/webhooks/:id/test', async (c) => {
+  const admin = await requireAdmin(c)
+  const id = c.req.param('id')
+  if (!isWebhookId(id)) throw Errors.invalid('Unknown webhook')
+  if (!(await sendWebhookTest(id, admin.nickname || admin.name))) {
+    return c.json({ error: 'not_configured', message: 'Its env URL is not set on this deployment' }, 409)
+  }
+  return c.json({ sent: true })
+})
 
 // ── Moderation (#68, #69) ───────────────────────────────────────────────────
 

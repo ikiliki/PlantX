@@ -810,3 +810,14 @@ export type SystemHealth = {
   }
   alerts: { configured: boolean }
 }
+
+/** Outgoing webhooks an admin can switch on and off (Admin → Webhooks). */
+export type WebhookId = 'alerts' | 'signups' | 'signins' | 'activities'
+
+/** One row of Admin → Webhooks. `configured`: its env URL is set (the URL itself never leaves the server). */
+export type WebhookStatus = {
+  id: WebhookId
+  env: 'PLANTX_ALERT_WEBHOOK_URL' | 'PLANTX_EVENTS_WEBHOOK_URL'
+  configured: boolean
+  enabled: boolean
+}

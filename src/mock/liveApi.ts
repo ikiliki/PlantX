@@ -107,6 +107,22 @@ export function fetchEnv() {
   }>('/api/env')
 }
 
+/** Admin → Webhooks: env set or not (never the URL) and the on/off switch. */
+export function fetchWebhooksOutcome() {
+  return requestOutcome<{ webhooks: import('./types').WebhookStatus[] }>('/api/admin/webhooks')
+}
+
+export function setWebhookEnabledOutcome(id: import('./types').WebhookId, enabled: boolean) {
+  return requestOutcome<{ webhooks: import('./types').WebhookStatus[] }>(`/api/admin/webhooks/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  })
+}
+
+export function sendWebhookTestOutcome(id: import('./types').WebhookId) {
+  return requestOutcome<{ sent: boolean }>(`/api/admin/webhooks/${id}/test`, { method: 'POST' })
+}
+
 /** Admin only: API, database, migrations, identify keys (set or not) and error counts (#56). */
 export function fetchSystemHealthOutcome() {
   return requestOutcome<{ health: import('./types').SystemHealth }>('/api/system/health')

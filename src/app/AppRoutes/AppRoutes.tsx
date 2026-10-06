@@ -35,6 +35,7 @@ import { MarketPage } from '../../pages/MarketPage/MarketPage'
 import { RankPage } from '../../pages/RankPage/RankPage'
 import { SellerProfilePage } from '../../pages/SellerProfilePage/SellerProfilePage'
 import { ApisPage } from '../../pages/ApisPage/ApisPage'
+import { WebhooksPage } from '../../pages/WebhooksPage/WebhooksPage'
 import { RequestsPage } from '../../pages/RequestsPage/RequestsPage'
 import { ModerationPage } from '../../pages/ModerationPage/ModerationPage'
 import { ServerPage } from '../../pages/ServerPage/ServerPage'
@@ -147,6 +148,7 @@ export function AppRoutes() {
           <Route path="admin/requests" element={<RequestsPage />} />
           <Route path="admin/moderation" element={<ModerationPage />} />
           <Route path="admin/apis" element={<ApisPage />} />
+          <Route path="admin/webhooks" element={<WebhooksPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/greenhouse" replace />} />
       </Routes>

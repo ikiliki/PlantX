@@ -31,6 +31,11 @@ export interface PlantxStore {
   isReady(): Promise<boolean>
   /** One round trip (`select 1`) and the newest applied migration, or null when it is not recorded. Throws when the database is down. */
   health(): Promise<{ migration: string | null }>
+  /** Admin on/off per outgoing webhook. A missing id is on. */
+  webhookSettings: {
+    get(): Promise<Partial<Record<import('../../../src/mock/types.ts').WebhookId, boolean>>>
+    set(id: import('../../../src/mock/types.ts').WebhookId, enabled: boolean): Promise<void>
+  }
   users: {
     list(): Promise<User[]>
     saveAll(users: User[]): Promise<void>
