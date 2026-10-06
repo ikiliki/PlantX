@@ -50,6 +50,22 @@ test.describe('member', () => {
   })
 })
 
+test.describe('member Global list', () => {
+  test.beforeEach(async ({ page }) => {
+    await signIn(page, MEMBER)
+  })
+
+  test('Global leaves out my own greenhouse and sorts the rest by level, highest first', async ({ page }) => {
+    await page.goto('/greenhouse?scope=global')
+    await expect(page.locator('[data-greenhouse-skeleton]')).toHaveCount(0, { timeout: 20_000 })
+    await expect(page.locator(`[data-greenhouse="${MEMBER}"]`)).toHaveCount(0)
+    const cards = page.locator('[data-greenhouse]:not([data-verified])')
+    test.skip((await cards.count()) < 2, 'fewer than two other greenhouses to compare')
+    const levels = (await cards.allInnerTexts()).map((text) => Number(/Level (\d+)/.exec(text)?.[1] ?? 0))
+    expect(levels, 'levels never rise down the list').toEqual([...levels].sort((a, b) => b - a))
+  })
+})
+
 test.describe('admin', () => {
   test.beforeEach(async ({ page }) => {
     await signIn(page, ADMIN)

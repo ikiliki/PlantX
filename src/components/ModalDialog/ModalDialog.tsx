@@ -51,7 +51,7 @@ export function ModalDialog({
         $width={width}
         onClick={(event) => event.stopPropagation()}
       >
-        <Close type="button" onClick={onClose} aria-label={t.common.cancel}>
+        <Close type="button" onClick={onClose} aria-label={t.common.close}>
           ×
         </Close>
         <Head>
