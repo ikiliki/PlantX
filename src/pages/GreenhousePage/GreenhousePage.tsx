@@ -30,8 +30,10 @@ import { ownerActivity } from '../../features/greenhouse/ownerActivity'
 import { useStore } from '../../mock/store'
 import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
+import { resolveArea } from '../../mock/locations'
+import { MyScanAllowance } from '../../features/greenhouse/components/ScanQuotaNote/ScanQuotaNote'
 import type { ComponentView } from '../../theme/view'
-import { HeadBlock, Heading, HeadingCopy, Page, PublicHeading, PublicPage } from './GreenhousePage.styles'
+import { HeadBlock, Heading, HeadingCopy, Page, PlacePrompt, PublicHeading, PublicPage } from './GreenhousePage.styles'
 
 const WIDGET_PLANTS = 2
 const PUBLIC_SKELETON_CARDS = 8
@@ -105,15 +107,16 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
 }
 
 function GreenhouseOwner({ view }: { view: ComponentView }) {
-  const fetching = useSectionFetch(true, ['plants', 'updates', 'todos'])
+  const [params, setParams] = useSearchParams()
+  const scope: GreenhouseScopeId = view === 'page' && params.get('scope') === 'global' ? 'global' : 'mine'
+  // Mine waits on the member's own plants, activity and tasks. Global waits on its own list (#77).
+  const fetching = useSectionFetch(scope === 'mine', ['plants', 'updates', 'todos'])
   const { db, fullDb, currentUser, signedIn, guestPlants } = useStore()
   const { t, tr } = useI18n()
   const [adding, setAdding] = useState(false)
   const [freshId, setFreshId] = useState<string>()
   const headerNav = useHeaderNav()
-  const [params, setParams] = useSearchParams()
   const filter = greenhouseFilter(params.get('tab'))
-  const scope: GreenhouseScopeId = view === 'page' && params.get('scope') === 'global' ? 'global' : 'mine'
   const ownerId = currentUser?.id ?? ''
 
   const mine = db.plants.filter((p) => p.ownerId === ownerId)
@@ -184,10 +187,10 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
       />
     )
 
-  const memberBody = fetching ? (
-    loadingBody
-  ) : scope === 'global' ? (
+  const memberBody = scope === 'global' ? (
     <GreenhouseDirectory />
+  ) : fetching ? (
+    loadingBody
   ) : (
     <CollectionBoard
       plants={view === 'widget' ? living.slice(0, WIDGET_PLANTS) : living}
@@ -216,6 +219,11 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
           <h1>{t.greenhouse.title}</h1>
         </HeadingCopy>
         {view === 'page' && scope === 'mine' ? levelCard : null}
+        {view === 'page' && scope === 'mine' && signedIn ? <MyScanAllowance /> : null}
+        {/* No place yet (a new account): say where to set it, once, under the level card (#20). */}
+        {view === 'page' && scope === 'mine' && signedIn && !resolveArea(currentUser?.region) ? (
+          <PlacePrompt to="/settings">{t.greenhouse.setPlacePrompt}</PlacePrompt>
+        ) : null}
         </Heading>
       </HeadBlock>
 

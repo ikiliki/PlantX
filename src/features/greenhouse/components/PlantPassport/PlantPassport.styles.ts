@@ -319,8 +319,16 @@ export const RarityBanner = styled.div<{ $rarity: PlantRarity }>`
   }
 `
 
-export const AsideStat = styled.div`
+export const AsideStat = styled.div<{ $wide?: boolean }>`
   ${asideStatTile}
+  ${({ $wide }) => ($wide ? 'grid-column: 1 / -1;' : '')}
+  dd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+  }
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
   ${[1, 2, 3, 4, 5, 6].map((n) => `&:nth-child(${n}) { animation-delay: ${100 + n * 40}ms; }`).join('\n')}
   ${stacked} {
@@ -981,4 +989,20 @@ export const ManageRow = styled.div`
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+`
+
+/** The passport name and its edit pencil (#70). */
+export const TitleRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+`
+
+export const NoteText = styled.span<{ $empty: boolean }>`
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: ${({ $empty }) => ($empty ? theme.colors.muted : 'inherit')};
+  font-style: ${({ $empty }) => ($empty ? 'italic' : 'normal')};
 `

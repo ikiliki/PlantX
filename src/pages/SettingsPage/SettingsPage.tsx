@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
+import { MyScanAllowance } from '../../features/greenhouse/components/ScanQuotaNote/ScanQuotaNote'
 import { clientEnv } from '../../theme/plantxEnv'
 import { PageHeader } from '../../app/AppShell/AppShell.styles'
 import { Avatar } from '../../components/Avatar/Avatar'
@@ -15,6 +18,7 @@ export function SettingsPage() {
   const { currentUser, loginAs, setLocale, db } = useStore()
   const { t, locale } = useI18n()
   const navigate = useNavigate()
+  const [accountOpen, setAccountOpen] = useState(false)
 
   return (
     <div>
@@ -32,12 +36,19 @@ export function SettingsPage() {
                 {t.settings.role}: {t.roles[currentUser.role]}
               </div>
               <GreenhousePlace />
+              <div style={{ display: 'grid', gap: 8, marginTop: 12, justifyItems: 'start' }}>
+                <MyScanAllowance />
+                <Button type="button" variant="ghost" size="sm" onClick={() => setAccountOpen(true)}>
+                  {t.settings.editProfile}
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
           <p>{t.common.guestBlocked}</p>
         )}
       </Card>
+      {accountOpen ? <AccountDialog onClose={() => setAccountOpen(false)} /> : null}
 
       {canChooseLocale() && (
       <Card style={{ marginBottom: 16 }}>

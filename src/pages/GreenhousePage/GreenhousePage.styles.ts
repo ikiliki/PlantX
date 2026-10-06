@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Link } from 'react-router-dom'
 import { theme } from '../../theme/tokens'
 
 /** Viewport where `CollectionBoard` puts shelf and rail side by side (961px board + main padding). */
@@ -87,4 +88,14 @@ export const GuestAuth = styled.div`
   > * {
     width: min(380px, 100%);
   }
+`
+
+/** A new account with no greenhouse place: a link to Settings (#20). */
+export const PlacePrompt = styled(Link)`
+  justify-self: start;
+  font-size: 13px;
+  font-weight: 700;
+  color: ${theme.colors.warn};
+  text-decoration: underline;
+  text-underline-offset: 3px;
 `

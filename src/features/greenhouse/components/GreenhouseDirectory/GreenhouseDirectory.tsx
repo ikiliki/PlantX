@@ -3,18 +3,20 @@ import { InfiniteSentinel, useInfiniteList } from '../../../../components/Infini
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { Plant, User } from '../../../../mock/types'
-import { useGreenhouseLevels } from '../../useGreenhouseLevels'
+import { useGreenhouseLevelsState } from '../../useGreenhouseLevels'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { GreenhouseCard, GreenhouseCardSkeleton, greenhouseHref, greenhouseShelf } from '../GreenhouseCard/GreenhouseCard'
 import { Empty, List, Root, Search } from './GreenhouseDirectory.styles'
 
 /**
- * A public greenhouse. Every grower is listed for everyone.
- * The admin is left out of that list, and sees every greenhouse including his own.
+ * A greenhouse in the Global list. A grower does not see their own there (it is the Mine tab);
+ * the admin is left out of everyone else's list, and sees every greenhouse including his own.
  */
 export function isPublicGreenhouse(user: User, viewer: User | null) {
   if (user.role === 'guest') return false
   if ((user.accountStatus ?? 'active') === 'disabled') return false
   if (user.role === 'admin') return viewer?.role === 'admin'
+  if (viewer && viewer.role !== 'admin' && user.id === viewer.id) return false
   return true
 }
 
@@ -59,24 +61,31 @@ export function GreenhouseDirectory() {
   const { db, currentUser } = useStore()
   const { t } = useI18n()
   const [query, setQuery] = useState('')
-
-  const levels = useGreenhouseLevels()
+  // Only what these cards show: the growers, their plant photos and their levels (#77).
+  const listLoading = useSectionFetch(true, ['users', 'plants'])
+  const { levels, ready: levelsReady } = useGreenhouseLevelsState()
   const growers = useMemo(
     () => db.users.filter((user) => isPublicGreenhouse(user, currentUser)),
     [db.users, currentUser],
   )
-  // Highest level first; XP breaks ties inside a level, then the name keeps the order stable.
+  // Highest level first; XP, then plant count break ties; the name keeps the order stable, with numbers in
+  // number order ("Tester 2" before "Tester 10").
   const byLevel = (a: User, b: User) =>
     (levels[b.id]?.level ?? 0) - (levels[a.id]?.level ?? 0) ||
     (levels[b.id]?.xp ?? 0) - (levels[a.id]?.xp ?? 0) ||
-    a.name.localeCompare(b.name)
+    livingCount(db.plants, b.id) - livingCount(db.plants, a.id) ||
+    a.name.localeCompare(b.name, undefined, { numeric: true })
   const needle = query.trim().toLowerCase()
   const verifiedUsers = (db.verifiedGreenhouseIds ?? [])
     .map((id) => growers.find((user) => user.id === id))
     .filter((user): user is User => Boolean(user))
     .sort(byLevel)
   const verifiedIds = new Set(verifiedUsers.map((user) => user.id))
-  const rest = growers.filter((user) => !verifiedIds.has(user.id) && matches(user, needle)).sort(byLevel)
+  // Greenhouses with no plants stay out of the list unless a search names them (#20).
+  const rest = growers
+    .filter((user) => !verifiedIds.has(user.id) && matches(user, needle))
+    .filter((user) => Boolean(needle) || livingCount(db.plants, user.id) > 0)
+    .sort(byLevel)
   const list = useInfiniteList(rest, { signature: `${needle}|${rest.map((user) => user.id).join('|')}` })
 
   const card = (user: User, verified = false) => (
@@ -90,6 +99,9 @@ export function GreenhouseDirectory() {
       level={levels[user.id]}
     />
   )
+
+  // Placeholders until the cards can render whole: no empty-state flash, no level rings popping in later.
+  if (listLoading || !levelsReady) return <GreenhouseDirectorySkeleton />
 
   return (
     <Root>

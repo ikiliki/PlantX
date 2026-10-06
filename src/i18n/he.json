@@ -344,7 +344,9 @@
     "timeAgo": "לפני {n} ימים",
     "averagePrice": "מחיר ממוצע",
     "priceTip": "מחירים נוספים",
-    "aiSuggested": "ה־AI הציע"
+    "aiSuggested": "ה־AI הציע",
+    "editField": "עריכת {field}",
+    "addNote": "הוסיפו הערה על הצמח"
   },
   "greenhouse": {
     "title": "החממה",
@@ -474,7 +476,8 @@
     "aiCount": "{n} מאומתים ב־AI",
     "activityShow": "הצגה",
     "activityXp": "XP",
-    "activityAll": "הכול"
+    "activityAll": "הכול",
+    "setPlacePrompt": "הגדירו את מיקום החממה כדי שצמחים חדשים יידעו איפה הם גדלים"
   },
   "todo": {
     "cancel": "ביטול",
@@ -671,7 +674,8 @@
     "limitedTitle": "יותר מדי בקשות",
     "limitedBody": "חכו דקה ונסו שוב.",
     "quotaNone": "אין סריקות AI להיום. הן חוזרות בחצות (שעון ישראל).",
-    "quotaLeft": "נשארו {left} מתוך {total} סריקות AI להיום"
+    "quotaLeft": "נשארו {left} מתוך {total} סריקות AI להיום · מתאפס בחצות (שעון ישראל)",
+    "quotaUnlimited": "סריקות AI ללא הגבלה (מנהל)"
   },
   "sell": {
     "title": "מכירה / התרבה",
@@ -1255,7 +1259,8 @@
     "scansCount": "סריקות",
     "scansCountValue": "{scans} סריקות · {members} חברים",
     "rejectConfirmTitle": "לדחות {count} בקשות?",
-    "rejectConfirmLead": "הם לא יוכלו להתחבר. אפשר למצוא אותם אחר כך תחת \"הוחלט\"."
+    "rejectConfirmLead": "הם לא יוכלו להתחבר. אפשר למצוא אותם אחר כך תחת \"הוחלט\".",
+    "manageInModeration": "ניהול במודרציה"
   },
   "settings": {
     "title": "הגדרות",
@@ -1264,7 +1269,9 @@
     "placeHint": "צמחים חדשים ישתמשו במקום הזה.",
     "role": "סוג חשבון",
     "logout": "התנתקות",
-    "logoutDemo": "יציאה לדמו"
+    "logoutDemo": "יציאה לדמו",
+    "editProfile": "עריכת כינוי ואייקון",
+    "moreSettings": "מיקום והגדרות נוספות"
   },
   "feed": {
     "people": "בחממה",
@@ -1645,9 +1652,6 @@
     "bioHe": "ביו (עברית)",
     "region": "אזור",
     "failed": "לא ניתן לשמור. נסו שוב.",
-    "plantTitle": "עריכת צמח",
-    "plantLead": "שם והערה. המין, הדירוג וההיסטוריה נשארים כמו שהם.",
-    "plantSaved": "{name} נשמר.",
     "name": "שם",
     "note": "הערה"
   },

@@ -1,7 +1,7 @@
 import { OTHER_CATEGORY_ID } from '../../../greenhouse/plantClass'
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Badge } from '../../../../components/Badge/Badge'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
@@ -12,7 +12,6 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import type { FeedUpdate, FeedUpdateKind, ModerationItem, Plant, ScanQuota, User } from '../../../../mock/types'
 import { formatApiFailure } from '../../../../lib/apiFailure'
 import { fetchAdminScanQuotas, type ServerSlice } from '../../../../mock/liveApi'
-import { ScanQuotaDialog } from '../ScanQuotaDialog/ScanQuotaDialog'
 import { useStore, type LiveStatus } from '../../../../mock/store'
 import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
@@ -177,23 +176,13 @@ function PreviewShell({
   )
 }
 
-function UserPreview({
-  row,
-  plantCount,
-  busy,
-  onClose,
-  onDisable,
-  onEnable,
-  onPreapproved,
-}: {
-  row: User
-  plantCount: number
-  busy: boolean
-  onClose: () => void
-  onDisable: () => void
-  onEnable: () => void
-  onPreapproved: (value: boolean) => void
-}) {
+/** Admin → Moderation, opened on one row (Server is read-only, #71). */
+export function moderationHref(type: 'user' | 'plant' | 'activity', query: string) {
+  return `/admin/moderation?${new URLSearchParams({ type, q: query })}`
+}
+
+function UserPreview({ row, plantCount, onClose }: { row: User; plantCount: number; onClose: () => void }) {
+  const navigate = useNavigate()
   const { t, tr, locale } = useI18n()
   const disabled = (row.accountStatus ?? 'active') === 'disabled'
   const specialties = (locale === 'he' ? row.specialtiesHe : row.specialties).join(', ') || '—'
@@ -204,42 +193,16 @@ function UserPreview({
       title={t.admin.previewUser}
       onClose={onClose}
       actions={
-        row.role === 'admin' ? (
+        <>
           <Button size="sm" variant="ghost" onClick={onClose}>
             {t.common.cancel}
           </Button>
-        ) : disabled ? (
-          <>
-            <Button size="sm" variant="ghost" onClick={onClose}>
-              {t.common.cancel}
+          {row.role === 'admin' ? null : (
+            <Button type="button" size="sm" variant="secondary" onClick={() => navigate(moderationHref('user', row.email || row.name))}>
+              {t.admin.manageInModeration}
             </Button>
-            <Button size="sm" variant="growth" disabled={busy} onClick={onEnable}>
-              {t.admin.enable}
-            </Button>
-            {row.preapproved ? (
-              <Button size="sm" variant="secondary" disabled={busy} onClick={() => onPreapproved(false)}>
-                {t.admin.unmarkPreapproved}
-              </Button>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <Button size="sm" variant="ghost" onClick={onClose}>
-              {t.common.cancel}
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={busy}
-              onClick={() => onPreapproved(!row.preapproved)}
-            >
-              {row.preapproved ? t.admin.unmarkPreapproved : t.admin.markPreapproved}
-            </Button>
-            <Button size="sm" variant="danger" disabled={busy} onClick={onDisable}>
-              {t.admin.disable}
-            </Button>
-          </>
-        )
+          )}
+        </>
       }
     >
       <PreviewCard>
@@ -488,16 +451,11 @@ export function ServerPanel() {
     plantxEnv,
     plantxEnvLabel,
     retryLive,
-    disableUser,
-    enableUser,
-    setPreapproved,
-    setVerifiedGreenhouses,
     liveMeta,
     resolveModeration,
   } = useStore()
   const { t, tr, locale, formatMoney } = useI18n()
 
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [selectedPlants, setSelectedPlants] = useState<string[]>([])
   const [selectedActivities, setSelectedActivities] = useState<string[]>([])
   const [selectedTx, setSelectedTx] = useState<string[]>([])
@@ -510,14 +468,12 @@ export function ServerPanel() {
   const [passportPlantId, setPassportPlantId] = useState<string | null>(null)
   const [activityPreviewId, setActivityPreviewId] = useState<string | null>(null)
   const [reportPreviewId, setReportPreviewId] = useState<string | null>(null)
-  const [busyId, setBusyId] = useState<string | null>(null)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ users: true })
   const [categoryPopupId, setCategoryPopupId] = useState<string | null>(null)
   const [activityKind, setActivityKind] = useState<ActivityTypeFilter>('all')
   const [activityUserId, setActivityUserId] = useState('all')
   // AI scans today per member (#67), shown in the users table; the Scans dialog changes them.
   const [scanQuotas, setScanQuotas] = useState<Record<string, ScanQuota>>({})
-  const [scansUserId, setScansUserId] = useState<string | null>(null)
 
   const usersOpen = Boolean(openSections.users)
   const plantsOpen = Boolean(openSections.plants)
@@ -621,24 +577,6 @@ export function ServerPanel() {
     )
   }
 
-  const run = async (id: string, action: () => Promise<boolean>) => {
-    setBusyId(id)
-    try {
-      await action()
-    } finally {
-      setBusyId(null)
-    }
-  }
-
-  const bulkUsers = async (ids: string[], mode: 'disable' | 'enable') => {
-    for (const id of ids) {
-      const user = users.find((item) => item.id === id)
-      if (!user || user.role === 'admin') continue
-      if (mode === 'disable') await disableUser(id)
-      else await enableUser(id)
-    }
-    setSelectedUsers([])
-  }
 
   const bulkResolveReports = (ids: string[], status: 'resolved' | 'dismissed') => {
     for (const id of ids) {
@@ -776,9 +714,6 @@ export function ServerPanel() {
           rowId={(row) => row.id}
           empty={t.admin.serverEmpty}
           onRowClick={(row) => setUserPreviewId(row.id)}
-          selectable
-          selected={selectedUsers}
-          onSelectedChange={setSelectedUsers}
           expandable
           expandedIds={expandedUsers}
           onExpandedChange={setExpandedUsers}
@@ -842,38 +777,6 @@ export function ServerPanel() {
               ]}
             />
           )}
-          actions={(row) => {
-            if (row.role === 'guest' || row.role === 'admin') return []
-            const verifiedIds = db.verifiedGreenhouseIds ?? []
-            const verified = verifiedIds.includes(row.id)
-            return [
-              { id: 'scans', label: t.moderation.scans, variant: 'ghost', onClick: () => setScansUserId(row.id) },
-              {
-                id: 'verify',
-                label: verified ? t.admin.unverifyGreenhouse : t.admin.verifyGreenhouse,
-                variant: verified ? 'growth' : 'ghost',
-                disabled: !verified && verifiedIds.length >= 3,
-                onClick: () =>
-                  setVerifiedGreenhouses(
-                    verified ? verifiedIds.filter((id) => id !== row.id) : [...verifiedIds, row.id].slice(0, 3),
-                  ),
-              },
-            ]
-          }}
-          bulkActions={[
-            {
-              id: 'disable',
-              label: t.admin.bulkDisable,
-              variant: 'danger',
-              onClick: (ids) => void bulkUsers(ids, 'disable'),
-            },
-            {
-              id: 'enable',
-              label: t.admin.bulkEnable,
-              variant: 'growth',
-              onClick: (ids) => void bulkUsers(ids, 'enable'),
-            },
-          ]}
         />
         ))}
       </Section>
@@ -1173,23 +1076,7 @@ export function ServerPanel() {
         <UserPreview
           row={userPreview}
           plantCount={plants.filter((plant) => plant.ownerId === userPreview.id).length}
-          busy={busyId === userPreview.id}
           onClose={() => setUserPreviewId(null)}
-          onDisable={() =>
-            void run(userPreview.id, async () => {
-              const ok = await disableUser(userPreview.id)
-              if (ok) setUserPreviewId(null)
-              return ok
-            })
-          }
-          onEnable={() =>
-            void run(userPreview.id, async () => {
-              const ok = await enableUser(userPreview.id)
-              if (ok) setUserPreviewId(null)
-              return ok
-            })
-          }
-          onPreapproved={(value) => void run(userPreview.id, () => setPreapproved(userPreview.id, value))}
         />
       )}
 
@@ -1224,13 +1111,6 @@ export function ServerPanel() {
           }}
         />
       )}
-      {scansUserId && users.find((row) => row.id === scansUserId) ? (
-        <ScanQuotaDialog
-          user={users.find((row) => row.id === scansUserId)!}
-          onClose={() => setScansUserId(null)}
-          onChange={loadScanQuotas}
-        />
-      ) : null}
     </Panel>
   )
 }

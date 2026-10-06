@@ -32,3 +32,4 @@ export const Fresh = () => <ScanQuotaNote quota={quota(0)} />
 export const OneUsed = () => <ScanQuotaNote quota={quota(1)} />
 export const WithExtra = () => <ScanQuotaNote quota={quota(3, 2)} />
 export const Out = () => <ScanQuotaNote quota={quota(3)} />
+export const Unlimited = () => <ScanQuotaNote unlimited />

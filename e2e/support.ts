@@ -6,6 +6,9 @@ import type { Catalog, Diagnosis } from '../src/mock/types'
 /** Admin exists on QA and PP. */
 export const ADMIN = 'u-admin'
 
+/** A plain member: PP's first tester, or the one scripts/e2e-seed.mjs adds to the CI QA stack. */
+export const MEMBER = process.env.PLANTX_TEST_TOKEN?.trim() ? 'test-user-001' : 'e2e-member'
+
 const CORE = ['health', 'size', 'stage', 'area']
 
 export type IdentifyAnswer = { status: number; body: unknown }

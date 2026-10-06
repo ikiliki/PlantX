@@ -10,6 +10,7 @@ import { canChooseLocale } from '../../../../i18n/locales'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isOperator } from '../../../../theme/operator'
+import { MyScanAllowance } from '../../../greenhouse/components/ScanQuotaNote/ScanQuotaNote'
 import {
   AVATAR_ICONS,
   avatarIconId,
@@ -201,6 +202,10 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
         </Rows>
 
         <Footer>
+          <MyScanAllowance />
+          <FooterLink to="/settings" onClick={onClose}>
+            {t.settings.moreSettings}
+          </FooterLink>
           {isOperator(currentUser) && (
             <FooterLink to="/admin/server" onClick={onClose}>
               {t.admin.title}

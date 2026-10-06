@@ -344,7 +344,9 @@
     "timeAgo": "{n}d ago",
     "averagePrice": "Average price",
     "priceTip": "Other prices",
-    "aiSuggested": "AI suggested"
+    "aiSuggested": "AI suggested",
+    "editField": "Edit {field}",
+    "addNote": "Add a note about this plant"
   },
   "greenhouse": {
     "title": "Greenhouse",
@@ -474,7 +476,8 @@
     "aiCount": "{n} AI verified",
     "activityShow": "Show",
     "activityXp": "XP",
-    "activityAll": "All"
+    "activityAll": "All",
+    "setPlacePrompt": "Set your greenhouse place so new plants know where they grow"
   },
   "todo": {
     "cancel": "Cancel",
@@ -671,7 +674,8 @@
     "limitedTitle": "Too many requests",
     "limitedBody": "Wait a minute and try again.",
     "quotaNone": "No AI scans left today. They come back at midnight (Israel time).",
-    "quotaLeft": "{left} of {total} AI scans left today"
+    "quotaLeft": "{left} of {total} AI scans left today · resets at midnight (Israel time)",
+    "quotaUnlimited": "Unlimited AI scans (admin)"
   },
   "sell": {
     "title": "Sell / Propagate",
@@ -1255,7 +1259,8 @@
     "scansCount": "Scans",
     "scansCountValue": "{scans} scans · {members} members",
     "rejectConfirmTitle": "Reject {count} applications?",
-    "rejectConfirmLead": "They will not be able to sign in. You can find them later under Decided."
+    "rejectConfirmLead": "They will not be able to sign in. You can find them later under Decided.",
+    "manageInModeration": "Manage in Moderation"
   },
   "settings": {
     "title": "Settings",
@@ -1264,7 +1269,9 @@
     "placeHint": "New plants use this place.",
     "role": "Account type",
     "logout": "Log out",
-    "logoutDemo": "Exit to demo login"
+    "logoutDemo": "Exit to demo login",
+    "editProfile": "Edit nickname and icon",
+    "moreSettings": "Place and more settings"
   },
   "feed": {
     "people": "In the greenhouse",
@@ -1645,9 +1652,6 @@
     "bioHe": "Bio (Hebrew)",
     "region": "Region",
     "failed": "Could not save. Try again.",
-    "plantTitle": "Edit plant",
-    "plantLead": "Name and note. Species, grade and history stay as they are.",
-    "plantSaved": "{name} saved.",
     "name": "Name",
     "note": "Note"
   },
