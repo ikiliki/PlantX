@@ -165,6 +165,9 @@ export function PlantPassport({
   const [toast, setToast] = useState('')
   const [photoIndex, setPhotoIndex] = useState(0)
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false)
+  const [moderating, setModerating] = useState<ModerationRequest | null>(null)
+  // The passport field being edited (#70); one at a time.
+  const [editField, setEditField] = useState<string | null>(null)
   const levels = useGreenhouseLevels()
   const { pathname } = useLocation()
   // As a popup, the owner and greenhouse rows only make sense from Home and the market; elsewhere the grower is already known.
@@ -229,11 +232,9 @@ export function PlantPassport({
   const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
   const isOwner = plant.ownerId === ownerId
   const isAdmin = signedIn && currentUser?.role === 'admin'
-  const [moderating, setModerating] = useState<ModerationRequest | null>(null)
   // Inline edit (#70): the owner and the admin edit a value where it is shown, one field at a time. The
   // passport popup is embedded too, so only the inert admin previews (embedded, not a dialog) stay read-only.
   const canEdit = (!embedded || dialog) && (isOwner || isAdmin)
-  const [editField, setEditField] = useState<string | null>(null)
   const saveField = async (patch: PlantPatch) => {
     const ok = await editPlant(plant.id, patch)
     if (ok) setEditField(null)
