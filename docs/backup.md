@@ -16,6 +16,12 @@ Keep the passphrase in a password manager, **not** only in GitHub: if you lose i
 
 Retention matches the Privacy Policy: a deleted account disappears from backups within 30 days.
 
+## Watching it
+
+GitHub → **Actions → Backup** lists every night's run; each run's **Artifacts** hold the encrypted dump. A failed
+run opens a **Backup failed (prod)** issue, or comments on the open one, and the next good run closes it. The
+repo's GitHub → Discord webhook (with **Issues** events on) posts both to the GitHub-issues channel. A green night posts nothing.
+
 ## One-time setup (owner)
 
 1. GitHub → repo **Settings → Secrets and variables → Actions** → add:

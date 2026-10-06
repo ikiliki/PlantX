@@ -4,6 +4,9 @@
 #
 # Secrets: PROD_DATABASE_URL (session pooler or direct connection, not the transaction pooler),
 # BACKUP_PASSPHRASE, and PP_DATABASE_URL for a by-hand PP run.
+#
+# A failed run opens a "Backup failed (<target>)" issue (or comments on the open one), and the next good run
+# closes it, so the GitHub-issues Discord channel hears about failures and recoveries only.
 name: Backup
 
 on:
@@ -19,6 +22,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # the Backup failed issue
 
 concurrency:
   group: backup-${{ inputs.target || 'prod' }}
@@ -31,6 +35,9 @@ jobs:
     timeout-minutes: 20
     env:
       TARGET: ${{ inputs.target || 'prod' }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       DATABASE_URL: ${{ (inputs.target || 'prod') == 'pp' && secrets.PP_DATABASE_URL || secrets.PROD_DATABASE_URL }}
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
     steps:
@@ -66,3 +73,25 @@ jobs:
             ${{ env.NAME }}.sha256
           retention-days: 30
           if-no-files-found: error
+
+      - name: Report failure
+        if: failure()
+        run: |
+          export TITLE="Backup failed ($TARGET)"
+          open=$(gh issue list --state open --search "in:title Backup failed" --json number,title \
+            | jq -r '.[] | select(.title == env.TITLE) | .number' | head -1)
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "Failed again: $RUN_URL"
+          else
+            printf 'The nightly %s backup failed: %s\n\nCheck the run log, fix the cause, then run **Actions → Backup → Run workflow**. The next good run closes this issue. Runbook: `docs/backup.md`.\n' \
+              "$TARGET" "$RUN_URL" > body.md
+            gh issue create --title "$TITLE" --body-file body.md
+          fi
+
+      - name: Close failure issue
+        if: success()
+        run: |
+          export TITLE="Backup failed ($TARGET)"
+          gh issue list --state open --search "in:title Backup failed" --json number,title \
+            | jq -r '.[] | select(.title == env.TITLE) | .number' \
+            | while read -r number; do gh issue close "$number" --comment "Backup OK again: $RUN_URL"; done
