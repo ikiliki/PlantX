@@ -24,9 +24,18 @@ import { analyticsRoutes } from './features/analytics/analytics.routes.ts'
 
 let booted: Promise<void> | null = null
 
-/** Seed the active store once. Safe to call from the process entry and the first request. */
+/**
+ * Seed the active store once. Safe to call from the process entry and the first request. A failed boot is
+ * not kept: a warm function retries on the next request, so applying a missing migration fixes it without a
+ * redeploy.
+ */
 export function boot() {
-  if (!booted) booted = ensureDataFiles()
+  if (!booted) {
+    booted = ensureDataFiles().catch((err) => {
+      booted = null
+      throw err
+    })
+  }
   return booted
 }
 
