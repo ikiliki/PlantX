@@ -33,9 +33,9 @@ export const GlobalStyle = createGlobalStyle`
   img { max-width: 100%; display: block; }
   h1, h2, h3, h4 {
     font-family: ${theme.fonts.display};
-    /* DM Serif Display ships a single regular weight; bolding it would synthesise strokes. */
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-weight: ${theme.fonts.displayWeight};
+    letter-spacing: ${theme.fonts.displayTracking};
+    text-wrap: balance;
     margin: 0;
   }
   p { margin: 0; text-wrap: pretty; }

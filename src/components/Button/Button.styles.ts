@@ -53,12 +53,12 @@ const variants = {
 export const Button = styled.button<{ $variant?: keyof typeof variants; $block?: boolean; $size?: 'sm' | 'md' }>`
   appearance: none;
   cursor: pointer;
-  border-radius: ${theme.radii.pill};
+  border-radius: ${theme.radii.control};
   font-family: ${theme.fonts.body};
   font-weight: 500;
   padding: ${({ $size }) => ($size === 'sm' ? `${theme.space.sm} ${theme.space.md}` : `12px 20px`)};
   font-size: ${({ $size }) => ($size === 'sm' ? '13px' : '14px')};
-  min-height: ${({ $size }) => ($size === 'sm' ? '34px' : '44px')};
+  min-height: ${({ $size }) => ($size === 'sm' ? theme.control.sm : theme.control.md)};
   display: inline-flex;
   align-items: center;
   justify-content: center;

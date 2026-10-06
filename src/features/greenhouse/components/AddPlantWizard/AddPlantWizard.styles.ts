@@ -71,7 +71,7 @@ export const StepHead = styled.header`
 export const StepTitle = styled.h3`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(22px, 4cqi, 28px);
   line-height: 1.15;
   color: ${theme.colors.forest};
@@ -490,7 +490,7 @@ export const Leaf = styled.span`
 export const DoneTitle = styled.h3`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 30px;
   color: ${theme.colors.forest};
 `

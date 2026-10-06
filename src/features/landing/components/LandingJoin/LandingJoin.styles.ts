@@ -42,7 +42,7 @@ export const Kicker = styled.p`
 export const Title = styled.h2`
   margin: 14px 0 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(34px, 5cqi, 52px);
   line-height: 1.02;
   color: ${theme.colors.forest};

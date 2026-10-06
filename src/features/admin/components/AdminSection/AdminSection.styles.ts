@@ -26,7 +26,7 @@ export const Head = styled.div`
     margin: 0;
     font-family: ${theme.fonts.display};
     font-size: 20px;
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     color: ${theme.colors.forest};
   }
 `

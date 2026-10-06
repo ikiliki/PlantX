@@ -93,7 +93,7 @@ export const DropCopy = styled.span`
 
   strong {
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: 22px;
     color: ${theme.colors.forest};
   }

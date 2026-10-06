@@ -45,7 +45,7 @@ export const Title = styled.h2`
   min-width: 0;
   white-space: nowrap;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 18px;
   line-height: 1.2;
   color: ${theme.colors.forest};

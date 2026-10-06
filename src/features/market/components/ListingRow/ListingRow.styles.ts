@@ -119,7 +119,7 @@ export const Health = styled.span<{ $health: string }>`
           ? theme.colors.chipWarm
           : $health === 'D'
             ? '#E8DDD6'
-            : '#F6DED4'};
+            : theme.colors.chipDanger};
   color: ${({ $health }) =>
     $health === 'S'
       ? theme.colors.cream

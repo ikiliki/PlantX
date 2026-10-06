@@ -41,7 +41,7 @@ export const SoonBanner = styled.div`
     color: ${theme.colors.forest};
     font-family: ${theme.fonts.display};
     font-size: clamp(20px, 3vw, 28px);
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     line-height: 1.1;
     text-align: center;
     white-space: nowrap;

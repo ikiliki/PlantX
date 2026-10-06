@@ -265,7 +265,7 @@ export const Head = styled.div`
 export const Title = styled.h3<{ $sparkle?: boolean }>`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 22px;
   line-height: 1.2;
   color: ${theme.colors.forest};

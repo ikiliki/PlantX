@@ -15,15 +15,24 @@ export const theme = {
     ink: '#173128',
     muted: '#66756D',
     border: '#DCE1D8',
+    /** Stronger hairline for controls (inputs, segmented rows). */
+    borderStrong: '#C9D0C4',
     chipGreen: '#E4EBD8',
     chipWarm: '#FFF0D8',
     chipNeutral: '#F4F1E8',
+    chipDanger: '#F6DED4',
+    chipInfo: '#E8F1F7',
+    chipAi: '#E8F1FB',
     track: '#E7E3D6',
     danger: '#B4553D',
     warn: '#9A6B1F',
     info: '#3C6B8F',
     /** AI provenance: the ✦ stamp and the AI chip. */
     aiBlue: '#3B7CC9',
+    /** Watering care tone (todo icons, calendar). */
+    water: '#3B7CC9',
+    /** Neutral metal for photo-only marks. */
+    metal: '#8B929A',
     /** Market direction tones, kept inside the botanical palette. */
     up: '#2F6B4A',
     down: '#B4553D',
@@ -34,6 +43,21 @@ export const theme = {
     md: '14px',
     lg: '22px',
     pill: '999px',
+    /** Buttons, chips and segmented items. */
+    control: '999px',
+  },
+  /** Page and chrome backgrounds (CSS background values). */
+  surface: {
+    page: `radial-gradient(1200px 500px at 10% -10%, rgba(207, 234, 120, 0.28), transparent 55%),
+    radial-gradient(900px 400px at 100% 0%, rgba(242, 200, 167, 0.30), transparent 50%),
+    #F4F1E8`,
+    bar: '#FFFEFA',
+    barScrolled: 'rgba(255, 254, 250, 0.86)',
+    barInk: '#123C2D',
+    barMuted: '#66756D',
+    barActive: '#E4EBD8',
+    nav: 'rgba(255, 254, 250, 0.94)',
+    barBorder: '#DCE1D8',
   },
   shadow: {
     card: '0 14px 34px rgba(23, 49, 40, 0.10)',
@@ -69,6 +93,25 @@ export const theme = {
     body: "'Inter', 'Rubik', system-ui, sans-serif",
     // DM Serif Display carries no Hebrew glyphs, so Frank Ruhl Libre picks up RTL text.
     display: "'DM Serif Display', 'Frank Ruhl Libre', Georgia, serif",
+    /** DM Serif Display ships a single regular weight; bolding it would synthesise strokes. */
+    displayWeight: 400,
+    displayTracking: '-0.01em',
+  },
+  /** Type scale. Shared components pick from it instead of one-off sizes. */
+  text: {
+    xs: '12px',
+    sm: '13px',
+    base: '14px',
+    md: '16px',
+    lg: '20px',
+    xl: '24px',
+    xxl: '32px',
+    display: 'clamp(30px, 4vw, 42px)',
+  },
+  /** Control heights: compact and touch. */
+  control: {
+    sm: '36px',
+    md: '44px',
   },
   space: {
     xs: '4px',

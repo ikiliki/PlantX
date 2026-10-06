@@ -36,7 +36,7 @@ export const Kicker = styled.p`
 export const Title = styled.h2`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(32px, 5cqi, 48px);
   line-height: 1.05;
   color: ${theme.colors.forest};
@@ -110,7 +110,7 @@ export const Step = styled.button<{ $on: boolean; $auto: boolean }>`
   strong {
     display: none;
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: 22px;
     color: ${theme.colors.forest};
   }
@@ -190,7 +190,7 @@ export const StepSummary = styled.div`
 
   strong {
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: 22px;
     color: ${theme.colors.forest};
   }

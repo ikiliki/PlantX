@@ -69,7 +69,7 @@ export const Eyebrow = styled.p`
 export const Title = styled.h1`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(28px, 6cqi, 40px);
   line-height: 1.08;
   color: ${theme.colors.forest};
@@ -291,7 +291,7 @@ export const AiChip = styled.span<{ $on: boolean }>`
 
   b {
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: 20px;
   }
 `

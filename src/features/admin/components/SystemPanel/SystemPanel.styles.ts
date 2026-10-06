@@ -51,7 +51,7 @@ export const HeadToggle = styled.button`
   color: ${theme.colors.forest};
   font-family: ${theme.fonts.display};
   font-size: 22px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.2;
   text-align: start;
   cursor: pointer;

@@ -59,7 +59,7 @@ export const Name = styled.h2`
   margin: 0;
   font-family: ${theme.fonts.display};
   font-size: clamp(26px, 3vw, 34px);
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.1;
   color: ${theme.colors.cream};
 `

@@ -13,9 +13,9 @@ export const Bar = styled.header<{ $scrolled?: boolean }>`
   gap: ${theme.space.md};
   height: calc(68px + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) ${theme.space.md} 0;
-  background: ${({ $scrolled }) => ($scrolled ? 'rgba(255, 254, 250, 0.86)' : theme.colors.creamCard)};
+  background: ${({ $scrolled }) => ($scrolled ? theme.surface.barScrolled : theme.surface.bar)};
   backdrop-filter: ${({ $scrolled }) => ($scrolled ? 'blur(14px) saturate(1.2)' : 'none')};
-  border-bottom: 1px solid ${theme.colors.border};
+  border-bottom: 1px solid ${theme.surface.barBorder};
   box-shadow: ${({ $scrolled }) => ($scrolled ? theme.shadow.soft : 'none')};
   transition:
     background ${theme.motion.base} ${theme.motion.ease},
@@ -32,9 +32,9 @@ export const Brand = styled(Link)`
   gap: 10px;
   flex-shrink: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 24px;
-  color: ${theme.colors.forest};
+  color: ${theme.surface.barInk};
 `
 
 export const BrandMark = styled.img`
@@ -83,7 +83,7 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   font-size: 14px;
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
   white-space: nowrap;
-  color: ${({ $active }) => ($active ? theme.colors.forest : theme.colors.muted)};
+  color: ${({ $active }) => ($active ? theme.surface.barInk : theme.surface.barMuted)};
   transition: color ${theme.motion.fast} ${theme.motion.ease};
   &::after {
     content: '';
@@ -92,12 +92,12 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
     bottom: 0;
     height: 2px;
     border-radius: ${theme.radii.pill};
-    background: ${theme.colors.forest};
+    background: ${theme.surface.barInk};
     transform: scaleX(${({ $active }) => ($active ? 1 : 0)});
     transition: transform ${theme.motion.base} ${theme.motion.ease};
   }
   &:hover {
-    color: ${theme.colors.forest};
+    color: ${theme.surface.barInk};
   }
   &:hover::after {
     transform: scaleX(1);

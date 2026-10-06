@@ -7,7 +7,7 @@ const ink = css`
   gap: 4px;
   flex: none;
   border: 1.5px solid ${theme.colors.info};
-  background: #e8f1f7;
+  background: ${theme.colors.chipInfo};
   color: ${theme.colors.info};
   font-weight: 800;
   line-height: 1;

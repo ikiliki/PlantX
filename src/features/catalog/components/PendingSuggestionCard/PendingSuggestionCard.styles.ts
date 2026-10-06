@@ -61,7 +61,7 @@ export const Body = styled.div`
 export const Name = styled.strong`
   font-family: ${theme.fonts.display};
   font-size: 20px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
   color: ${theme.colors.forest};
   overflow-wrap: anywhere;

@@ -145,7 +145,7 @@ export const TopCopy = styled.div`
 
 export const Rank = styled.strong`
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 24px;
   line-height: 1.1;
   color: ${theme.colors.forest};

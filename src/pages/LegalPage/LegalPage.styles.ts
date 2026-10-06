@@ -40,7 +40,7 @@ export const Top = styled.nav`
 export const Title = styled.h1`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(30px, 6vw, 44px);
   line-height: 1.1;
   color: ${theme.colors.forest};

@@ -32,7 +32,7 @@ export const Proof = styled.article`
   strong {
     display: block;
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: 20px;
     color: ${theme.colors.forest};
   }

@@ -1,8 +1,9 @@
 import styled from 'styled-components'
 import type { TodoSubcategory } from '../../../../mock/types'
+import { theme } from '../../../../theme/tokens'
 
-const water = '#3B7CC9'
-const metal = '#8B929A'
+const water = theme.colors.water
+const metal = theme.colors.metal
 
 export const Glyph = styled.span<{ $kind: TodoSubcategory }>`
   display: inline-grid;

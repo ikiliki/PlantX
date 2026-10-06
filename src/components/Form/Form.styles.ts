@@ -2,7 +2,7 @@ import styled, { css } from 'styled-components'
 import { theme } from '../../theme/tokens'
 
 const control = css`
-  border: 1px solid ${theme.colors.border};
+  border: 1px solid ${theme.colors.borderStrong};
   border-radius: ${theme.radii.md};
   padding: 12px 14px;
   background: ${theme.colors.creamCard};
@@ -32,11 +32,9 @@ const control = css`
 export const Field = styled.label`
   display: grid;
   gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: ${theme.colors.moss};
+  font-size: ${theme.text.sm};
+  font-weight: 600;
+  color: ${theme.colors.ink};
 `
 
 export const Input = styled.input`
@@ -51,6 +49,7 @@ export const Select = styled.select`
 export const TextArea = styled.textarea`
   ${control}
   min-height: 88px;
+  line-height: 1.5;
   resize: vertical;
 `
 

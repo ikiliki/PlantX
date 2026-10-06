@@ -32,7 +32,7 @@ export const Kicker = styled.p`
 export const Title = styled.h2`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(32px, 5cqi, 48px);
   line-height: 1.05;
   color: ${theme.colors.forest};
@@ -152,7 +152,7 @@ export const Copy = styled.div`
   h3 {
     margin: 0;
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: clamp(26px, 3cqi, 34px);
     line-height: 1.1;
     color: ${theme.colors.forest};

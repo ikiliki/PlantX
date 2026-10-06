@@ -221,7 +221,7 @@ export const Body = styled.div`
 export const Name = styled.h3<{ $variant?: StackVariant }>`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: ${({ $variant }) => ($variant === 'page' ? '32px' : '26px')};
   line-height: 1.05;
   color: ${theme.colors.creamCard};
@@ -346,7 +346,7 @@ export const ActionButton = styled.button<{ $letter: CommunityGradeLetter; $big?
     `}
   strong {
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: ${({ $big }) => ($big ? '28px' : '23px')};
     line-height: 1;
   }
@@ -438,7 +438,7 @@ export const EmptyCard = styled.div`
   animation: ${floatIn} ${theme.motion.slow} ${theme.motion.ease} both;
   strong {
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: 28px;
     color: ${theme.colors.ink};
   }

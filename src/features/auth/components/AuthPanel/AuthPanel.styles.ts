@@ -61,7 +61,7 @@ export const BrandName = styled.p`
   margin: 0;
   font-family: ${theme.fonts.display};
   font-size: clamp(34px, 5.5vw, 44px);
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.05;
   letter-spacing: -0.01em;
   color: ${theme.colors.cream};

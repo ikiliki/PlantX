@@ -44,7 +44,7 @@ export const Mark = styled.span`
 export const Title = styled.h1`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(28px, 4vw, 36px);
   line-height: 1.15;
   color: ${theme.colors.forest};

@@ -36,7 +36,7 @@ export const Kicker = styled.p`
 export const Title = styled.h1`
   margin: 18px 0 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(38px, 7cqi, 68px);
   line-height: 1;
   letter-spacing: -0.03em;

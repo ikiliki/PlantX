@@ -61,7 +61,7 @@ export const Title = styled.h2`
   margin: 0 0 16px;
   margin-inline-end: 36px;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 24px;
   color: ${theme.colors.forest};
 `

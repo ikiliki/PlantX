@@ -7,10 +7,7 @@ export const Shell = styled.div`
   min-height: 100%;
   display: grid;
   grid-template-rows: auto auto 1fr;
-  background:
-    radial-gradient(1200px 500px at 10% -10%, rgba(207, 234, 120, 0.28), transparent 55%),
-    radial-gradient(900px 400px at 100% 0%, rgba(242, 200, 167, 0.30), transparent 50%),
-    ${theme.colors.cream};
+  background: ${theme.surface.page};
 `
 
 export const Main = styled.main<{ $wide?: boolean }>`
@@ -32,9 +29,9 @@ export const BottomNav = styled.nav<{ $cols?: number }>`
   z-index: ${theme.z.bottomNav};
   display: grid;
   grid-template-columns: repeat(${({ $cols = 5 }) => Math.max($cols, 1)}, minmax(0, 1fr));
-  background: rgba(255, 254, 250, 0.94);
+  background: ${theme.surface.nav};
   backdrop-filter: blur(12px);
-  border-top: 1px solid ${theme.colors.border};
+  border-top: 1px solid ${theme.surface.barBorder};
   padding: 6px ${theme.space.xs} calc(6px + env(safe-area-inset-bottom));
   @media (min-width: ${theme.breakpoints.md}) {
     display: none;
@@ -49,7 +46,7 @@ export const BottomLink = styled(Link)<{ $active?: boolean }>`
   gap: 2px;
   font-size: 11px;
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
-  color: ${({ $active }) => ($active ? theme.colors.forest : theme.colors.muted)};
+  color: ${({ $active }) => ($active ? theme.surface.barInk : theme.surface.barMuted)};
   padding: 6px 2px;
   border-radius: ${theme.radii.md};
 `
@@ -60,7 +57,7 @@ export const BottomIcon = styled.span<{ $active?: boolean }>`
   width: 52px;
   height: 30px;
   border-radius: ${theme.radii.pill};
-  background: ${({ $active }) => ($active ? theme.colors.chipGreen : 'transparent')};
+  background: ${({ $active }) => ($active ? theme.surface.barActive : 'transparent')};
   transform: scale(${({ $active }) => ($active ? 1 : 0.92)});
   transition:
     background ${theme.motion.base} ${theme.motion.ease},
@@ -76,7 +73,7 @@ export const PageHeader = styled.header`
   margin-bottom: ${theme.space.xl};
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} both;
   h1 {
-    font-size: clamp(30px, 4vw, 42px);
+    font-size: ${theme.text.display};
     color: ${theme.colors.ink};
   }
   p {

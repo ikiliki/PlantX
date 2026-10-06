@@ -69,7 +69,7 @@ export const SectionHead = styled.header`
     margin: 0;
     font-family: ${theme.fonts.display};
     font-size: 24px;
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     color: ${theme.colors.forest};
   }
 `

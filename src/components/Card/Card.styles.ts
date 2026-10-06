@@ -4,7 +4,7 @@ import { theme } from '../../theme/tokens'
 export const Card = styled.div<{ $pad?: boolean; $clickable?: boolean }>`
   background: ${theme.colors.creamCard};
   border-radius: ${theme.radii.lg};
-  box-shadow: ${theme.shadow.soft};
+  /* Elevation is declared once: the border at rest, a shadow only when it lifts. */
   border: 1px solid ${theme.colors.border};
   padding: ${({ $pad = true }) => ($pad ? '20px' : '0')};
   overflow: hidden;

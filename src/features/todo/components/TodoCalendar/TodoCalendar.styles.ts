@@ -2,8 +2,8 @@ import styled, { keyframes } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-const water = '#3B7CC9'
-const metal = '#8B929A'
+const water = theme.colors.water
+const metal = theme.colors.metal
 
 export const Root = styled.section`
   container-type: inline-size;

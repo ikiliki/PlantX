@@ -312,7 +312,7 @@ export const Name = styled(Link)`
   overflow-wrap: anywhere;
   font-family: ${theme.fonts.display};
   font-size: 20px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
   color: ${theme.colors.ink};
   text-decoration: none;
@@ -334,7 +334,7 @@ export const CareName = styled.span`
   min-width: 0;
   font-family: ${theme.fonts.display};
   font-size: 20px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
   color: ${theme.colors.ink};
   overflow-wrap: anywhere;
@@ -367,7 +367,7 @@ export const CareAction = styled.span<{ $tone: 'water' | 'photo' }>`
   min-height: 28px;
   padding: 0 10px;
   border-radius: ${theme.radii.pill};
-  background: ${({ $tone }) => ($tone === 'photo' ? '#8B929A' : '#3B7CC9')};
+  background: ${({ $tone }) => ($tone === 'photo' ? theme.colors.metal : theme.colors.aiBlue)};
   color: ${theme.colors.creamCard};
   font-size: 12px;
   font-weight: 700;

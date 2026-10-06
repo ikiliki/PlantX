@@ -24,59 +24,59 @@ const surface: Record<FeedUpdateKind, ReturnType<typeof css>> = {
   water: css`
     background:
       radial-gradient(90% 120% at 100% 80%, rgba(126, 190, 224, 0.55), transparent 58%),
-      linear-gradient(165deg, #e5f3fb 0%, #fffefa 68%);
+      linear-gradient(165deg, #e5f3fb 0%, ${theme.colors.creamCard} 68%);
     border-color: #8ebcda;
   `,
   added: css`
     background:
       radial-gradient(80% 120% at 100% 100%, rgba(207, 234, 120, 0.75), transparent 60%),
-      linear-gradient(165deg, #eef8d4 0%, #fffefa 70%);
+      linear-gradient(165deg, #eef8d4 0%, ${theme.colors.creamCard} 70%);
     border-color: #8aaa62;
   `,
   photo: css`
     background:
       radial-gradient(80% 100% at 100% 0%, rgba(242, 200, 167, 0.85), transparent 55%),
-      linear-gradient(165deg, #fff1e4 0%, #fffefa 70%);
+      linear-gradient(165deg, #fff1e4 0%, ${theme.colors.creamCard} 70%);
     border-color: #e2b48a;
   `,
   propagate: css`
     background:
       radial-gradient(80% 110% at 100% 100%, rgba(143, 196, 154, 0.7), transparent 58%),
-      linear-gradient(165deg, #e7f4e4 0%, #fffefa 72%);
+      linear-gradient(165deg, #e7f4e4 0%, ${theme.colors.creamCard} 72%);
     border-color: #7fa878;
   `,
   grade: css`
     background:
       radial-gradient(70% 100% at 100% 0%, rgba(244, 214, 120, 0.75), transparent 55%),
-      linear-gradient(165deg, #fff6d8 0%, #fffefa 72%);
+      linear-gradient(165deg, #fff6d8 0%, ${theme.colors.creamCard} 72%);
     border-color: #d4b46a;
   `,
   listing: css`
     background:
       radial-gradient(80% 100% at 100% 80%, rgba(242, 200, 167, 0.65), transparent 58%),
-      linear-gradient(165deg, #fff3e2 0%, #fffefa 70%);
+      linear-gradient(165deg, #fff3e2 0%, ${theme.colors.creamCard} 70%);
     border-color: #e4c29a;
   `,
   // AI scans have their own lavender: no other kind uses it (green is a new plant, blue is water).
   scan: css`
     background:
       radial-gradient(90% 120% at 100% 90%, rgba(178, 162, 232, 0.45), transparent 58%),
-      linear-gradient(165deg, #f1edfb 0%, #fffefa 70%);
+      linear-gradient(165deg, #f1edfb 0%, ${theme.colors.creamCard} 70%);
     border-color: #b9aee0;
   `,
   passport: css`
     background:
       radial-gradient(80% 100% at 100% 0%, rgba(36, 84, 63, 0.18), transparent 55%),
-      linear-gradient(165deg, #e7f0e8 0%, #fffefa 72%);
-    border-color: #24543f;
+      linear-gradient(165deg, #e7f0e8 0%, ${theme.colors.creamCard} 72%);
+    border-color: ${theme.colors.forestSoft};
   `,
   // The owner's own bookkeeping: quiet neutrals, no celebration.
   edited: css`
-    background: linear-gradient(165deg, #f1f2ee 0%, #fffefa 72%);
+    background: linear-gradient(165deg, #f1f2ee 0%, ${theme.colors.creamCard} 72%);
     border-color: #c9cec6;
   `,
   deleted: css`
-    background: linear-gradient(165deg, #f6ece8 0%, #fffefa 72%);
+    background: linear-gradient(165deg, #f6ece8 0%, ${theme.colors.creamCard} 72%);
     border-color: #dcbcb2;
   `,
 }
@@ -272,8 +272,8 @@ export const PriceTag = styled.span`
   width: 20px;
   height: 16px;
   border-radius: 3px 8px 8px 3px;
-  background: #f2c8a7;
-  box-shadow: inset 6px 0 0 #fffefa;
+  background: ${theme.colors.warmth};
+  box-shadow: inset 6px 0 0 ${theme.colors.creamCard};
   animation: ${bob} 1.8s ease-in-out infinite;
   ${still}
 
@@ -298,8 +298,8 @@ export const Stamp = styled.span`
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 2px solid #24543f;
-  color: #24543f;
+  border: 2px solid ${theme.colors.forestSoft};
+  color: ${theme.colors.forestSoft};
   font-size: 14px;
   font-weight: 800;
   transform: rotate(-8deg);
@@ -333,7 +333,7 @@ const glyph: Record<FeedUpdateKind, ReturnType<typeof css>> = {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #f2c8a7;
+    background: ${theme.colors.warmth};
     box-shadow: inset 0 0 0 2px #9a6230;
     animation: ${flash} 2.8s ease-in-out infinite;
   `,
@@ -357,8 +357,8 @@ const glyph: Record<FeedUpdateKind, ReturnType<typeof css>> = {
     width: 12px;
     height: 9px;
     border-radius: 2px 6px 6px 2px;
-    background: #f2c8a7;
-    box-shadow: inset 4px 0 0 #fffefa;
+    background: ${theme.colors.warmth};
+    box-shadow: inset 4px 0 0 ${theme.colors.creamCard};
     animation: ${bob} 1.8s ease-in-out infinite;
   `,
   // No glyph: the "AI scan" label and the lavender card say it.
@@ -368,7 +368,7 @@ const glyph: Record<FeedUpdateKind, ReturnType<typeof css>> = {
   passport: css`
     width: 12px;
     height: 12px;
-    border: 1.5px solid #24543f;
+    border: 1.5px solid ${theme.colors.forestSoft};
     border-radius: 50%;
     animation: ${stamp} 0.7s ${theme.motion.spring} both;
   `,
@@ -489,7 +489,7 @@ export const Note = styled.p`
   margin: 0;
   font-family: ${theme.fonts.display};
   font-size: 26px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.2;
   color: ${theme.colors.forest};
   overflow-wrap: anywhere;

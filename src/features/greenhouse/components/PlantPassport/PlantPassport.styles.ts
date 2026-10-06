@@ -430,7 +430,7 @@ export const Title = styled.h1`
   max-width: 100%;
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(24px, 2.6vw, 30px);
   line-height: 1.12;
   letter-spacing: -0.01em;

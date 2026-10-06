@@ -29,7 +29,7 @@ export const Answer = styled.div`
   strong {
     font-family: ${theme.fonts.display};
     font-size: 22px;
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     line-height: 1.2;
     color: ${theme.colors.forest};
   }

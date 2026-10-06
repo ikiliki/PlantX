@@ -81,7 +81,7 @@ export const SheetClose = styled.button`
 export const SheetTitle = styled.h2`
   margin: 0 36px 14px 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 22px;
   color: ${theme.colors.forest};
 
