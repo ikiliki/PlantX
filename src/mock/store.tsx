@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { deletedActivityText, editedActivityText } from '../features/greenhouse/plantActivity'
 import { createCatalog } from './catalog'
 import { saveCatalogFile } from './catalogFile'
 import { areaById, fieldsFromPlace, ownerGreenhousePlace, resolveArea, UNKNOWN_AREA } from './locations'
@@ -68,6 +69,7 @@ import {
   postPlant,
   fetchScanQuota,
   patchPlant,
+  deletePlantRequest,
   type PlantPatch,
   postTodoComplete,
   postRejectPending,
@@ -184,6 +186,8 @@ interface StoreApi {
   noteScanQuota: (quota: ScanQuota) => void
   /** Owner or admin edits a saved plant (#68). Resolves false when the server refused. */
   editPlant: (plantId: string, patch: PlantPatch) => Promise<boolean>
+  /** The owner (or an admin) deletes a plant: gone from the greenhouse and tasks; an admin can restore it. */
+  deletePlant: (plantId: string) => Promise<boolean>
   /** Mirror an admin hide / show / delete / restore in the loaded data (#68). */
   noteVisibility: (type: ModerationTarget, id: string, visibility: Visibility) => void
   /** Mirror an admin edit of a member's profile. */
@@ -660,12 +664,61 @@ export function StoreProvider({
         const next: Plant = { ...current, ...patch }
         if (patch.sizeBand) next.sizeGrade = patch.sizeBand
         if (patch.stage) next.rooting = patch.stage === 'CUT' ? 'unrooted' : patch.stage === 'ROOTED' ? 'rooted' : 'established'
-        apply(next)
+        const changed = Object.keys(patch).filter((key) => key !== 'private' && key !== 'titleHe' && key !== 'descriptionHe')
+        const privacy =
+          patch.private !== undefined && Boolean(patch.private) !== Boolean(current.private)
+            ? patch.private
+              ? 'private'
+              : 'public'
+            : undefined
+        update((d) => {
+          const index = d.plants.findIndex((item) => item.id === plantId)
+          if (index >= 0) d.plants[index] = next
+          d.updates = [
+            {
+              id: `u-edit-${Date.now()}`,
+              kind: 'edited',
+              userId: current.ownerId,
+              plantId,
+              createdAt: new Date().toISOString(),
+              ...editedActivityText(next.title, next.titleHe, changed, privacy),
+            },
+            ...d.updates,
+          ]
+          return d
+        })
         return true
       }
       const outcome = await patchPlant(plantId, patch)
       if (!outcome.ok) return false
       apply(outcome.data.plant)
+      // The server wrote an 'edited' row in the owner's activity.
+      void reloadSlice('updates')
+      return true
+    },
+    deletePlant: async (plantId) => {
+      const current = db.plants.find((item) => item.id === plantId)
+      if (!current) return false
+      const drop = (activity?: FeedUpdate) =>
+        update((d) => {
+          d.plants = d.plants.filter((item) => item.id !== plantId)
+          d.todos = d.todos.filter((todo) => todo.plantId !== plantId)
+          if (activity) d.updates = [activity, ...d.updates]
+          return d
+        })
+      if (uiMocks) {
+        drop({
+          id: `u-delete-${Date.now()}`,
+          kind: 'deleted',
+          userId: current.ownerId,
+          createdAt: new Date().toISOString(),
+          ...deletedActivityText(current.title, current.titleHe),
+        })
+        return true
+      }
+      const outcome = await deletePlantRequest(plantId)
+      if (!outcome.ok) return false
+      drop(outcome.data.activity)
       return true
     },
     noteVisibility: (type, id, visibility) =>

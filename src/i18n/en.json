@@ -346,6 +346,16 @@
     "priceTip": "Other prices",
     "aiSuggested": "AI suggested",
     "editField": "Edit {field}",
+    "privacyLabel": "Who can see this plant",
+    "public": "Public",
+    "private": "Private",
+    "publicHint": "Everyone can see this plant and its activity.",
+    "privateHint": "Only you see this plant and its activity.",
+    "deletePlant": "Delete plant",
+    "deleteTitle": "Delete {name}?",
+    "deleteLead": "It leaves your greenhouse and its tasks stop. Its activity stays in your log.",
+    "deleteConfirm": "Delete",
+    "deleteFailed": "Could not delete. Try again.",
     "addNote": "Add a note about this plant"
   },
   "greenhouse": {
@@ -1300,6 +1310,8 @@
     "topEmpty": "No greenhouses to rank yet.",
     "updateScan": "AI scan",
     "updateAdded": "New plant",
+    "updateEdited": "Edited",
+    "updateDeleted": "Deleted plant",
     "xpEarned": "+{n} XP"
   },
   "guest": {

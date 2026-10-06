@@ -179,6 +179,8 @@ export interface Species {
 
 export interface Plant extends VisibilityMeta {
   id: string
+  /** Only the owner and admins see a private plant and its activity. Default public. */
+  private?: boolean
   code: string
   ownerId: string
   speciesId: string
@@ -413,7 +415,19 @@ export interface ClaimDraft {
 }
 
 /** `scan`: an Add Plant identify call (linked to the plant once it is saved). `added`: a plant joined the greenhouse. */
-export type FeedUpdateKind = 'photo' | 'water' | 'propagate' | 'grade' | 'passport' | 'listing' | 'scan' | 'added'
+export type FeedUpdateKind =
+  | 'photo'
+  | 'water'
+  | 'propagate'
+  | 'grade'
+  | 'passport'
+  | 'listing'
+  | 'scan'
+  | 'added'
+  /** The owner (or an admin) changed the plant, or made it private / public. Private to the owner and admins. */
+  | 'edited'
+  /** The owner deleted the plant. Private; it has no plantId, so it outlives the deleted plant. */
+  | 'deleted'
 
 export interface FeedUpdate {
   id: string

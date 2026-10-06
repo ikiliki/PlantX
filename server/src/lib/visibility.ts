@@ -10,6 +10,9 @@ import { getStore } from '../db/index.ts'
  * - Admin: everything (the admin screens badge Hidden / Deleted).
  * - Owner: their own rows, unless the row or an ancestor is deleted.
  * - Everyone else: only rows that, with every ancestor, are visible.
+ *
+ * Privacy is the owner's own switch, apart from moderation: a private plant and every activity about it
+ * reach only the owner and admins (`privatePlant`), so nobody else learns the grower has it.
  */
 type Viewer = Pick<User, 'id' | 'role'> | null | undefined
 
@@ -28,15 +31,19 @@ export type VisibilityIndex = {
   user(id: string): Visibility
   plant(id: string): Visibility
   activity(item: Activity): Visibility
+  /** The plant is private (the owner's switch). */
+  privatePlant(id: string): boolean
 }
 
 /** Effective state of every user, plant and activity, including what their ancestors pass down. */
 export function visibilityIndex(users: User[], plants: Plant[]): VisibilityIndex {
+  const privateIds = new Set(plants.filter((plant) => plant.private).map((plant) => plant.id))
   const userState = new Map(users.map((user) => [user.id, stateOf(user)]))
   const plantState = new Map(
     plants.map((plant) => [plant.id, worst(stateOf(plant), userState.get(plant.ownerId) ?? 'visible')]),
   )
   return {
+    privatePlant: (id) => privateIds.has(id),
     user: (id) => userState.get(id) ?? 'visible',
     plant: (id) => plantState.get(id) ?? 'visible',
     activity: (item) =>
@@ -60,12 +67,26 @@ export async function loadVisibility() {
   return visibilityIndex(users, plants)
 }
 
+/** A private row: only its owner and admins. */
+export function canSeePrivate(isPrivate: boolean, ownerId: string, viewer: Viewer) {
+  return !isPrivate || viewer?.role === 'admin' || viewer?.id === ownerId
+}
+
+/** May this viewer open this plant: moderation state and the owner's privacy switch. */
+export function canSeePlant(plant: Plant, index: VisibilityIndex, viewer: Viewer) {
+  return canSee(index.plant(plant.id), plant.ownerId, viewer) && canSeePrivate(Boolean(plant.private), plant.ownerId, viewer)
+}
+
 export function visiblePlants(plants: Plant[], index: VisibilityIndex, viewer: Viewer) {
-  return plants.filter((plant) => canSee(index.plant(plant.id), plant.ownerId, viewer))
+  return plants.filter((plant) => canSeePlant(plant, index, viewer))
 }
 
 export function visibleActivities(activities: Activity[], index: VisibilityIndex, viewer: Viewer) {
-  return activities.filter((item) => canSee(index.activity(item), item.userId, viewer))
+  return activities.filter(
+    (item) =>
+      canSee(index.activity(item), item.userId, viewer) &&
+      canSeePrivate(Boolean(item.plantId && index.privatePlant(item.plantId)), item.userId, viewer),
+  )
 }
 
 /** Users other people may see in directories and on public pages. */

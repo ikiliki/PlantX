@@ -503,8 +503,18 @@ export function postAdminScans(
 // ── Edit and moderation (#68, #69) ──────────────────────────────────────────
 
 export type PlantPatch = Partial<
-  Pick<Plant, 'title' | 'titleHe' | 'description' | 'descriptionHe' | 'sizeBand' | 'stage' | 'quality' | 'traits' | 'photos'>
+  Pick<
+    Plant,
+    'title' | 'titleHe' | 'description' | 'descriptionHe' | 'sizeBand' | 'stage' | 'quality' | 'traits' | 'photos' | 'private'
+  >
 >
+
+/** The owner deletes their plant (soft; an admin can restore it). The answer carries the owner's 'deleted' activity. */
+export function deletePlantRequest(plantId: string) {
+  return requestOutcome<{ plantId: string; activity: FeedUpdate }>(`/api/plants/${encodeURIComponent(plantId)}`, {
+    method: 'DELETE',
+  })
+}
 
 export function patchPlant(plantId: string, patch: PlantPatch) {
   return requestOutcome<{ plant: Plant; changed: string[] }>(`/api/plants/${encodeURIComponent(plantId)}`, {

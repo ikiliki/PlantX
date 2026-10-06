@@ -12,6 +12,8 @@ const INK: Record<FeedUpdateKind, string> = {
   listing: '#8A6416',
   scan: '#5B4A9B',
   passport: '#123C2D',
+  edited: '#4A5A52',
+  deleted: '#8A4A3A',
 }
 
 export function kindInk(kind: FeedUpdateKind) {
@@ -67,6 +69,15 @@ const surface: Record<FeedUpdateKind, ReturnType<typeof css>> = {
       radial-gradient(80% 100% at 100% 0%, rgba(36, 84, 63, 0.18), transparent 55%),
       linear-gradient(165deg, #e7f0e8 0%, #fffefa 72%);
     border-color: #24543f;
+  `,
+  // The owner's own bookkeeping: quiet neutrals, no celebration.
+  edited: css`
+    background: linear-gradient(165deg, #f1f2ee 0%, #fffefa 72%);
+    border-color: #c9cec6;
+  `,
+  deleted: css`
+    background: linear-gradient(165deg, #f6ece8 0%, #fffefa 72%);
+    border-color: #dcbcb2;
   `,
 }
 
@@ -360,6 +371,20 @@ const glyph: Record<FeedUpdateKind, ReturnType<typeof css>> = {
     border: 1.5px solid #24543f;
     border-radius: 50%;
     animation: ${stamp} 0.7s ${theme.motion.spring} both;
+  `,
+  edited: css`
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+    background: #4a5a52;
+    transform: rotate(-35deg);
+  `,
+  deleted: css`
+    width: 11px;
+    height: 2px;
+    border-radius: 2px;
+    background: #8a4a3a;
+    box-shadow: 0 0 0 0 transparent;
   `,
 }
 

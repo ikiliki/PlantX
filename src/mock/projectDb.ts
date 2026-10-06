@@ -17,11 +17,16 @@ const HIDDEN_OWNER = 'demo-unassigned'
 /** Hide, trim, or duplicate seed rows. The stored db is left intact. */
 export function projectDb(db: MockDb): MockDb {
   const flags = normalizeScenarios(db.flags)
-  const updates = selectUpdates(db.updates ?? [], flags.updates)
+  const viewer = db.currentUserId ?? db.visitorId
+  const admin = db.users.some((user) => user.id === viewer && user.role === 'admin')
+  const reachable = reachablePlants(db.plants, viewer, admin)
+  const updates = selectUpdates(
+    (db.updates ?? []).filter((item) => !item.plantId || reachable.has(item.plantId) || !db.plants.some((plant) => plant.id === item.plantId)),
+    flags.updates,
+  )
   const topGreenhouses = selectTopGreenhouses(db.topGreenhouses ?? [], flags.topGreenhouses)
   const market = projectMarket(db, flags.market)
-  const viewer = db.currentUserId ?? db.visitorId
-  const plants = projectPlants(db.plants, viewer, flags.greenhouse, market.comps, market.plantIds)
+  const plants = projectPlants(db.plants.filter((plant) => reachable.has(plant.id)), viewer, flags.greenhouse, market.comps, market.plantIds)
 
   return {
     ...db,
@@ -32,7 +37,21 @@ export function projectDb(db: MockDb): MockDb {
     marketClasses: market.classes,
     orders: market.orders,
     plants,
+    todos: db.todos.filter((todo) => !todo.plantId || reachable.has(todo.plantId) || !db.plants.some((plant) => plant.id === todo.plantId)),
   }
+}
+
+/**
+ * Plants this viewer may reach, the server's rules in mock mode (server/src/lib/visibility.ts): another
+ * grower's private plant, and a deleted plant, are gone unless the viewer is an admin. Their activity and
+ * tasks go with them.
+ */
+function reachablePlants(plants: Plant[], viewer: string, admin: boolean) {
+  return new Set(
+    plants
+      .filter((plant) => admin || ((!plant.private || plant.ownerId === viewer) && plant.visibility !== 'deleted'))
+      .map((plant) => plant.id),
+  )
 }
 
 function selectUpdates(updates: FeedUpdate[], scenario: DemoScenarios['updates']): FeedUpdate[] {

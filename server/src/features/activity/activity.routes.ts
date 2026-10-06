@@ -15,7 +15,7 @@ export const activityRoutes = new Hono<SignedInEnv>()
 
 activityRoutes.use('*', signedIn)
 
-const KINDS: ActivityKind[] = ['photo', 'water', 'propagate', 'grade', 'passport', 'listing', 'scan', 'added']
+const KINDS: ActivityKind[] = ['photo', 'water', 'propagate', 'grade', 'passport', 'listing', 'scan', 'added', 'edited', 'deleted']
 
 function isKind(value: unknown): value is ActivityKind {
   return typeof value === 'string' && (KINDS as string[]).includes(value)
@@ -82,8 +82,9 @@ activityRoutes.get('/:type', async (c) => {
 activityRoutes.post('/', async (c) => {
   const user = c.get('user')
   const body = (await c.req.json()) as ActivityInput
-  if (body?.kind === 'scan' || body?.kind === 'added' || body?.identifyRequestId) {
-    throw Errors.invalid('scan and added activities are recorded by identify and Add Plant only')
+  const serverOnly = ['scan', 'added', 'edited', 'deleted']
+  if (serverOnly.includes(String(body?.kind)) || body?.identifyRequestId) {
+    throw Errors.invalid('scan, added, edited and deleted activities are recorded by the server only')
   }
   if (!isKind(body?.kind)) throw Errors.invalid(`kind must be one of ${KINDS.join(', ')}`)
   if (body.plantId) {

@@ -1,14 +1,14 @@
-import type { VisibilityMeta } from '../../../../src/mock/types.ts'
+import type { FeedUpdateKind, VisibilityMeta } from '../../../../src/mock/types.ts'
 
 /** One greenhouse (or market) action that shows in the news feed and on a plant. */
-export type ActivityKind = 'photo' | 'water' | 'propagate' | 'grade' | 'passport' | 'listing' | 'scan' | 'added'
+export type ActivityKind = FeedUpdateKind
 
 export interface Activity extends VisibilityMeta {
   id: string
   kind: ActivityKind
   userId: string
   plantId?: string
-  /** `scan` and `added`: the Add Plant identify request behind it. */
+  /** `scan` and `added`: the Add Plant identify request behind it. `deleted` has no plantId (the plant is gone). */
   identifyRequestId?: string
   body: string
   bodyHe: string

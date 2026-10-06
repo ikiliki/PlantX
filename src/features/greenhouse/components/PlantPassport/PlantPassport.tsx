@@ -1,6 +1,6 @@
 import { OTHER_CATEGORY_ID, OTHER_SUBCATEGORY_ID } from '../../plantClass'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UNKNOWN_AREA } from '../../../../mock/locations'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
@@ -42,6 +42,7 @@ import { EditPencil, InlineEdit } from '../InlineEdit/InlineEdit'
 import { emptyClassDraft, sizeChoices, stageChoices } from '../../plantClass'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import type { PlantPatch } from '../../../../mock/liveApi'
+import { PlantOwnerControls } from '../PlantOwnerControls/PlantOwnerControls'
 import { ModerationDialog, type ModerationRequest } from '../../../admin/components/ModerationDialog/ModerationDialog'
 import { Badge } from '../../../../components/Badge/Badge'
 import {
@@ -170,6 +171,7 @@ export function PlantPassport({
   const [editField, setEditField] = useState<string | null>(null)
   const levels = useGreenhouseLevels()
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   // As a popup, the owner and greenhouse rows only make sense from Home and the market; elsewhere the grower is already known.
   const showOwner = !dialog || pathname === '/home' || pathname.startsWith('/market')
 
@@ -468,8 +470,11 @@ export function PlantPassport({
           </NameBlock>
         </IdentityHead>
 
-          {/* Owner or admin edit inline (#70). Admin on someone else's plant: hide or delete it (#69). */}
-          {!embedded && isAdmin && !isOwner ? (
+          {/* The owner: who sees the plant, and delete it. Admin on someone else's plant: hide or delete it (#69). */}
+          {canEdit && isOwner ? (
+            <PlantOwnerControls plant={plant} onDeleted={() => navigate('/greenhouse', { replace: true })} />
+          ) : null}
+          {canEdit && isAdmin && !isOwner ? (
             <ManageRow>
               {plant.visibility ? (
                 <Badge $tone={plant.visibility === 'deleted' ? 'danger' : 'warn'}>

@@ -8,12 +8,12 @@ import { moderationService } from '../moderation/moderation.service.ts'
 import { Errors } from '../../lib/errors.ts'
 import { assertPhotos } from '../../lib/images.ts'
 import { rateLimit } from '../../lib/rateLimit.ts'
-import { canSee, loadVisibility, visiblePlants } from '../../lib/visibility.ts'
+import { canSeePlant, loadVisibility, visiblePlants } from '../../lib/visibility.ts'
 
-/** A hidden plant is "not found" for anyone but its owner and admins. */
+/** A hidden or private plant is "not found" for anyone but its owner and admins. */
 async function visiblePlant(id: string, viewer: Pick<User, 'id' | 'role'>) {
   const [plant, index] = await Promise.all([greenhouseService.get(id), loadVisibility()])
-  if (!canSee(index.plant(plant.id), plant.ownerId, viewer)) throw Errors.missing(`Plant ${id} not found`)
+  if (!canSeePlant(plant, index, viewer)) throw Errors.missing(`Plant ${id} not found`)
   return plant
 }
 
@@ -22,7 +22,7 @@ export const greenhouseRoutes = new Hono<SignedInEnv>()
 
 greenhouseRoutes.use('*', signedIn)
 
-/** Plants this member may see: none an admin hid (or whose grower is hidden), except their own hidden ones. */
+/** Plants this member may see: none an admin hid (or whose grower is hidden) and none another grower made private. */
 greenhouseRoutes.get('/', async (c) => {
   const [plants, index] = await Promise.all([greenhouseService.list(), loadVisibility()])
   return c.json({ plants: visiblePlants(plants, index, c.get('user')) })
@@ -43,6 +43,14 @@ greenhouseRoutes.patch('/:id', async (c) => {
     await moderationService.logEdit('plant', plant.id, plant.title, user, changed)
   }
   return c.json({ plant, changed })
+})
+
+/** The owner deletes their plant (an admin may too); see greenhouseService.remove. */
+greenhouseRoutes.delete('/:id', async (c) => {
+  const user = c.get('user')
+  const { plant, activity } = await greenhouseService.remove(c.req.param('id'), user)
+  if (plant.ownerId !== user.id) await moderationService.logEdit('plant', plant.id, plant.title, user, ['deleted'])
+  return c.json({ plantId: plant.id, activity })
 })
 
 /** Plant card / passport: plant from greenhouse, timeline from activity. */

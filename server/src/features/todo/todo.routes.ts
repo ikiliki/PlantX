@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { requireUser } from '../../lib/session.ts'
 import { activityService, visibleTo } from '../activity/activity.service.ts'
+import { loadVisibility } from '../../lib/visibility.ts'
 import { isFirstWaterTodo, todoService } from './todo.service.ts'
 
 export const todoRoutes = new Hono()
@@ -8,7 +9,9 @@ export const todoRoutes = new Hono()
 todoRoutes.get('/', async (c) => {
   const user = await requireUser(c)
   const open = c.req.query('open') === '1' || c.req.query('open') === 'true'
-  const todos = await todoService.list({ ownerId: user.id, open: open || undefined })
+  const [rows, index] = await Promise.all([todoService.list({ ownerId: user.id, open: open || undefined }), loadVisibility()])
+  // A deleted plant takes its tasks with it (they come back if an admin restores the plant).
+  const todos = rows.filter((todo) => !todo.plantId || index.plant(todo.plantId) !== 'deleted')
   return c.json({ todos })
 })
 

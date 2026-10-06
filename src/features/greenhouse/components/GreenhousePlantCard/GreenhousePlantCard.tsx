@@ -13,6 +13,7 @@ import {
 } from '../../../todo/todoSchedule'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
+import { Icon } from '../../../../components/Icon/Icon'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import {
   CareAction,
@@ -26,6 +27,7 @@ import {
   PassportMark,
   Photo,
   PhotoCount,
+  PrivateMark,
   PhotoTags,
   PhotoLink,
   Root,
@@ -179,6 +181,11 @@ export function GreenhousePlantCard({
           ) : (
             <Name to={`/plants/${plant.id}`}>{tr(plant.title, plant.titleHe)}</Name>
           )}
+          {plant.private ? (
+            <PrivateMark title={t.passport.private} aria-label={t.passport.private} data-private-plant>
+              <Icon name="lock" size={12} />
+            </PrivateMark>
+          ) : null}
         </NameRow>
         {careMode ? (
           <CareActions>
