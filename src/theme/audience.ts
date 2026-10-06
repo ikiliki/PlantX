@@ -16,6 +16,8 @@ export const APP_SURFACES = [
   'todo',
   'passport',
   'admin',
+  /** Privacy Policy and Terms of Use: the same page for everyone. */
+  'legal',
 ] as const
 
 export type AppSurface = (typeof APP_SURFACES)[number]
@@ -32,6 +34,7 @@ export const SURFACE_GUEST: Record<AppSurface, GuestAccess> = {
   todo: 'prompt',
   passport: 'prompt',
   admin: 'hidden',
+  legal: 'browse',
 }
 
 export interface AudienceViews<T> {

@@ -124,6 +124,11 @@ export function sendWebhookTestOutcome(id: import('./types').WebhookId) {
 }
 
 /** Admin only: API, database, migrations, identify keys (set or not) and error counts (#56). */
+/** Admin → System funnel (#59). */
+export function fetchFunnelOutcome() {
+  return requestOutcome<{ days: import('./types').FunnelDay[] }>('/api/events/funnel')
+}
+
 export function fetchSystemHealthOutcome() {
   return requestOutcome<{ health: import('./types').SystemHealth }>('/api/system/health')
 }
@@ -211,15 +216,18 @@ export function fetchGoogleAuth() {
   return request<{ enabled: boolean; clientId: string | null }>('/api/session/google')
 }
 
-export function postGoogleSession(credential: string) {
-  return request<LivePayload>('/api/session/google', {
-    method: 'POST',
-    body: JSON.stringify({ credential }),
-  })
+/** The signed-in member agrees to this Terms version. */
+export function postConsent(version: string) {
+  return request<{ user: User }>('/api/session/consent', { method: 'POST', body: JSON.stringify({ version }) })
 }
 
-/** Same as postGoogleSession but returns the API error token when login fails. */
-export async function postGoogleSessionResult(credential: string) {
+/** Erases the signed-in member's account and signs out. Returns the signed-out payload. */
+export function deleteMyAccount() {
+  return request<LivePayload>('/api/session/account', { method: 'DELETE' })
+}
+
+/** Google sign-in. `termsVersion` is the Terms version ticked on the login page (needed to sign up). */
+export async function postGoogleSessionResult(credential: string, termsVersion?: string) {
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
@@ -227,7 +235,7 @@ export async function postGoogleSessionResult(credential: string) {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential }),
+      body: JSON.stringify({ credential, termsVersion }),
       signal: controller.signal,
     })
     if (res.ok) return { ok: true as const, live: (await res.json()) as LivePayload }

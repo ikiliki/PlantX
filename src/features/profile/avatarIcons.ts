@@ -39,6 +39,20 @@ export function cleanNickname(value: string) {
   return value.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, NICKNAME_MAX)
 }
 
+/**
+ * What other members see for a grower with no nickname (#95): "Grower" and four letters of the id. The account
+ * name is private, so the server sends this in its place.
+ */
+export function anonymousGrowerName(userId: string) {
+  const tail = userId.replace(/[^a-z0-9]/gi, '').slice(-4).toUpperCase()
+  return `Grower ${tail || '0000'}`
+}
+
+/** The server's public name for a grower: the nickname, or the anonymous name. Never the account name. */
+export function sharedGrowerName(user: { id: string; nickname?: string | null }) {
+  return user.nickname?.trim() || anonymousGrowerName(user.id)
+}
+
 /** The name other people see. A nickname replaces the account name. */
 export function publicGrowerName(
   user: { name: string; nameHe?: string; nickname?: string | null },

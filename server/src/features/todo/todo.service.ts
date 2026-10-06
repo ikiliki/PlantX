@@ -1,3 +1,4 @@
+import { analyticsService } from '../analytics/analytics.service.ts'
 import { changedSince, snapshot } from '../../lib/changedRows.ts'
 import { Errors } from '../../lib/errors.ts'
 import { getStore } from '../../db/index.ts'
@@ -236,6 +237,7 @@ export const todoService = {
     await save(rows, before)
     await store.plants.upsert([plant])
     const activity = activityInput ? await activityService.record(activityInput) : null
+    await analyticsService.trackFirst('care_done', userId, { kind: todo.subcategory })
     return {
       todo,
       todos: await todoService.list({ ownerId: userId }),

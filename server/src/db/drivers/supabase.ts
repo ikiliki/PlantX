@@ -17,6 +17,8 @@ import { supabaseIdentifyRequests } from './supabaseIdentifyRequests.ts'
 import { supabaseIssueReports } from './supabaseIssueReports.ts'
 import { supabaseIdentifySettings } from './supabaseIdentifySettings.ts'
 import { supabaseWebhookSettings } from './supabaseWebhookSettings.ts'
+import { supabaseAccounts } from './supabaseAccounts.ts'
+import { supabaseAnalytics } from './supabaseAnalytics.ts'
 import { supabaseModeration, supabaseRateLimits, supabaseScanQuota, visibilityFrom } from './supabaseModeration.ts'
 
 const { Pool } = pg
@@ -189,6 +191,8 @@ export function createSupabaseStore(): PlantxStore {
       }
     },
     webhookSettings: supabaseWebhookSettings(pool),
+    accounts: supabaseAccounts(pool),
+    analytics: supabaseAnalytics(pool),
     identifyRequests: supabaseIdentifyRequests(pool),
     issueReports: supabaseIssueReports(pool),
     scanQuota: supabaseScanQuota(pool),
@@ -244,6 +248,7 @@ export function createSupabaseStore(): PlantxStore {
       if (avatarIcon) user.avatarIcon = avatarIcon
       if (lat != null) user.lat = lat
       if (lng != null) user.lng = lng
+      Object.assign(user, consentFrom(row))
       return user
     })
   }
@@ -269,9 +274,9 @@ export function createSupabaseStore(): PlantxStore {
           id, position, name, name_he, role, business_name, business_name_he,
           region, region_he, lat, lng, bio, bio_he, rating, completed_orders,
           verification_rate, cancellations, avatar_color, email, account_status, preapproved,
-          nickname, avatar_icon
+          nickname, avatar_icon, terms_version, terms_accepted_at
         ) values (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25
         )
         on conflict (id) do update set
           position = excluded.position,
@@ -295,7 +300,9 @@ export function createSupabaseStore(): PlantxStore {
           account_status = excluded.account_status,
           preapproved = excluded.preapproved,
           nickname = excluded.nickname,
-          avatar_icon = excluded.avatar_icon`,
+          avatar_icon = excluded.avatar_icon,
+          terms_version = excluded.terms_version,
+          terms_accepted_at = excluded.terms_accepted_at`,
         [
           user.id,
           position,
@@ -320,6 +327,8 @@ export function createSupabaseStore(): PlantxStore {
           Boolean(user.preapproved),
           user.nickname?.trim() ? user.nickname.trim() : null,
           user.avatarIcon?.trim() ? user.avatarIcon.trim() : 'seed',
+          user.termsVersion ?? null,
+          user.termsAcceptedAt ?? null,
         ],
       )
     }
@@ -349,6 +358,13 @@ export function createSupabaseStore(): PlantxStore {
     if (mode === 'all') await client.query('delete from users where not (id = any($1::text[]))', [kept])
   }
 
+  /** Which Terms version a member or applicant agreed to, and when. Absent until they agree. */
+  function consentFrom(row: SqlRow) {
+    const termsVersion = optional(row, 'terms_version')
+    const termsAcceptedAt = optional(row, 'terms_accepted_at')
+    return termsVersion && termsAcceptedAt ? { termsVersion, termsAcceptedAt } : {}
+  }
+
   async function listPendingUsers(client: PoolClient): Promise<PendingUser[]> {
     const found = await rows(client, 'select * from pending_users order by position, id')
     return found.map((row) => {
@@ -367,6 +383,7 @@ export function createSupabaseStore(): PlantxStore {
       if (approvedAt) item.approvedAt = approvedAt
       if (rejectedAt) item.rejectedAt = rejectedAt
       if (userId) item.userId = userId
+      Object.assign(item, consentFrom(row))
       return item
     })
   }
@@ -382,8 +399,9 @@ export function createSupabaseStore(): PlantxStore {
       const position = positionOf(item.id, index)
       await client.query(
         `insert into pending_users (
-          id, position, name, email, note, created_at, status, approved_at, rejected_at, user_id
-        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          id, position, name, email, note, created_at, status, approved_at, rejected_at, user_id,
+          terms_version, terms_accepted_at
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
         on conflict (id) do update set
           position = excluded.position,
           name = excluded.name,
@@ -393,7 +411,9 @@ export function createSupabaseStore(): PlantxStore {
           status = excluded.status,
           approved_at = excluded.approved_at,
           rejected_at = excluded.rejected_at,
-          user_id = excluded.user_id`,
+          user_id = excluded.user_id,
+          terms_version = excluded.terms_version,
+          terms_accepted_at = excluded.terms_accepted_at`,
         [
           item.id,
           position,
@@ -405,6 +425,8 @@ export function createSupabaseStore(): PlantxStore {
           item.approvedAt ?? null,
           item.rejectedAt ?? null,
           item.userId && userIds.has(item.userId) ? item.userId : null,
+          item.termsVersion ?? null,
+          item.termsAcceptedAt ?? null,
         ],
       )
     }

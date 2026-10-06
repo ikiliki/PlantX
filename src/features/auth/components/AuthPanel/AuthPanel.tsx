@@ -3,14 +3,19 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { fetchGoogleAuth } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
 import { clientEnv } from '../../../../theme/plantxEnv'
+import { track } from '../../../../lib/track'
+import { LEGAL_VERSION } from '../../../legal/legalVersion'
+import { PRIVACY_PATH, TERMS_PATH } from '../../../legal/legalPaths'
 import type { AuthReason } from '../../AuthProvider'
 import {
   Brand,
   BrandMark,
   BrandName,
   BrandTagline,
+  Consent,
   ErrorText,
   Foot,
+  GoogleGate,
   GoogleSlot,
   Lead,
   Panel,
@@ -124,6 +129,8 @@ export function AuthPanel({
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [pending, setPending] = useState(false)
+  // The first Google sign-in is the sign-up, so every sign-in agrees to the Terms first.
+  const [agreed, setAgreed] = useState(false)
   const [googleClientId, setGoogleClientId] = useState<string | null>(() => envGoogleClientId())
   // Until the server says whether Google is on, show neither the button nor "paused".
   // Google is on but its script did not load (blocked or offline): an error, not "paused".
@@ -197,7 +204,7 @@ export function AuthPanel({
             void (async () => {
               setBusy(true)
               setError('')
-              const result = await loginRef.current(response.credential)
+              const result = await loginRef.current(response.credential, LEGAL_VERSION)
               setBusy(false)
               if (result.ok) {
                 onSuccessRef.current()
@@ -234,6 +241,11 @@ export function AuthPanel({
       cancelled = true
     }
   }, [showGoogle, googleClientId, googleLocale, mode, t.auth])
+
+  const onAgree = (next: boolean) => {
+    setAgreed(next)
+    if (next) track('signup_start', { mode }, { once: true })
+  }
 
   const switchMode = (next: 'login' | 'register') => {
     setMode(next)
@@ -287,14 +299,37 @@ export function AuthPanel({
             </>
           ) : (
             <>
+              {(mockSso || showGoogle) && !gisFailed ? (
+                <Consent>
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(event) => onAgree(event.target.checked)}
+                    data-terms-agree
+                  />
+                  <span>
+                    {t.legal.agreeBefore}
+                    <a href={TERMS_PATH} target="_blank" rel="noreferrer">
+                      {t.legal.terms}
+                    </a>
+                    {t.legal.agreeAnd}
+                    <a href={PRIVACY_PATH} target="_blank" rel="noreferrer">
+                      {t.legal.privacy}
+                    </a>
+                    {t.legal.agreeAfter}
+                  </span>
+                </Consent>
+              ) : null}
               {mockSso ? (
-                <Submit type="button" onClick={() => void onMockSso()} disabled={busy}>
+                <Submit type="button" onClick={() => void onMockSso()} disabled={busy || !agreed}>
                   {busy ? t.common.loading : t.auth.google}
                 </Submit>
               ) : showGoogle && gisFailed ? (
                 <ErrorText>{t.auth.googleUnavailable}</ErrorText>
               ) : showGoogle ? (
-                <GoogleSlot ref={googleRef} aria-label={t.auth.google} aria-busy={busy} />
+                <GoogleGate $locked={!agreed} aria-disabled={!agreed || undefined} title={agreed ? undefined : t.legal.agreeFirst}>
+                  <GoogleSlot ref={googleRef} aria-label={t.auth.google} aria-busy={busy} />
+                </GoogleGate>
               ) : (
                 <Pending aria-live="polite">{t.common.loading}</Pending>
               )}

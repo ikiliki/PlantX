@@ -55,6 +55,21 @@ sessionRoutes.patch('/account', async (c) => {
   return c.json({ user: next })
 })
 
+/** The signed-in member agrees to the current Terms and Privacy Policy (the consent dialog). */
+sessionRoutes.post('/consent', async (c) => {
+  const user = await requireUser(c)
+  const body = (await c.req.json().catch(() => ({}))) as { version?: unknown }
+  return c.json({ user: await sessionService.acceptTerms(user.id, body.version) })
+})
+
+/** The member deletes their own account (Account → Delete my account) and is signed out. */
+sessionRoutes.delete('/account', async (c) => {
+  const user = await requireUser(c)
+  await sessionService.deleteAccount(user.id)
+  await setSession(c, null)
+  return c.json(await liveService.payload(null))
+})
+
 /** Preprod only: sign in as a seeded user with the test token. Scripts use POST + header. */
 sessionRoutes.post('/test-login', async (c) => {
   if (!preprodEnabled()) throw Errors.missing()
@@ -84,9 +99,9 @@ sessionRoutes.get('/test-login', async (c) => {
 })
 
 sessionRoutes.post('/google', signInLimit, async (c) => {
-  const body = (await c.req.json()) as { credential?: string }
+  const body = (await c.req.json()) as { credential?: string; termsVersion?: unknown }
   const profile = await verifyGoogleIdToken(body.credential ?? '')
-  const user = await sessionService.loginWithGoogle(profile)
+  const user = await sessionService.loginWithGoogle(profile, body.termsVersion)
   await setSession(c, user.id)
   return c.json(await liveService.payload(user.id))
 })

@@ -1,9 +1,9 @@
-import type { User } from '../../../../src/mock/types.ts'
+import type { TermsConsent, User } from '../../../../src/mock/types.ts'
 
 /** Landing applications waiting for an admin to preview and activate. */
 export type PendingUserStatus = 'pending' | 'approved' | 'rejected'
 
-export interface PendingUser {
+export interface PendingUser extends TermsConsent {
   id: string
   name: string
   email: string

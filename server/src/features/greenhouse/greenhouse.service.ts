@@ -1,3 +1,4 @@
+import { analyticsService } from '../analytics/analytics.service.ts'
 import { resolveArea, UNKNOWN_AREA } from '../../../../src/mock/locations.ts'
 import type { IdentifyRequestRecord, Plant, User } from '../../../../src/mock/types.ts'
 import {
@@ -163,6 +164,10 @@ export const greenhouseService = {
     } catch (err) {
       logger.error('todo schedule failed', { plantId: row.id }, err)
     }
+    await analyticsService.trackFirst('plant_saved', ownerId, {
+      ai: identifyRequestIds.some(Boolean),
+      photo: photos.length > 0,
+    })
     return row
   },
 

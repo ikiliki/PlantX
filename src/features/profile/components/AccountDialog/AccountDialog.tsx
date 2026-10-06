@@ -12,6 +12,8 @@ import { useStore } from '../../../../mock/store'
 import { isOperator } from '../../../../theme/operator'
 import { GreenhousePlace } from '../../../greenhouse/components/GreenhousePlace/GreenhousePlace'
 import { MyScanAllowance } from '../../../greenhouse/components/ScanQuotaNote/ScanQuotaNote'
+import { PRIVACY_PATH, TERMS_PATH } from '../../../legal/legalPaths'
+import { DeleteAccountDialog } from '../DeleteAccountDialog/DeleteAccountDialog'
 import {
   AVATAR_ICONS,
   avatarIconId,
@@ -25,6 +27,7 @@ import {
   Block,
   Card,
   Close,
+  DangerLink,
   Face,
   FieldLabel,
   Footer,
@@ -37,6 +40,7 @@ import {
   LabelRow,
   Lang,
   LangBtn,
+  LegalRow,
   Mark,
   Rows,
   Value,
@@ -55,15 +59,17 @@ function Privacy({ kind, label }: { kind: 'public' | 'private'; label: string })
 
 /**
  * Signed-in account card, and the only settings surface (there is no Settings page): nickname, icon and
- * greenhouse place (public), account name and email (private), AI scans left, language, sign out.
+ * greenhouse place (public), account name and email (private), AI scans left, language, sign out, the
+ * Privacy / Terms links and Delete my account (not for the admin).
  * Open it from anywhere with `?account=1` (`accountHref`); the top bar owns it.
  */
 export function AccountDialog({ onClose }: { onClose: () => void }) {
-  const { currentUser, db, loginAs, setAccount, setLocale } = useStore()
+  const { currentUser, db, loginAs, setAccount, setLocale, deleteAccount } = useStore()
   const { t, locale } = useI18n()
   const navigate = useNavigate()
   const [nickname, setNickname] = useState(currentUser?.nickname ?? '')
   const [status, setStatus] = useState<'idle' | 'saved' | 'failed'>('idle')
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     setNickname(currentUser?.nickname ?? '')
@@ -103,6 +109,15 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
     if (!avatarUnlocked(id, level) || id === icon) return
     const ok = await setAccount({ avatarIcon: id })
     setStatus(ok ? 'saved' : 'failed')
+  }
+
+  const removeAccount = async () => {
+    const ok = await deleteAccount()
+    if (!ok) return false
+    setDeleting(false)
+    onClose()
+    navigate('/login')
+    return true
   }
 
   const signOut = () => {
@@ -234,7 +249,30 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
           <Button type="button" variant="secondary" block onClick={signOut}>
             {t.profile.signOut}
           </Button>
+          <LegalRow>
+            <span>
+              <a href={PRIVACY_PATH} target="_blank" rel="noreferrer">
+                {t.legal.privacy}
+              </a>
+              {' · '}
+              <a href={TERMS_PATH} target="_blank" rel="noreferrer">
+                {t.legal.terms}
+              </a>
+            </span>
+            {currentUser.role !== 'admin' && (
+              <DangerLink type="button" onClick={() => setDeleting(true)} data-delete-account>
+                {t.legal.deleteAccount}
+              </DangerLink>
+            )}
+          </LegalRow>
         </Footer>
+        {deleting && (
+          <DeleteAccountDialog
+            plants={db.plants.filter((plant) => plant.ownerId === currentUser.id).length}
+            onDelete={removeAccount}
+            onClose={() => setDeleting(false)}
+          />
+        )}
       </Card>
     </Backdrop>,
     document.body,

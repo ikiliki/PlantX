@@ -189,3 +189,31 @@ export const LangBtn = styled.button<{ $on?: boolean }>`
   font-weight: 700;
   cursor: pointer;
 `
+
+/** Privacy · Terms, and Delete my account, under Sign out. */
+export const LegalRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 0;
+  font-size: 13px;
+
+  a {
+    color: ${theme.colors.muted};
+  }
+`
+
+export const DangerLink = styled.button`
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${theme.colors.danger};
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+`

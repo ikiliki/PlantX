@@ -1,5 +1,5 @@
 import { isPublicActivity } from '../../../src/features/feed/activityXp.ts'
-import { publicGrowerName } from '../../../src/features/profile/avatarIcons.ts'
+import { sharedGrowerName } from '../../../src/features/profile/avatarIcons.ts'
 import type { FeedUpdateKind, User, WebhookId } from '../../../src/mock/types.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
 import { getStore } from '../db/index.ts'
@@ -37,7 +37,7 @@ export async function notifyApproved(name: string) {
 }
 
 export async function notifySignIn(user: User) {
-  await post('signins', `🔑 ${plain(publicGrowerName(user, false))} signed in`)
+  await post('signins', `🔑 ${plain(sharedGrowerName(user))} signed in`)
 }
 
 const KIND_MARK: Partial<Record<FeedUpdateKind, string>> = { added: '🌱', water: '💧', photo: '📸' }
@@ -48,7 +48,7 @@ export async function notifyActivity(activity: Activity) {
     const [index, users] = await Promise.all([loadVisibility(), getStore().users.list()])
     if (visibleActivities([activity], index, null).length === 0) return
     const user = users.find((item) => item.id === activity.userId)
-    const who = user ? publicGrowerName(user, false) : 'A grower'
+    const who = user ? sharedGrowerName(user) : 'A grower'
     await post('activities', `${KIND_MARK[activity.kind] ?? '•'} ${plain(who)} · ${plain(activity.body, 200)}`)
   } catch (err) {
     logger.warn('activity event failed', { activityId: activity.id }, err)

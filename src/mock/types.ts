@@ -104,7 +104,13 @@ export type ModerationEntry = {
   createdAt: string
 }
 
-export interface User extends VisibilityMeta {
+/** The Terms and Privacy Policy version a person agreed to (`LEGAL_VERSION`), and when. Absent until they agree. */
+export interface TermsConsent {
+  termsVersion?: string
+  termsAcceptedAt?: string
+}
+
+export interface User extends VisibilityMeta, TermsConsent {
   id: string
   name: string
   nameHe: string
@@ -140,7 +146,7 @@ export interface User extends VisibilityMeta {
 
 export type PendingUserStatus = 'pending' | 'approved' | 'rejected'
 
-export interface PendingUser {
+export interface PendingUser extends TermsConsent {
   id: string
   name: string
   email: string
@@ -820,4 +826,26 @@ export type WebhookStatus = {
   env: 'PLANTX_ALERT_WEBHOOK_URL' | 'PLANTX_EVENTS_WEBHOOK_URL'
   configured: boolean
   enabled: boolean
+}
+
+/** Funnel analytics (#59). The names are the `analytics_events.name` check list. */
+export type AnalyticsEventName =
+  | 'landing_view'
+  | 'guest_start'
+  | 'signup_start'
+  | 'signup_done'
+  | 'plant_add_start'
+  | 'identify_result'
+  | 'plant_saved'
+  | 'care_done'
+  | 'session_return'
+
+/** Small facts about an event. Never a name, an email, a photo or a provider. */
+export type AnalyticsProps = Record<string, string | number | boolean>
+
+/** One day of the funnel (Israel time): events per name, and distinct signed-in people per name. */
+export interface FunnelDay {
+  day: string
+  counts: Partial<Record<AnalyticsEventName, number>>
+  people: Partial<Record<AnalyticsEventName, number>>
 }
