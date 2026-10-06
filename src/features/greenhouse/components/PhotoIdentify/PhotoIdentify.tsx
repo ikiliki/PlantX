@@ -7,7 +7,7 @@ import { postIdentify } from '../../../../mock/liveApi'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { useStore } from '../../../../mock/store'
 import type { Catalog, Diagnosis, IdentifyTried, Locale, PhotoCheck } from '../../../../mock/types'
-import { readPhoto, thumbPhoto } from '../../../../lib/readPhoto'
+import { readPhoto, thumbPhoto, UnreadablePhotoError } from '../../../../lib/readPhoto'
 import { catalogName } from '../../../catalog/catalog'
 import { MAX_PLANT_PHOTOS, scanActivityText } from '../../identification'
 import { AiScan, type AiScanFact, type AiScanState } from '../AiScan/AiScan'
@@ -24,6 +24,7 @@ import {
   SlotSticker,
   Strip,
   StripHint,
+  Unreadable,
 } from './PhotoIdentify.styles'
 
 /** A fast answer still shows the scan long enough to read. */
@@ -134,6 +135,8 @@ export function PhotoIdentify({
   const started = useRef(new Set<string>())
   const [selectedId, setSelectedId] = useState<string>()
   const [dragging, setDragging] = useState(false)
+  // The last pick the browser could not decode (format name), shown until a photo reads fine.
+  const [unreadable, setUnreadable] = useState<string | null>(null)
   // A phone can't drop a file: it takes a photo or picks one from the gallery.
   const touch = useMediaQuery('(pointer: coarse)')
 
@@ -212,6 +215,7 @@ export function PhotoIdentify({
     for (const file of picked) {
       const id = newScanId()
       void readPhoto(file).then((dataUrl) => {
+        setUnreadable(null)
         onScansChange((current) =>
           current.length >= max
             ? current
@@ -219,9 +223,20 @@ export function PhotoIdentify({
         )
         setSelectedId(id)
         if (analyze) begin(id, dataUrl)
+      }, (error: unknown) => {
+        // Never show or send a photo the browser cannot decode: it would look broken and fail the scan.
+        setUnreadable(error instanceof UnreadablePhotoError ? error.format : '')
       })
     }
   }
+
+  const unreadableNote =
+    unreadable === null ? null : (
+      <Unreadable role="alert" data-photo-unreadable>
+        <strong>{t.addPlant.unreadableTitle}</strong>
+        <span>{t.addPlant.unreadableBody.replace('{format}', unreadable || '?')}</span>
+      </Unreadable>
+    )
 
   const onDrop = (event: DragEvent) => {
     event.preventDefault()
@@ -278,6 +293,7 @@ export function PhotoIdentify({
             </small>
           </DropCopy>
         </Drop>
+        {unreadableNote}
       </Root>
     )
   }
@@ -326,6 +342,7 @@ export function PhotoIdentify({
         onRemove={max <= 1 ? () => remove(selected.id) : undefined}
         removeLabel={t.addPlant.removePhoto.replace('{n}', '1')}
       />
+      {unreadableNote}
       {max > 1 && (
       <>
       <Strip aria-label={t.addPlant.photoStrip.replace('{n}', String(scans.length)).replace('{max}', String(max))}>

@@ -27,6 +27,31 @@ test.describe('Add Plant', () => {
     await expect(dialog.locator('input[type=file]')).toHaveCount(2)
   })
 
+  test('a photo the browser cannot read (HEIC) says so, is not shown and is not scanned', async ({ page }) => {
+    let scanned = false
+    page.on('request', (request) => {
+      if (request.url().endsWith('/api/identify') && request.method() === 'POST') scanned = true
+    })
+    const dialog = await openAddPlant(page)
+    // Chrome cannot decode HEIC (a phone camera's "High efficiency pictures"); these bytes are not an image either.
+    await dialog.locator('input[type=file]').first().setInputFiles({
+      name: 'IMG_0001.heic',
+      mimeType: 'image/heic',
+      buffer: Buffer.from('ftypheic not a real photo'),
+    })
+    const note = dialog.locator('[data-photo-unreadable]')
+    await expect(note).toBeVisible()
+    await expect(note).toContainText('HEIC')
+    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
+    await expect(dialog.locator('img[src^="data:image/heic"]')).toHaveCount(0)
+    expect(scanned).toBe(false)
+
+    // A photo that reads fine replaces the note.
+    await dialog.locator('input[type=file]').first().setInputFiles(plantPhoto())
+    await expect(note).toHaveCount(0)
+    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeEnabled()
+  })
+
   test('a full AI answer is ready to save', async ({ page, identify }) => {
     const pick = await catalogPick(page)
     identify.answer(diagnosisFor(pick, { withTrait: true }))

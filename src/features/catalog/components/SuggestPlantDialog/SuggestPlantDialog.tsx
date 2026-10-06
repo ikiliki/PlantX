@@ -5,7 +5,8 @@ import { ChoiceChips } from '../../../../components/ChoiceChips/ChoiceChips'
 import { Field, Input, TextArea } from '../../../../components/Form/Form'
 import { Segmented } from '../../../../components/Segmented/Segmented'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { readPhoto } from '../../../../lib/readPhoto'
+import { notifyInfo } from '../../../../lib/httpNotice'
+import { readPhoto, UnreadablePhotoError } from '../../../../lib/readPhoto'
 import type { Catalog, CatalogSuggestionInput } from '../../../../mock/types'
 import { wikiHref } from '../../../species/components/GuideLink/GuideLink'
 import { SUGGEST_NAME_MAX, SUGGEST_NOTE_MAX, SUGGEST_OPEN_LIMIT, emptySuggestionInput, existingEntry } from '../../catalogSuggest'
@@ -110,7 +111,14 @@ export function SuggestPlantDialog({
 
   const pickPhoto = (file: File | undefined) => {
     if (!file) return
-    void readPhoto(file).then((photo) => set({ photo }))
+    void readPhoto(file).then(
+      (photo) => set({ photo }),
+      (error: unknown) =>
+        notifyInfo(
+          t.addPlant.unreadableTitle,
+          t.addPlant.unreadableBody.replace('{format}', error instanceof UnreadablePhotoError ? error.format : '?'),
+        ),
+    )
   }
 
   const submit = async (event: FormEvent) => {
