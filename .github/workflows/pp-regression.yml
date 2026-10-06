@@ -60,12 +60,12 @@ jobs:
           echo "label=PP preview${branch:+ · $branch}" >> "$GITHUB_OUTPUT"
           if [ -n "$pr" ]; then echo "report=pr $pr" >> "$GITHUB_OUTPUT"; else echo "report=summary" >> "$GITHUB_OUTPUT"; fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.target.outputs.run == 'true'
         with:
           ref: ${{ github.event.deployment.sha || github.sha }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.target.outputs.run == 'true'
         with:
           node-version: 22
@@ -91,7 +91,7 @@ jobs:
       - name: Upload report (videos, traces)
         id: upload
         if: always() && steps.target.outputs.run == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pp-regression-${{ github.run_id }}
           path: |
