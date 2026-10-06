@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PlantX — Product Blueprint + Repo Audit</title>
+<style>
+:root{--g:#164b38;--g2:#23634b;--soft:#e8f0e9;--cream:#fbf7ed;--card:#fffdf7;--text:#193128;--muted:#69776f;--border:#ddd7c9;--shadow:0 12px 35px rgba(25,49,40,.08)}
+*{box-sizing:border-box}body{margin:0;background:#f4efe5;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:22px}.shell{background:var(--cream);border:1px solid var(--border);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
+.hero{padding:28px;background:radial-gradient(circle at 90% 5%,rgba(35,99,75,.15),transparent 34%),linear-gradient(135deg,#fffaf0,#f2ebdc)}
+.brand{display:flex;gap:10px;align-items:center;color:var(--g);font-weight:800}.leaf{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--soft);font-size:21px}
+h1,h2,h3{font-family:Georgia,serif;color:var(--g);margin:0}h1{font-size:clamp(30px,5vw,50px);line-height:1.03;margin-top:18px;max-width:780px}.sub{color:var(--muted);max-width:760px;line-height:1.6}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:17px}.card strong.big{display:block;font:700 26px Georgia;color:var(--g);margin-top:5px}.label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.content{padding:20px 28px 30px}.status{display:grid;grid-template-columns:1fr .8fr;gap:14px}.promise{background:var(--g);color:#fff}.promise h3{color:#fff}.count{font:700 34px Georgia;color:var(--g);margin:8px 0}
+.progress{height:10px;background:var(--soft);border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;width:0;background:var(--g);transition:.25s}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 14px}.tab{border:1px solid var(--border);background:var(--card);border-radius:12px;padding:11px 15px;min-height:44px;font-weight:750;color:var(--text);cursor:pointer}.tab.active{background:var(--g);color:#fff;border-color:var(--g)}
+.panel{display:none}.panel.active{display:block}.timeline{padding:4px 18px}.row{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:18px 0;border-top:1px solid var(--border)}.row:first-child{border-top:0}.week{width:54px;height:54px;border-radius:16px;background:var(--soft);color:var(--g);display:grid;place-items:center;font-weight:900}.week.now{background:var(--g);color:#fff}.deploy{font-size:12px;font-weight:850;color:var(--g);margin-top:8px}.muted{color:var(--muted);line-height:1.5}.pill{display:inline-block;padding:6px 10px;border-radius:99px;background:var(--soft);color:var(--g);font-size:11px;font-weight:850}
+.tasks{display:grid;grid-template-columns:1fr 1fr;gap:14px}.task{display:flex;gap:10px;padding:12px 0;border-top:1px solid var(--border)}.task:first-of-type{border-top:0}.task input{width:19px;height:19px;accent-color:var(--g);flex:0 0 auto}.task:has(input:checked){color:var(--g)}.task:has(input:checked) span{text-decoration-thickness:1px}
+.cal-head,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.cal-head{text-align:center;font-size:11px;font-weight:800;color:var(--muted);margin:14px 0 5px}.month{grid-column:1/-1;font:700 20px Georgia;color:var(--g);margin:14px 0 3px}.day{min-height:48px;border:1px solid var(--border);border-radius:10px;background:var(--card);position:relative}.day.event{font-weight:900;color:var(--g);cursor:pointer}.day.now{background:var(--g);color:#fff}.dot{position:absolute;bottom:5px;left:50%;width:6px;height:6px;border-radius:50%;background:var(--g);transform:translateX(-50%)}.now .dot{background:#fff}
+.flow{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.flow span.box{padding:9px 11px;background:var(--soft);color:var(--g);border-radius:10px;font-size:12px;font-weight:800}
+.gates{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.gate{padding:14px;background:var(--soft);border-radius:14px;margin-top:9px}
+footer{padding:18px 28px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+@media(max-width:720px){.wrap{padding:0}.shell{border-radius:0;border-left:0;border-right:0}.hero,.content{padding:20px 16px}.grid3,.status,.tasks,.gates{grid-template-columns:1fr}.row{grid-template-columns:55px 1fr;gap:8px}.timeline{padding:2px 12px}.week{width:46px;height:46px;border-radius:13px}.tab{flex:1 1 45%}}
+
+.audit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.audit-grid .full{grid-column:1/-1}
+.verdict{font:700 28px Georgia;color:var(--g);margin:6px 0 4px}
+.statusline{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid var(--border)}
+.statusline:first-of-type{border-top:0}
+.ok{color:#1d744f;font-weight:900}.warn{color:#a86719;font-weight:900}.danger{color:#a43a35;font-weight:900}
+.codeflow{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f1e8;border:1px dashed var(--border);border-radius:14px;padding:15px;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#244539;margin-top:12px}
+.alert{padding:14px;border-radius:14px;background:#fff1e9;border:1px solid #e5c4b1;margin-top:12px;line-height:1.55}
+.alert.good{background:#edf7ef;border-color:#c8dfce}
+.audit-list{margin:10px 0 0;padding-left:20px}.audit-list li{margin:8px 0;line-height:1.5}
+.context-section{padding:14px 0;border-top:1px solid var(--border)}.context-section:first-of-type{border-top:0}
+.context-section h3{margin-bottom:7px}
+.mini-table{width:100%;border-collapse:collapse;margin-top:10px}.mini-table th,.mini-table td{padding:10px;border-top:1px solid var(--border);text-align:left;vertical-align:top}.mini-table th{color:var(--g);font-size:12px}
+@media(max-width:720px){.audit-grid{grid-template-columns:1fr}}
+#issues .mini-table{display:block;overflow-x:auto}#issues a{color:var(--g);font-weight:700}
+
+
+.roadmap-visual{display:grid;grid-template-columns:120px minmax(0,1fr) 300px;gap:18px;align-items:center;padding:20px 0;border-top:1px solid var(--border)}
+.roadmap-visual:first-of-type{border-top:0}
+.phase-badge{display:flex;flex-direction:column;align-items:center;gap:7px}
+.phase-circle{width:64px;height:64px;border-radius:20px;background:var(--soft);color:var(--g);display:grid;place-items:center;font-weight:900;font-size:18px;border:1px solid var(--border)}
+.phase-circle.now{background:var(--g);color:white}
+.phase-date{font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+.phase-copy h3{font-size:20px;margin:0 0 6px}
+.phase-copy .milestone{font-size:12px;font-weight:900;color:var(--g);margin-top:8px}
+.screen{border:1px solid #cfd9cf;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 10px 28px rgba(25,49,40,.08);min-width:0}
+.screen-bar{height:22px;background:#edf2ec;border-bottom:1px solid #d9e0d9;display:flex;align-items:center;padding:0 9px;gap:5px}
+.screen-dot{width:6px;height:6px;border-radius:50%;background:#b7c4b9}
+.screen-body{padding:12px;background:#fbfcfa;min-height:165px}
+.mini-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.mini-logo{font-weight:900;color:var(--g);font-size:11px}.mini-chip{font-size:9px;padding:4px 7px;border-radius:99px;background:var(--soft);color:var(--g);font-weight:800}
+.mini-title{font:700 14px Georgia;color:var(--g);margin-bottom:8px}
+.mini-row{display:flex;gap:7px;margin-top:7px}.mini-card{flex:1;border:1px solid #e2e4de;background:#fff;border-radius:10px;padding:8px;min-width:0}
+.mini-img{height:48px;border-radius:8px;background:linear-gradient(135deg,#dce9dc,#eef3e8);display:grid;place-items:center;font-size:22px}
+.mini-line{height:5px;background:#dfe7df;border-radius:99px;margin-top:5px}.mini-line.short{width:58%}.mini-line.med{width:78%}
+.mini-btn{margin-top:8px;background:var(--g);color:#fff;border-radius:8px;text-align:center;padding:6px;font-size:9px;font-weight:900}
+.mini-outline{margin-top:6px;border:1px solid #cbd7cc;color:var(--g);border-radius:8px;text-align:center;padding:6px;font-size:9px;font-weight:800}
+.mini-task{display:flex;align-items:center;gap:7px;border:1px solid #e1e5df;background:#fff;border-radius:9px;padding:7px;margin-top:6px}
+.mini-check{width:15px;height:15px;border-radius:50%;border:2px solid #8aa593}
+.scan-frame{height:82px;border-radius:12px;background:linear-gradient(160deg,#d7e8d8,#f3eee1);display:grid;place-items:center;font-size:30px;position:relative;overflow:hidden}
+.scan-frame:after{content:"";position:absolute;inset:13px;border:1.5px solid #2f6a50;border-radius:9px}
+.quota{margin-top:7px;font-size:9px;color:var(--muted);display:flex;justify-content:space-between}
+.quota-bar{height:5px;background:#e3e9e2;border-radius:99px;overflow:hidden;margin-top:3px}.quota-bar i{display:block;height:100%;background:var(--g);width:33%}
+.deploy-lane{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:10px}.deploy-lane span{font-size:9px;padding:5px 7px;border-radius:7px;background:var(--soft);color:var(--g);font-weight:800}
+.flow-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.flow-card{border:1px solid var(--border);border-radius:16px;background:var(--card);padding:15px}
+.flow-card h3{font-size:17px;margin-bottom:7px}
+.flow-line{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:10px}
+.flow-node{padding:7px 9px;border-radius:9px;background:var(--soft);color:var(--g);font-size:11px;font-weight:800;border:1px solid #d8e2d9}
+.flow-arrow{color:var(--muted);font-weight:900}
+.state-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.state{border:1px solid var(--border);background:#fff;border-radius:12px;padding:10px}.state b{font-size:11px;color:var(--g);display:block}.state span{font-size:10px;color:var(--muted);line-height:1.35;display:block;margin-top:4px}
+@media(max-width:900px){.roadmap-visual{grid-template-columns:78px minmax(0,1fr)}.roadmap-visual .screen{grid-column:1/-1;margin-left:78px}.state-strip{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.roadmap-visual{grid-template-columns:1fr}.phase-badge{align-items:flex-start;flex-direction:row}.roadmap-visual .screen{grid-column:auto;margin-left:0}.state-strip{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<div class="wrap"><main class="shell">
+<section class="hero">
+<div class="brand"><span class="leaf">🌿</span> PlantX · Product Blueprint + Launch Command Center</div>
+<h1>From greenhouse to public launch.</h1>
+<p class="sub">Current position: <b>Week 0 — Stabilize</b>, last day of the window (Oct 5–7). Auth, schema, scanning, quota, moderation and rate limits are in production. What is left before Public Beta is health, backup, analytics, and three follow-up UX issues filed after the merge.</p>
+<p class="sub" style="margin-top:6px"><b>Update Oct 6 (v9):</b> <a href="https://github.com/ikiliki/PlantX/pull/65">PR #65</a> is on master and production (<code>b5e290b</code>). Production smoke passed, 28 tests. Shipped in that PR: startup DDL removed (#52), scanning + Dependabot (#54), server type-check and repo hygiene (#60), 20 s timeout (#7), rate limits and real image checks (#57), scan quota (#67), moderation cascade (#69), scan-suggestion popup (#64), API security headers, and hide / soft-delete plus name-and-note plant edit (#68, still open for the rest). The global API body limit was removed — it hung POSTs on Vercel. <b>Next, in order:</b> show the daily scan allowance outside Add Plant (<a href="https://github.com/ikiliki/PlantX/issues/72">#72</a>), one admin action place (<a href="https://github.com/ikiliki/PlantX/issues/71">#71</a>), inline passport edit (<a href="https://github.com/ikiliki/PlantX/issues/70">#70</a>). Still open for launch: health (#56), backup (#58), analytics (#59).</p>
+<p class="sub" style="margin-top:6px"><b>Oct 6 (v8):</b> Written while PR #65 was still on PP, and it listed quota, edit/hide, moderation, rate limits and the scan popup as “planned next.” Those landed in the same PR before it merged. v7 had already shipped auth (#61) and guest UX (#62).</p>
+<div class="grid3">
+<div class="card"><span class="label">Private MVP</span><strong class="big">Oct 28</strong><span class="muted">Core user loop complete</span></div>
+<div class="card" style="background:var(--soft)"><span class="label">🌍 Ready for public users</span><strong class="big">Nov 5</strong><span class="muted">Public Beta</span></div>
+<div class="card"><span class="label">MVP v1.0</span><strong class="big">Nov 12</strong><span class="muted">Retention release</span></div>
+</div>
+</section>
+<section class="content">
+<div class="status">
+<div class="card"><span class="label">⏱ Countdown to Public Beta</span><div class="count" id="countdown">—</div><div style="display:flex;justify-content:space-between;font-size:12px"><span>Launch readiness</span><b id="pct">0%</b></div><div class="progress" style="margin-top:8px"><i id="bar"></i></div></div>
+<div class="card promise"><span class="label" style="color:#d9e9df">MVP promise</span><h3 style="margin-top:8px">Take a photo of your plant.</h3><p>PlantX builds your digital greenhouse and helps you know what to do next.</p></div>
+</div>
+<nav class="tabs">
+<button class="tab active" data-panel="roadmap">🌱 Roadmap</button><button class="tab" data-panel="issues">🗂 Issues</button><button class="tab" data-panel="flows">↗ Flows</button><button class="tab" data-panel="productmap">▦ Pages & Components</button><button class="tab" data-panel="features">✨ Features</button><button class="tab" data-panel="admin">🛠 Admin</button><button class="tab" data-panel="done">✅ Done</button><button class="tab" data-panel="security">🛡 Security</button><button class="tab" data-panel="autharch">🔐 Auth & Architecture</button><button class="tab" data-panel="context">🧠 Context</button><button class="tab" data-panel="calendar">📅 Calendar</button><button class="tab" data-panel="tasks">✓ Tasks</button><button class="tab" data-panel="gates">🚪 Launch gates</button>
+</nav>
+<section id="roadmap" class="panel active card">
+<h2 style="padding:14px 0 4px">🌱 Visual deployment roadmap</h2>
+<p class="muted">Each phase shows the product state users should actually see — not just engineering tasks.</p>
+
+<div class="roadmap-visual">
+  <div class="phase-badge"><div class="phase-circle now">W0</div><div class="phase-date">Oct 5–7<br>NOW</div></div>
+  <div class="phase-copy">
+    <h3>Stabilize the real platform</h3>
+    <div class="muted">Auth, schema, scanning, quota, moderation and rate limits are in production (PR #65). Left in this phase: health, a tested backup, and funnel analytics. The global body limit was pulled back — it hung sign-in on Vercel.</div>
+    <div class="deploy-lane"><span>✅ #51 auth</span><span>✅ #55 admin env</span><span>✅ #53 master rule</span><span>✅ #52 DDL</span><span>✅ #54 scanning</span><span>✅ #57 limits</span><span>✅ #60 hygiene</span><span>✅ #7 timeout</span><span>#56 health</span><span>#58 backup</span><span>#59 analytics</span><span>#45 rest</span></div>
+    <div class="milestone">DEPLOY → Internal Production</div>
+    <div class="deploy-lane"><span>GitHub</span>→<span>Vercel</span>→<span>Supabase</span>→<span>Logs</span></div>
+  </div>
+  <div class="screen">
+    <div class="screen-bar"><i class="screen-dot"></i><i class="screen-dot"></i><i class="screen-dot"></i></div>
+    <div class="screen-body">
+      <div class="mini-nav"><span class="mini-logo">PlantX Admin</span><span class="mini-chip">prod · healthy</span></div>
+      <div class="mini-title">System health</div>
+      <div class="mini-task"><span class="mini-check"></span><div style="flex:1"><div class="mini-line med"></div><div class="mini-line short"></div></div></div>
+      <div class="mini-task"><span class="mini-check"></span><div style="flex:1"><div class="mini-line"></div><div class="mini-line short"></div></div></div>
+      <div class="mini-task"><span class="mini-check"></span><div style="flex:1"><div class="mini-line med"></div><div class="mini-line short"></div></div></div>
+      <div class="mini-outline">Refresh · last updated just now</div>
+    </div>
+  </div>
+</div>
+
+<div class="roadmap-visual">
+  <div class="phase-badge"><div class="phase-circle">W1</div><div class="phase-date">Oct 8–14</div></div>
+  <div class="phase-copy">
+    <h3>Core Greenhouse</h3>
+    <div class="muted">Guest-local plant, signed-in persistent greenhouse, add/edit/archive, photos, passport, ownership and polished empty/error/loading states.</div>
+    <div class="deploy-lane"><span>✅ guest plant on device (PR #62)</span><span>✅ guest Home #47</span><span>✅ sign-up paused state #1</span></div>
+    <div class="milestone">DEPLOY → Alpha</div>
+  </div>
+  <div class="screen">
+    <div class="screen-bar"><i class="screen-dot"></i><i class="screen-dot"></i><i class="screen-dot"></i></div>
+    <div class="screen-body">
+      <div class="mini-nav"><span class="mini-logo">My Greenhouse</span><span class="mini-chip">2 plants</span></div>
+      <div class="mini-row">
+        <div class="mini-card"><div class="mini-img">🌿</div><div class="mini-line med"></div><div class="mini-line short"></div></div>
+        <div class="mini-card"><div class="mini-img">🪴</div><div class="mini-line med"></div><div class="mini-line short"></div></div>
+      </div>
+      <div class="mini-btn">+ Add plant</div>
+    </div>
+  </div>
+</div>
+
+<div class="roadmap-visual">
+  <div class="phase-badge"><div class="phase-circle">W2</div><div class="phase-date">Oct 15–21</div></div>
+  <div class="phase-copy">
+    <h3>Smart plant onboarding</h3>
+    <div class="muted">Photo → plant gate → Pl@ntNet species → Gemini catalog draft → PlantX fields → user confirms → save.</div>
+    <div class="milestone">DEPLOY → Alpha v2</div>
+  </div>
+  <div class="screen">
+    <div class="screen-bar"><i class="screen-dot"></i><i class="screen-dot"></i><i class="screen-dot"></i></div>
+    <div class="screen-body">
+      <div class="mini-nav"><span class="mini-logo">Identify plant</span><span class="mini-chip">Step 2/3</span></div>
+      <div class="scan-frame">🌱</div>
+      <div class="mini-title" style="margin-top:8px">Golden Pothos · 94%</div>
+      <div class="mini-line"></div><div class="mini-line med"></div>
+      <div class="mini-btn">Confirm & add</div>
+    </div>
+  </div>
+</div>
+
+<div class="roadmap-visual">
+  <div class="phase-badge"><div class="phase-circle">W3</div><div class="phase-date">Oct 22–28</div></div>
+  <div class="phase-copy">
+    <h3>Care loop → Private MVP</h3>
+    <div class="muted">Plant state affects recommended care. Today + upcoming tasks, complete action, schedule next, activity timeline and plant passport history.</div>
+    <div class="milestone">🌿 PRIVATE MVP · OCT 28</div>
+  </div>
+  <div class="screen">
+    <div class="screen-bar"><i class="screen-dot"></i><i class="screen-dot"></i><i class="screen-dot"></i></div>
+    <div class="screen-body">
+      <div class="mini-nav"><span class="mini-logo">Today</span><span class="mini-chip">3 tasks</span></div>
+      <div class="mini-task"><span class="mini-check"></span><div style="flex:1"><b style="font-size:10px;color:var(--g)">Water Monstera</b><div class="mini-line short"></div></div></div>
+      <div class="mini-task"><span class="mini-check"></span><div style="flex:1"><b style="font-size:10px;color:var(--g)">Check roots</b><div class="mini-line short"></div></div></div>
+      <div class="mini-task"><span class="mini-check"></span><div style="flex:1"><b style="font-size:10px;color:var(--g)">New photo</b><div class="mini-line short"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="roadmap-visual">
+  <div class="phase-badge"><div class="phase-circle">W4</div><div class="phase-date">Oct 29–Nov 4</div></div>
+  <div class="phase-copy">
+    <h3>Harden + Guest → Free conversion</h3>
+    <div class="muted">Quota is already live (members 3/day, guests 0). This week is polish and measurement: show the allowance outside Add Plant, finish inline plant edit, mobile QA, analytics, production smoke.</div>
+    <div class="milestone">DEPLOY → Release Candidate</div>
+  </div>
+  <div class="screen">
+    <div class="screen-bar"><i class="screen-dot"></i><i class="screen-dot"></i><i class="screen-dot"></i></div>
+    <div class="screen-body">
+      <div class="mini-nav"><span class="mini-logo">AI scan</span><span class="mini-chip">Free plan</span></div>
+      <div class="scan-frame">📷</div>
+      <div class="quota"><span>1 of 3 scans used</span><span>2 left today</span></div>
+      <div class="quota-bar"><i></i></div>
+      <div class="mini-btn">Scan another plant</div>
+      <div class="mini-outline">Upgrade preview · disabled for now</div>
+    </div>
+  </div>
+</div>
+
+<div class="roadmap-visual">
+  <div class="phase-badge"><div class="phase-circle">W5</div><div class="phase-date">Nov 5–11</div></div>
+  <div class="phase-copy">
+    <h3>Public Beta</h3>
+    <div class="muted">Open to 20–50 real users. Measure guest try → signup → first persistent plant → first care action → return visit.</div>
+    <div class="milestone">🌍 READY FOR PUBLIC USERS · NOV 5</div>
+  </div>
+  <div class="screen">
+    <div class="screen-bar"><i class="screen-dot"></i><i class="screen-dot"></i><i class="screen-dot"></i></div>
+    <div class="screen-body">
+      <div class="mini-nav"><span class="mini-logo">PlantX</span><span class="mini-chip">Public beta</span></div>
+      <div class="mini-title">Your greenhouse is alive.</div>
+      <div class="mini-row">
+        <div class="mini-card"><div class="mini-img">🌿</div><div class="mini-line med"></div><div class="mini-line short"></div></div>
+        <div class="mini-card"><div class="mini-img">💧</div><div class="mini-line med"></div><div class="mini-line short"></div></div>
+      </div>
+      <div class="mini-btn">See today's care</div>
+    </div>
+  </div>
+</div>
+
+<div class="roadmap-visual">
+  <div class="phase-badge"><div class="phase-circle">W6+</div><div class="phase-date">Nov 12+</div></div>
+  <div class="phase-copy">
+    <h3>Retention → Social → Market</h3>
+    <div class="muted">First improve return behavior and notifications. Then public greenhouse/social trust. Only after that expose market browse, then transactions, then Rank/community.</div>
+    <div class="milestone">MVP v1.0 → Community → Market Beta</div>
+  </div>
+  <div class="screen">
+    <div class="screen-bar"><i class="screen-dot"></i><i class="screen-dot"></i><i class="screen-dot"></i></div>
+    <div class="screen-body">
+      <div class="mini-nav"><span class="mini-logo">Explore</span><span class="mini-chip">Later phase</span></div>
+      <div class="mini-row">
+        <div class="mini-card"><div class="mini-img">👥</div><div class="mini-line med"></div><div class="mini-line short"></div></div>
+        <div class="mini-card"><div class="mini-img">🛒</div><div class="mini-line med"></div><div class="mini-line short"></div></div>
+      </div>
+      <div class="mini-outline">Community first</div>
+      <div class="mini-outline">Market after trust + usage</div>
+    </div>
+  </div>
+</div>
+</section>
+
+
+<section id="issues" class="panel">
+<div class="card">
+<h2>🗂 GitHub issues by phase</h2>
+<p class="muted">Each phase is a milestone on <a href="https://github.com/ikiliki/PlantX/milestones">ikiliki/PlantX</a>. <b>in prod</b> means merged to master. An issue can stay open after that when the comment says work is left. Updated Oct 6 from issue comments.</p>
+<table class="mini-table">
+<tr><th>Phase</th><th>Issue</th><th>What</th><th>Migration</th><th>State</th></tr>
+<tr><td>W0</td><td><a href="https://github.com/ikiliki/PlantX/issues/51">#51</a> · <a href="https://github.com/ikiliki/PlantX/issues/55">#55</a> · <a href="https://github.com/ikiliki/PlantX/issues/52">#52</a> · <a href="https://github.com/ikiliki/PlantX/issues/53">#53</a> · <a href="https://github.com/ikiliki/PlantX/issues/54">#54</a> · <a href="https://github.com/ikiliki/PlantX/issues/57">#57</a> · <a href="https://github.com/ikiliki/PlantX/issues/60">#60</a> · <a href="https://github.com/ikiliki/PlantX/issues/7">#7</a></td><td>Auth, admin email, no startup DDL, master rule (e2e runs, does not block), scanning + Dependabot, rate limits + image checks, server type-check, 20 s timeout</td><td class="warn">rate_limits</td><td class="ok">✅ In prod · PR #65</td></tr>
+<tr><td>W0</td><td><a href="https://github.com/ikiliki/PlantX/issues/45">#45</a></td><td>API security headers shipped. Still open: headers on the static site, public API surface, what a non-owner sees on a passport</td><td>No</td><td class="warn">Partial · in prod</td></tr>
+<tr><td>W0</td><td><a href="https://github.com/ikiliki/PlantX/issues/56">#56</a></td><td>Health endpoints, Admin system-health card, request ids, alerts</td><td>No</td><td>Open</td></tr>
+<tr><td>W0</td><td><a href="https://github.com/ikiliki/PlantX/issues/58">#58</a></td><td>Backup + tested restore</td><td>No</td><td>Open</td></tr>
+<tr><td>W0</td><td><a href="https://github.com/ikiliki/PlantX/issues/59">#59</a></td><td>Funnel analytics events</td><td class="warn">Yes · events</td><td>Open</td></tr>
+<tr><td>W1</td><td><a href="https://github.com/ikiliki/PlantX/issues/70">#70</a></td><td>Passport: edit in place, Save under the field (replaces the plant edit popup). Covers the class fields, photos and ✎ provenance left on #68</td><td>No</td><td class="warn">Next</td></tr>
+<tr><td>W1</td><td><a href="https://github.com/ikiliki/PlantX/issues/1">#1</a> · <a href="https://github.com/ikiliki/PlantX/issues/43">#43</a> · <a href="https://github.com/ikiliki/PlantX/issues/47">#47</a></td><td>Sign-up dead end; onboarding copy; guest Home; guest plants on this device</td><td>No</td><td class="ok">✅ In prod · PR #62</td></tr>
+<tr><td>W2</td><td><a href="https://github.com/ikiliki/PlantX/issues/64">#64</a></td><td>Not-in-catalog scan asks the member; unrequested scans are read-only in Admin</td><td>No</td><td class="ok">✅ In prod · PR #65</td></tr>
+<tr><td>W2</td><td><a href="https://github.com/ikiliki/PlantX/issues/46">#46</a></td><td>"AI verified" vs "AI suggested" — waiting on a wording decision</td><td>No</td><td>Open · question</td></tr>
+<tr><td>W3</td><td><a href="https://github.com/ikiliki/PlantX/issues/42">#42</a></td><td>First-watering date. Comment: code already stores the picked day; retest by hand. Calendar names (#44) are done</td><td>No</td><td class="warn">Retest</td></tr>
+<tr><td>W4</td><td><a href="https://github.com/ikiliki/PlantX/issues/67">#67</a></td><td>AI scan quota: members 3/day (00:00 IL), guests 0, admins unlimited; shown on Add Plant; admin extras logged</td><td class="warn">scan quota</td><td class="ok">✅ In prod · PR #65</td></tr>
+<tr><td>W4</td><td><a href="https://github.com/ikiliki/PlantX/issues/72">#72</a></td><td>Show that same allowance on Settings and by the greenhouse Add entry. Uses the existing quota endpoint</td><td>No</td><td class="warn">Next</td></tr>
+<tr><td>W4</td><td><a href="https://github.com/ikiliki/PlantX/issues/68">#68</a></td><td>Visibility, hide / show / soft-delete, admin user edit, owner edits name and note. Left: class fields, photos, ✎ marks, the three e2e tests — plant edit moves to #70</td><td class="warn">visibility</td><td class="warn">Partial · in prod</td></tr>
+<tr><td>W4</td><td><a href="https://github.com/ikiliki/PlantX/issues/69">#69</a></td><td>Moderation cascade with an impact confirm and moderation_log</td><td class="warn">moderation_log</td><td class="ok">✅ In prod · PR #65</td></tr>
+<tr><td>W4</td><td><a href="https://github.com/ikiliki/PlantX/issues/71">#71</a></td><td>Moderation owns every action; Server is read-only; Moderation uses Server's table</td><td>No</td><td class="warn">Next</td></tr>
+<tr><td>W4</td><td><a href="https://github.com/ikiliki/PlantX/issues/20">#20</a></td><td>"Log out" wording done. Still open: split settings, default bio, Unknown location, Global list order</td><td>No</td><td class="warn">Partial</td></tr>
+<tr><td>W6+</td><td><a href="https://github.com/ikiliki/PlantX/issues/16">#16</a></td><td>Market Sell dialog. Market stays gated; not an MVP blocker</td><td>—</td><td>Later</td></tr>
+</table>
+<div class="alert"><b>Next up (new issues, Oct 6):</b> #72 quota note on Settings and the greenhouse, then #71 so Moderation is the only place with admin actions, then #70 inline passport edit (Save under the field, no popup). None of these need a migration.</div>
+<div class="alert"><b>Comment corrections:</b> #57 shipped without a global <code>bodyLimit</code> — that middleware hung POSTs on Vercel (PP sign-in never returned). Photo routes still reject bad or oversized images; Vercel caps a function body at 4.5 MB. #42 stays open until a hand retest; the code path already uses the picked day. #46 is a wording decision, not a build. Dependabot PRs #66 #73 #74 #75 #76 are open from #54 and are not product work.</div>
+<div class="alert"><b>Proposed (W1):</b> email sign-in under the Google button, with a 6-digit code (like Cursor) — no passwords to store. Needs an email-sending provider and a <code>login_codes</code> migration. Waiting for a decision before filing.</div>
+</div>
+</section>
+
+<section id="flows" class="panel">
+<div class="card">
+<h2>↗ Product + system flows</h2>
+<p class="muted">Updated from the repo audit. These are the flows PlantX actually has now or should implement next.</p>
+
+<div class="flow-grid">
+  <div class="flow-card">
+    <h3>1 · Guest → value → signup</h3>
+    <div class="flow-line"><span class="flow-node">Landing</span><span class="flow-arrow">→</span><span class="flow-node">Try as Guest</span></div>
+    <div class="flow-line"><span class="flow-node">Manual Add</span><span class="flow-arrow">or</span><span class="flow-node">1 AI Trial</span></div>
+    <div class="flow-line"><span class="flow-node">Local Plant Card</span><span class="flow-arrow">→</span><span class="flow-node">Care Preview</span></div>
+    <div class="flow-line"><span class="flow-node">Signup with Google</span><span class="flow-arrow">→</span><span class="flow-node">Sync to account</span></div>
+    <p class="muted">North star: deliver value before asking for signup.</p>
+  </div>
+
+  <div class="flow-card">
+    <h3>2 · Registered user core loop</h3>
+    <div class="flow-line"><span class="flow-node">Greenhouse</span><span class="flow-arrow">→</span><span class="flow-node">Add Plant</span></div>
+    <div class="flow-line"><span class="flow-node">Passport</span><span class="flow-arrow">→</span><span class="flow-node">Tasks</span></div>
+    <div class="flow-line"><span class="flow-node">Complete Care</span><span class="flow-arrow">→</span><span class="flow-node">Activity History</span></div>
+    <div class="flow-line"><span class="flow-node">Return Later</span><span class="flow-arrow">→</span><span class="flow-node">Today</span></div>
+    <p class="muted">This is the MVP retention loop. Market is not part of it.</p>
+  </div>
+
+  <div class="flow-card">
+    <h3>3 · AI identify chain</h3>
+    <div class="flow-line"><span class="flow-node">Photo</span><span class="flow-arrow">→</span><span class="flow-node">Gemini plant gate</span></div>
+    <div class="flow-line"><span class="flow-node">Pl@ntNet species</span><span class="flow-arrow">→</span><span class="flow-node">Gemini catalog draft</span></div>
+    <div class="flow-line"><span class="flow-node">PlantX normalize</span><span class="flow-arrow">→</span><span class="flow-node">User confirms</span></div>
+    <div class="flow-line"><span class="flow-node">Save Plant</span><span class="flow-arrow">→</span><span class="flow-node">Record identify history</span></div>
+    <p class="muted">Provider keys remain server-side. Automated checks should not call live providers.</p>
+  </div>
+
+  <div class="flow-card">
+    <h3>4 · Entitlement + quota</h3>
+    <div class="flow-line"><span class="flow-node">Scan request</span><span class="flow-arrow">→</span><span class="flow-node">Resolve account tier</span></div>
+    <div class="flow-line"><span class="flow-node">Check capability</span><span class="flow-arrow">→</span><span class="flow-node">Check daily usage</span></div>
+    <div class="flow-line"><span class="flow-node">Allow / deny</span><span class="flow-arrow">→</span><span class="flow-node">Record usage</span></div>
+    <div class="state-strip">
+      <div class="state"><b>Guest</b><span>1 trial scan</span></div>
+      <div class="state"><b>Free</b><span>Target: 3/day</span></div>
+      <div class="state"><b>Premium</b><span>Target: 30/day</span></div>
+      <div class="state"><b>Admin</b><span>Operator controls</span></div>
+    </div>
+    <p class="muted">Keep FeatureGate, Entitlement and UsageLimit as separate concerns.</p>
+  </div>
+
+  <div class="flow-card">
+    <h3>5 · Authentication</h3>
+    <div class="flow-line"><span class="flow-node">Google ID token</span><span class="flow-arrow">→</span><span class="flow-node">/api/session/google</span></div>
+    <div class="flow-line"><span class="flow-node">Verify identity</span><span class="flow-arrow">→</span><span class="flow-node">User lookup / pending</span></div>
+    <div class="flow-line"><span class="flow-node">Signed HttpOnly cookie</span><span class="flow-arrow">→</span><span class="flow-node">requireUser / requireAdmin</span></div>
+    <p class="muted">Production must reject Google login if cryptographic verification cannot be completed.</p>
+  </div>
+
+  <div class="flow-card">
+    <h3>6 · Feature release flow</h3>
+    <div class="flow-line"><span class="flow-node">Code exists</span><span class="flow-arrow">→</span><span class="flow-node">Feature disabled</span></div>
+    <div class="flow-line"><span class="flow-node">Coming Soon</span><span class="flow-arrow">→</span><span class="flow-node">PP testing</span></div>
+    <div class="flow-line"><span class="flow-node">Ready</span><span class="flow-arrow">→</span><span class="flow-node">Public</span></div>
+    <p class="muted">Market and Rank can remain in code without becoming MVP blockers.</p>
+  </div>
+
+  <div class="flow-card" style="grid-column:1/-1">
+    <h3>7 · Real deployment path</h3>
+    <div class="flow-line">
+      <span class="flow-node">Feature branch</span><span class="flow-arrow">→</span>
+      <span class="flow-node">Vercel PP preview</span><span class="flow-arrow">→</span>
+      <span class="flow-node">PR → master</span><span class="flow-arrow">→</span>
+      <span class="flow-node">QA e2e</span><span class="flow-arrow">+</span>
+      <span class="flow-node">PP regression</span><span class="flow-arrow">→</span>
+      <span class="flow-node">Manual PP QA</span><span class="flow-arrow">→</span>
+      <span class="flow-node">Prod migration approval</span><span class="flow-arrow">→</span>
+      <span class="flow-node">Merge master</span><span class="flow-arrow">→</span>
+      <span class="flow-node">Vercel production</span>
+    </div>
+    <p class="muted">PR e2e uses its own Docker Supabase QA stack; it does not test against production.</p>
+  </div>
+</div>
+</div>
+</section>
+<section id="productmap" class="panel"><div class="card"><h2>▦ Pages & components · Now → MVP → Next</h2><div class="gate"><b>Home</b><div class="muted">Now: app home. MVP: Today, attention plants, quick add. Next: community activity + recommendations.</div></div><div class="gate"><b>Greenhouse</b><div class="muted">Now: core page exists. MVP: guest-local plants, editable PlantCard, state badges, next care action. Next: QR, lineage and trade state.</div></div><div class="gate"><b>Plant Detail</b><div class="muted">MVP: overview, photos, rooted/rooting-in-water state, care, timeline, edit. Next: posts, share, ownership.</div></div><div class="gate"><b>Tasks</b><div class="muted">MVP: activity catalog varies by category and state. A rooting-in-water plant must not receive a normal watering task.</div></div><div class="gate"><b>Core components</b><div class="muted">PlantCard · AddPlantSheet · PlantStateBadge · CareActivityCard · ScanQuota · EntitlementGate · Empty/Error/Loader states.</div></div><div class="gate"><b>Next social components</b><div class="muted">PostCard · LeafButton · CommentThread · SharePlant · Profile summary.</div></div></div></section>
+<section id="features" class="panel"><div class="card"><h2>✨ Feature phases</h2><div class="gate"><b>MVP · Guest local greenhouse</b><div class="muted">Manual add without AI or an account. Up to 3 plants on this device, sent to the account on sign-in. Guests get no AI scans.</div></div><div class="gate"><b>MVP · Free/Premium foundation</b><div class="muted">Tier + entitlement model, server-side daily quota and feature flags. Free target: 3 scans/day. Premium target: 30/day, initially OFF.</div></div><div class="gate"><b>MVP · Plant state-aware care</b><div class="muted">Rooted, rooting in water / propagation states affect allowed/recommended activities. Add richer activities per category.</div></div><div class="gate"><b>NEXT · Social</b><div class="muted">Posts, leaves (likes), comments and plant sharing. Add moderation from day one.</div></div><div class="gate"><b>NEXT · Physical/digital network</b><div class="muted">QR plant identity, propagation lineage, ownership history and give/swap.</div></div><div class="gate"><b>LATER · Market</b><div class="muted">Listings and transfers first; dynamic supply/demand pricing only after real transaction data.</div></div></div></section>
+<section id="admin" class="panel"><div class="card"><h2>🛠 Admin MVP</h2><p class="muted">Make this an operator console, not a debug page.</p><div class="gate"><b>Navigation + responsive UX</b><div class="muted">Clear sections, mobile-friendly tables/cards, loaders, empty/error states, per-view refresh and last-refreshed time.</div></div><div class="gate"><b>User management</b><div class="muted">Live: edit profile, hide, soft-delete, scan extras. #71 moves every action onto Moderation and leaves Server read-only. Login As is still later.</div></div><div class="gate"><b>Content moderation</b><div class="muted">Live: hide / show / soft-delete with an impact confirm and moderation_log (#69). #71 makes this the only action screen and matches Server's table.</div></div><div class="gate"><b>Deletion relationships</b><div class="muted">Before delete, show relation impact. Prefer soft-delete/anonymize/preserve history over cascading away ownership, lineage or conversations.</div></div></div></section>
+<section id="done" class="panel">
+<div class="card">
+<h2>✅ Verified from the repository</h2>
+<p class="muted">This section now separates “exists in code” from “production-safe”. Verified against the public <b>ikiliki/PlantX</b> repository.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:16px">
+<div class="gate"><b>✅ React app + real routes</b><div class="muted">Landing, Greenhouse, Tasks, Market, Wiki, Rank, Settings and Admin routes exist.</div></div>
+<div class="gate"><b>✅ Hono API</b><div class="muted">Feature modules for session, users, catalog, greenhouse, identify, issues, activity, todo and system.</div></div>
+<div class="gate"><b>✅ Supabase / Postgres</b><div class="muted">Schema and migrations are committed; hosted prod and local Docker QA use the same driver.</div></div>
+<div class="gate"><b>✅ Google SSO + signed session cookie</b><div class="muted">No browser bearer token/localStorage auth. Production cookie is HttpOnly + Secure + SameSite=Lax.</div></div>
+<div class="gate"><b>✅ Server-side admin guards</b><div class="muted">Admin mutations call requireAdmin() on the API, not only in React.</div></div>
+<div class="gate"><b>✅ PP isolation</b><div class="muted">Test-login requires PP token and is forced off when VERCEL_ENV=production.</div></div>
+<div class="gate"><b>✅ PR e2e</b><div class="muted">Runs on every PR and does not block merging (single maintainer, #53). The preview suite is a separate check named pp-e2e. Production @prod smoke passed on b5e290b (28 tests).</div></div>
+<div class="gate"><b>✅ Preview regression</b><div class="muted">Vercel preview deployments are tested as PP; production runs guest/read-only @prod tests.</div></div>
+<div class="gate"><b>✅ Feature release system</b><div class="muted">Pages → Features → Placements with ready / comingSoon / maintenance statuses.</div></div>
+<div class="gate"><b>✅ AI identify providers are server-side</b><div class="muted">Gemini and Pl@ntNet keys never need to be exposed to the browser.</div></div>
+<div class="gate"><b>✅ Google signature check</b><div class="muted">Tokens are checked against Google's keys; no unsigned fallback (PR #61, #51).</div></div>
+<div class="gate"><b>✅ Admin email from env</b><div class="muted">PLANTX_BOOTSTRAP_ADMIN_EMAIL on Vercel production; out of the public repo (#55).</div></div>
+<div class="gate"><b>✅ No startup DDL</b><div class="muted">Schema changes live only in migrations (#52, PR #65).</div></div>
+<div class="gate"><b>✅ Master rule</b><div class="muted">PR only, 0 approvals, e2e runs but does not block. No CODEOWNERS until a second maintainer (#53).</div></div>
+<div class="gate"><b>✅ Secret scanning on</b><div class="muted">Push protection and Dependabot are on. First scan: 0 secrets. Dependabot PRs are open (#54).</div></div>
+<div class="gate"><b>✅ Scan quota + moderation</b><div class="muted">Members 3 scans/day, guests 0. Hide / soft-delete cascades through Moderation with an audit log (#67 #69).</div></div>
+</div>
+<div style="margin-top:16px;padding:14px;border-radius:14px;background:var(--soft)">
+<b>Current interpretation:</b> the platform, guest loop, scan quota and moderation are in production. Public launch work left is observability, backup, analytics, and the three UX follow-ups (#72, #71, #70).
+</div>
+</div>
+</section>
+
+<section id="security" class="panel">
+<div class="audit-grid">
+  <div class="card">
+    <span class="label">Public repo verdict</span>
+    <div class="verdict">Mostly safe to stay public</div>
+    <p class="muted">No obvious committed production secret was found in the current tree. Security correctly relies mostly on server-side env variables and API authorization rather than obscurity.</p>
+  </div>
+  <div class="card">
+    <span class="label">Main blocker</span>
+    <div class="verdict" style="color:#1d744f">Fixed · PR #61</div>
+    <p class="muted">Google ID tokens are verified against Google's published keys. Master rule, scanning and rate limits shipped in PR #65. Left on #45: static-site headers, the public API surface, and non-owner passport fields.</p>
+  </div>
+
+  <div class="card full">
+    <h2>Repository safety findings</h2>
+    <div class="statusline"><span>.env / .env.* ignored</span><span class="ok">GOOD</span></div>
+    <div class="statusline"><span>.vercel, local DB and test output ignored</span><span class="ok">GOOD</span></div>
+    <div class="statusline"><span>Gemini / Pl@ntNet keys server-side</span><span class="ok">GOOD</span></div>
+    <div class="statusline"><span>SESSION_SECRET + DB URL server-side</span><span class="ok">GOOD</span></div>
+    <div class="statusline"><span>Supabase tables protected with RLS</span><span class="ok">GOOD</span></div>
+    <div class="statusline"><span>Admin mutations protected on server</span><span class="ok">GOOD</span></div>
+    <div class="statusline"><span>PP test login impossible on Vercel production</span><span class="ok">GOOD</span></div>
+    <div class="statusline"><span>Google fallback signature verification</span><span class="ok">FIXED · #51</span></div>
+    <div class="statusline"><span>Bootstrap admin email exposed in docs</span><span class="ok">FIXED · #55</span></div>
+    <div class="statusline"><span>Runtime ALTER TABLE from app startup</span><span class="ok">FIXED · #52</span></div>
+    <div class="statusline"><span>Master: PR only, e2e runs, does not block</span><span class="ok">DECIDED · #53</span></div>
+    <div class="statusline"><span>Secret scanning / push protection / Dependabot</span><span class="ok">ON · #54</span></div>
+    <div class="statusline"><span>Rate limits + magic-byte image checks</span><span class="ok">FIXED · #57</span></div>
+    <div class="statusline"><span>Global API bodyLimit</span><span class="warn">REMOVED · hung Vercel POSTs</span></div>
+    <div class="statusline"><span>API nosniff / frame / referrer headers</span><span class="ok">ON · #45</span></div>
+    <div class="statusline"><span>Static-site headers + public API review</span><span class="warn">OPEN · #45</span></div>
+  </div>
+
+  <div class="card full">
+    <h2>🟢 Auth issue fixed (PR #61)</h2>
+    <div class="codeflow">Google Identity token
+↓
+POST /api/session/google
+↓
+verifyGoogleIdToken()
+├─ RS256 signature against Google JWKS (keys cached by max-age)
+├─ keys unreachable / unknown key → 401, never trust claims
+└─ then aud · iss · exp · email_verified
+↓
+admin only if email = PLANTX_BOOTSTRAP_ADMIN_EMAIL (env)</div>
+    <div class="alert good"><b>Now:</b> a forged token with the right claims but no Google signature gets 401 and no session. An e2e test (<code>e2e/auth.spec.ts</code>, @prod) checks this on every PR and after every production deploy.</div>
+  </div>
+</div>
+</section>
+
+<section id="autharch" class="panel">
+<div class="audit-grid">
+  <div class="card full">
+    <h2>🔐 Authentication request flow</h2>
+    <div class="codeflow">Browser
+↓
+LoginPage / AuthDialog
+↓
+Google Identity Services
+↓ ID token
+POST /api/session/google
+↓
+verifyGoogleIdToken()  (Google JWKS signature check)
+↓
+sessionService.loginWithGoogle()
+↓
+existing member / pending signup / bootstrap admin
+↓
+setSession()
+↓
+signed HttpOnly cookie: plantx_session
+↓
+future API requests use credentials: include
+↓
+getSignedCookie()
+↓
+active user lookup
+├─ requireUser()
+└─ requireAdmin()</div>
+  </div>
+
+  <div class="card">
+    <h3>Credential handling</h3>
+    <ul class="audit-list">
+      <li>No bearer JWT stored in localStorage.</li>
+      <li>Session cookie is signed with SESSION_SECRET.</li>
+      <li>HttpOnly.</li>
+      <li>Secure in production.</li>
+      <li>SameSite=Lax.</li>
+      <li>Disabled users lose access on the next request.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>PP / test login isolation</h3>
+    <div class="codeflow">PREVIEW / PP
+PLANTX_PREPROD = 1
+PLANTX_TEST_TOKEN = set
+VERCEL_ENV != production
+↓
+test login enabled
+
+PRODUCTION
+VERCEL_ENV = production
+↓
+preprodEnabled() = false
+↓
+test login disabled</div>
+  </div>
+
+  <div class="card full">
+    <h2>🏗 Architecture</h2>
+    <div class="codeflow">React SPA
+↓
+Hono API /api/*
+↓
+Domain modules
+├─ session
+├─ users
+├─ catalog
+├─ greenhouse
+├─ identify
+├─ issues
+├─ live
+├─ system
+├─ todo
+└─ activity
+↓
+Supabase / Postgres
+├─ Gemini
+└─ Pl@ntNet</div>
+    <p class="muted"><b>Recommendation:</b> keep this as a modular monolith for MVP. The domain boundaries are already good enough to extract services later if scale or team ownership creates a real reason.</p>
+  </div>
+
+  <div class="card full">
+    <h2>Feature release architecture</h2>
+    <table class="mini-table">
+      <tr><th>Layer</th><th>Current model</th></tr>
+      <tr><td>Pages</td><td>home, market, greenhouse, todo, rank, wiki</td></tr>
+      <tr><td>Features</td><td>news, market, greenhouse, todo, rank, wiki</td></tr>
+      <tr><td>Placements</td><td>home.market, greenhouse.level, passport.market, rank.board, etc.</td></tr>
+      <tr><td>Status</td><td>ready · comingSoon · maintenance</td></tr>
+    </table>
+    <p class="muted">Use this same architecture for rollout. Add a separate entitlement layer for Guest / Free / Premium instead of mixing subscription checks into components.</p>
+  </div>
+</div>
+</section>
+
+<section id="context" class="panel">
+<div class="card">
+<h2>🧠 PlantX context</h2>
+<p class="muted">Dense project handoff: verified repo findings + the product decisions we already made. Use this tab when handing PlantX to another AI/engineer or when we resume later.</p>
+
+<div class="context-section">
+<h3>What PlantX is</h3>
+<p class="muted">A bilingual living-plant platform centered on a digital greenhouse. Plants have identity/passport data, photos, class metadata, care actions, history and eventually trust, lineage and market state.</p>
+</div>
+
+<div class="context-section">
+<h3>Current technical stack</h3>
+<p class="muted">React 19 + Vite + TypeScript + React Router + styled-components + PWA. Hono API. Postgres through pg against Supabase. Vercel deployment. Google SSO. Gemini + Pl@ntNet identification.</p>
+</div>
+
+<div class="context-section">
+<h3>Current product areas found in code</h3>
+<table class="mini-table">
+<tr><th>Core / active</th><th>Exists but can stay gated</th></tr>
+<tr><td>Landing · Greenhouse · Add Plant · Plant Passport · Tasks/Care · Catalog · Wiki · Admin · AI Identify · Activity · Issues</td><td>Market · Rank · Sell · Seller profiles · marketplace mechanics</td></tr>
+</table>
+</div>
+
+<div class="context-section">
+<h3>MVP user model we discussed</h3>
+<div class="codeflow">Guest
+├─ browse / wiki
+├─ up to 3 plants on this device
+└─ no AI scans
+
+Free member
+├─ persistent greenhouse
+├─ care / tasks / passport
+└─ 3 AI scans/day, reset 00:00 Israel (live)
+
+Premium
+├─ everything in Free
+└─ 30/day exists in the model, stays off
+
+Admin
+├─ Moderation: the only place with actions (#71)
+├─ Server: read-only tables
+├─ catalog, system, providers, identify history, issue reports</div>
+</div>
+
+<div class="context-section">
+<h3>Entitlement design</h3>
+<p class="muted">Do not scatter <code>if (user.isPremium)</code>. Keep three separate concepts: <b>FeatureGate</b> (is the product feature released?), <b>Entitlement</b> (is this tier allowed?), and <b>UsageLimit</b> (how much can this account use today?). Premium can exist behind the scenes while pricing/activation stays off.</p>
+</div>
+
+<div class="context-section">
+<h3>Admin direction</h3>
+<p class="muted">Admin is an operator console. Decided in #71: Moderation owns every action (edit, scans, hide, delete) with the confirm and the impact counts. Server stays the comfortable read-only table and can link a row into Moderation. Moderation should use that same table layout.</p>
+</div>
+
+<div class="context-section">
+<h3>Public repo conclusions</h3>
+<ul class="audit-list">
+<li>Public source itself is acceptable; do not depend on hidden routes or hidden architecture for security.</li>
+<li>Secrets belong only in Vercel/GitHub environment secret storage.</li>
+<li>✅ Google auth fallback fixed (#51, PR #61).</li>
+<li>✅ Bootstrap admin email moved to env configuration (#55, PR #61).</li>
+<li>✅ Startup DDL removed; migrations only (#52, PR #65).</li>
+<li>✅ Master is PR-only, 0 approvals, e2e runs and does not block. CODEOWNERS waits for a second maintainer (#53).</li>
+<li>✅ Secret scanning, push protection and Dependabot are on (#54).</li>
+</ul>
+</div>
+
+<div class="context-section">
+<h3>Deployment model verified from code</h3>
+<div class="codeflow">Local mock
+↓
+Local QA (Docker Supabase)
+↓
+Feature branch
+↓
+Vercel PP preview
+↓
+PR → master
+├─ PR e2e on isolated QA stack
+└─ PP regression + manual preview QA
+↓
+approved production migration
+↓
+merge master
+↓
+Vercel production
+↓
+@prod guest/read-only regression</div>
+</div>
+
+<div class="context-section">
+<h3>Recommended product sequence</h3>
+<div class="codeflow">Security + release hardening
+↓
+Guest experience
+↓
+Core greenhouse + care loop
+↓
+Free / Premium quota foundation
+↓
+Verification / trust
+↓
+Social greenhouse
+↓
+Market browse
+↓
+Market transactions
+↓
+Rank / deeper community</div>
+</div>
+
+<div class="context-section">
+<h3>Technical debt noted</h3>
+<ul class="audit-list">
+<li><code>src/mock/store.tsx</code> is really the app data/state layer in every mode; rename later to store/data.</li>
+<li>✅ Server TypeScript is type-checked by <code>tsc -p tsconfig.server.json</code> inside <code>npm run build</code> (#60).</li>
+<li>✅ Legacy JSON dirs and the unused smoke script are gone; esbuild is declared (#60).</li>
+<li>Once real users exist, production migrations should become backward-compatible / controlled instead of assuming resettable data.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section id="calendar" class="panel card">
+<div style="padding:18px"><h2>Launch calendar</h2><p class="muted">Tap a milestone date.</p><div id="selected" class="pill">Select a milestone</div><div class="cal-head"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="calendar" id="cal"></div></div>
+</section>
+<section id="tasks" class="panel">
+<div class="tasks">
+<div class="card"><h2>⚙️ Do now</h2><p class="muted">Week 0 · production foundation</p>
+<label class="task"><input class="check" type="checkbox" checked><span><b>Mock / QA / PP / Production separation</b> <span class="pill">VERIFIED</span><br><small class="muted">Local mock, Docker QA, Vercel PP previews and production are already distinct.</small></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span><b>Fix Google ID-token fallback</b> <span class="pill">#51 · PR #61</span><br><small class="muted">Signature checked against Google's keys; no unsigned fallback.</small></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span><b>Bootstrap admin email to env</b> <span class="pill">#55 · PR #61</span></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span><b>Delete startup ALTER TABLE</b> <span class="pill">#52 · PR #65</span></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span><b>Rate limits + upload validation</b> <span class="pill">#57</span><br><small class="muted">No global bodyLimit — it hung Vercel POSTs.</small></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span><b>Master rule</b> <span class="pill">#53</span><br><small class="muted">PR only. e2e runs and does not block. No CODEOWNERS yet.</small></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span><b>Secret + dependency scanning</b> <span class="pill">#54</span></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span><b>Repo hygiene + server type-check</b> <span class="pill">#60</span></span></label>
+<label class="task"><input class="check" type="checkbox"><span><b>Error monitoring + structured logs + health</b> <span class="pill">#56</span></span></label>
+<label class="task"><input class="check" type="checkbox"><span><b>Analytics funnel events</b> <span class="pill">#59</span></span></label>
+<label class="task"><input class="check" type="checkbox"><span><b>Backup + restore test</b> <span class="pill">#58</span></span></label>
+<label class="task"><input class="check" type="checkbox"><span><b>Scan allowance on Settings + greenhouse</b> <span class="pill">#72</span></span></label>
+<label class="task"><input class="check" type="checkbox"><span><b>Admin actions only on Moderation</b> <span class="pill">#71</span></span></label>
+<label class="task"><input class="check" type="checkbox"><span><b>Inline passport edit</b> <span class="pill">#70</span></span></label></div>
+<div class="card"><h2>🌿 MVP checklist</h2><p class="muted">Required before Public Beta</p>
+<label class="task"><input class="check" type="checkbox" checked><span>Guest tries without an account <span class="pill">PR #62</span></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span>Signup / login / verification <span class="pill">KNOWN BUILT</span></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span>Greenhouse + empty state <span class="pill">KNOWN BUILT</span></span></label>
+<label class="task"><input class="check" type="checkbox"><span>Edit a plant inline on the passport <span class="pill">#70</span><br><small class="muted">Name and note already save. Class fields, photos and hide/delete shipped in #68.</small></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span>Plant photos + details <span class="pill">KNOWN BUILT</span></span></label>
+<label class="task"><input class="check" type="checkbox" checked><span>AI plant identification + 3/day quota <span class="pill">#67</span></span></label>
+<label class="task"><input class="check" type="checkbox"><span>User confirms AI result</span></label>
+<label class="task"><input class="check" type="checkbox"><span>Today + upcoming care tasks</span></label>
+<label class="task"><input class="check" type="checkbox"><span>Complete care + schedule next</span></label>
+<label class="task"><input class="check" type="checkbox"><span>Plant history / timeline</span></label>
+<label class="task"><input class="check" type="checkbox"><span>Mobile QA + smoke tests</span></label></div>
+</div></section>
+<section id="gates" class="panel">
+<div class="gates">
+<div class="card"><h2>Ready for public users when…</h2>
+<div class="gate"><b>🌱 New user succeeds</b><div class="muted">Signup → add first plant → see it in Greenhouse without help.</div></div>
+<div class="gate"><b>💧 There is a reason to return</b><div class="muted">Home clearly shows what needs attention today.</div></div>
+<div class="gate"><b>🛡 Core API is safe</b><div class="muted">Authorization, validation, uploads and rate limits verified.</div></div>
+<div class="gate"><b>📈 Production is observable</b><div class="muted">Logs, errors, health checks and analytics work.</div></div>
+<div class="gate"><b>💾 Data can recover</b><div class="muted">Backup and restore tested.</div></div></div>
+<div class="card"><h2>Not MVP blockers</h2><p class="muted">Keep behind feature flags until the core loop is proven.</p><div class="flow"><span class="box">🛒 Market</span><span class="box">🏆 Rank / ELO</span><span class="box">📚 Full Wiki</span><span class="box">📊 Dynamic pricing</span><span class="box">🏙 Municipality</span><span class="box">👥 Social feed</span></div></div>
+</div></section>
+<div class="card" style="margin-top:14px"><h2>🚀 Verified deployment path</h2><p class="muted">This now matches the repo workflows and Vercel setup.</p><div class="flow"><span class="box">Feature branch</span>→<span class="box">Vercel PP Preview</span>→<span class="box">PR → master</span>→<span class="box">QA e2e</span>→<span class="box">PP regression</span>→<span class="box">Manual PP QA</span>→<span class="box">Prod migration approval</span>→<span class="box">Merge master</span>→<span class="box">Vercel Production</span>→<span class="box">@prod smoke</span></div></div>
+</section>
+<footer>PlantX MVP roadmap v9 · updated October 6, 2026 (master b5e290b, PR #65) · Target Public Beta: November 5, 2026</footer>
+</main></div>
+<script>
+const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')];
+tabs.forEach(b=>b.onclick=()=>{tabs.forEach(x=>x.classList.toggle('active',x===b));panels.forEach(p=>p.classList.toggle('active',p.id===b.dataset.panel))});
+const launch=new Date('2026-11-05T09:00:00+02:00'),out=document.getElementById('countdown');
+function tick(){let d=launch-new Date();if(d<=0){out.textContent='Public Beta is live';return}let days=Math.floor(d/86400000);d%=86400000;let h=Math.floor(d/3600000);d%=3600000;let m=Math.floor(d/60000);out.textContent=`${days}d ${h}h ${m}m`}tick();setInterval(tick,60000);
+const checks=[...document.querySelectorAll('.check')],bar=document.getElementById('bar'),pct=document.getElementById('pct');
+function progress(){let n=checks.filter(x=>x.checked).length,p=Math.round(n/checks.length*100);bar.style.width=p+'%';pct.textContent=p+'%'}checks.forEach(x=>x.onchange=progress);progress();
+const events={'2026-10-05':'Week 0 started','2026-10-06':'Today · PR #65 in production','2026-10-08':'Week 1 · Core Greenhouse','2026-10-15':'Week 2 · Smart onboarding','2026-10-22':'Week 3 · Care loop','2026-10-28':'🌿 Private MVP target','2026-10-29':'Release Candidate hardening','2026-11-05':'🌍 READY FOR PUBLIC USERS · Public Beta','2026-11-12':'MVP v1.0 · Retention','2026-11-19':'Community starts','2026-12-03':'Market Lite starts','2026-12-16':'Market Beta target'};
+const cal=document.getElementById('cal'),sel=document.getElementById('selected'),pad=n=>String(n).padStart(2,'0');
+function month(y,m){let f=new Date(Date.UTC(y,m,1)),days=new Date(Date.UTC(y,m+1,0)).getUTCDate(),t=document.createElement('div');t.className='month';t.textContent=f.toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});cal.append(t);for(let i=0;i<f.getUTCDay();i++)cal.append(document.createElement('div'));for(let d=1;d<=days;d++){let k=`${y}-${pad(m+1)}-${pad(d)}`,b=document.createElement('button');b.className='day';b.textContent=d;if(k==='2026-10-06')b.classList.add('now');if(events[k]){b.classList.add('event');let dot=document.createElement('i');dot.className='dot';b.append(dot);b.onclick=()=>sel.textContent=events[k]}else b.disabled=true;cal.append(b)}}month(2026,9);month(2026,10);month(2026,11);
+</script>
+</body></html>
