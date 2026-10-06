@@ -94,7 +94,8 @@ test.describe('scroll', { tag: '@prod' }, () => {
     await page.addStyleTag({ content: 'main { min-height: 4000px !important; }' })
     await page.evaluate(() => window.scrollTo(0, 1500))
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000)
-    await page.locator('main a[href="/wiki"]').first().click()
+    // A script click: a pointer click would scroll the link into view first and hide a kept offset.
+    await page.locator('main a[href="/wiki"]').first().evaluate((link) => (link as HTMLAnchorElement).click())
     await expect(page).toHaveURL(/\/wiki$/)
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
   })
