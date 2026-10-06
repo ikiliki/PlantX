@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
 import { catalogSpecies } from '../../features/species/catalogSpecies'
@@ -9,7 +9,7 @@ import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } fr
 import { Avatar } from '../../components/Avatar/Avatar'
 import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/ActivityBell'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
-import { AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
+import { ACCOUNT_PARAM, AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { NavMenu } from './NavMenu/NavMenu'
 import {
@@ -32,6 +32,7 @@ export function TopBar() {
   const { currentUser, db, signedIn, setLocale } = useStore()
   const tasks = useTaskTabCount()
   const loc = useLocation()
+  const navigate = useNavigate()
   const [accountOpen, setAccountOpen] = useState(false)
   const [openNav, setOpenNav] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
@@ -73,7 +74,17 @@ export function TopBar() {
   useEffect(() => {
     setAccountOpen(false)
     setOpenNav(null)
-  }, [loc.pathname, loc.search])
+  }, [loc.pathname])
+
+  // `?account=1` (accountHref; the old /settings redirects here) opens the account dialog, then drops the flag.
+  useEffect(() => {
+    const params = new URLSearchParams(loc.search)
+    if (!signedIn || params.get(ACCOUNT_PARAM) !== '1') return
+    params.delete(ACCOUNT_PARAM)
+    const search = params.toString()
+    navigate({ pathname: loc.pathname, search: search ? `?${search}` : '' }, { replace: true, state: loc.state })
+    setAccountOpen(true)
+  }, [loc.pathname, loc.search, loc.state, navigate, signedIn])
 
   const langToggle = (
     <Lang role="group" aria-label={t.nav.language}>

@@ -9,12 +9,15 @@ test.describe('member', () => {
     await signIn(page, MEMBER)
   })
 
-  test('settings shows the daily AI scan allowance', async ({ page }) => {
+  test('/settings opens the account popup with the place and the AI scan allowance', async ({ page }) => {
     await page.route('**/api/identify/quota', (route) =>
       route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt: resetsAt() } } }),
     )
     await expectPage(page, '/settings')
-    const meter = page.locator('[data-scan-quota]').first()
+    await expect(page).toHaveURL(/\/greenhouse$/)
+    const account = page.getByRole('dialog', { name: 'Account' })
+    await expect(account.getByRole('combobox', { name: 'Greenhouse place' })).toBeVisible()
+    const meter = account.locator('[data-scan-quota]')
     await expect(meter).toContainText('2 of 3 left')
     // Tapping the tile says when the scans reset.
     await meter.click()
@@ -54,7 +57,7 @@ test.describe('admin', () => {
 
   test('the admin sees unlimited AI scans', async ({ page }) => {
     await expectPage(page, '/settings')
-    await expect(page.locator('[data-scan-quota="unlimited"]').first()).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Account' }).locator('[data-scan-quota="unlimited"]')).toBeVisible()
   })
 
   test('Server users are read-only; Moderation has the user actions', async ({ page }) => {

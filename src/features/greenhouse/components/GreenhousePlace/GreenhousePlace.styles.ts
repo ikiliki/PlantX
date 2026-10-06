@@ -4,8 +4,7 @@ import { theme } from '../../../../theme/tokens'
 export const Root = styled.div`
   display: grid;
   gap: 8px;
-  margin-top: 12px;
-  max-width: min(360px, 100%);
+  width: 100%;
   min-width: 0;
 `
 

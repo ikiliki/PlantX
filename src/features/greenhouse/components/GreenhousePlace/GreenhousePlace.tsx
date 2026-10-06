@@ -1,14 +1,19 @@
-import { Field, Select } from '../../../../components/Form/Form'
+import { Select } from '../../../../components/Form/Form'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { AREAS, greenhouseAreaId } from '../../../../mock/locations'
 import { useStore } from '../../../../mock/store'
 import { Hint, Root } from './GreenhousePlace.styles'
 
-/** Greenhouse place. New plants copy it. Empty or unknown regions show Unknown. */
+/**
+ * Greenhouse place. New plants copy it. Empty or unknown regions show Unknown. The caller supplies the label
+ * (the account dialog's row); `id` ties it to the select.
+ */
 export function GreenhousePlace({
+  id,
   areaId,
   onChange,
 }: {
+  id?: string
   areaId?: string
   onChange?: (areaId: string) => void
 }) {
@@ -22,16 +27,18 @@ export function GreenhousePlace({
 
   return (
     <Root>
-      <Field>
-        {t.settings.region}
-        <Select aria-label={t.settings.region} value={selected} onChange={(event) => change(event.target.value)}>
-          {AREAS.map((area) => (
-            <option key={area.id} value={area.id}>
-              {locale === 'he' ? area.regionHe : area.region}
-            </option>
-          ))}
-        </Select>
-      </Field>
+      <Select
+        id={id}
+        aria-label={id ? undefined : t.settings.region}
+        value={selected}
+        onChange={(event) => change(event.target.value)}
+      >
+        {AREAS.map((area) => (
+          <option key={area.id} value={area.id}>
+            {locale === 'he' ? area.regionHe : area.region}
+          </option>
+        ))}
+      </Select>
       <Hint>{t.settings.placeHint}</Hint>
     </Root>
   )

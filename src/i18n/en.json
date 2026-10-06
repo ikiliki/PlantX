@@ -796,7 +796,8 @@
     "privateMark": "Private",
     "iconLabel": "Icon",
     "iconSeed": "Seed",
-    "iconHint": "Starts as a seed. More icons unlock as your greenhouse levels up."
+    "iconHint": "Starts as a seed. More icons unlock as your greenhouse levels up.",
+    "placeLabel": "Greenhouse place"
   },
   "auth": {
     "buyTitle": "Log in to purchase",
@@ -1268,15 +1269,8 @@
     "manageInModeration": "Manage in Moderation"
   },
   "settings": {
-    "title": "Settings",
-    "profile": "Profile",
     "region": "Location",
-    "placeHint": "New plants use this place.",
-    "role": "Account type",
-    "logout": "Log out",
-    "logoutDemo": "Exit to demo login",
-    "editProfile": "Edit nickname and icon",
-    "moreSettings": "Place and more settings"
+    "placeHint": "New plants use this place."
   },
   "feed": {
     "people": "In the greenhouse",

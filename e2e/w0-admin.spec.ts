@@ -14,9 +14,9 @@ test.describe('signed in', () => {
     expect(typeof quota.resetsAt).toBe('string')
   })
 
-  test('settings signs out without demo wording', async ({ page }) => {
+  test('the account popup signs out without demo wording', async ({ page }) => {
     await expectPage(page, '/settings')
-    await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Account' }).getByRole('button', { name: 'Sign out' })).toBeVisible()
     await expect(page.getByText('Exit to demo login')).toHaveCount(0)
   })
 

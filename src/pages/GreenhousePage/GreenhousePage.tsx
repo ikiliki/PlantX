@@ -31,6 +31,7 @@ import { useStore } from '../../mock/store'
 import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
 import { resolveArea } from '../../mock/locations'
+import { accountHref } from '../../features/profile/components/AccountDialog/AccountDialog'
 import { MyScanAllowance } from '../../features/greenhouse/components/ScanQuotaNote/ScanQuotaNote'
 import type { ComponentView } from '../../theme/view'
 import {
@@ -223,7 +224,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
       <>
         {showScans ? <MyScanAllowance /> : null}
         {needsPlace ? (
-          <PlacePrompt to="/settings">
+          <PlacePrompt to={accountHref()}>
             <PlaceIcon aria-hidden>📍</PlaceIcon>
             <PlaceCopy>
               <strong>{t.greenhouse.setPlaceShort}</strong>

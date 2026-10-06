@@ -37,6 +37,7 @@ import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
+import { accountHref } from '../../../profile/components/AccountDialog/AccountDialog'
 import { EditPencil, InlineEdit } from '../InlineEdit/InlineEdit'
 import { emptyClassDraft, sizeChoices, stageChoices } from '../../plantClass'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
@@ -229,8 +230,9 @@ export function PlantPassport({
   const isOwner = plant.ownerId === ownerId
   const isAdmin = signedIn && currentUser?.role === 'admin'
   const [moderating, setModerating] = useState<ModerationRequest | null>(null)
-  // Inline edit (#70): the owner and the admin edit a value where it is shown, one field at a time.
-  const canEdit = !embedded && (isOwner || isAdmin)
+  // Inline edit (#70): the owner and the admin edit a value where it is shown, one field at a time. The
+  // passport popup is embedded too, so only the inert admin previews (embedded, not a dialog) stay read-only.
+  const canEdit = (!embedded || dialog) && (isOwner || isAdmin)
   const [editField, setEditField] = useState<string | null>(null)
   const saveField = async (patch: PlantPatch) => {
     const ok = await editPlant(plant.id, patch)
@@ -258,7 +260,7 @@ export function PlantPassport({
       // Unknown on the owner's own plant: say where to set it instead of leaving a dead end.
       value:
         isOwner && plant.locationZone === UNKNOWN_AREA.region ? (
-          <SetPlace to="/settings">{t.passport.setPlace}</SetPlace>
+          <SetPlace to={accountHref()}>{t.passport.setPlace}</SetPlace>
         ) : (
           tr(plant.locationZone, plant.locationZoneHe)
         ),
