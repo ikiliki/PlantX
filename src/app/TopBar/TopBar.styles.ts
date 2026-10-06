@@ -53,7 +53,7 @@ export const NavItems = styled.nav`
   @media (min-width: ${theme.breakpoints.md}) {
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 4px;
     min-width: 0;
     overflow: visible;
   }
@@ -78,29 +78,21 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 6px 0;
+  min-height: ${theme.control.sm};
+  padding: 0 14px;
+  border-radius: ${theme.radii.pill};
+  background: ${({ $active }) => ($active ? theme.surface.barActive : 'transparent')};
   font-family: ${theme.fonts.body};
   font-size: 14px;
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
   white-space: nowrap;
   color: ${({ $active }) => ($active ? theme.surface.barInk : theme.surface.barMuted)};
-  transition: color ${theme.motion.fast} ${theme.motion.ease};
-  &::after {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: 2px;
-    border-radius: ${theme.radii.pill};
-    background: ${theme.surface.barInk};
-    transform: scaleX(${({ $active }) => ($active ? 1 : 0)});
-    transition: transform ${theme.motion.base} ${theme.motion.ease};
-  }
+  transition:
+    color ${theme.motion.fast} ${theme.motion.ease},
+    background ${theme.motion.fast} ${theme.motion.ease};
   &:hover {
     color: ${theme.surface.barInk};
-  }
-  &:hover::after {
-    transform: scaleX(1);
+    background: ${({ $active }) => ($active ? theme.surface.barActive : 'rgba(18, 60, 45, 0.05)')};
   }
 `
 

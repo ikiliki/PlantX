@@ -13,7 +13,8 @@ export const theme = {
     cream: '#F4F1E8',
     creamCard: '#FFFEFA',
     ink: '#173128',
-    muted: '#66756D',
+    /** Secondary text; 5.5:1 on cream so small labels pass WCAG AA. */
+    muted: '#56655D',
     border: '#DCE1D8',
     /** Stronger hairline for controls (inputs, segmented rows). */
     borderStrong: '#C9D0C4',
@@ -39,30 +40,29 @@ export const theme = {
     overlay: 'rgba(23, 28, 26, 0.46)',
   },
   radii: {
-    sm: '10px',
-    md: '14px',
-    lg: '22px',
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
     pill: '999px',
     /** Buttons, chips and segmented items. */
     control: '999px',
   },
   /** Page and chrome backgrounds (CSS background values). */
   surface: {
-    page: `radial-gradient(1200px 500px at 10% -10%, rgba(207, 234, 120, 0.28), transparent 55%),
-    radial-gradient(900px 400px at 100% 0%, rgba(242, 200, 167, 0.30), transparent 50%),
-    #F4F1E8`,
+    /** Flat paper: the plants and photos carry the colour, not the backdrop. */
+    page: '#F4F1E8',
     bar: '#FFFEFA',
-    barScrolled: 'rgba(255, 254, 250, 0.86)',
+    barScrolled: 'rgba(255, 254, 250, 0.9)',
     barInk: '#123C2D',
-    barMuted: '#66756D',
+    barMuted: '#56655D',
     barActive: '#E4EBD8',
     nav: 'rgba(255, 254, 250, 0.94)',
     barBorder: '#DCE1D8',
   },
   shadow: {
-    card: '0 14px 34px rgba(23, 49, 40, 0.10)',
-    soft: '0 2px 10px rgba(23, 49, 40, 0.06)',
-    lift: '0 18px 44px rgba(23, 49, 40, 0.14)',
+    card: '0 1px 2px rgba(23, 49, 40, 0.05), 0 10px 28px rgba(23, 49, 40, 0.08)',
+    soft: '0 1px 2px rgba(23, 49, 40, 0.07)',
+    lift: '0 2px 4px rgba(23, 49, 40, 0.04), 0 14px 32px rgba(23, 49, 40, 0.10)',
     dialog: '0 24px 64px rgba(12, 32, 24, 0.24)',
     focus: '0 0 0 3px rgba(207, 234, 120, 0.9), 0 0 0 5px rgba(18, 60, 45, 0.55)',
   },
@@ -91,11 +91,10 @@ export const theme = {
   fonts: {
     // Inter has no Hebrew glyphs, so Rubik picks up body text in RTL.
     body: "'Inter', 'Rubik', system-ui, sans-serif",
-    // DM Serif Display carries no Hebrew glyphs, so Frank Ruhl Libre picks up RTL text.
-    display: "'DM Serif Display', 'Frank Ruhl Libre', Georgia, serif",
-    /** DM Serif Display ships a single regular weight; bolding it would synthesise strokes. */
-    displayWeight: 400,
-    displayTracking: '-0.01em',
+    // Fraunces carries no Hebrew glyphs, so Frank Ruhl Libre picks up RTL text.
+    display: "'Fraunces', 'Frank Ruhl Libre', Georgia, serif",
+    displayWeight: 500,
+    displayTracking: '-0.02em',
   },
   /** Type scale. Shared components pick from it instead of one-off sizes. */
   text: {
@@ -106,7 +105,7 @@ export const theme = {
     lg: '20px',
     xl: '24px',
     xxl: '32px',
-    display: 'clamp(30px, 4vw, 42px)',
+    display: 'clamp(32px, 4vw, 46px)',
   },
   /** Control heights: compact and touch. */
   control: {
