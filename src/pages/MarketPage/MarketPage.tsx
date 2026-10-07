@@ -81,7 +81,7 @@ function MarketReady({ view }: { view: ComponentView }) {
           <MarketTicker />
         </BlurTape>
         {visible.length === 0 ? (
-          <EmptyState title={t.market.empty} />
+          <EmptyState icon="market" title={t.market.empty} />
         ) : (
           <ListingTable listings={visible} onOpen={openListing} />
         )}
@@ -129,7 +129,7 @@ function MarketReady({ view }: { view: ComponentView }) {
             />
           </ResultsHead>
           {visible.length === 0 ? (
-            <EmptyState title={t.market.empty} />
+            <EmptyState icon="market" title={t.market.empty} />
           ) : (
             <ListingTable listings={visible} onOpen={openListing} />
           )}
