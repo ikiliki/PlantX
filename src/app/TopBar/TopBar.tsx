@@ -7,6 +7,7 @@ import { groupByRarity, wikiRarityTitle } from '../../features/species/wikiGroup
 import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { Avatar } from '../../components/Avatar/Avatar'
+import { Icon } from '../../components/Icon/Icon'
 import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/ActivityBell'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
 import { ACCOUNT_PARAM, AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
@@ -23,6 +24,7 @@ import {
   LangBtn,
   LoginButton,
   MobileOnly,
+  NavIcon,
   NavItem,
   NavItems,
 } from './TopBar.styles'
@@ -117,17 +119,24 @@ export function TopBar() {
       <NavItems>
         {show('home') && (
           <NavItem to="/home" $active={isActive('/home')} aria-current={isActive('/home') ? 'page' : undefined}>
+            <NavIcon aria-hidden>
+              <Icon name="home" size={18} />
+            </NavIcon>
             {t.nav.home}
           </NavItem>
         )}
         {show('market') && (
           <NavItem to="/market" $active={isActive('/market')} aria-current={isActive('/market') ? 'page' : undefined}>
+            <NavIcon aria-hidden>
+              <Icon name="market" size={18} />
+            </NavIcon>
             {t.nav.market}
           </NavItem>
         )}
         {show('greenhouse') && (
           <NavMenu
             label={t.nav.greenhouse}
+            icon="greenhouse"
             to="/greenhouse"
             open={openNav === 'greenhouse'}
             onOpen={() => setOpenNav('greenhouse')}
@@ -149,17 +158,24 @@ export function TopBar() {
         )}
         {show('todo') && (
           <NavItem to="/tasks" $active={isActive('/tasks')} aria-current={isActive('/tasks') ? 'page' : undefined}>
+            <NavIcon aria-hidden>
+              <Icon name="drop" size={18} />
+            </NavIcon>
             {tasks.today > 0 ? `${t.nav.todo} (${tasks.today})` : t.nav.todo}
           </NavItem>
         )}
         {show('rank') && (
           <NavItem to="/rank" $active={isActive('/rank')} aria-current={isActive('/rank') ? 'page' : undefined}>
+            <NavIcon aria-hidden>
+              <Icon name="rank" size={18} />
+            </NavIcon>
             {t.nav.rank}
           </NavItem>
         )}
         {show('wiki') && (
           <NavMenu
             label={t.nav.wiki}
+            icon="wiki"
             to="/wiki"
             open={openNav === 'wiki'}
             onOpen={() => setOpenNav('wiki')}
