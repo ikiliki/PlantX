@@ -10,7 +10,6 @@ const face = `
   background: ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
-  box-shadow: ${theme.shadow.soft};
   color: inherit;
   text-decoration: none;
   transition:
@@ -18,8 +17,12 @@ const face = `
     box-shadow ${theme.motion.base} ${theme.motion.ease};
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: ${theme.shadow.lift};
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.99);
   }
 `
 

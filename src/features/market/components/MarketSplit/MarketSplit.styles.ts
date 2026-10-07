@@ -51,7 +51,7 @@ export const MapPane = styled.div<{ $active: boolean }>`
 
   @container (min-width: 960px) {
     position: sticky;
-    top: calc(${theme.layout.topBar} + 12px);
+    top: calc(${theme.layout.chromeTop} + 12px);
     height: min(calc(100svh - 150px), 640px);
   }
 `

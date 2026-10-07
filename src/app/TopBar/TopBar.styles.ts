@@ -20,9 +20,23 @@ export const Bar = styled.header<{ $scrolled?: boolean }>`
   transition:
     background ${theme.motion.base} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease};
+  /* Desktop: a full-height rail on the start edge. Brand on top, the nav as a list, the account at the foot. */
   @media (min-width: ${theme.breakpoints.md}) {
-    height: ${theme.layout.topBar};
-    padding: 0 56px;
+    && {
+      grid-column: 1;
+      grid-row: 1 / -1;
+    }
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: ${theme.space.lg};
+    height: 100svh;
+    padding: 28px 16px 20px;
+    background: ${theme.surface.bar};
+    backdrop-filter: none;
+    box-shadow: none;
+    border-bottom: 0;
+    border-inline-end: 1px solid ${theme.surface.barBorder};
   }
 `
 
@@ -35,6 +49,11 @@ export const Brand = styled(Link)`
   font-weight: ${theme.fonts.displayWeight};
   font-size: 24px;
   color: ${theme.surface.barInk};
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    padding: 0 10px 12px;
+    font-size: 26px;
+  }
 `
 
 export const BrandMark = styled.img`
@@ -52,8 +71,9 @@ export const NavItems = styled.nav`
   display: none;
   @media (min-width: ${theme.breakpoints.md}) {
     display: flex;
-    align-items: center;
-    gap: 4px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
     min-width: 0;
     overflow: visible;
   }
@@ -78,9 +98,9 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: ${theme.control.sm};
-  padding: 0 14px;
-  border-radius: ${theme.radii.pill};
+  min-height: ${theme.control.md};
+  padding: 0 12px;
+  border-radius: ${theme.radii.md};
   background: ${({ $active }) => ($active ? theme.surface.barActive : 'transparent')};
   font-family: ${theme.fonts.body};
   font-size: 14px;
@@ -101,7 +121,11 @@ export const NavIcon = styled.span`
   display: none;
   flex: none;
   place-items: center;
-  margin-inline-end: 10px;
+  margin-inline-end: 12px;
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    display: inline-grid;
+  }
 `
 
 /** Greenhouse activity bell sits with the account control on the phone shell only. */
@@ -118,6 +142,14 @@ export const Actions = styled.div`
   align-items: center;
   gap: 14px;
   flex-shrink: 0;
+
+  /* Desktop rail: the account sits at the foot. */
+  @media (min-width: ${theme.breakpoints.md}) {
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding: 14px 10px 0;
+    border-top: 1px solid ${theme.surface.barBorder};
+  }
 `
 
 export const Lang = styled.div`

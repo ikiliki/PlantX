@@ -21,7 +21,7 @@ export const Page = styled.div<{ $fill?: boolean }>`
     `
     @media (min-width: ${SPLIT_VIEWPORT}px) {
       grid-template-rows: auto minmax(0, 1fr);
-      height: calc(100svh - ${theme.layout.topBar} - 56px - 72px);
+      height: calc(100svh - ${theme.layout.chromeTop} - 56px - 72px);
       overflow: hidden;
     }
   `}

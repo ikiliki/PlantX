@@ -11,6 +11,10 @@ export const Trigger = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+
+  > a {
+    flex: 1;
+  }
 `
 
 export const Caret = styled.button<{ $open?: boolean }>`
@@ -41,6 +45,16 @@ export const Panel = styled.div`
   translate: -50% 0;
   [dir='rtl'] & {
     translate: 50% 0;
+  }
+
+  /* Rail: the menu opens beside the item, not under it. */
+  @media (min-width: ${theme.breakpoints.md}) {
+    top: 0;
+    inset-inline-start: calc(100% + 12px);
+    translate: none;
+    [dir='rtl'] & {
+      translate: none;
+    }
   }
   min-width: 196px;
   max-height: min(70vh, 420px);

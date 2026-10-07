@@ -8,6 +8,16 @@ export const Shell = styled.div`
   display: grid;
   grid-template-rows: auto auto 1fr;
   background: ${theme.surface.page};
+
+  /* Desktop: the rail on the start edge, the page beside it. */
+  @media (min-width: ${theme.breakpoints.md}) {
+    grid-template-columns: ${theme.layout.sideNav} minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+
+    > * {
+      grid-column: 2;
+    }
+  }
 `
 
 export const Main = styled.main<{ $wide?: boolean }>`

@@ -57,7 +57,7 @@ export const Rail = styled.aside`
 
   @container (min-width: 1180px) {
     position: sticky;
-    top: calc(${theme.layout.topBar} + ${theme.space.md});
+    top: calc(${theme.layout.chromeTop} + ${theme.space.md});
   }
 
   @container (max-width: 1179px) {

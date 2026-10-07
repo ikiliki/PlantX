@@ -26,8 +26,7 @@ export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $stat
     `
     &:hover {
       border-color: ${$selected ? theme.colors.forest : theme.colors.moss};
-      box-shadow: ${theme.shadow.soft};
-      transform: translateY(-1px);
+      background: ${$selected ? theme.colors.chipGreen : 'rgba(228, 235, 216, 0.45)'};
     }
     &:active {
       transform: scale(0.995);
@@ -43,9 +42,9 @@ export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $stat
 `
 
 export const Thumb = styled.div<{ $stale?: boolean }>`
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: ${theme.radii.md};
   overflow: hidden;
   background: ${theme.colors.chipGreen};
   img {
@@ -148,11 +147,15 @@ export const Cell = styled.span`
 `
 
 export const Price = styled(Cell)`
-  font-weight: 800;
+  font-family: ${theme.fonts.display};
+  font-size: 17px;
+  font-weight: ${theme.fonts.displayWeight};
+  font-variant-numeric: tabular-nums;
   color: ${theme.colors.forest};
 `
 
 export const Change = styled(Cell)<{ $up: boolean }>`
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   color: ${({ $up }) => ($up ? theme.colors.greenDark : theme.colors.danger)};
 `

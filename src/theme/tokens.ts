@@ -132,6 +132,8 @@ export const theme = {
     homeMax: '1680px',
     demoBar: '44px',
     topBar: '80px',
+    /** Height of the chrome above the page on desktop: the rail sits beside it, so nothing is above. */
+    chromeTop: '0px',
     bottomNav: '72px',
     sideNav: '240px',
   },

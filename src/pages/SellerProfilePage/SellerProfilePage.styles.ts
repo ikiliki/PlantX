@@ -7,7 +7,7 @@ export const Page = styled.div`
   gap: 0;
   width: 100%;
   min-width: 0;
-  min-height: min(720px, calc(100svh - ${theme.layout.topBar} - 48px));
+  min-height: min(720px, calc(100svh - ${theme.layout.chromeTop} - 48px));
   border-radius: ${theme.radii.lg};
   overflow: hidden;
   border: 1px solid ${theme.colors.border};
