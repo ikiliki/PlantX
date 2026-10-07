@@ -46,7 +46,7 @@ function CategoriesReady() {
       </Header>
 
       {groups.length === 0 ? (
-        <EmptyState title={t.market.empty} />
+        <EmptyState icon="market" title={t.market.empty} />
       ) : (
         <>
           <Summary>

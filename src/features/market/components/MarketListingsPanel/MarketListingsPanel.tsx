@@ -29,7 +29,7 @@ export function MarketListingsPanel({
     <Root $embedded={embedded} aria-label={title ?? t.market.listings}>
       {title ? <Title>{title}</Title> : null}
       {listings.length === 0 ? (
-        <EmptyState title={t.market.empty} />
+        <EmptyState icon="market" title={t.market.empty} />
       ) : (
         <TableWrap $embedded={embedded}>
           <ListingTable listings={listings} selectedId={selectedId} onOpen={open} />

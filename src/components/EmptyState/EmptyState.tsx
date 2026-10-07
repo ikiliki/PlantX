@@ -1,31 +1,27 @@
-import styled from 'styled-components'
-import { theme } from '../../theme/tokens'
+import type { ReactNode } from 'react'
+import { Icon, type IconName } from '../Icon/Icon'
+import { Action, Hint, Mark, Title, Wrap } from './EmptyState.styles'
 
-const Wrap = styled.div`
-  text-align: center;
-  padding: ${theme.space.xl};
-  color: ${theme.colors.muted};
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-`
-
-const Icon = styled.div`
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: ${theme.colors.chipGreen};
-  display: grid;
-  place-items: center;
-  font-size: 24px;
-`
-
-export function EmptyState({ title, hint }: { title: string; hint?: string }) {
+/** A composed empty view: a mark, what is missing, why, and (optionally) the next step. */
+export function EmptyState({
+  title,
+  hint,
+  icon = 'greenhouse',
+  action,
+}: {
+  title: string
+  hint?: string
+  icon?: IconName
+  action?: ReactNode
+}) {
   return (
-    <Wrap>
-      <Icon>🌿</Icon>
-      <strong style={{ color: theme.colors.ink }}>{title}</strong>
-      {hint && <p>{hint}</p>}
+    <Wrap role="status">
+      <Mark aria-hidden>
+        <Icon name={icon} size={26} />
+      </Mark>
+      <Title>{title}</Title>
+      {hint ? <Hint>{hint}</Hint> : null}
+      {action ? <Action>{action}</Action> : null}
     </Wrap>
   )
 }
