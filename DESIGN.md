@@ -1,6 +1,6 @@
 # PlantX design: Botanical (refined)
 
-Direction A of three redesign candidates (`feature/redesign-botanical`, `feature/redesign-editorial`, `feature/redesign-modern`). The product is an Operate-mode app: growers manage plants, browse the market and rank. Scanability and consistency outrank expression; the brand lives in the details.
+Direction A of three redesign candidates (`feature/redesign-botanical`, `feature/redesign-garden`, `feature/redesign-modern`). The product is an Operate-mode app: growers manage plants, browse the market and rank. Scanability and consistency outrank expression; the brand lives in the details.
 
 ## World
 
@@ -16,7 +16,8 @@ The current PlantX identity, sharpened. Forest green, cream paper and a lime gro
 
 ## Shell
 
-- Top bar: brand, nav items as pills (active pill tinted `barActive`), account.
+- Desktop: a full-height **greenhouse rail** on the start edge (`layout.sideNav`): wordmark on top, the nav as an icon list (active row tinted `barActive`), submenus opening beside their row, the account at the foot. Sticky page offsets read `layout.chromeTop` (0 beside the rail).
+- Phone: the slim top bar (wordmark, bell, account) stays.
 - Phone bottom nav: icon pill on the active tab.
 
 ## Rules
@@ -41,3 +42,10 @@ The current PlantX identity, sharpened. Forest green, cream paper and a lime gro
 ## Labels
 
 `theme.type.labelCase` / `labelTracking`: micro-labels speak in sentence case.
+
+## Pages
+
+- Wiki cards are framed specimens like the greenhouse cards (inset 4:3 photo, lift and slow zoom).
+- Market rows tint leaf-green on hover instead of jumping; prices are Fraunces with tabular figures.
+- Feed cards rest on a border and lift with a shadow only on hover.
+- Empty states are composed: an icon mark, the title in Fraunces, a hint, an optional next step.
