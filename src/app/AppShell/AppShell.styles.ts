@@ -18,21 +18,22 @@ export const Main = styled.main<{ $wide?: boolean }>`
   min-width: 0;
   margin: 0 auto;
   @media (min-width: ${theme.breakpoints.md}) {
-    padding: 56px ${theme.space.xl} 72px;
+    padding: 48px ${theme.space.xl} 140px;
   }
 `
 
 export const BottomNav = styled.nav<{ $cols?: number }>`
+  /* Phone: a floating dock, not a bar glued to the edge. */
   position: fixed;
-  bottom: 0;
-  inset-inline: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  inset-inline: 12px;
   z-index: ${theme.z.bottomNav};
   display: grid;
   grid-template-columns: repeat(${({ $cols = 5 }) => Math.max($cols, 1)}, minmax(0, 1fr));
-  background: ${theme.surface.nav};
-  backdrop-filter: blur(12px);
-  border-top: 1px solid ${theme.surface.barBorder};
-  padding: 6px ${theme.space.xs} calc(6px + env(safe-area-inset-bottom));
+  background: ${theme.surface.dock};
+  border-radius: 28px;
+  box-shadow: ${theme.shadow.lift};
+  padding: 6px;
   @media (min-width: ${theme.breakpoints.md}) {
     display: none;
   }
@@ -46,7 +47,8 @@ export const BottomLink = styled(Link)<{ $active?: boolean }>`
   gap: 2px;
   font-size: 11px;
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
-  color: ${({ $active }) => ($active ? theme.surface.barInk : theme.surface.barMuted)};
+  color: ${({ $active }) => ($active ? theme.surface.dockInk : theme.surface.dockMuted)};
+  font-weight: 700;
   padding: 6px 2px;
   border-radius: ${theme.radii.md};
 `
@@ -57,8 +59,9 @@ export const BottomIcon = styled.span<{ $active?: boolean }>`
   width: 52px;
   height: 30px;
   border-radius: ${theme.radii.pill};
-  background: ${({ $active }) => ($active ? theme.surface.barActive : 'transparent')};
-  transform: scale(${({ $active }) => ($active ? 1 : 0.92)});
+  background: ${({ $active }) => ($active ? theme.surface.dockActive : 'transparent')};
+  color: ${({ $active }) => ($active ? theme.colors.forest : 'inherit')};
+  transform: scale(${({ $active }) => ($active ? 1.06 : 0.92)}) translateY(${({ $active }) => ($active ? '-2px' : '0')});
   transition:
     background ${theme.motion.base} ${theme.motion.ease},
     transform ${theme.motion.base} ${theme.motion.spring};

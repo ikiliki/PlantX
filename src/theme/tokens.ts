@@ -1,77 +1,87 @@
 export const theme = {
   colors: {
-    forest: '#123C2D',
-    forestMid: '#1B4A38',
-    forestSoft: '#24543F',
-    moss: '#5D7C4E',
-    growth: '#CFEA78',
-    warmth: '#F2C8A7',
-    /** Legacy aliases kept so existing pages pick up the new palette. */
-    lime: '#CFEA78',
-    green: '#5D7C4E',
-    greenDark: '#2F6B4A',
-    cream: '#F4F1E8',
-    creamCard: '#FFFEFA',
-    ink: '#173128',
-    muted: '#66756D',
-    border: '#DCE1D8',
-    /** Stronger hairline for controls (inputs, segmented rows). */
-    borderStrong: '#C9D0C4',
-    chipGreen: '#E4EBD8',
-    chipWarm: '#FFF0D8',
-    chipNeutral: '#F4F1E8',
-    chipDanger: '#F6DED4',
-    chipInfo: '#E8F1F7',
-    chipAi: '#E8F1FB',
-    track: '#E7E3D6',
-    danger: '#B4553D',
-    warn: '#9A6B1F',
-    info: '#3C6B8F',
+    /** Leaf green: primary actions and active text. */
+    forest: '#1F5135',
+    forestMid: '#2A6643',
+    forestSoft: '#347A50',
+    moss: '#5B8C3E',
+    /** Sunshine: the one bright accent, for active states and the growth action. */
+    growth: '#FFC94A',
+    /** Terracotta pot. */
+    warmth: '#F08A5D',
+    lime: '#FFC94A',
+    green: '#5B8C3E',
+    greenDark: '#2A6643',
+    cream: '#FFF8EC',
+    creamCard: '#FFFFFF',
+    ink: '#20302A',
+    /** Secondary text; 6:1 on the warm page. */
+    muted: '#56625C',
+    border: '#EFE4CF',
+    /** Stronger edge for controls (inputs, segmented rows). */
+    borderStrong: '#E0D2B6',
+    chipGreen: '#E3F2D6',
+    chipWarm: '#FFEFD0',
+    chipNeutral: '#FBF3E3',
+    chipDanger: '#FCE1D6',
+    chipInfo: '#E3F0FA',
+    chipAi: '#E3EEFB',
+    track: '#F1E7D3',
+    danger: '#C2492B',
+    warn: '#9A6312',
+    info: '#2F6B9A',
     /** AI provenance: the ✦ stamp and the AI chip. */
     aiBlue: '#3B7CC9',
     /** Watering care tone (todo icons, calendar). */
-    water: '#3B7CC9',
+    water: '#3B8FD9',
     /** Neutral metal for photo-only marks. */
     metal: '#8B929A',
-    /** Market direction tones, kept inside the botanical palette. */
-    up: '#2F6B4A',
-    down: '#B4553D',
-    overlay: 'rgba(23, 28, 26, 0.46)',
+    /** Market direction tones. */
+    up: '#2A6643',
+    down: '#C2492B',
+    overlay: 'rgba(32, 48, 42, 0.42)',
   },
   radii: {
-    sm: '10px',
-    md: '14px',
-    lg: '22px',
+    sm: '12px',
+    md: '18px',
+    lg: '26px',
     pill: '999px',
-    /** Buttons, chips and segmented items. */
+    /** Buttons, chips and segmented items: soft pebbles. */
     control: '999px',
   },
   /** Page and chrome backgrounds (CSS background values). */
   surface: {
-    page: `radial-gradient(1200px 500px at 10% -10%, rgba(207, 234, 120, 0.28), transparent 55%),
-    radial-gradient(900px 400px at 100% 0%, rgba(242, 200, 167, 0.30), transparent 50%),
-    #F4F1E8`,
-    bar: '#FFFEFA',
-    barScrolled: 'rgba(255, 254, 250, 0.86)',
-    barInk: '#123C2D',
-    barMuted: '#66756D',
-    barActive: '#E4EBD8',
-    nav: 'rgba(255, 254, 250, 0.94)',
-    barBorder: '#DCE1D8',
+    /** Warm paper with morning sun coming in from the top start corner. */
+    page: `radial-gradient(900px 420px at 0% -10%, rgba(255, 201, 74, 0.22), transparent 60%),
+    #FFF8EC`,
+    bar: '#FFF8EC',
+    barScrolled: '#FFF8EC',
+    barInk: '#1F5135',
+    barMuted: '#56625C',
+    barActive: '#FFC94A',
+    nav: '#1F5135',
+    barBorder: 'transparent',
+    /** The floating dock that carries the main navigation. */
+    dock: '#1F5135',
+    dockInk: '#FFF8EC',
+    dockMuted: 'rgba(255, 248, 236, 0.72)',
+    dockActive: '#FFC94A',
   },
   shadow: {
-    card: '0 14px 34px rgba(23, 49, 40, 0.10)',
-    soft: '0 2px 10px rgba(23, 49, 40, 0.06)',
-    lift: '0 18px 44px rgba(23, 49, 40, 0.14)',
-    dialog: '0 24px 64px rgba(12, 32, 24, 0.24)',
-    focus: '0 0 0 3px rgba(207, 234, 120, 0.9), 0 0 0 5px rgba(18, 60, 45, 0.55)',
+    /** Clay: a soft drop under the object plus a faint lower lip, as if it were moulded. */
+    card: '0 2px 0 rgba(31, 81, 53, 0.05), 0 16px 32px -10px rgba(31, 81, 53, 0.22)',
+    soft: '0 1px 0 rgba(31, 81, 53, 0.06), 0 6px 14px -6px rgba(31, 81, 53, 0.18)',
+    lift: '0 3px 0 rgba(31, 81, 53, 0.05), 0 26px 44px -14px rgba(31, 81, 53, 0.32)',
+    dialog: '0 30px 70px -10px rgba(31, 81, 53, 0.35)',
+    focus: '0 0 0 3px #FFF8EC, 0 0 0 6px #FFC94A',
   },
   motion: {
-    fast: '140ms',
-    base: '220ms',
-    slow: '360ms',
-    ease: 'cubic-bezier(0.2, 0, 0, 1)',
-    spring: 'cubic-bezier(0.34, 1.4, 0.64, 1)',
+    fast: '150ms',
+    base: '260ms',
+    slow: '420ms',
+    /** Back-out: arrivals overshoot a touch and settle, like a bouncy seedling. */
+    ease: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+    spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
     exit: 'cubic-bezier(0.4, 0, 1, 1)',
   },
   z: {
@@ -89,29 +99,33 @@ export const theme = {
     lg: '1280px',
   },
   fonts: {
-    // Inter has no Hebrew glyphs, so Rubik picks up body text in RTL.
-    body: "'Inter', 'Rubik', system-ui, sans-serif",
-    // DM Serif Display carries no Hebrew glyphs, so Frank Ruhl Libre picks up RTL text.
-    display: "'DM Serif Display', 'Frank Ruhl Libre', Georgia, serif",
-    /** DM Serif Display ships a single regular weight; bolding it would synthesise strokes. */
-    displayWeight: 400,
+    // Nunito has no Hebrew glyphs, so Rubik picks up body text in RTL.
+    body: "'Nunito', 'Rubik', system-ui, sans-serif",
+    // Fredoka carries Hebrew glyphs, so RTL headings stay rounded too.
+    display: "'Fredoka', 'Rubik', system-ui, sans-serif",
+    displayWeight: 600,
     displayTracking: '-0.01em',
   },
   /** Type scale. Shared components pick from it instead of one-off sizes. */
   text: {
     xs: '12px',
     sm: '13px',
-    base: '14px',
-    md: '16px',
-    lg: '20px',
-    xl: '24px',
-    xxl: '32px',
-    display: 'clamp(30px, 4vw, 42px)',
+    base: '15px',
+    md: '17px',
+    lg: '21px',
+    xl: '26px',
+    xxl: '34px',
+    display: 'clamp(34px, 4.5vw, 52px)',
   },
-  /** Control heights: compact and touch. */
+  /** Micro-label voice (chips, section labels, stamps). Garden speaks plainly, in sentence case. */
+  type: {
+    labelCase: 'none',
+    labelTracking: '0',
+  },
+  /** Control heights: compact and touch. Chunky, thumb-friendly. */
   control: {
-    sm: '36px',
-    md: '44px',
+    sm: '38px',
+    md: '48px',
   },
   space: {
     xs: '4px',
@@ -126,8 +140,10 @@ export const theme = {
     /** Home uses a wider shell so the feed can grow without stretching other pages. */
     homeMax: '1680px',
     demoBar: '44px',
-    topBar: '80px',
-    bottomNav: '72px',
+    topBar: '72px',
+    /** Height of the chrome above the page on desktop (the slim top bar; the nav floats at the bottom). */
+    chromeTop: '72px',
+    bottomNav: '84px',
     sideNav: '240px',
   },
 } as const

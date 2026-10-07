@@ -8,9 +8,9 @@ const face = `
   gap: 6px;
   padding: 14px 16px;
   background: ${theme.colors.creamCard};
-  border: 1px solid ${theme.colors.border};
+  border: 0;
   border-radius: ${theme.radii.lg};
-  box-shadow: ${theme.shadow.soft};
+  box-shadow: ${theme.shadow.card};
   color: inherit;
   text-decoration: none;
   transition:
@@ -18,7 +18,7 @@ const face = `
     box-shadow ${theme.motion.base} ${theme.motion.ease};
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-5px) rotate(-0.4deg);
     box-shadow: ${theme.shadow.lift};
   }
 `
@@ -89,8 +89,8 @@ export const Kind = styled.span<{ $kind: FeedUpdateKind }>`
   gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${({ $kind }) => kindInk($kind)};
 `
 

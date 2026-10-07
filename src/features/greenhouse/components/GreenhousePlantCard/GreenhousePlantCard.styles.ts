@@ -25,10 +25,13 @@ export const Root = styled.article<{
 }>`
   display: grid;
   grid-template-rows: auto 1fr;
+  /* A clay tile: the photo is pressed into it with a soft lip all round. */
+  padding: 8px;
   border-radius: ${theme.radii.lg};
   overflow: hidden;
   background: ${theme.colors.creamCard};
-  border: 1px solid ${({ $fresh }) => ($fresh ? theme.colors.moss : theme.colors.border)};
+  border: 2px solid ${({ $fresh }) => ($fresh ? theme.colors.growth : 'transparent')};
+  box-shadow: ${theme.shadow.card};
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease};
@@ -60,13 +63,19 @@ export const Root = styled.article<{
       opacity ${theme.motion.slow} ${theme.motion.ease};
   }
 
+  /* The back-out ease makes the lift overshoot and settle: a small hop. */
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-6px) rotate(-1deg);
     box-shadow: ${theme.shadow.lift};
   }
 
   &:hover img {
-    transform: scale(1.04);
+    transform: scale(1.07);
+  }
+
+  &:active {
+    transform: translateY(1px) scale(0.97);
+    transition-duration: 80ms;
   }
 
   @container (max-width: 559px) {
@@ -153,6 +162,7 @@ export const Photo = styled.div<{ $stale?: boolean }>`
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
+  border-radius: ${theme.radii.md};
   background: ${theme.colors.chipGreen};
 
   img {
@@ -187,10 +197,11 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
           ? theme.colors.chipWarm
           : 'rgba(255, 254, 250, 0.92)'};
   color: ${theme.colors.forest};
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-family: ${theme.fonts.display};
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   box-shadow: ${theme.shadow.soft};
 
   ${({ $tone }) =>
@@ -244,9 +255,9 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
 
 export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
   display: grid;
-  gap: 10px;
+  gap: 8px;
   align-content: start;
-  padding: 14px 16px 16px;
+  padding: 12px 6px 4px;
 
   @container (max-width: 559px) {
     ${({ $care, $preview }) =>
@@ -311,10 +322,10 @@ export const Name = styled(Link)`
   min-width: 0;
   overflow-wrap: anywhere;
   font-family: ${theme.fonts.display};
-  font-size: 20px;
+  font-size: 19px;
   font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
-  color: ${theme.colors.ink};
+  color: ${theme.colors.forest};
   text-decoration: none;
 
   &:hover {
@@ -491,7 +502,7 @@ export const CollectionGrid = styled.div`
   grid-template-columns: repeat(2, minmax(0, 1fr));
 
   @container (min-width: 560px) {
-    gap: ${theme.space.md};
+    gap: 20px;
     grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
   }
 
@@ -504,5 +515,6 @@ export const CollectionGrid = styled.div`
     min-width: 0;
   }
 
-  ${Array.from({ length: 8 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 45}ms; }`).join('\n')}
+  /* Tiles pop in and overshoot a touch, one after another. */
+  ${Array.from({ length: 12 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 50}ms; }`).join('\n')}
 `

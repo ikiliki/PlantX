@@ -14,7 +14,7 @@ export const Bar = styled.header<{ $scrolled?: boolean }>`
   height: calc(68px + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) ${theme.space.md} 0;
   background: ${({ $scrolled }) => ($scrolled ? theme.surface.barScrolled : theme.surface.bar)};
-  backdrop-filter: ${({ $scrolled }) => ($scrolled ? 'blur(14px) saturate(1.2)' : 'none')};
+  /* No backdrop filter: it would trap the fixed dock inside the bar. */
   border-bottom: 1px solid ${theme.surface.barBorder};
   box-shadow: ${({ $scrolled }) => ($scrolled ? theme.shadow.soft : 'none')};
   transition:
@@ -22,7 +22,7 @@ export const Bar = styled.header<{ $scrolled?: boolean }>`
     box-shadow ${theme.motion.base} ${theme.motion.ease};
   @media (min-width: ${theme.breakpoints.md}) {
     height: ${theme.layout.topBar};
-    padding: 0 56px;
+    padding: 0 40px;
   }
 `
 
@@ -51,11 +51,27 @@ export const BrandMark = styled.img`
 export const NavItems = styled.nav`
   display: none;
   @media (min-width: ${theme.breakpoints.md}) {
+    /* Desktop: the nav floats as a dock at the bottom centre of the window. */
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    translate: -50% 0;
+    z-index: ${theme.z.bottomNav};
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 4px;
     min-width: 0;
+    padding: 7px;
+    border-radius: ${theme.radii.pill};
+    background: ${theme.surface.dock};
+    box-shadow: ${theme.shadow.lift};
     overflow: visible;
+
+    [dir='rtl'] & {
+      translate: 50% 0;
+      left: auto;
+      right: 50%;
+    }
   }
 `
 
@@ -78,29 +94,25 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 6px 0;
-  font-family: ${theme.fonts.body};
-  font-size: 14px;
-  font-weight: ${({ $active }) => ($active ? 700 : 500)};
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: ${theme.radii.pill};
+  background: ${({ $active }) => ($active ? theme.surface.dockActive : 'transparent')};
+  font-family: ${theme.fonts.display};
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
-  color: ${({ $active }) => ($active ? theme.surface.barInk : theme.surface.barMuted)};
-  transition: color ${theme.motion.fast} ${theme.motion.ease};
-  &::after {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: 2px;
-    border-radius: ${theme.radii.pill};
-    background: ${theme.surface.barInk};
-    transform: scaleX(${({ $active }) => ($active ? 1 : 0)});
-    transition: transform ${theme.motion.base} ${theme.motion.ease};
-  }
+  color: ${({ $active }) => ($active ? theme.colors.forest : theme.surface.dockMuted)};
+  transition:
+    color ${theme.motion.fast} ${theme.motion.ease},
+    background ${theme.motion.base} ${theme.motion.ease},
+    transform ${theme.motion.base} ${theme.motion.ease};
   &:hover {
-    color: ${theme.surface.barInk};
+    color: ${({ $active }) => ($active ? theme.colors.forest : theme.surface.dockInk)};
+    transform: translateY(-2px);
   }
-  &:hover::after {
-    transform: scaleX(1);
+  &:active {
+    transform: translateY(1px) scale(0.96);
   }
 `
 
@@ -109,7 +121,11 @@ export const NavIcon = styled.span`
   display: none;
   flex: none;
   place-items: center;
-  margin-inline-end: 10px;
+  margin-inline-end: 8px;
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    display: inline-grid;
+  }
 `
 
 /** Greenhouse activity bell sits with the account control on the phone shell only. */
@@ -169,8 +185,8 @@ export const MenuLang = styled.div`
   > span {
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.muted};
   }
 
@@ -276,12 +292,13 @@ export const LoginButton = styled(Link)`
   padding: 0 18px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.forest};
-  color: ${theme.colors.creamCard};
-  font-size: 14px;
-  font-weight: 700;
+  color: ${theme.colors.cream};
+  font-family: ${theme.fonts.display};
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
   text-decoration: none;
-  box-shadow: ${theme.shadow.soft};
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22), ${theme.shadow.soft};
   transition:
     background ${theme.motion.fast} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease},

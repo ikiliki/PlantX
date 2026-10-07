@@ -216,8 +216,8 @@ export const DemoRibbon = styled.span`
   color: ${theme.colors.cream};
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
 `
 
 export const SubHead = styled.div`
@@ -400,8 +400,8 @@ export const PreviewStats = styled.dl`
 
   dt {
     font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    text-transform: ${theme.type.labelCase};
+    letter-spacing: ${theme.type.labelTracking};
     color: ${theme.colors.muted};
   }
 
@@ -432,8 +432,8 @@ export const PreviewVerify = styled.section`
     margin: 0;
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.muted};
   }
 `

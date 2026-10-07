@@ -1,6 +1,6 @@
 import styled, { css, keyframes } from 'styled-components'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
-import { pressable, riseIn } from '../../../../theme/motion'
+import { drift, growX, pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const pulse = keyframes`
@@ -28,12 +28,13 @@ export const Root = styled.aside<{ $celebrate: boolean }>`
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 16px 18px 14px;
+  /* A sunny garden plaque. */
+  padding: 20px 22px 18px;
   border-radius: ${theme.radii.lg};
   background:
-    radial-gradient(120% 90% at 0% 0%, rgba(207, 234, 120, 0.5), rgba(255, 254, 250, 0) 60%),
-    ${theme.colors.creamCard};
-  border: 1px solid ${theme.colors.border};
+    radial-gradient(70% 120% at 100% 0%, rgba(255, 201, 74, 0.45), rgba(255, 201, 74, 0) 65%),
+    ${theme.colors.chipWarm};
+  border: 0;
   box-shadow: ${theme.shadow.card};
   color: ${theme.colors.forest};
   container-type: inline-size;
@@ -146,8 +147,8 @@ export const TopCopy = styled.div`
 export const Rank = styled.strong`
   font-family: ${theme.fonts.display};
   font-weight: ${theme.fonts.displayWeight};
-  font-size: 24px;
-  line-height: 1.1;
+  font-size: 30px;
+  line-height: 1.05;
   color: ${theme.colors.forest};
   overflow-wrap: anywhere;
 `
@@ -183,17 +184,35 @@ export const Burst = styled.span`
 `
 
 export const Bar = styled.div`
-  height: 8px;
+  height: 16px;
+  padding: 3px;
   border-radius: ${theme.radii.pill};
-  background: ${theme.colors.track};
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 2px 3px rgba(31, 81, 53, 0.12);
   overflow: hidden;
 `
 
 export const BarFill = styled.div`
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, ${theme.colors.moss}, ${theme.colors.growth});
+  /* Still growing: soft stripes drift along the fill. */
+  background:
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.28) 0 7px, transparent 7px 14px),
+    linear-gradient(90deg, ${theme.colors.moss}, ${theme.colors.forestSoft});
+  background-size: 28px 100%, 100% 100%;
+  transform-origin: left center;
+  animation:
+    ${growX} 900ms ${theme.motion.ease} 200ms both,
+    ${drift} 1.2s linear infinite;
   transition: width ${theme.motion.slow} ${theme.motion.ease};
+
+  [dir='rtl'] & {
+    transform-origin: right center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 export const Next = styled.p`
@@ -222,11 +241,13 @@ export const Tally = styled.span<{ $tone: 'plant' | 'care' }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: ${theme.radii.pill};
-  font-size: 12px;
-  font-weight: 700;
-  background: ${({ $tone }) => ($tone === 'plant' ? theme.colors.chipGreen : 'rgba(60, 107, 143, 0.12)')};
+  font-family: ${theme.fonts.display};
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: ${theme.shadow.soft};
+  background: ${({ $tone }) => ($tone === 'plant' ? theme.colors.creamCard : theme.colors.chipInfo)};
   color: ${({ $tone }) => ($tone === 'plant' ? theme.colors.forest : theme.colors.info)};
 `
 

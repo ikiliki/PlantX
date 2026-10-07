@@ -5,7 +5,8 @@ export const Card = styled.div<{ $pad?: boolean; $clickable?: boolean }>`
   background: ${theme.colors.creamCard};
   border-radius: ${theme.radii.lg};
   /* Elevation is declared once: the border at rest, a shadow only when it lifts. */
-  border: 1px solid ${theme.colors.border};
+  border: 0;
+  box-shadow: ${theme.shadow.card};
   padding: ${({ $pad = true }) => ($pad ? '20px' : '0')};
   overflow: hidden;
   ${({ $clickable }) =>
@@ -17,9 +18,8 @@ export const Card = styled.div<{ $pad?: boolean; $clickable?: boolean }>`
         box-shadow ${theme.motion.base} ${theme.motion.ease},
         border-color ${theme.motion.base} ${theme.motion.ease};
       &:hover {
-        transform: translateY(-3px);
+        transform: translateY(-6px) rotate(-0.6deg);
         box-shadow: ${theme.shadow.lift};
-        border-color: ${theme.colors.chipGreen};
       }
       &:active {
         transform: translateY(-1px);

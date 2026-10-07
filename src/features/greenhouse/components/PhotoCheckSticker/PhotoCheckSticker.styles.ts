@@ -53,7 +53,7 @@ export const Root = styled.span<{ $tone: StickerTone; $size: 'sm' | 'md' }>`
   font-weight: 900;
   letter-spacing: ${({ $size }) => ($size === 'sm' ? '0.03em' : '0.06em')};
   line-height: 1.15;
-  text-transform: uppercase;
+  text-transform: ${theme.type.labelCase};
   white-space: ${({ $size }) => ($size === 'sm' ? 'normal' : 'nowrap')};
   box-shadow: 0 2px 8px rgba(18, 60, 45, 0.18);
   transform: rotate(var(--tilt));

@@ -21,22 +21,23 @@ export const Caret = styled.button<{ $open?: boolean }>`
   padding: 0;
   border: 0;
   background: transparent;
-  color: ${theme.colors.muted};
+  color: ${theme.surface.dockMuted};
   cursor: pointer;
   transform: rotate(${({ $open }) => ($open ? 180 : 0)}deg);
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     color ${theme.motion.fast} ${theme.motion.ease};
   &:hover {
-    color: ${theme.colors.forest};
+    color: ${theme.surface.dockInk};
   }
 `
 
 export const Panel = styled.div`
   animation: ${menuIn} ${theme.motion.base} ${theme.motion.ease} both;
   transform-origin: top center;
+  /* The dock sits at the bottom, so its menus open upward. */
   position: absolute;
-  top: calc(100% + 8px);
+  bottom: calc(100% + 14px);
   inset-inline-start: 50%;
   translate: -50% 0;
   [dir='rtl'] & {
@@ -92,8 +93,8 @@ export const GroupLabel = styled.button<{ $open?: boolean }>`
   font: inherit;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   text-align: start;
   color: ${theme.colors.muted};
   cursor: pointer;

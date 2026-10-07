@@ -32,8 +32,8 @@ export const Tab = styled.button<{ $open: boolean }>`
   color: ${theme.colors.creamCard};
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   cursor: pointer;
   box-shadow: ${({ $open }) => ($open ? 'none' : theme.shadow.soft)};
 `
@@ -65,8 +65,8 @@ export const PanelHead = styled.div`
 
 export const DemoLabel = styled.span`
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   opacity: 0.7;
 `
 

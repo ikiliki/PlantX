@@ -7,7 +7,8 @@ export const Wrap = styled.div`
   justify-items: center;
   gap: 10px;
   padding: ${theme.space.xxl} ${theme.space.lg};
-  border: 1px dashed ${theme.colors.borderStrong};
+  border: 2px dashed ${theme.colors.borderStrong};
+  background: rgba(255, 255, 255, 0.5);
   border-radius: ${theme.radii.lg};
   text-align: center;
   color: ${theme.colors.muted};
@@ -21,7 +22,8 @@ export const Mark = styled.span`
   height: 56px;
   margin-bottom: 4px;
   border-radius: ${theme.radii.lg};
-  background: ${theme.colors.chipGreen};
+  background: ${theme.colors.growth};
+  box-shadow: inset 0 -3px 0 rgba(154, 99, 18, 0.28);
   color: ${theme.colors.forest};
 `
 

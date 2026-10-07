@@ -24,8 +24,8 @@ export const Kicker = styled.p`
   margin: 0;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
