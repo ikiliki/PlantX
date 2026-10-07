@@ -240,8 +240,8 @@ export const Stamp = styled.span<{ $tone: 'ok' | 'warn' }>`
   white-space: nowrap;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   box-shadow: ${theme.shadow.lift};
   background: ${({ $tone }) => ($tone === 'ok' ? theme.colors.growth : theme.colors.chipWarm)};
   color: ${({ $tone }) => ($tone === 'ok' ? theme.colors.forest : theme.colors.warn)};
@@ -370,8 +370,8 @@ export const Fact = styled.div`
 export const FactLabel = styled.dt`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 

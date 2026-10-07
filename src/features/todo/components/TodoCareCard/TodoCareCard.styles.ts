@@ -63,8 +63,8 @@ export const Tone = styled.span<{ $tone: 'water' | 'photo' }>`
   color: ${theme.colors.creamCard};
   font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
 
   span {
     color: ${theme.colors.creamCard};

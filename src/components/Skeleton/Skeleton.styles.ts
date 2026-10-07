@@ -20,7 +20,7 @@ export const Bar = styled.span<{ $width: string; $height: number; $round: boolea
     ${theme.colors.chipNeutral} 70%
   );
   background-size: 200% 100%;
-  animation: ${sweep} 1.4s linear infinite;
+  animation: ${sweep} 2.4s ease-in-out infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

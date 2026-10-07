@@ -83,8 +83,8 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   font-family: ${theme.fonts.body};
   font-size: ${theme.text.xs};
   font-weight: ${({ $active }) => ($active ? 700 : 600)};
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   white-space: nowrap;
   color: ${({ $active }) => ($active ? theme.surface.barInk : theme.surface.barMuted)};
   transition: color ${theme.motion.fast} ${theme.motion.ease};
@@ -164,8 +164,8 @@ export const MenuLang = styled.div`
   > span {
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.muted};
   }
 

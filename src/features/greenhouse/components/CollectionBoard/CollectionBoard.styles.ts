@@ -115,12 +115,7 @@ export const Rail = styled.aside`
       inset-inline-start: 0;
       width: 1px;
       pointer-events: none;
-      background: linear-gradient(
-        180deg,
-        rgba(93, 124, 78, 0.32) 0%,
-        rgba(93, 124, 78, 0.22) 70%,
-        transparent 100%
-      );
+      background: ${theme.colors.forest};
     }
   }
 
@@ -163,11 +158,13 @@ export const CareSectionHead = styled.h3`
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: ${theme.colors.moss};
+  padding-bottom: 8px;
+  border-bottom: 1px solid ${theme.colors.forest};
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
+  color: ${theme.colors.forest};
 `
 
 export const CareGrid = styled.div`

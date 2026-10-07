@@ -13,8 +13,20 @@ export const fadeIn = keyframes`
 `
 
 export const riseIn = keyframes`
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
+`
+
+/** A photo printed onto the page: revealed top to bottom like ink drying on a press sheet. */
+export const inkReveal = keyframes`
+  from { clip-path: inset(0 0 100% 0); transform: scale(1.06); }
+  to { clip-path: inset(0 0 0 0); transform: none; }
+`
+
+/** A rule drawn across the page from the start edge. */
+export const growX = keyframes`
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 `
 
 export const popIn = keyframes`
@@ -97,6 +109,7 @@ export const pressable = css`
     border-color ${theme.motion.fast} ${theme.motion.ease},
     box-shadow ${theme.motion.fast} ${theme.motion.ease};
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: translateY(1px);
+    transition-duration: 60ms;
   }
 `

@@ -1,7 +1,7 @@
 import styled, { css, keyframes } from 'styled-components'
 import { Link } from 'react-router-dom'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
-import { riseIn } from '../../../../theme/motion'
+import { fadeIn, inkReveal, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const freshGlow = keyframes`
@@ -23,12 +23,14 @@ export const Root = styled.article<{
   $skeleton?: boolean
   $blurred?: boolean
 }>`
+  /* A journal plate: no card box, just the photograph and its caption on the page. */
   display: grid;
   grid-template-rows: auto 1fr;
-  border-radius: ${theme.radii.lg};
-  overflow: hidden;
-  background: ${theme.colors.creamCard};
-  border: 1px solid ${({ $fresh }) => ($fresh ? theme.colors.moss : theme.colors.border)};
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid ${({ $fresh }) => ($fresh ? theme.colors.forest : 'transparent')};
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease};
@@ -60,29 +62,25 @@ export const Root = styled.article<{
       opacity ${theme.motion.slow} ${theme.motion.ease};
   }
 
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: ${theme.shadow.lift};
+  img {
+    transition-duration: 900ms;
   }
 
   &:hover img {
-    transform: scale(1.04);
+    transform: scale(1.035);
+  }
+
+  &:hover a {
+    text-decoration-color: currentColor;
   }
 
   @container (max-width: 559px) {
     align-self: start;
     width: 100%;
-    border-radius: ${theme.radii.lg};
-    border-color: transparent;
-    box-shadow: ${theme.shadow.soft};
+    border-radius: 0;
 
-    &:hover,
     &:hover img {
       transform: none;
-    }
-
-    &:hover {
-      box-shadow: ${theme.shadow.soft};
     }
   }
 
@@ -151,9 +149,10 @@ export const PhotoLink = styled(Link)`
 
 export const Photo = styled.div<{ $stale?: boolean }>`
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: ${theme.colors.chipGreen};
+  border-radius: ${theme.radii.sm};
+  background: ${theme.colors.chipNeutral};
 
   img {
     position: absolute;
@@ -176,8 +175,8 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
   inset-block-start: 10px;
   inset-inline-start: 10px;
   max-width: calc(100% - 20px);
-  padding: 5px 10px;
-  border-radius: ${theme.radii.pill};
+  padding: 5px 8px;
+  border-radius: 0;
   background: ${({ $tone }) =>
     $tone === 'warm'
       ? theme.colors.warmth
@@ -185,13 +184,12 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
         ? theme.colors.growth
         : $tone === 'due'
           ? theme.colors.chipWarm
-          : 'rgba(255, 254, 250, 0.92)'};
+          : theme.colors.creamCard};
   color: ${theme.colors.forest};
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  box-shadow: ${theme.shadow.soft};
+  font-weight: 700;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
 
   ${({ $tone }) =>
     $tone === 'calm' &&
@@ -244,9 +242,9 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
 
 export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
   display: grid;
-  gap: 10px;
+  gap: 8px;
   align-content: start;
-  padding: 14px 16px 16px;
+  padding: 14px 0 4px;
 
   @container (max-width: 559px) {
     ${({ $care, $preview }) =>
@@ -265,7 +263,7 @@ export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
           : css`
               /* Phone shelf: the name only, so several plants can be told apart; tags stay off. */
               gap: 0;
-              padding: 8px 10px 10px;
+              padding: 8px 0 4px;
 
               > :not(:first-child) {
                 display: none;
@@ -311,15 +309,16 @@ export const Name = styled(Link)`
   min-width: 0;
   overflow-wrap: anywhere;
   font-family: ${theme.fonts.display};
-  font-size: 20px;
+  font-size: 24px;
   font-weight: ${theme.fonts.displayWeight};
-  line-height: 1.15;
+  line-height: 1.1;
+  letter-spacing: ${theme.fonts.displayTracking};
   color: ${theme.colors.ink};
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color ${theme.motion.base} ${theme.motion.ease};
 
   @container (max-width: 559px) {
     min-width: 0;
@@ -419,8 +418,8 @@ export const CareDate = styled.span`
   z-index: 1;
   inset-block-start: 10px;
   inset-inline-end: 10px;
-  padding: 5px 10px;
-  border-radius: ${theme.radii.pill};
+  padding: 5px 8px;
+  border-radius: 0;
   background: ${theme.colors.forest};
   color: ${theme.colors.creamCard};
   font-size: 10px;
@@ -483,7 +482,7 @@ export const PhotoCount = styled.span`
 
 export const CollectionGrid = styled.div`
   display: grid;
-  gap: 12px;
+  gap: 28px 14px;
   align-items: stretch;
   /* Room for the add tile on the start edge, including its hover scale. */
   padding-inline-start: 16px;
@@ -491,7 +490,7 @@ export const CollectionGrid = styled.div`
   grid-template-columns: repeat(2, minmax(0, 1fr));
 
   @container (min-width: 560px) {
-    gap: ${theme.space.md};
+    gap: 40px 28px;
     grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
   }
 
@@ -499,10 +498,21 @@ export const CollectionGrid = styled.div`
     grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
   }
 
+  /* Each plate prints in turn: the caption fades up while its photograph is revealed top to bottom. */
   > * {
-    animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
+    animation: ${fadeIn} 700ms ${theme.motion.ease} backwards;
     min-width: 0;
   }
 
-  ${Array.from({ length: 8 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 45}ms; }`).join('\n')}
+  > * img {
+    animation: ${inkReveal} 1100ms ${theme.motion.ease} backwards;
+  }
+
+  ${Array.from({ length: 10 }, (_, i) => `> :nth-child(${i + 2}), > :nth-child(${i + 2}) img { animation-delay: ${(i + 1) * 90}ms; }`).join('\n')}
+
+  @media (prefers-reduced-motion: reduce) {
+    > * img {
+      animation: none;
+    }
+  }
 `

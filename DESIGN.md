@@ -24,3 +24,20 @@ A field journal on warm paper. Near-black green ink, hairline rules, square-cut 
 - New UI reads tokens; no raw hex in `*.styles.ts`.
 - Headings use `fonts.displayWeight` / `fonts.displayTracking`.
 - No new colours: emphasis comes from size, weight and the rule, not tint.
+
+## Greenhouse
+
+- No card boxes: each plant is a journal plate, a 4:5 photograph with a Bodoni caption on the page. Hover draws a 1px underline under the name and slowly pushes into the photo.
+- Status tags are square ink labels in tracked small capitals.
+- The level card is a masthead between two ink rules: a large Bodoni rank, a 3px ink progress rule, counts underlined instead of chipped.
+- Wide gutters (40px rows, 28px columns) so the shelf reads like a contact sheet.
+
+## Motion
+
+- One measured ease-in-out (`motion.ease`), slower durations (480ms): a page turning, never a bounce.
+- Signature moment: shelf photographs print in turn, revealed top to bottom (`inkReveal`) while their captions fade up, 90ms apart.
+- Controls press down 1px; no hover lifts. Everything stops under reduced motion.
+
+## Labels
+
+`theme.type.labelCase` / `labelTracking`: tracked small capitals (0.1em).

@@ -65,13 +65,14 @@ export const theme = {
     soft: '0 1px 0 rgba(26, 32, 28, 0.08)',
     lift: '0 10px 30px rgba(26, 32, 28, 0.10)',
     dialog: '0 24px 64px rgba(12, 32, 24, 0.24)',
-    focus: '0 0 0 3px rgba(207, 234, 120, 0.9), 0 0 0 5px rgba(18, 60, 45, 0.55)',
+    focus: '0 0 0 2px #F7F4EC, 0 0 0 3.5px #1C2721',
   },
   motion: {
     fast: '140ms',
     base: '220ms',
-    slow: '360ms',
-    ease: 'cubic-bezier(0.2, 0, 0, 1)',
+    slow: '480ms',
+    /** Measured ease-in-out: a page turning, never a bounce. */
+    ease: 'cubic-bezier(0.65, 0, 0.35, 1)',
     spring: 'cubic-bezier(0.34, 1.4, 0.64, 1)',
     exit: 'cubic-bezier(0.4, 0, 1, 1)',
   },
@@ -107,6 +108,11 @@ export const theme = {
     xl: '24px',
     xxl: '36px',
     display: 'clamp(36px, 5vw, 60px)',
+  },
+  /** Micro-label voice (chips, section labels, stamps). Editorial sets them as tracked small capitals. */
+  type: {
+    labelCase: 'uppercase',
+    labelTracking: '0.1em',
   },
   /** Control heights: compact and touch. */
   control: {

@@ -41,8 +41,8 @@ export const Pending = styled.span`
   color: ${theme.colors.warn};
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   &::before {
     content: '';
     width: 7px;
