@@ -15,12 +15,12 @@ export const Bar = styled.span<{ $width: string; $height: number; $round: boolea
   border-radius: ${({ $round }) => ($round ? '50%' : theme.radii.pill)};
   background: linear-gradient(
     100deg,
-    ${theme.colors.chipNeutral} 30%,
+    ${theme.colors.chipGreen} 30%,
     ${theme.colors.creamCard} 50%,
-    ${theme.colors.chipNeutral} 70%
+    ${theme.colors.chipGreen} 70%
   );
   background-size: 200% 100%;
-  animation: ${sweep} 1.4s linear infinite;
+  animation: ${sweep} 1.8s ease-in-out infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

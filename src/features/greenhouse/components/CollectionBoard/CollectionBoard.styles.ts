@@ -163,11 +163,11 @@ export const CareSectionHead = styled.h3`
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: ${theme.colors.moss};
+  font-family: ${theme.fonts.display};
+  font-size: ${theme.text.lg};
+  font-weight: ${theme.fonts.displayWeight};
+  letter-spacing: ${theme.fonts.displayTracking};
+  color: ${theme.colors.ink};
 `
 
 export const CareGrid = styled.div`

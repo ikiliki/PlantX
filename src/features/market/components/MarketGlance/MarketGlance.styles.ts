@@ -21,8 +21,8 @@ export const Label = styled(Link)`
   padding-inline: 14px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
   border-inline-end: 1px solid ${theme.colors.border};
   text-decoration: none;

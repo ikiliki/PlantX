@@ -52,8 +52,8 @@ export const DayHead = styled.p`
   margin: 0 0 4px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.muted};
 `
 

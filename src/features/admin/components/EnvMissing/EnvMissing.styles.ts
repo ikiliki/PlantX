@@ -15,8 +15,8 @@ export const Box = styled.div`
 
   strong {
     font-size: 12px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
   }
 
   ul {

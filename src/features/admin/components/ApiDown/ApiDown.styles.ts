@@ -14,7 +14,7 @@ export const Note = styled.div`
     color: ${theme.colors.warn};
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
   }
 `

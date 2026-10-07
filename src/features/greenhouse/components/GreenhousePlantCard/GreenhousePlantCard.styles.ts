@@ -1,7 +1,7 @@
 import styled, { css, keyframes } from 'styled-components'
 import { Link } from 'react-router-dom'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
-import { riseIn } from '../../../../theme/motion'
+import { riseIn, sproutIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const freshGlow = keyframes`
@@ -23,8 +23,10 @@ export const Root = styled.article<{
   $skeleton?: boolean
   $blurred?: boolean
 }>`
+  /* A framed specimen: the photo sits inset in the card like a print in a mount. */
   display: grid;
   grid-template-rows: auto 1fr;
+  padding: 6px;
   border-radius: ${theme.radii.lg};
   overflow: hidden;
   background: ${theme.colors.creamCard};
@@ -61,17 +63,27 @@ export const Root = styled.article<{
   }
 
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
     box-shadow: ${theme.shadow.lift};
   }
 
   &:hover img {
-    transform: scale(1.04);
+    transform: scale(1.06);
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.985);
+    transition-duration: 80ms;
+  }
+
+  &:focus-within {
+    border-color: ${theme.colors.moss};
   }
 
   @container (max-width: 559px) {
     align-self: start;
     width: 100%;
+    padding: 4px;
     border-radius: ${theme.radii.lg};
     border-color: transparent;
     box-shadow: ${theme.shadow.soft};
@@ -153,6 +165,7 @@ export const Photo = styled.div<{ $stale?: boolean }>`
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
+  border-radius: ${theme.radii.md};
   background: ${theme.colors.chipGreen};
 
   img {
@@ -176,8 +189,9 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
   inset-block-start: 10px;
   inset-inline-start: 10px;
   max-width: calc(100% - 20px);
-  padding: 5px 10px;
+  padding: 4px 10px;
   border-radius: ${theme.radii.pill};
+  backdrop-filter: blur(8px);
   background: ${({ $tone }) =>
     $tone === 'warm'
       ? theme.colors.warmth
@@ -187,10 +201,8 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
           ? theme.colors.chipWarm
           : 'rgba(255, 254, 250, 0.92)'};
   color: ${theme.colors.forest};
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
   box-shadow: ${theme.shadow.soft};
 
   ${({ $tone }) =>
@@ -216,9 +228,8 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
     inset-block-start: 8px;
     inset-inline-start: 8px;
     max-width: calc(100% - 16px);
-    padding: 4px 8px;
-    font-size: 10px;
-    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    font-size: 11px;
     line-height: 1.25;
     white-space: normal;
 
@@ -244,9 +255,9 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
 
 export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
   display: grid;
-  gap: 10px;
+  gap: 8px;
   align-content: start;
-  padding: 14px 16px 16px;
+  padding: 12px 8px 6px;
 
   @container (max-width: 559px) {
     ${({ $care, $preview }) =>
@@ -265,7 +276,7 @@ export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
           : css`
               /* Phone shelf: the name only, so several plants can be told apart; tags stay off. */
               gap: 0;
-              padding: 8px 10px 10px;
+              padding: 8px 6px 4px;
 
               > :not(:first-child) {
                 display: none;
@@ -423,9 +434,8 @@ export const CareDate = styled.span`
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.forest};
   color: ${theme.colors.creamCard};
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 600;
   box-shadow: ${theme.shadow.soft};
 
   @container (max-width: 559px) {
@@ -499,10 +509,12 @@ export const CollectionGrid = styled.div`
     grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
   }
 
+  /* Cards sprout from their bottom edge, one after another. */
   > * {
-    animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
+    animation: ${sproutIn} 560ms ${theme.motion.ease} backwards;
+    transform-origin: 50% 100%;
     min-width: 0;
   }
 
-  ${Array.from({ length: 8 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 45}ms; }`).join('\n')}
+  ${Array.from({ length: 10 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 55}ms; }`).join('\n')}
 `

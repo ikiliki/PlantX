@@ -70,7 +70,8 @@ export const theme = {
     fast: '140ms',
     base: '220ms',
     slow: '360ms',
-    ease: 'cubic-bezier(0.2, 0, 0, 1)',
+    /** Ease-out-quint: things settle like a leaf landing, no bounce. */
+    ease: 'cubic-bezier(0.22, 1, 0.36, 1)',
     spring: 'cubic-bezier(0.34, 1.4, 0.64, 1)',
     exit: 'cubic-bezier(0.4, 0, 1, 1)',
   },
@@ -106,6 +107,11 @@ export const theme = {
     xl: '24px',
     xxl: '32px',
     display: 'clamp(32px, 4vw, 46px)',
+  },
+  /** Micro-label voice (chips, section labels, stamps). Botanical speaks in sentence case. */
+  type: {
+    labelCase: 'none',
+    labelTracking: '0.01em',
   },
   /** Control heights: compact and touch. */
   control: {

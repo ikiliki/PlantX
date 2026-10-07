@@ -1,6 +1,6 @@
 import styled, { css, keyframes } from 'styled-components'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
-import { pressable, riseIn } from '../../../../theme/motion'
+import { growX, pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const pulse = keyframes`
@@ -28,13 +28,10 @@ export const Root = styled.aside<{ $celebrate: boolean }>`
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 16px 18px 14px;
+  padding: 18px 20px 16px;
   border-radius: ${theme.radii.lg};
-  background:
-    radial-gradient(120% 90% at 0% 0%, rgba(207, 234, 120, 0.5), rgba(255, 254, 250, 0) 60%),
-    ${theme.colors.creamCard};
+  background: ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};
-  box-shadow: ${theme.shadow.card};
   color: ${theme.colors.forest};
   container-type: inline-size;
   animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
@@ -146,8 +143,9 @@ export const TopCopy = styled.div`
 export const Rank = styled.strong`
   font-family: ${theme.fonts.display};
   font-weight: ${theme.fonts.displayWeight};
-  font-size: 24px;
-  line-height: 1.1;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: ${theme.fonts.displayTracking};
   color: ${theme.colors.forest};
   overflow-wrap: anywhere;
 `
@@ -183,17 +181,29 @@ export const Burst = styled.span`
 `
 
 export const Bar = styled.div`
-  height: 8px;
+  height: 10px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.track};
   overflow: hidden;
 `
 
+/** The XP fill grows in from the start edge when the card arrives, then follows the XP. */
 export const BarFill = styled.div`
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, ${theme.colors.moss}, ${theme.colors.growth});
+  transform-origin: left center;
+  animation: ${growX} 1.1s ${theme.motion.ease} 200ms both;
   transition: width ${theme.motion.slow} ${theme.motion.ease};
+
+  [dir='rtl'] & {
+    transform-origin: right center;
+    background: linear-gradient(270deg, ${theme.colors.moss}, ${theme.colors.growth});
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 export const Next = styled.p`

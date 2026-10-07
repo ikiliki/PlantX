@@ -134,8 +134,8 @@ export const Ticket = styled.aside`
 export const TicketLabel = styled.span`
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.muted};
 `
 
@@ -195,8 +195,8 @@ export const Stat = styled.div`
   dt {
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.muted};
   }
   dd {
@@ -267,8 +267,8 @@ export const HeadRow = styled(Row)`
   padding: 7px 18px;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.muted};
   background: ${theme.colors.cream};
 `

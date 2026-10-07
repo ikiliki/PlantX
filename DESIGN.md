@@ -24,3 +24,20 @@ The current PlantX identity, sharpened. Forest green, cream paper and a lime gro
 - New UI reads tokens; no raw hex in `*.styles.ts`.
 - Headings use `fonts.displayWeight` / `fonts.displayTracking`, never a hard-coded weight.
 - One elevation per surface: border or shadow.
+
+## Greenhouse
+
+- Plant cards are framed specimens: 6px mount around an inset photo (radius `md`), Fraunces name below. Hover lifts the card and slowly zooms the photo; press settles it (scale 0.985).
+- Status tags sit on the photo as frosted sentence-case pills, not uppercase stamps.
+- The level card is a flat sheet (border only, no gradient blob); its XP bar grows in from the start edge on arrival.
+- Care section headings are Fraunces, not uppercase micro-labels.
+
+## Motion
+
+- Ease-out-quint (`motion.ease`) everywhere: things settle like a leaf landing, no bounce.
+- Signature moment: shelf cards sprout up from their bottom edge, staggered 55ms.
+- Controls lift 1px on hover and press in 60ms. Everything stops under reduced motion.
+
+## Labels
+
+`theme.type.labelCase` / `labelTracking`: micro-labels speak in sentence case.

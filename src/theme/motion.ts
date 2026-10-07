@@ -13,8 +13,21 @@ export const fadeIn = keyframes`
 `
 
 export const riseIn = keyframes`
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
   to { opacity: 1; transform: none; }
+`
+
+/** A plant card sprouting: it grows up from its bottom edge. */
+export const sproutIn = keyframes`
+  0% { opacity: 0; transform: translateY(18px) scaleY(0.9); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: none; }
+`
+
+/** A progress fill growing from the start edge. */
+export const growX = keyframes`
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 `
 
 export const popIn = keyframes`
@@ -96,7 +109,11 @@ export const pressable = css`
     color ${theme.motion.fast} ${theme.motion.ease},
     border-color ${theme.motion.fast} ${theme.motion.ease},
     box-shadow ${theme.motion.fast} ${theme.motion.ease};
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: translateY(0) scale(0.97);
+    transition-duration: 60ms;
   }
 `
