@@ -104,6 +104,14 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   }
 `
 
+/** Icon in front of a nav label; each design direction decides whether the top bar shows it. */
+export const NavIcon = styled.span`
+  display: none;
+  flex: none;
+  place-items: center;
+  margin-inline-end: 10px;
+`
+
 /** Greenhouse activity bell sits with the account control on the phone shell only. */
 export const MobileOnly = styled.div`
   display: contents;
