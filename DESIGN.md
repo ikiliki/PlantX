@@ -25,3 +25,20 @@ A night greenhouse. Dark chrome (top bar, phone nav) frames a cool, light workin
 - New UI reads tokens; no raw hex in `*.styles.ts`.
 - Anything placed in the chrome uses `surface.bar*` tokens, never `colors.forest` (it disappears on the dark bar).
 - Headings use `fonts.displayWeight` / `fonts.displayTracking`.
+
+## Greenhouse
+
+- Plant tiles: full-bleed photo with a night scrim under the identity chips, Space Grotesk name. Hover tips the tile toward you (perspective lift and rotateX 3deg), rings it in lime and pushes the photo in; press snaps it back (scale 0.98).
+- Status chips are dark glass (blur + saturate, 1px light edge); the tone lives in the text colour (lime = fresh, warm = needs care).
+- The level card is the greenhouse dashboard: the chrome's night colour, a lime glow in the corner, a 30px rank, tabular counts, and an XP bar that charges in and then breathes with a soft lime glow.
+- Care section labels carry a small glowing lime pip.
+
+## Motion
+
+- Expo-out (`motion.ease`), short durations (120 / 200 / 320ms): quick to answer, long soft landing.
+- Signature moment: everything that arrives pops in from a blur (`riseIn`: blur 6px, scale 0.97); shelf tiles 35ms apart.
+- Controls press hard (scale 0.95, 60ms). Everything stops under reduced motion.
+
+## Labels
+
+`theme.type.labelCase` / `labelTracking`: tight capitals (0.04em).

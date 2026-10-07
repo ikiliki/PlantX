@@ -1,6 +1,6 @@
 import styled, { css, keyframes } from 'styled-components'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
-import { pressable, riseIn } from '../../../../theme/motion'
+import { glow, growX, pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const pulse = keyframes`
@@ -28,14 +28,14 @@ export const Root = styled.aside<{ $celebrate: boolean }>`
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 16px 18px 14px;
+  /* The greenhouse dashboard: the same night as the chrome, lit by the XP charge. */
+  padding: 20px 22px 18px;
   border-radius: ${theme.radii.lg};
   background:
-    radial-gradient(120% 90% at 0% 0%, rgba(207, 234, 120, 0.5), rgba(255, 254, 250, 0) 60%),
-    ${theme.colors.creamCard};
-  border: 1px solid ${theme.colors.border};
-  box-shadow: ${theme.shadow.card};
-  color: ${theme.colors.forest};
+    radial-gradient(80% 140% at 100% 0%, rgba(184, 240, 74, 0.14), rgba(184, 240, 74, 0) 60%),
+    ${theme.surface.bar};
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F1F5EE;
   container-type: inline-size;
   animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
 
@@ -96,7 +96,7 @@ export const End = styled.div<{ $loose?: boolean }>`
   gap: 8px;
   min-width: 0;
   padding-top: ${({ $loose }) => ($loose ? 0 : '12px')};
-  border-top: ${({ $loose }) => ($loose ? 'none' : `1px solid ${theme.colors.border}`)};
+  border-top: ${({ $loose }) => ($loose ? 'none' : '1px solid rgba(255, 255, 255, 0.1)')};
 
   & > * {
     flex: 1 1 200px;
@@ -114,7 +114,7 @@ export const End = styled.div<{ $loose?: boolean }>`
     padding-top: 0;
     padding-inline-start: 18px;
     border-top: none;
-    border-inline-start: 1px solid ${theme.colors.border};
+    border-inline-start: 1px solid rgba(255, 255, 255, 0.1);
 
     & > * {
       flex: none;
@@ -146,9 +146,10 @@ export const TopCopy = styled.div`
 export const Rank = styled.strong`
   font-family: ${theme.fonts.display};
   font-weight: ${theme.fonts.displayWeight};
-  font-size: 24px;
-  line-height: 1.1;
-  color: ${theme.colors.forest};
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: ${theme.fonts.displayTracking};
+  color: #F1F5EE;
   overflow-wrap: anywhere;
 `
 
@@ -158,7 +159,8 @@ export const Xp = styled.span`
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: ${theme.colors.muted};
+  font-variant-numeric: tabular-nums;
+  color: #A3B3AA;
 `
 
 export const Burst = styled.span`
@@ -185,15 +187,26 @@ export const Burst = styled.span`
 export const Bar = styled.div`
   height: 8px;
   border-radius: ${theme.radii.pill};
-  background: ${theme.colors.track};
-  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
 `
 
 export const BarFill = styled.div`
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, ${theme.colors.moss}, ${theme.colors.growth});
+  background: ${theme.colors.growth};
+  transform-origin: left center;
+  animation:
+    ${growX} 1.2s ${theme.motion.ease} 250ms both,
+    ${glow} 2.8s ease-in-out 1.5s infinite;
   transition: width ${theme.motion.slow} ${theme.motion.ease};
+
+  [dir='rtl'] & {
+    transform-origin: right center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 export const Next = styled.p`
@@ -203,7 +216,7 @@ export const Next = styled.p`
   margin: 6px 0 0;
   font-size: 12px;
   font-weight: 600;
-  color: ${theme.colors.muted};
+  color: #A3B3AA;
 `
 
 export const TallyRow = styled.div`
@@ -226,8 +239,10 @@ export const Tally = styled.span<{ $tone: 'plant' | 'care' }>`
   border-radius: ${theme.radii.pill};
   font-size: 12px;
   font-weight: 700;
-  background: ${({ $tone }) => ($tone === 'plant' ? theme.colors.chipGreen : 'rgba(60, 107, 143, 0.12)')};
-  color: ${({ $tone }) => ($tone === 'plant' ? theme.colors.forest : theme.colors.info)};
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-variant-numeric: tabular-nums;
+  color: ${({ $tone }) => ($tone === 'plant' ? theme.colors.growth : '#9CC7EC')};
 `
 
 /** "?" at the end of the level line, same size and gray as that line. Padding only grows the tap area. */
@@ -249,7 +264,7 @@ export const How = styled.button<{ $on: boolean }>`
   border: 1.5px solid currentColor;
   border-radius: ${theme.radii.pill};
   background: ${({ $on }) => ($on ? theme.colors.chipGreen : 'none')};
-  color: ${({ $on }) => ($on ? theme.colors.ink : theme.colors.muted)};
+  color: ${({ $on }) => ($on ? theme.colors.ink : '#A3B3AA')};
   font: inherit;
   font-size: 10px;
   font-weight: 800;
@@ -264,7 +279,7 @@ export const How = styled.button<{ $on: boolean }>`
   }
 
   &:hover {
-    color: ${theme.colors.ink};
+    color: #F1F5EE;
   }
 `
 
@@ -274,10 +289,10 @@ export const HowList = styled.ul`
   gap: 4px;
   margin: 0;
   padding: 10px 0 0;
-  border-top: 1px solid ${theme.colors.border};
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   list-style: none;
   font-size: 13px;
-  color: ${theme.colors.ink};
+  color: #F1F5EE;
   animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
 `
 
@@ -321,9 +336,9 @@ const roundButton = css`
 /** "!": the AI scans left and the level rules. */
 export const InfoButton = styled.button<{ $on: boolean }>`
   ${roundButton}
-  border: 1.5px solid ${({ $on }) => ($on ? theme.colors.forest : theme.colors.border)};
-  background: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.creamCard)};
-  color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.forest)};
+  border: 1.5px solid ${({ $on }) => ($on ? theme.colors.growth : 'rgba(255, 255, 255, 0.1)')};
+  background: ${({ $on }) => ($on ? theme.colors.growth : 'rgba(255, 255, 255, 0.06)')};
+  color: ${({ $on }) => ($on ? theme.colors.forest : '#F1F5EE')};
   font-size: 15px;
   font-weight: 800;
   line-height: 1;
@@ -343,7 +358,7 @@ export const Panel = styled.div`
   display: grid;
   gap: 10px;
   padding-top: 12px;
-  border-top: 1px solid ${theme.colors.border};
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
 
   @container (min-width: 640px) {
@@ -358,5 +373,5 @@ export const PanelRules = styled.ul`
   padding: 0;
   list-style: none;
   font-size: 13px;
-  color: ${theme.colors.ink};
+  color: #F1F5EE;
 `

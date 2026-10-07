@@ -67,10 +67,11 @@ export const theme = {
     focus: '0 0 0 3px rgba(184, 240, 74, 0.9), 0 0 0 5px rgba(15, 42, 30, 0.6)',
   },
   motion: {
-    fast: '140ms',
-    base: '220ms',
-    slow: '360ms',
-    ease: 'cubic-bezier(0.2, 0, 0, 1)',
+    fast: '120ms',
+    base: '200ms',
+    slow: '320ms',
+    /** Expo-out: quick to answer, long soft landing. */
+    ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
     spring: 'cubic-bezier(0.34, 1.4, 0.64, 1)',
     exit: 'cubic-bezier(0.4, 0, 1, 1)',
   },
@@ -105,6 +106,11 @@ export const theme = {
     xl: '24px',
     xxl: '32px',
     display: 'clamp(30px, 4vw, 42px)',
+  },
+  /** Micro-label voice (chips, section labels, stamps). Modern sets them as tight capitals. */
+  type: {
+    labelCase: 'uppercase',
+    labelTracking: '0.04em',
   },
   /** Control heights: compact and touch. */
   control: {

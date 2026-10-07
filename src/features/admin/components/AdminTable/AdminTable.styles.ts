@@ -90,8 +90,8 @@ export const Table = styled.table`
     color: ${theme.colors.moss};
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
   }
 
   th.check,
@@ -194,8 +194,8 @@ export const DetailItem = styled.div`
   dt {
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.moss};
   }
 

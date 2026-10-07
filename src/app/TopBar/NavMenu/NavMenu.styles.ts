@@ -92,8 +92,8 @@ export const GroupLabel = styled.button<{ $open?: boolean }>`
   font: inherit;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   text-align: start;
   color: ${theme.colors.muted};
   cursor: pointer;

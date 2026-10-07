@@ -61,8 +61,8 @@ export const Eyebrow = styled.p`
   margin: 0;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
@@ -228,8 +228,8 @@ export const StageTag = styled.span`
   color: ${theme.colors.forest};
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
 `
 
 const shown = (on: boolean) => css`

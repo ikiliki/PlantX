@@ -324,8 +324,8 @@ export const RarityBanner = styled.div<{ $rarity: PlantRarity }>`
   color: ${({ $rarity }) => ($rarity === 'unique' ? theme.colors.forest : onForest(0.88))};
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
   animation-delay: 60ms;
   ${stacked} {
@@ -370,8 +370,8 @@ export const AsideStatButton = styled.button`
 export const AsideLabel = styled.span`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
@@ -420,8 +420,8 @@ export const Code = styled.p`
   margin: 0;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.muted};
 `
 
@@ -527,8 +527,8 @@ export const PriceCaption = styled.span`
   flex: 1 0 100%;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${onForest(0.6)};
 `
 
@@ -807,8 +807,8 @@ export const Fact = styled.div`
 export const FactLabel = styled.span`
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 

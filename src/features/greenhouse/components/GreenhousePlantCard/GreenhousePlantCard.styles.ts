@@ -28,10 +28,11 @@ export const Root = styled.article<{
   border-radius: ${theme.radii.lg};
   overflow: hidden;
   background: ${theme.colors.creamCard};
-  border: 1px solid ${({ $fresh }) => ($fresh ? theme.colors.moss : theme.colors.border)};
+  border: 1px solid ${({ $fresh }) => ($fresh ? theme.colors.growth : theme.colors.border)};
   transition:
-    transform ${theme.motion.base} ${theme.motion.ease},
-    box-shadow ${theme.motion.base} ${theme.motion.ease};
+    transform 420ms ${theme.motion.ease},
+    box-shadow 420ms ${theme.motion.ease},
+    border-color ${theme.motion.base} ${theme.motion.ease};
   ${({ $skeleton }) =>
     $skeleton &&
     css`
@@ -60,13 +61,21 @@ export const Root = styled.article<{
       opacity ${theme.motion.slow} ${theme.motion.ease};
   }
 
+  /* Hover tips the tile toward you and rings it in lime; the photo pushes in and brightens. */
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: ${theme.shadow.lift};
+    transform: perspective(900px) translateY(-6px) rotateX(3deg);
+    border-color: ${theme.colors.growth};
+    box-shadow: 0 0 0 1px ${theme.colors.growth}, ${theme.shadow.lift};
   }
 
   &:hover img {
-    transform: scale(1.04);
+    transform: scale(1.08);
+    filter: saturate(1.15) brightness(1.04);
+  }
+
+  &:active {
+    transform: perspective(900px) translateY(-2px) scale(0.98);
+    transition-duration: 80ms;
   }
 
   @container (max-width: 559px) {
@@ -155,6 +164,16 @@ export const Photo = styled.div<{ $stale?: boolean }>`
   overflow: hidden;
   background: ${theme.colors.chipGreen};
 
+  /* Night scrim under the identity chips and photo count. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 45%;
+    pointer-events: none;
+    background: linear-gradient(0deg, rgba(8, 16, 12, 0.55), rgba(8, 16, 12, 0));
+  }
+
   img {
     position: absolute;
     inset: 0;
@@ -176,21 +195,24 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
   inset-block-start: 10px;
   inset-inline-start: 10px;
   max-width: calc(100% - 20px);
+  /* Dark glass chip; the tone lives in the text colour. */
   padding: 5px 10px;
-  border-radius: ${theme.radii.pill};
-  background: ${({ $tone }) =>
+  border-radius: ${theme.radii.sm};
+  background: rgba(12, 23, 18, 0.72);
+  backdrop-filter: blur(10px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: ${({ $tone }) =>
     $tone === 'warm'
       ? theme.colors.warmth
       : $tone === 'fresh'
         ? theme.colors.growth
         : $tone === 'due'
           ? theme.colors.chipWarm
-          : 'rgba(255, 254, 250, 0.92)'};
-  color: ${theme.colors.forest};
+          : '#F1F5EE'};
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   box-shadow: ${theme.shadow.soft};
 
   ${({ $tone }) =>
@@ -206,8 +228,9 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
       ${Root}:focus-within &,
       ${Root}:active & {
         background: ${theme.colors.growth};
+        color: ${theme.colors.forest};
         border-style: solid;
-        border-color: ${theme.colors.forest};
+        border-color: ${theme.colors.growth};
         transform: translateY(-1px);
       }
     `}
@@ -226,7 +249,8 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
       $tone === 'calm' &&
       css`
         ${Root}:hover & {
-          background: rgba(255, 254, 250, 0.92);
+          background: rgba(12, 23, 18, 0.72);
+          color: #F1F5EE;
           border-style: dashed;
           border-color: ${theme.colors.moss};
           transform: none;
@@ -311,9 +335,10 @@ export const Name = styled(Link)`
   min-width: 0;
   overflow-wrap: anywhere;
   font-family: ${theme.fonts.display};
-  font-size: 20px;
+  font-size: 18px;
   font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
+  letter-spacing: ${theme.fonts.displayTracking};
   color: ${theme.colors.ink};
   text-decoration: none;
 
@@ -420,9 +445,10 @@ export const CareDate = styled.span`
   inset-block-start: 10px;
   inset-inline-end: 10px;
   padding: 5px 10px;
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.forest};
-  color: ${theme.colors.creamCard};
+  border-radius: ${theme.radii.sm};
+  background: ${theme.colors.growth};
+  color: ${theme.colors.forest};
+  font-variant-numeric: tabular-nums;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -465,8 +491,9 @@ export const PhotoCount = styled.span`
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  border-radius: ${theme.radii.pill};
-  background: rgba(18, 60, 45, 0.78);
+  border-radius: ${theme.radii.sm};
+  background: rgba(12, 23, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: ${theme.colors.creamCard};
   font-size: 11px;
   font-weight: 800;
@@ -504,5 +531,6 @@ export const CollectionGrid = styled.div`
     min-width: 0;
   }
 
-  ${Array.from({ length: 8 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 45}ms; }`).join('\n')}
+  /* Tiles pop in from a blur, fast and close together. */
+  ${Array.from({ length: 12 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 35}ms; }`).join('\n')}
 `

@@ -44,8 +44,8 @@ export const Row = styled.div`
 export const HeadRow = styled(Row)`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.muted};
   background: ${theme.colors.cream};
   animation: none;

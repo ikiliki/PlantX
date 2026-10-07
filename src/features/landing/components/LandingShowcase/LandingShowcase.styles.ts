@@ -92,8 +92,8 @@ export const Eyebrow = styled.p`
   margin: 0;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 

@@ -33,8 +33,8 @@ export const SectionTitle = styled.h3`
   margin: 0;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.ink};
 `
 
@@ -72,8 +72,8 @@ export const Note = styled.p`
   white-space: pre-wrap;
   strong {
     font-size: 11px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.moss};
   }
 `

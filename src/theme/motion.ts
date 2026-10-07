@@ -13,8 +13,20 @@ export const fadeIn = keyframes`
 `
 
 export const riseIn = keyframes`
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translateY(10px) scale(0.97); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+`
+
+/** A progress fill charging up from the start edge. */
+export const growX = keyframes`
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+`
+
+/** A slow glow on something live (the XP fill). */
+export const glow = keyframes`
+  0%, 100% { box-shadow: 0 0 8px rgba(184, 240, 74, 0.45); }
+  50% { box-shadow: 0 0 16px rgba(184, 240, 74, 0.8); }
 `
 
 export const popIn = keyframes`
@@ -97,6 +109,7 @@ export const pressable = css`
     border-color ${theme.motion.fast} ${theme.motion.ease},
     box-shadow ${theme.motion.fast} ${theme.motion.ease};
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale(0.95);
+    transition-duration: 60ms;
   }
 `

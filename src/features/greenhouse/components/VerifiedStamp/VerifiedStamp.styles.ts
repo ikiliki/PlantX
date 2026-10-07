@@ -11,8 +11,8 @@ const ink = css`
   color: ${theme.colors.info};
   font-weight: 800;
   line-height: 1;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
 `
 
 export const Root = styled.span<{ $place: 'stamp' | 'inline' | 'icon' }>`
