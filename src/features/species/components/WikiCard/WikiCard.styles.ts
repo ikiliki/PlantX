@@ -8,12 +8,24 @@ export const Card = styled(Link)`
   min-width: 0;
   overflow: hidden;
   border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.md};
+  border-radius: ${theme.radii.lg};
   background: ${theme.colors.creamCard};
   color: ${theme.colors.ink};
   text-decoration: none;
+  transition:
+    transform 420ms ${theme.motion.ease},
+    box-shadow 420ms ${theme.motion.ease},
+    border-color ${theme.motion.base} ${theme.motion.ease};
   &:hover {
-    border-color: ${theme.colors.forest};
+    transform: perspective(900px) translateY(-5px) rotateX(3deg);
+    border-color: ${theme.colors.growth};
+    box-shadow: 0 0 0 1px ${theme.colors.growth}, ${theme.shadow.lift};
+  }
+  &:hover img {
+    transform: scale(1.08);
+  }
+  &:active {
+    transform: perspective(900px) translateY(-1px) scale(0.98);
   }
   &:focus-visible {
     outline: 2px solid ${theme.colors.moss};
@@ -30,6 +42,7 @@ export const Photo = styled.div`
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 600ms ${theme.motion.ease};
   }
 `
 
@@ -41,10 +54,11 @@ export const Body = styled.div`
 
 export const Name = styled.strong`
   font-family: ${theme.fonts.display};
-  font-size: 20px;
+  font-size: 18px;
   font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
-  color: ${theme.colors.forest};
+  letter-spacing: ${theme.fonts.displayTracking};
+  color: ${theme.colors.ink};
 `
 
 export const Scientific = styled.em`

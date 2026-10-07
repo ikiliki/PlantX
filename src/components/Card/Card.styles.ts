@@ -18,8 +18,8 @@ export const Card = styled.div<{ $pad?: boolean; $clickable?: boolean }>`
         border-color ${theme.motion.base} ${theme.motion.ease};
       &:hover {
         transform: translateY(-3px);
-        box-shadow: ${theme.shadow.lift};
-        border-color: ${theme.colors.chipGreen};
+        box-shadow: 0 0 0 1px ${theme.colors.growth}, ${theme.shadow.lift};
+        border-color: ${theme.colors.growth};
       }
       &:active {
         transform: translateY(-1px);

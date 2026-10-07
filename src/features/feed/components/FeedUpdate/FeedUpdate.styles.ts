@@ -10,16 +10,17 @@ const face = `
   background: ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
-  box-shadow: ${theme.shadow.soft};
   color: inherit;
   text-decoration: none;
   transition:
-    transform ${theme.motion.base} ${theme.motion.ease},
-    box-shadow ${theme.motion.base} ${theme.motion.ease};
+    transform 420ms ${theme.motion.ease},
+    box-shadow 420ms ${theme.motion.ease},
+    border-color ${theme.motion.base} ${theme.motion.ease};
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${theme.shadow.lift};
+    transform: translateY(-3px);
+    border-color: ${theme.colors.growth};
+    box-shadow: 0 0 0 1px ${theme.colors.growth}, ${theme.shadow.lift};
   }
 `
 

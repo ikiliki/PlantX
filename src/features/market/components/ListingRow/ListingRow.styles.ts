@@ -6,10 +6,13 @@ import { columns } from '../ListingTable/ListingTable.styles'
 export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $static?: boolean }>`
   ${columns};
   padding: ${theme.space.sm} 14px;
-  border-radius: ${theme.radii.md};
-  border: 1px solid ${({ $selected }) => ($selected ? theme.colors.forest : theme.colors.border)};
-  background: ${({ $selected }) => ($selected ? theme.colors.chipGreen : theme.colors.creamCard)};
-  box-shadow: ${({ $selected }) => ($selected ? theme.shadow.soft : 'none')};
+  /* A data row, not a card: hairlines between rows, a lime-tinted selection. */
+  border-radius: ${theme.radii.sm};
+  border: 1px solid ${({ $selected }) => ($selected ? theme.colors.growth : 'transparent')};
+  border-bottom-color: ${({ $selected }) => ($selected ? theme.colors.growth : theme.colors.border)};
+  background: ${({ $selected }) => ($selected ? 'rgba(184, 240, 74, 0.14)' : 'transparent')};
+  box-shadow: none;
+  font-variant-numeric: tabular-nums;
   color: ${theme.colors.ink};
   font: inherit;
   text-align: start;
@@ -25,9 +28,8 @@ export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $stat
     !$static &&
     `
     &:hover {
-      border-color: ${$selected ? theme.colors.forest : theme.colors.moss};
+      background: ${$selected ? 'rgba(184, 240, 74, 0.2)' : theme.colors.creamCard};
       box-shadow: ${theme.shadow.soft};
-      transform: translateY(-1px);
     }
     &:active {
       transform: scale(0.995);
@@ -45,7 +47,7 @@ export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $stat
 export const Thumb = styled.div<{ $stale?: boolean }>`
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: ${theme.radii.sm};
   overflow: hidden;
   background: ${theme.colors.chipGreen};
   img {
@@ -148,8 +150,10 @@ export const Cell = styled.span`
 `
 
 export const Price = styled(Cell)`
-  font-weight: 800;
-  color: ${theme.colors.forest};
+  font-family: ${theme.fonts.display};
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: ${theme.colors.ink};
 `
 
 export const Change = styled(Cell)<{ $up: boolean }>`

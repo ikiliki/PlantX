@@ -17,7 +17,12 @@
     "settings": "Settings",
     "configurations": "Configurations",
     "login": "Login",
-    "language": "Language"
+    "language": "Language",
+    "search": "Search",
+    "searchPlaceholder": "Jump to a page or a plant",
+    "searchEmpty": "Nothing matches that. Try a plant name.",
+    "pages": "Pages",
+    "plants": "Plants"
   },
   "demo": {
     "label": "Demo",

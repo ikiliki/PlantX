@@ -17,7 +17,12 @@
     "settings": "הגדרות",
     "configurations": "תצורות",
     "login": "כניסה",
-    "language": "שפה"
+    "language": "שפה",
+    "search": "חיפוש",
+    "searchPlaceholder": "קפיצה לעמוד או לצמח",
+    "searchEmpty": "אין התאמה. נסו שם של צמח.",
+    "pages": "עמודים",
+    "plants": "צמחים"
   },
   "demo": {
     "label": "דמו",

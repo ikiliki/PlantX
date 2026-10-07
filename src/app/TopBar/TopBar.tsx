@@ -7,6 +7,7 @@ import { groupByRarity, wikiRarityTitle } from '../../features/species/wikiGroup
 import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { Avatar } from '../../components/Avatar/Avatar'
+import { CommandPalette, type CommandItem } from '../../components/CommandPalette/CommandPalette'
 import { Icon } from '../../components/Icon/Icon'
 import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/ActivityBell'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
@@ -27,6 +28,9 @@ import {
   NavIcon,
   NavItem,
   NavItems,
+  SearchKey,
+  SearchText,
+  SearchTrigger,
 } from './TopBar.styles'
 
 export function TopBar() {
@@ -38,6 +42,8 @@ export function TopBar() {
   const [accountOpen, setAccountOpen] = useState(false)
   const [openNav, setOpenNav] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
   const chooseLocale = canChooseLocale()
 
   useEffect(() => {
@@ -45,6 +51,18 @@ export function TopBar() {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Ctrl+K / Cmd+K opens the quick jump from anywhere.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen((open) => !open)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   const wikiPlants = db.catalog.categories.map((category) => {
@@ -76,6 +94,7 @@ export function TopBar() {
   useEffect(() => {
     setAccountOpen(false)
     setOpenNav(null)
+    setSearchOpen(false)
   }, [loc.pathname])
 
   // `?account=1` (accountHref; the old /settings redirects here) opens the account dialog, then drops the flag.
@@ -87,6 +106,34 @@ export function TopBar() {
     navigate({ pathname: loc.pathname, search: search ? `?${search}` : '' }, { replace: true, state: loc.state })
     setAccountOpen(true)
   }, [loc.pathname, loc.search, loc.state, navigate, signedIn])
+
+  const pageItems: (CommandItem & { show: boolean })[] = [
+    { id: '/home', label: t.nav.home, group: t.nav.pages, icon: 'home', show: show('home') },
+    { id: '/market', label: t.nav.market, group: t.nav.pages, icon: 'market', show: show('market') },
+    { id: '/greenhouse', label: t.greenhouse.scopeMine, group: t.nav.pages, icon: 'greenhouse', show: show('greenhouse') },
+    {
+      id: '/greenhouse?scope=global',
+      label: t.greenhouse.scopeGlobal,
+      group: t.nav.pages,
+      icon: 'globe',
+      show: show('greenhouse'),
+    },
+    { id: '/tasks', label: t.nav.todo, group: t.nav.pages, icon: 'drop', show: show('todo') },
+    { id: '/rank', label: t.nav.rank, group: t.nav.pages, icon: 'rank', show: show('rank') },
+    { id: '/wiki', label: t.nav.wiki, group: t.nav.pages, icon: 'wiki', show: show('wiki') },
+  ]
+  const searchItems: CommandItem[] = [
+    ...pageItems.filter((item) => item.show).map(({ show: _show, ...item }) => item),
+    ...(show('wiki')
+      ? wikiPlants.map((plant) => ({
+          id: `/wiki/${plant.id}`,
+          label: plant.label,
+          group: t.nav.plants,
+          icon: 'greenhouse' as const,
+          hint: wikiRarityTitle(plant.rarity, t.plant),
+        }))
+      : []),
+  ]
 
   const langToggle = (
     <Lang role="group" aria-label={t.nav.language}>
@@ -197,6 +244,18 @@ export function TopBar() {
       </NavItems>
 
       <Actions>
+        <SearchTrigger
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          aria-label={t.nav.search}
+          aria-haspopup="dialog"
+          aria-expanded={searchOpen}
+          aria-keyshortcuts="Control+K Meta+K"
+        >
+          <Icon name="search" size={18} />
+          <SearchText>{t.nav.searchPlaceholder}</SearchText>
+          <SearchKey aria-hidden>{isMac ? '⌘K' : 'Ctrl K'}</SearchKey>
+        </SearchTrigger>
         {signedIn && currentUser ? (
           <>
             <MobileOnly>
@@ -230,6 +289,19 @@ export function TopBar() {
           </>
         )}
       </Actions>
+      {searchOpen ? (
+        <CommandPalette
+          items={searchItems}
+          label={t.nav.search}
+          placeholder={t.nav.searchPlaceholder}
+          emptyText={t.nav.searchEmpty}
+          onPick={(item) => {
+            setSearchOpen(false)
+            navigate(item.id)
+          }}
+          onClose={() => setSearchOpen(false)}
+        />
+      ) : null}
     </Bar>
   )
 }

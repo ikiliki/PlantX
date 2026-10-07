@@ -20,9 +20,10 @@ export const Mark = styled.span`
   width: 56px;
   height: 56px;
   margin-bottom: 4px;
-  border-radius: ${theme.radii.lg};
-  background: ${theme.colors.chipGreen};
-  color: ${theme.colors.forest};
+  border-radius: ${theme.radii.md};
+  background: ${theme.surface.bar};
+  color: ${theme.colors.growth};
+  box-shadow: 0 0 18px rgba(184, 240, 74, 0.35);
 `
 
 export const Title = styled.strong`

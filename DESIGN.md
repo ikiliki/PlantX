@@ -1,6 +1,6 @@
 # PlantX design: Modern
 
-Direction C of three redesign candidates (`feature/redesign-botanical`, `feature/redesign-editorial`, `feature/redesign-modern`). The app is Operate-mode and the market is a live exchange of plant classes; this direction leans into that: a confident app with a trading-floor edge.
+Direction C of three redesign candidates (`feature/redesign-botanical`, `feature/redesign-garden`, `feature/redesign-modern`). The app is Operate-mode and the market is a live exchange of plant classes; this direction leans into that: a confident app with a trading-floor edge.
 
 ## World
 
@@ -19,6 +19,7 @@ A night greenhouse. Dark chrome (top bar, phone nav) frames a cool, light workin
 - Dark top bar: wordmark, soft-square nav items with a lime-tinted active state, lime Log in.
 - Dark phone bottom nav: active icon in lime on a tinted square.
 - `theme-color` matches the chrome so the phone status bar blends in.
+- **Quick jump (⌘K / Ctrl K):** a search field in the top bar (icon only on the phone) opens `CommandPalette`: every page and every catalog plant, filtered as you type, arrow keys to move, Enter to open, Escape to close (focus returns to the trigger). It lives in the chrome's night colour.
 
 ## Rules
 
@@ -42,3 +43,10 @@ A night greenhouse. Dark chrome (top bar, phone nav) frames a cool, light workin
 ## Labels
 
 `theme.type.labelCase` / `labelTracking`: tight capitals (0.04em).
+
+## Pages
+
+- Wiki cards tip and ring in lime like the greenhouse tiles.
+- Market listings are data rows, not cards: hairlines between rows, tabular figures, a lime-tinted selection, Space Grotesk prices.
+- Feed cards rest on a border and ring in lime on hover.
+- Empty states carry a glowing night tile as their mark.

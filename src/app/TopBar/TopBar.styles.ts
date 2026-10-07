@@ -179,6 +179,59 @@ export const MenuLang = styled.div`
   }
 `
 
+/** Opens the quick jump. Phone: the icon alone; wider: a search field look with the shortcut. */
+export const SearchTrigger = styled.button`
+  ${pressable}
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid ${theme.surface.barBorder};
+  border-radius: ${theme.radii.control};
+  background: rgba(255, 255, 255, 0.06);
+  color: ${theme.surface.barMuted};
+  font: inherit;
+  font-size: ${theme.text.sm};
+  cursor: pointer;
+
+  &:hover {
+    color: ${theme.surface.barInk};
+    border-color: rgba(184, 240, 74, 0.45);
+  }
+
+  @media (min-width: ${theme.breakpoints.lg}) {
+    width: 260px;
+    padding: 0 8px 0 12px;
+  }
+`
+
+export const SearchText = styled.span`
+  display: none;
+  flex: 1;
+  text-align: start;
+  white-space: nowrap;
+
+  @media (min-width: ${theme.breakpoints.lg}) {
+    display: inline;
+  }
+`
+
+export const SearchKey = styled.kbd`
+  display: none;
+  padding: 2px 6px;
+  border: 1px solid ${theme.surface.barBorder};
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: ${theme.surface.barInk};
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    display: inline;
+  }
+`
+
 export const Account = styled.div`
   position: relative;
 `
