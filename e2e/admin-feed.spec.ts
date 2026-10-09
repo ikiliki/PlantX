@@ -11,6 +11,17 @@ test.describe('admin feed', () => {
     await expect(page.getByText('Feed', { exact: true }).first()).toBeVisible()
   })
 
+  test('Server shows the reactions table and 🌿 / 💬 counts on activities', async ({ page }) => {
+    const reactions = [
+      { activityId: 'e2e-post', userId: 'e2e-member', userName: 'E2E Member', createdAt: new Date().toISOString(), postBody: 'e2e liked post', postUserId: 'u-admin' },
+    ]
+    await page.route('**/api/admin/reactions', (route) => route.fulfill({ json: { reactions } }))
+    await expectPage(page, '/admin/server')
+    const row = page.getByRole('row').filter({ hasText: 'e2e liked post' })
+    await expect(row).toBeVisible()
+    await expect(row).toContainText('E2E Member')
+  })
+
   test('Moderation lists the newest comments and removes one', async ({ page }) => {
     const comments = [
       {

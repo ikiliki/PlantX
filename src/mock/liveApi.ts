@@ -420,6 +420,11 @@ export function postComment(activityId: string, body: string) {
   )
 }
 
+/** Admin → Server → Reactions. */
+export function fetchAdminReactionsOutcome() {
+  return requestOutcome<{ reactions: import('./types').AdminReaction[] }>('/api/admin/reactions')
+}
+
 /** Admin → Moderation → Comments. */
 export function fetchAdminCommentsOutcome() {
   return requestOutcome<{ comments: import('./types').AdminComment[] }>('/api/admin/comments')

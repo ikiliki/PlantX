@@ -1361,7 +1361,14 @@
     "commentsAuthor": "By",
     "commentsBody": "Comment",
     "commentsPost": "On the post",
-    "commentsRemove": "Remove"
+    "commentsRemove": "Remove",
+    "serverColReactions": "🌿",
+    "serverColComments": "💬",
+    "reactionsTitle": "Reactions",
+    "reactionsLead": "Newest 🌿 on Feed posts: who gave it and on which post. Posts are the Activities above.",
+    "reactionsMock": "Reactions are stored on the server; mock mode has none.",
+    "reactionsFailed": "Could not load reactions. Try again.",
+    "reactionsEmpty": "No reactions yet."
   },
   "settings": {
     "region": "Location",

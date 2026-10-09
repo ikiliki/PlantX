@@ -450,6 +450,16 @@ export interface FeedUpdate {
   comments?: number
 }
 
+/** Admin → Server → Reactions: one 🌿, who gave it, and the post. */
+export interface AdminReaction {
+  activityId: string
+  userId: string
+  userName: string
+  createdAt: string
+  postBody: string
+  postUserId: string
+}
+
 /** Admin → Moderation → Comments: a comment with who wrote it and the post it is on. */
 export interface AdminComment {
   id: string

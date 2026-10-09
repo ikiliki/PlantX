@@ -105,6 +105,27 @@ export function supabaseActivitySocial(pool: pg.Pool): PlantxStore['activitySoci
       }))
     },
 
+    async recentReactions(limit) {
+      const result = await pool.query(
+        `select r.activity_id, r.user_id, r.created_at, coalesce(u.name, '') as user_name,
+                a.body as post_body, a.user_id as post_user_id
+         from activity_reactions r
+         join activities a on a.id = r.activity_id
+         left join users u on u.id = r.user_id
+         order by r.created_at desc
+         limit $1`,
+        [limit],
+      )
+      return (result.rows as Record<string, unknown>[]).map((row) => ({
+        activityId: String(row.activity_id),
+        userId: String(row.user_id),
+        userName: String(row.user_name),
+        createdAt: String(row.created_at),
+        postBody: String(row.post_body),
+        postUserId: String(row.post_user_id),
+      }))
+    },
+
     async softDeleteComment(id) {
       await pool.query('update activity_comments set deleted_at = $2 where id = $1 and deleted_at is null', [
         id,

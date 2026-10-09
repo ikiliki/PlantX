@@ -65,6 +65,11 @@ export const feedSocialService = {
     return getStore().activitySocial.recent(Math.min(Math.max(limit, 1), 200))
   },
 
+  /** Admin → Server → Reactions. */
+  async recentReactions(limit = 200) {
+    return getStore().activitySocial.recentReactions(Math.min(Math.max(limit, 1), 500))
+  },
+
   async deleteComment(commentId: string, viewer: Viewer) {
     const social = getStore().activitySocial
     const comment = await social.getComment(commentId)

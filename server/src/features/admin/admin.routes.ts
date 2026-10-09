@@ -91,6 +91,12 @@ adminRoutes.get('/comments', async (c) => {
   return c.json({ comments: await feedSocialService.recent(100) })
 })
 
+/** Newest 🌿 reactions on Feed posts (read-only). */
+adminRoutes.get('/reactions', async (c) => {
+  await requireAdmin(c)
+  return c.json({ reactions: await feedSocialService.recentReactions(200) })
+})
+
 adminRoutes.get('/moderation/log', async (c) => {
   await requireAdmin(c)
   return c.json({ entries: await moderationService.log(100) })

@@ -1361,7 +1361,14 @@
     "commentsAuthor": "מאת",
     "commentsBody": "תגובה",
     "commentsPost": "על הפוסט",
-    "commentsRemove": "הסרה"
+    "commentsRemove": "הסרה",
+    "serverColReactions": "🌿",
+    "serverColComments": "💬",
+    "reactionsTitle": "עלים (תגובות)",
+    "reactionsLead": "העלים האחרונים על פוסטים בפיד: מי נתן ועל איזה פוסט. הפוסטים הם הפעילויות למעלה.",
+    "reactionsMock": "העלים נשמרים בשרת; במצב הדמו אין כאלה.",
+    "reactionsFailed": "לא הצלחנו לטעון. נסו שוב.",
+    "reactionsEmpty": "עדיין אין עלים."
   },
   "settings": {
     "region": "מיקום",
