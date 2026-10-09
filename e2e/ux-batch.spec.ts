@@ -101,7 +101,10 @@ test.describe('admin', () => {
 
   test('the admin sees unlimited AI scans', async ({ page }) => {
     await expectPage(page, '/settings')
-    await expect(page.getByRole('dialog', { name: 'Account' }).locator('[data-scan-quota="unlimited"]')).toBeVisible()
+    const account = page.getByRole('dialog', { name: 'Account' })
+    // Scans and sign out live on the dialog's Account tab.
+    await account.getByRole('tab', { name: 'Account', exact: true }).click()
+    await expect(account.locator('[data-scan-quota="unlimited"]')).toBeVisible()
   })
 
   test('Server users are read-only; Moderation has the user actions', async ({ page }) => {
