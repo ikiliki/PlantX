@@ -8,7 +8,7 @@ test.describe('admin feed', () => {
 
   test('System lists Feed as its own page', async ({ page }) => {
     await expectPage(page, '/admin/system')
-    await expect(page.getByText('Feed', { exact: true }).first()).toBeVisible()
+    await expect(page.locator('main').getByText('Feed', { exact: true }).first()).toBeVisible()
   })
 
   test('Server shows the reactions and comments tables and 🌿 / 💬 counts on activities', async ({ page }) => {
@@ -26,7 +26,8 @@ test.describe('admin feed', () => {
       }),
     )
     await expectPage(page, '/admin/server')
-    const row = page.getByRole('row').filter({ hasText: 'e2e liked post' })
+    // The reaction row (the comment row below also shows the post text).
+    const row = page.locator('tr[data-row-id="e2e-post:e2e-member"]')
     await expect(row).toBeVisible()
     await expect(row).toContainText('E2E Member')
     // Comments are listed here too, read-only (Remove lives in Moderation).
