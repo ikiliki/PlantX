@@ -143,7 +143,7 @@ export interface PlantxStore {
     softDeleteComment(id: string): Promise<void>
     /** Newest visible comments, with author and post, for Admin → Moderation. */
     recent(limit: number): Promise<AdminComment[]>
-    /** 🌿 and comments other growers left on this owner's posts, newest first. */
+    /** Every 🌿 and comment on this owner's posts (theirs included), newest first. */
     forOwner(ownerId: string, limit: number): Promise<GreenhouseSocialItem[]>
     /** Newest 🌿 reactions, with who gave them and the post, for Admin → Server. */
     recentReactions(limit: number): Promise<AdminReaction[]>

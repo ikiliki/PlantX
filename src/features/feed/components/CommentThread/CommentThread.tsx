@@ -59,7 +59,9 @@ export function CommentThread({ update }: { update: FeedUpdate }) {
         <List>
           {comments.map((comment) => {
             const author = db.users.find((user) => user.id === comment.userId)
-            const name = author ? publicGrowerName(author, locale === 'he') : ''
+            const name =
+              (author ? publicGrowerName(author, locale === 'he') : '') +
+              (currentUser && comment.userId === currentUser.id ? ` ${t.feed.youMark}` : '')
             return (
               <Item key={comment.id} data-comment={comment.id}>
                 {author ? <Avatar name={name} color={author.avatarColor} icon={author.avatarIcon} size={28} /> : <span />}

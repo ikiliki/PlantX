@@ -1,4 +1,5 @@
 import pg from 'pg'
+import { generateNickname } from '../../../../src/features/profile/avatarIcons.ts'
 import type {
   Catalog,
   CatalogProperty,
@@ -327,7 +328,7 @@ export function createSupabaseStore(): PlantxStore {
           user.email?.trim() ? user.email.trim() : null,
           user.accountStatus ?? 'active',
           Boolean(user.preapproved),
-          user.nickname?.trim() ? user.nickname.trim() : null,
+          user.nickname?.trim() ? user.nickname.trim() : generateNickname(),
           user.avatarIcon?.trim() ? user.avatarIcon.trim() : 'seed',
           user.termsVersion ?? null,
           user.termsAcceptedAt ?? null,

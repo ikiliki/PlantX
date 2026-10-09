@@ -35,6 +35,11 @@ export function avatarUnlocked(id: AvatarIconId, level: number) {
 }
 
 /** One line, no line breaks, capped. Empty means the nickname is cleared. */
+/** A new grower's starting nickname, "Grower 4821": every account has one, and it is editable but never empty. */
+export function generateNickname() {
+  return `Grower ${1000 + Math.floor(Math.random() * 9000)}`
+}
+
 export function cleanNickname(value: string) {
   return value.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, NICKNAME_MAX)
 }

@@ -12,7 +12,7 @@ export const activitySocialRoutes = new Hono<SignedInEnv>()
 
 activitySocialRoutes.use('*', signedIn)
 
-/** 🌿 and comments other growers left on your posts (Greenhouse activities → Social). */
+/** Every 🌿 and comment on your posts (Greenhouse activities → Social and the bell). */
 activitySocialRoutes.get('/social/mine', async (c) => c.json({ items: await feedSocialService.mine(c.get('user').id) }))
 
 activitySocialRoutes.put('/:id/reaction', async (c) => c.json(await feedSocialService.react(c.req.param('id'), c.get('user'), true)))

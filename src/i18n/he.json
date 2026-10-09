@@ -506,7 +506,11 @@
     "activitySocial": "חברתי",
     "socialReacted": "{name} נתן/ה 🌿 לפוסט שלך",
     "socialCommented": "{name} הגיב/ה: ״{text}״",
-    "socialEmpty": "עדיין אין עלים או תגובות על הפוסטים שלך."
+    "socialEmpty": "עדיין אין עלים או תגובות על הפוסטים שלך.",
+    "socialYouReacted": "נתת 🌿 לפוסט שלך",
+    "socialYouCommented": "הגבת: ״{text}״",
+    "socialUnread": "{n} חדשים",
+    "bellUnread": "פעילויות החממה, {n} חדשים"
   },
   "todo": {
     "cancel": "ביטול",
@@ -827,7 +831,8 @@
     "iconLabel": "אייקון",
     "iconSeed": "זרע",
     "iconHint": "מתחילים מזרע. אייקונים נוספים נפתחים עם רמת החממה.",
-    "placeLabel": "מיקום החממה"
+    "placeLabel": "מיקום החממה",
+    "nicknameRequired": "כינוי לא יכול להיות ריק."
   },
   "auth": {
     "buyTitle": "כדי לרכוש צריך חשבון",
@@ -1424,7 +1429,8 @@
     "updateAdded": "צמח חדש",
     "updateEdited": "עריכה",
     "updateDeleted": "צמח נמחק",
-    "xpEarned": "+{n} XP"
+    "xpEarned": "+{n} XP",
+    "youMark": "(את/ה)"
   },
   "guest": {
     "logIn": "התחברות",

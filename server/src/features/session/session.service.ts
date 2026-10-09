@@ -195,8 +195,9 @@ export const sessionService = {
 
     if (input.nickname !== undefined) {
       const nickname = cleanNickname(input.nickname)
-      if (nickname) user.nickname = nickname
-      else delete user.nickname
+      // Everyone has a public name: it can change, not go blank.
+      if (!nickname) throw Errors.invalid('A nickname is 1 to 32 characters')
+      user.nickname = nickname
     }
 
     if (input.avatarIcon !== undefined) {

@@ -8,7 +8,9 @@ test.describe('admin feed', () => {
 
   test('System lists Feed as its own page', async ({ page }) => {
     await expectPage(page, '/admin/system')
-    await expect(page.locator('main').getByText('Feed', { exact: true }).first()).toBeVisible()
+    // Pages starts collapsed; Feed has its own Live / Maintenance select there.
+    await page.locator('main').getByRole('button', { name: 'Pages', exact: true }).click()
+    await expect(page.locator('main').getByRole('combobox', { name: /^Feed / })).toBeVisible()
   })
 
   test('Server shows the reactions and comments tables and 🌿 / 💬 counts on activities', async ({ page }) => {

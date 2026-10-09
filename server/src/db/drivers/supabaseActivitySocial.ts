@@ -108,19 +108,19 @@ export function supabaseActivitySocial(pool: pg.Pool): PlantxStore['activitySoci
     async forOwner(ownerId, limit) {
       const result = await pool.query(
         `select * from (
-           select 'reaction' as kind, r.activity_id, a.plant_id, r.user_id, coalesce(u.name, '') as user_name,
+           select 'reaction' as kind, r.activity_id, a.plant_id, r.user_id, coalesce(u.nickname, '') as user_name,
                   '' as body, r.created_at
            from activity_reactions r
            join activities a on a.id = r.activity_id
            left join users u on u.id = r.user_id
-           where a.user_id = $1 and r.user_id <> $1
+           where a.user_id = $1
            union all
-           select 'comment' as kind, c.activity_id, a.plant_id, c.user_id, coalesce(u.name, '') as user_name,
+           select 'comment' as kind, c.activity_id, a.plant_id, c.user_id, coalesce(u.nickname, '') as user_name,
                   c.body, c.created_at
            from activity_comments c
            join activities a on a.id = c.activity_id
            left join users u on u.id = c.user_id
-           where a.user_id = $1 and c.user_id <> $1 and c.deleted_at is null
+           where a.user_id = $1 and c.deleted_at is null
          ) social
          order by created_at desc
          limit $2`,

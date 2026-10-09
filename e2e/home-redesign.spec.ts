@@ -105,6 +105,11 @@ test.describe('member Home and Feed', () => {
     await menu.locator('[data-account-profile]').click()
     const profile = page.getByRole('dialog', { name: 'Profile' })
     await expect(profile.getByLabel('Nickname')).toBeVisible()
+    // Everyone has a nickname; it can change but not be emptied.
+    await expect(profile.getByLabel('Nickname')).not.toHaveValue('')
+    await profile.getByLabel('Nickname').fill('   ')
+    await expect(profile.getByRole('button', { name: 'Save' })).toBeDisabled()
+    await expect(profile.getByText("A nickname can't be empty.")).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(profile).toHaveCount(0)
 
