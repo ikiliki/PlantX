@@ -47,7 +47,7 @@ function FeedStream() {
           value={filter}
           onChange={setFilter}
           options={[
-            { id: 'all', label: t.feedPage.all },
+            { id: 'all', label: t.feedPage.all, count: items.length },
             { id: 'added', label: t.feedPage.added, count: count('added') },
             { id: 'photo', label: t.feedPage.photo, count: count('photo') },
             { id: 'water', label: t.feedPage.water, count: count('water') },
@@ -87,7 +87,7 @@ export function FeedPage() {
   useServerSlices(['users', 'plants', 'updates', 'catalog'])
 
   return (
-    <PageGate pageId="home" title={t.nav.feed}>
+    <PageGate pageId="feed" title={t.nav.feed}>
       <Page data-feed-page>
         {forAudience(signedIn, {
           // Like Tasks: the page's own shape, blurred (nothing fetched), with the log-in card on top.
@@ -109,7 +109,7 @@ export function FeedPage() {
             </GuestCurtain>
           ),
           signedIn: (
-            <FeatureGate placement="home.feed" title={t.nav.feed}>
+            <FeatureGate placement="feed.board" title={t.nav.feed}>
               <FeedStream />
             </FeatureGate>
           ),

@@ -1,4 +1,5 @@
 import { DiscoverPage } from '../../../../pages/DiscoverPage/DiscoverPage'
+import { FeedPage } from '../../../../pages/FeedPage/FeedPage'
 import { GreenhousePage } from '../../../../pages/GreenhousePage/GreenhousePage'
 import { MarketPage } from '../../../../pages/MarketPage/MarketPage'
 import { RankPage } from '../../../../pages/RankPage/RankPage'
@@ -9,6 +10,7 @@ import { Page, Stage } from './PagePreview.styles'
 
 function pageBody(pageId: PageId) {
   if (pageId === 'home') return <DiscoverPage />
+  if (pageId === 'feed') return <FeedPage />
   if (pageId === 'market') return <MarketPage />
   if (pageId === 'greenhouse') return <GreenhousePage />
   if (pageId === 'todo') return <TodoPage />

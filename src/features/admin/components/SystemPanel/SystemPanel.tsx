@@ -59,6 +59,7 @@ const FEATURE_ORDER: FeatureId[] = ['news', 'market', 'greenhouse', 'todo', 'ran
 
 const PAGE_SLICES = {
   home: ['users', 'plants', 'updates', 'todos', 'catalog'],
+  feed: ['users', 'plants', 'updates', 'catalog'],
   market: ['users', 'plants', 'catalog'],
   greenhouse: ['users', 'plants', 'updates', 'todos', 'catalog'],
   todo: ['users', 'plants', 'todos', 'updates'],
@@ -90,6 +91,7 @@ function FetchHold({
 
 function pageLabel(id: PageId, t: ReturnType<typeof useI18n>['t']) {
   if (id === 'home') return t.nav.home
+  if (id === 'feed') return t.nav.feed
   if (id === 'market') return t.nav.market
   if (id === 'greenhouse') return t.nav.greenhouse
   if (id === 'todo') return t.nav.todo

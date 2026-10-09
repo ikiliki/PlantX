@@ -12,6 +12,7 @@ type RoomId = (typeof ROOMS)[number]
 /** Where each gated page lives, for the quick links on a page under maintenance. */
 const PAGE_PATH: Record<PageId, string> = {
   home: '/home',
+  feed: '/feed',
   greenhouse: '/greenhouse',
   todo: '/tasks',
   wiki: '/wiki',
@@ -53,6 +54,7 @@ export function HoldNotice({
   }
   const pageNames: Record<PageId, string> = {
     home: t.nav.home,
+    feed: t.nav.feed,
     greenhouse: t.nav.greenhouse,
     todo: t.nav.todo,
     wiki: t.nav.wiki,

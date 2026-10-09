@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { rateLimit } from '../../lib/rateLimit.ts'
 import { signedIn, type SignedInEnv } from '../../lib/session.ts'
+import { moderationService } from '../moderation/moderation.service.ts'
 import { feedSocialService } from './feedSocial.service.ts'
 
 /**
@@ -33,6 +34,11 @@ export const commentRoutes = new Hono<SignedInEnv>()
 commentRoutes.use('*', signedIn)
 
 commentRoutes.delete('/:id', async (c) => {
-  await feedSocialService.deleteComment(c.req.param('id'), c.get('user'))
+  const user = c.get('user')
+  const { comment, byModerator } = await feedSocialService.deleteComment(c.req.param('id'), user)
+  // An admin removing someone else's comment goes in the moderation log, on the post.
+  if (byModerator) {
+    await moderationService.logEdit('activity', comment.activityId, `Comment: ${comment.body.slice(0, 60)}`, user, ['comment removed'])
+  }
   return c.json({ ok: true })
 })

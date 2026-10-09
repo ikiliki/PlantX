@@ -450,6 +450,18 @@ export interface FeedUpdate {
   comments?: number
 }
 
+/** Admin → Moderation → Comments: a comment with who wrote it and the post it is on. */
+export interface AdminComment {
+  id: string
+  activityId: string
+  userId: string
+  authorName: string
+  body: string
+  createdAt: string
+  postBody: string
+  postUserId: string
+}
+
 /** A comment on an activity (feed post). Deleted comments never reach the client. */
 export interface ActivityComment {
   id: string

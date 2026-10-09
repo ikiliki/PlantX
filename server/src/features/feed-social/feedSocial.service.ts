@@ -1,7 +1,9 @@
 import { getStore } from '../../db/index.ts'
 import { Errors } from '../../lib/errors.ts'
 import type { ActivityComment, User } from '../../../../src/mock/types.ts'
+import { isPlacementEnabled } from '../../../../src/theme/release.ts'
 import { activityService, visibleTo } from '../activity/activity.service.ts'
+import { systemService } from '../system/system.service.ts'
 
 export const COMMENT_MAX = 500
 
@@ -16,6 +18,13 @@ async function seenActivity(activityId: string, viewer: Viewer) {
   return visible
 }
 
+/** Admin → System → Feed reactions and comments. Off: no new leaves or comments (an admin can still remove). */
+async function assertSocialOn() {
+  if (!isPlacementEnabled(await systemService.get(), 'feed.social')) {
+    throw Errors.forbidden('Reactions and comments are off for now')
+  }
+}
+
 async function reactionState(activityId: string, viewer: Viewer) {
   const counts = await getStore().activitySocial.counts([activityId], viewer.id)
   const entry = counts.get(activityId)
@@ -28,6 +37,7 @@ async function reactionState(activityId: string, viewer: Viewer) {
  */
 export const feedSocialService = {
   async react(activityId: string, viewer: Viewer, on: boolean) {
+    await assertSocialOn()
     await seenActivity(activityId, viewer)
     const social = getStore().activitySocial
     if (on) await social.react(activityId, viewer.id)
@@ -45,8 +55,14 @@ export const feedSocialService = {
     if (body.length < 1 || body.length > COMMENT_MAX) {
       throw Errors.invalid(`A comment is 1 to ${COMMENT_MAX} characters`)
     }
+    await assertSocialOn()
     await seenActivity(activityId, viewer)
     return getStore().activitySocial.addComment({ activityId, userId: viewer.id, body })
+  },
+
+  /** Admin → Moderation → Comments. */
+  async recent(limit = 100) {
+    return getStore().activitySocial.recent(Math.min(Math.max(limit, 1), 200))
   },
 
   async deleteComment(commentId: string, viewer: Viewer) {
@@ -57,5 +73,6 @@ export const feedSocialService = {
     const allowed = viewer.role === 'admin' || comment.userId === viewer.id || activity?.userId === viewer.id
     if (!allowed) throw Errors.forbidden('Only the author, the post owner or an admin can remove this comment')
     await social.softDeleteComment(commentId)
+    return { comment, byModerator: viewer.role === 'admin' && comment.userId !== viewer.id && activity?.userId !== viewer.id }
   },
 }

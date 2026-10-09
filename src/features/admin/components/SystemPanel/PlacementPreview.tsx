@@ -10,6 +10,7 @@ import { useStore } from '../../../../mock/store'
 import { CategoriesPage } from '../../../../pages/CategoriesPage/CategoriesPage'
 import { CategoryPage } from '../../../../pages/CategoryPage/CategoryPage'
 import { DiscoverPage } from '../../../../pages/DiscoverPage/DiscoverPage'
+import { FeedPage } from '../../../../pages/FeedPage/FeedPage'
 import { GreenhousePage } from '../../../../pages/GreenhousePage/GreenhousePage'
 import { MarketClassPage } from '../../../../pages/MarketClassPage/MarketClassPage'
 import { MarketPage } from '../../../../pages/MarketPage/MarketPage'
@@ -99,6 +100,9 @@ function previewFor(id: PlacementId): ReactNode {
   switch (id) {
     case 'home.feed':
       return <DiscoverPage />
+    case 'feed.board':
+    case 'feed.social':
+      return <FeedPage />
     case 'home.market':
       return <MarketRail />
     case 'home.rank':

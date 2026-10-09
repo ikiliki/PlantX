@@ -1,5 +1,6 @@
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import { isPlacementEnabled } from '../../../../theme/release'
 import type { FeedUpdate } from '../../../../mock/types'
 import { Bar, Count, Leaf, Pill } from './ReactBar.styles'
 
@@ -19,13 +20,16 @@ export function ReactBar({
   readOnly?: boolean
 }) {
   const { t } = useI18n()
-  const { signedIn, reactToUpdate } = useStore()
+  const { db, signedIn, reactToUpdate } = useStore()
   const reactions = update.reactions ?? 0
   const comments = update.comments ?? 0
   const reacted = Boolean(update.reacted)
   const commentLabel =
     comments === 0 ? t.feedPage.commentNone : comments === 1 ? t.feedPage.commentOne : t.feedPage.comments.replace('{n}', String(comments))
   const inert = readOnly || !signedIn
+
+  // Admin → System → Feed reactions and comments.
+  if (!isPlacementEnabled(db.system, 'feed.social')) return null
 
   if (inert) {
     if (reactions === 0 && comments === 0) return null

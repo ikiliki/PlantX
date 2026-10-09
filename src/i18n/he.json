@@ -1230,7 +1230,9 @@
       "passport.rank": "דירוג משתמשים בדרכון",
       "passport.todo": "לשונית משימות בדרכון",
       "rank.board": "ערימת דירוג",
-      "wiki.board": "קטלוג"
+      "wiki.board": "קטלוג",
+      "feed.board": "פוסטים בפיד",
+      "feed.social": "תגובות ועלים בפיד"
     },
     "systemItem": "פריט",
     "systemStatus": "סטטוס",
@@ -1349,7 +1351,17 @@
     "scansCountValue": "{scans} סריקות · {members} חברים",
     "rejectConfirmTitle": "לדחות {count} בקשות?",
     "rejectConfirmLead": "הם לא יוכלו להתחבר. אפשר למצוא אותם אחר כך תחת \"הוחלט\".",
-    "manageInModeration": "ניהול במודרציה"
+    "manageInModeration": "ניהול במודרציה",
+    "commentsTitle": "תגובות",
+    "commentsLead": "התגובות האחרונות בפיד. הסרה מוציאה תגובה לכולם ונרשמת על הפוסט.",
+    "commentsMock": "התגובות נשמרות בשרת; במצב הדמו אין כאלה.",
+    "commentsFailed": "לא הצלחנו לטעון תגובות. נסו שוב.",
+    "commentsEmpty": "עדיין אין תגובות.",
+    "commentsWhen": "מתי",
+    "commentsAuthor": "מאת",
+    "commentsBody": "תגובה",
+    "commentsPost": "על הפוסט",
+    "commentsRemove": "הסרה"
   },
   "settings": {
     "region": "מיקום",

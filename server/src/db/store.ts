@@ -20,7 +20,7 @@ import type {
 import type { SystemConfig } from '../../../src/theme/release.ts'
 import type { IssueContext, IssueReport } from '../../../src/lib/issueReport.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
-import type { ActivityComment } from '../../../src/mock/types.ts'
+import type { ActivityComment, AdminComment } from '../../../src/mock/types.ts'
 import type { Todo } from '../features/todo/todo.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
 
@@ -141,6 +141,8 @@ export interface PlantxStore {
     addComment(input: { activityId: string; userId: string; body: string }): Promise<ActivityComment>
     getComment(id: string): Promise<ActivityComment | null>
     softDeleteComment(id: string): Promise<void>
+    /** Newest visible comments, with author and post, for Admin → Moderation. */
+    recent(limit: number): Promise<AdminComment[]>
   }
   /** AI scan quota (#67). Usage is counted from identify_requests. */
   scanQuota: {

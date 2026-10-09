@@ -420,6 +420,11 @@ export function postComment(activityId: string, body: string) {
   )
 }
 
+/** Admin → Moderation → Comments. */
+export function fetchAdminCommentsOutcome() {
+  return requestOutcome<{ comments: import('./types').AdminComment[] }>('/api/admin/comments')
+}
+
 export function deleteComment(commentId: string) {
   return request<{ ok: true }>(`/api/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' })
 }

@@ -8,7 +8,7 @@ import { defaultAppLaunched } from './launch'
 export const FEATURE_IDS = ['greenhouse', 'market', 'rank', 'wiki', 'news', 'todo'] as const
 export type FeatureId = (typeof FEATURE_IDS)[number]
 
-export const PAGE_IDS = ['home', 'market', 'greenhouse', 'todo', 'rank', 'wiki'] as const
+export const PAGE_IDS = ['home', 'feed', 'market', 'greenhouse', 'todo', 'rank', 'wiki'] as const
 export type PageId = (typeof PAGE_IDS)[number]
 
 /** Shown only while the placement is enabled. */
@@ -30,6 +30,9 @@ export type PageStatus = 'live' | 'maintenance'
 
 export const PLACEMENTS = [
   { id: 'home.feed', pageId: 'home', featureId: 'news', required: true },
+  { id: 'feed.board', pageId: 'feed', featureId: 'news', required: true },
+  /** 🌿 reactions and comments on Feed posts (and their counts on Home). */
+  { id: 'feed.social', pageId: 'feed', featureId: 'news', required: false },
   { id: 'home.market', pageId: 'home', featureId: 'market', required: false },
   { id: 'home.rank', pageId: 'home', featureId: 'rank', required: false },
   { id: 'home.wiki', pageId: 'home', featureId: 'wiki', required: false },
@@ -78,6 +81,7 @@ export interface SystemConfig {
 /** Primary feature behind each main app page. */
 export const PAGE_FEATURE: Record<PageId, FeatureId> = {
   home: 'news',
+  feed: 'news',
   market: 'market',
   greenhouse: 'greenhouse',
   todo: 'todo',
@@ -89,6 +93,7 @@ export const DEFAULT_SYSTEM: SystemConfig = {
   launched: defaultAppLaunched(),
   pages: {
     home: 'live',
+    feed: 'live',
     market: 'maintenance',
     greenhouse: 'live',
     todo: 'live',
@@ -105,6 +110,8 @@ export const DEFAULT_SYSTEM: SystemConfig = {
   },
   placements: {
     'home.feed': { enabled: true },
+    'feed.board': { enabled: true },
+    'feed.social': { enabled: true },
     'home.market': { enabled: true },
     'home.rank': { enabled: true },
     'home.wiki': { enabled: true },

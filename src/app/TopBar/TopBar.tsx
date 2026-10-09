@@ -47,6 +47,7 @@ export function TopBar() {
   const menus = useNavMenus()
 
   const pageBoard: Partial<Record<PageId, PlacementId>> = {
+    feed: 'feed.board',
     market: 'market.board',
     greenhouse: 'greenhouse.board',
     todo: 'todo.board',
@@ -93,7 +94,7 @@ export function TopBar() {
             {t.nav.home}
           </NavItem>
         )}
-        {show('home') && (
+        {show('feed') && (
           <NavItem to="/feed" $active={isActive('/feed')} aria-current={isActive('/feed') ? 'page' : undefined}>
             <NavIcon aria-hidden>
               <Icon name="feed" size={18} />
