@@ -39,7 +39,7 @@ export function LandingPage() {
           </FootLinks>
         </Foot>
       </Main>
-      <ScrollTopButton label={t.common.backToTop} />
+      <ScrollTopButton label={t.common.backToTop} dock />
     </Page>
   )
 }

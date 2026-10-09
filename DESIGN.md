@@ -25,7 +25,7 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 ## Shell
 
 - Desktop top bar: wordmark, the nav as a tray of pebbles with icons (active page a lime pebble, menus open downward; icons only between 900 and 1180px), the garden toggle and the account.
-- Phone: the nav is a floating rounded leaf-green dock that tucks below the edge while you scroll down and comes back on any scroll up, near the top, or at the end (`useDockAway`). At night it carries a faint leaf edge.
+- Phone: the nav is a floating rounded dock in the same colours as the desktop tray (light surface, muted labels, a lime pebble with dark text for the active tab). It tucks below the edge while you scroll down and stays tucked at the end of the page; it comes back on any scroll up or near the top (`src/app/dockState.ts`). While it is tucked, Back to top takes its place at the bottom centre; tapping it scrolls up, brings the dock back and leaves. At night it carries a faint leaf edge.
 
 ## Greenhouse
 

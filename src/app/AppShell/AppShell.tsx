@@ -12,7 +12,7 @@ import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { theme } from '../../theme/tokens'
 import { TopBar } from '../TopBar/TopBar'
-import { useDockAway } from '../useDockAway'
+import { useDockAway } from '../dockState'
 import { usePageRefresh } from '../usePageRefresh'
 import { usePageNavigationType } from '../pageNavigation'
 import { BottomIcon, BottomLink, BottomNav, Main, Shell } from './AppShell.styles'
@@ -107,8 +107,8 @@ export function AppShell() {
           <Outlet />
         </LoaderShell>
       </Main>
-      <ScrollTopButton label={t.common.backToTop} />
-      <BottomNav $cols={bottom.length} $away={dockAway}>
+      <ScrollTopButton label={t.common.backToTop} dock />
+      <BottomNav $cols={bottom.length} $away={dockAway} data-dock={dockAway ? 'away' : 'shown'}>
         {bottom.map((l) => {
           const active = l.to.startsWith('/admin')
             ? loc.pathname.startsWith('/admin')
