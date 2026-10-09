@@ -43,14 +43,17 @@ export function FeedUpdateSkeleton({ kind }: { kind: FeedUpdateKind }) {
 
 export function FeedUpdate({ update }: { update: FeedUpdateData }) {
   const { t, tr, locale } = useI18n()
-  const { db } = useStore()
+  const { db, currentUser } = useStore()
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const user = db.users.find((item) => item.id === update.userId && item.role !== 'guest')
   const name = user ? publicGrowerName(user, locale === 'he') : ''
   // Persona labels ("Rich — full living collection") describe demo accounts; real accounts show their name.
-  const growerLabel = clientEnv() === 'mock' ? t.demo.personaScenarios[personaScenarioId(update.userId)] : name
+  // Your own posts say so: "Full Name (you)".
+  const mine = Boolean(currentUser && currentUser.id === update.userId)
+  const youMark = mine ? ` ${t.feed.youMark}` : ''
+  const growerLabel = (clientEnv() === 'mock' ? t.demo.personaScenarios[personaScenarioId(update.userId)] : name) + youMark
   const verified = Boolean(user && (db.verifiedGreenhouseIds ?? []).includes(user.id))
 
   const openProfile = () => {
@@ -77,7 +80,7 @@ export function FeedUpdate({ update }: { update: FeedUpdateData }) {
             </Kind>
             <XpChip kind={update.kind} />
             {verified ? <VerifiedStamp place="inline" /> : null}
-            <Grower $verified={verified}>{verified ? t.greenhouse.verifiedGreenhouse : growerLabel}</Grower>
+            <Grower $verified={verified}>{verified ? t.greenhouse.verifiedGreenhouse + youMark : growerLabel}</Grower>
           </Meta>
           <Line>{tr(update.body, update.bodyHe)}</Line>
           <ReactBar update={update} readOnly />

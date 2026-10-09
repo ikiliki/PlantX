@@ -4,6 +4,7 @@ import { theme } from '../../../../theme/tokens'
 
 export const Bell = styled.button<{ $open?: boolean }>`
   ${pressable}
+  position: relative;
   display: grid;
   place-items: center;
   width: 40px;
@@ -68,4 +69,23 @@ export const Title = styled.h2`
 export const Close = styled.button`
   ${closeButton}
   flex: none;
+`
+
+/** New 🌿 and comments from others: a small warm number on the bell's corner. */
+export const Count = styled.span`
+  position: absolute;
+  inset-block-start: -4px;
+  inset-inline-end: -4px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.warn};
+  color: ${theme.colors.creamCard};
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 0 2px ${theme.colors.cream};
 `

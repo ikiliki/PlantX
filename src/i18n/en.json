@@ -506,7 +506,11 @@
     "activitySocial": "Social",
     "socialReacted": "{name} gave your post a 🌿",
     "socialCommented": "{name} commented: “{text}”",
-    "socialEmpty": "No leaves or comments on your posts yet."
+    "socialEmpty": "No leaves or comments on your posts yet.",
+    "socialYouReacted": "You gave your post a 🌿",
+    "socialYouCommented": "You commented: “{text}”",
+    "socialUnread": "{n} new",
+    "bellUnread": "Greenhouse activities, {n} new"
   },
   "todo": {
     "cancel": "Cancel",
@@ -1424,7 +1428,8 @@
     "updateAdded": "New plant",
     "updateEdited": "Edited",
     "updateDeleted": "Deleted plant",
-    "xpEarned": "+{n} XP"
+    "xpEarned": "+{n} XP",
+    "youMark": "(you)"
   },
   "guest": {
     "logIn": "Log in",

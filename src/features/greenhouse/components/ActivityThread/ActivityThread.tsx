@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { Segmented } from '../../../../components/Segmented/Segmented'
@@ -104,16 +104,26 @@ export function ActivityThread({
   activity: all,
   height,
   variant = 'rail',
+  initialShow = 'xp',
 }: {
   activity: ActivityEntry[]
   height?: number
   variant?: 'rail' | 'sheet'
+  /** The bell opens on Social when there is something new there. */
+  initialShow?: 'all' | 'social' | 'xp'
 }) {
   const { t, locale } = useI18n()
   const { db, signedIn } = useStore()
-  const [show, setShow] = useState<'all' | 'social' | 'xp'>('xp')
-  // Social: what others left on your posts. All mixes it in with your own log, newest first.
-  const social = useGreenhouseSocial(signedIn && show !== 'xp')
+  const [show, setShow] = useState<'all' | 'social' | 'xp'>(initialShow)
+  // Social: every 🌿 and comment on your posts. All mixes it in with your own log, newest first.
+  // Loaded while the thread is open, so the Social label can say how many are new.
+  const social = useGreenhouseSocial(signedIn)
+  const { markSeen } = social
+  const socialCount = social.entries.length
+  // Looking at Social (or All, which holds the same rows) counts as seeing them.
+  useEffect(() => {
+    if (show !== 'xp' && socialCount > 0) markSeen()
+  }, [show, socialCount, markSeen])
   const activity =
     show === 'xp'
       ? all.filter((entry) => entry.kind && isPublicActivity(entry.kind))
@@ -160,7 +170,13 @@ export function ActivityThread({
             onChange={setShow}
             options={[
               { id: 'all', label: t.greenhouse.activityAll },
-              { id: 'social', label: t.greenhouse.activitySocial },
+              {
+                id: 'social',
+                label:
+                  social.unread > 0 && show === 'xp'
+                    ? `${t.greenhouse.activitySocial} (${social.unread})`
+                    : t.greenhouse.activitySocial,
+              },
               { id: 'xp', label: t.greenhouse.activityXp },
             ]}
           />

@@ -7,12 +7,13 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { useDialogLayer } from '../../../../lib/dialogLayer'
 import { useStore } from '../../../../mock/store'
 import { ownerActivity } from '../../ownerActivity'
+import { useGreenhouseSocial } from '../../useGreenhouseSocial'
 import { ActivityThread } from '../ActivityThread/ActivityThread'
-import { Backdrop, Bell, Close, Head, Sheet, Title } from './ActivityBell.styles'
+import { Backdrop, Bell, Close, Count, Head, Sheet, Title } from './ActivityBell.styles'
 
 const TITLE_ID = 'activity-sheet-title'
 
-function ActivitySheet({ onClose }: { onClose: () => void }) {
+function ActivitySheet({ onClose, initialShow }: { onClose: () => void; initialShow: 'social' | 'xp' }) {
   const { fullDb, db, currentUser } = useStore()
   const { t, tr } = useI18n()
   const ownerId = currentUser?.id ?? ''
@@ -58,7 +59,7 @@ function ActivitySheet({ onClose }: { onClose: () => void }) {
             ×
           </Close>
         </Head>
-        <ActivityThread activity={activity} variant="sheet" />
+        <ActivityThread activity={activity} variant="sheet" initialShow={initialShow} />
       </Sheet>
     </Backdrop>,
     document.body,
@@ -70,6 +71,9 @@ export function ActivityBell({ defaultOpen = false }: { defaultOpen?: boolean })
   const { t } = useI18n()
   const location = useLocation()
   const [open, setOpen] = useState(defaultOpen)
+  // New 🌿 and comments from other growers since you last looked: a number on the bell.
+  const { unread } = useGreenhouseSocial(true)
+  const [openOn, setOpenOn] = useState<'social' | 'xp'>('xp')
   const skipRouteClose = useRef(true)
 
   useEffect(() => {
@@ -84,15 +88,24 @@ export function ActivityBell({ defaultOpen = false }: { defaultOpen?: boolean })
     <>
       <Bell
         type="button"
-        aria-label={t.greenhouse.activityTitle}
+        aria-label={unread > 0 ? t.greenhouse.bellUnread.replace('{n}', String(unread)) : t.greenhouse.activityTitle}
         aria-expanded={open}
         aria-haspopup="dialog"
         $open={open}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          setOpenOn(unread > 0 ? 'social' : 'xp')
+          setOpen((value) => !value)
+        }}
+        data-activity-bell
       >
         <Icon name="bell" size={20} />
+        {unread > 0 ? (
+          <Count aria-hidden data-bell-count>
+            {unread > 9 ? '9+' : unread}
+          </Count>
+        ) : null}
       </Bell>
-      {open ? <ActivitySheet onClose={() => setOpen(false)} /> : null}
+      {open ? <ActivitySheet onClose={() => setOpen(false)} initialShow={openOn} /> : null}
     </>
   )
 }

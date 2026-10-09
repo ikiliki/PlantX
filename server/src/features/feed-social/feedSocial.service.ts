@@ -65,7 +65,7 @@ export const feedSocialService = {
     return getStore().activitySocial.recent(Math.min(Math.max(limit, 1), 200))
   },
 
-  /** Greenhouse activities → Social: what others left on your own posts. */
+  /** Greenhouse activities → Social: every 🌿 and comment on your posts, yours included. */
   async mine(ownerId: string) {
     return getStore().activitySocial.forOwner(ownerId, 200)
   },

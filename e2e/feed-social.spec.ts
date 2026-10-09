@@ -53,6 +53,8 @@ test.describe('feed reactions and comments', () => {
 
     await expectPage(page, '/feed')
     const card = page.locator(`[data-feed-post="${post.id}"]`)
+    // My own post names me with (you).
+    await expect(card).toContainText('(you)')
     const leaf = card.locator('[data-react]')
     await expect(leaf).toContainText('2')
     await expect(leaf).toHaveAttribute('aria-pressed', 'false')
@@ -84,7 +86,7 @@ test.describe('feed reactions and comments', () => {
     await expect(thread.getByText('Lovely')).toHaveCount(0)
   })
 
-  test('Greenhouse activities: All, Social and XP; Social lists leaves and comments others left on my posts', async ({ page }, testInfo) => {
+  test('Greenhouse activities: Social lists every leaf and comment on my posts; the bell counts new ones', async ({ page }, testInfo) => {
     const at = new Date().toISOString()
     await page.route('**/api/activities/social/mine', (route) =>
       route.fulfill({
@@ -92,18 +94,26 @@ test.describe('feed reactions and comments', () => {
           items: [
             { kind: 'comment', activityId: 'e2e-mine', plantId: null, userId: 'u-admin', userName: 'E2E Admin', body: 'Gorgeous leaves', createdAt: at },
             { kind: 'reaction', activityId: 'e2e-mine', plantId: null, userId: 'u-admin', userName: 'E2E Admin', body: '', createdAt: at },
+            { kind: 'reaction', activityId: 'e2e-mine', plantId: null, userId: MEMBER, userName: 'Me', body: '', createdAt: at },
           ],
         },
       }),
     )
     await expectPage(page, '/greenhouse')
-    if (testInfo.project.name === 'phone') await page.getByRole('banner').getByRole('button', { name: 'Greenhouse activities' }).click()
+    if (testInfo.project.name === 'phone') {
+      // Two new from another grower (my own leaf does not count); the bell opens on Social.
+      const bell = page.getByRole('banner').locator('[data-activity-bell]')
+      await expect(bell.locator('[data-bell-count]')).toHaveText('2')
+      await bell.click()
+    } else {
+      const show = page.locator('[data-activity-thread]').getByRole('radiogroup', { name: 'Show' })
+      await expect(show.getByRole('radio', { name: 'Social (2)' })).toBeVisible()
+      await show.getByRole('radio', { name: /^Social/ }).click()
+    }
     const thread = page.locator('[data-activity-thread]').last()
-    const show = thread.getByRole('radiogroup', { name: 'Show' })
-    await expect(show.getByRole('radio')).toHaveText(['All', 'Social', 'XP'])
-    await expect(show.getByRole('radio', { name: 'XP' })).toBeChecked()
-    await show.getByRole('radio', { name: 'Social' }).click()
+    await expect(thread.getByRole('radiogroup', { name: 'Show' }).getByRole('radio', { name: 'Social' })).toBeChecked()
     await expect(thread.getByText('E2E Admin commented: “Gorgeous leaves”')).toBeVisible()
     await expect(thread.getByText('E2E Admin gave your post a 🌿')).toBeVisible()
+    await expect(thread.getByText('You gave your post a 🌿')).toBeVisible()
   })
 })

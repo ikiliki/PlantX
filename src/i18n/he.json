@@ -506,7 +506,11 @@
     "activitySocial": "חברתי",
     "socialReacted": "{name} נתן/ה 🌿 לפוסט שלך",
     "socialCommented": "{name} הגיב/ה: ״{text}״",
-    "socialEmpty": "עדיין אין עלים או תגובות על הפוסטים שלך."
+    "socialEmpty": "עדיין אין עלים או תגובות על הפוסטים שלך.",
+    "socialYouReacted": "נתת 🌿 לפוסט שלך",
+    "socialYouCommented": "הגבת: ״{text}״",
+    "socialUnread": "{n} חדשים",
+    "bellUnread": "פעילויות החממה, {n} חדשים"
   },
   "todo": {
     "cancel": "ביטול",
@@ -1424,7 +1428,8 @@
     "updateAdded": "צמח חדש",
     "updateEdited": "עריכה",
     "updateDeleted": "צמח נמחק",
-    "xpEarned": "+{n} XP"
+    "xpEarned": "+{n} XP",
+    "youMark": "(את/ה)"
   },
   "guest": {
     "logIn": "התחברות",

@@ -61,7 +61,7 @@ export function FeedPostSkeleton() {
  */
 export function FeedPost({ update }: { update: FeedUpdate }) {
   const { t, tr, locale } = useI18n()
-  const { db } = useStore()
+  const { db, currentUser } = useStore()
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
@@ -71,7 +71,10 @@ export function FeedPost({ update }: { update: FeedUpdate }) {
   const user = db.users.find((item) => item.id === update.userId && item.role !== 'guest')
   const plant = update.plantId ? db.plants.find((item) => item.id === update.plantId) : undefined
   const name = user ? publicGrowerName(user, locale === 'he') : ''
-  const growerLabel = clientEnv() === 'mock' ? t.demo.personaScenarios[personaScenarioId(update.userId)] : name
+  // Your own posts say so: "Full Name (you)".
+  const mine = Boolean(currentUser && currentUser.id === update.userId)
+  const youMark = mine ? ` ${t.feed.youMark}` : ''
+  const growerLabel = (clientEnv() === 'mock' ? t.demo.personaScenarios[personaScenarioId(update.userId)] : name) + youMark
   const verified = Boolean(user && (db.verifiedGreenhouseIds ?? []).includes(user.id))
 
   const openProfile = () => {
@@ -93,7 +96,7 @@ export function FeedPost({ update }: { update: FeedUpdate }) {
           <Who>
             <Grower $verified={verified}>
               {verified ? <VerifiedStamp place="inline" /> : null}
-              {verified ? t.greenhouse.verifiedGreenhouse : growerLabel}
+              {verified ? t.greenhouse.verifiedGreenhouse + youMark : growerLabel}
             </Grower>
             <Kind $kind={update.kind}>
               <MomentGlyph kind={update.kind} />
