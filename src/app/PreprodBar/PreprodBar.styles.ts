@@ -1,51 +1,22 @@
 import styled from 'styled-components'
-import { pressable } from '../../theme/motion'
 import { theme } from '../../theme/tokens'
 
-export { Dock, Panel, PanelHead, DemoLabel as BarLabel, Tab } from '../DemoBar/DemoBar.styles'
+export { Dock } from '../DemoBar/DemoBar.styles'
 
-export const TokenField = styled.label`
-  display: grid;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 600;
-`
-
-export const TokenInput = styled.input`
-  width: 100%;
-  min-width: 0;
-  background: ${theme.colors.forestSoft};
+/** The DemoBar tab's look, as a label: nothing to open. */
+export const Badge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 12px 5px;
+  border: 1px solid color-mix(in srgb, var(--c-growth) 35%, transparent);
+  border-top: 0;
+  border-radius: 0 0 ${theme.radii.pill} ${theme.radii.pill};
+  background: ${theme.colors.forest};
   color: ${theme.colors.creamCard};
-  border: 1px solid color-mix(in srgb, var(--c-creamCard) 15%, transparent);
-  border-radius: ${theme.radii.sm};
-  padding: ${theme.space.xs} ${theme.space.sm};
-  font: inherit;
-`
-
-export const Users = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
-  gap: 6px;
-`
-
-export const UserButton = styled.button<{ $current: boolean }>`
-  ${pressable}
-  padding: 6px 10px;
-  border-radius: ${theme.radii.sm};
-  border: 1px solid ${({ $current }) => ($current ? theme.colors.growth : 'color-mix(in srgb, var(--c-creamCard) 20%, transparent)')};
-  background: ${({ $current }) => ($current ? theme.colors.growth : 'transparent')};
-  color: ${({ $current }) => ($current ? theme.colors.onGrowth : theme.colors.creamCard)};
-  font: inherit;
-  font-weight: 600;
-  text-align: start;
-  cursor: pointer;
-  &:disabled {
-    opacity: 0.5;
-    cursor: wait;
-  }
-`
-
-export const Note = styled.p`
-  margin: 0;
-  opacity: 0.8;
+  box-shadow: ${theme.shadow.soft};
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
+  pointer-events: none;
 `

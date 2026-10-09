@@ -226,23 +226,41 @@ export function deleteMyAccount() {
   return request<LivePayload>('/api/session/account', { method: 'DELETE' })
 }
 
+/** Whether the login card offers email + password (PP only), and whether this is PP. */
+export function fetchPasswordAuth() {
+  return request<{ enabled: boolean; preprod: boolean }>('/api/session/password')
+}
+
 /** Google sign-in. `termsVersion` is the Terms version ticked on the login page (needed to sign up). */
-export async function postGoogleSessionResult(credential: string, termsVersion?: string) {
+export function postGoogleSessionResult(credential: string, termsVersion?: string) {
+  return postSignIn('/api/session/google', { credential, termsVersion })
+}
+
+/** PP: email + password sign-in (`login`) or a new account (`register`). */
+export function postPasswordSessionResult(
+  mode: 'login' | 'register',
+  body: { email: string; password: string; name?: string; termsVersion?: string },
+) {
+  return postSignIn(mode === 'register' ? '/api/session/signup' : '/api/session/password', body)
+}
+
+/** A sign-in POST: the live payload, or the server's error token and message. */
+async function postSignIn(path: string, body: Record<string, unknown>) {
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    const res = await plantFetch('/api/session/google', {
+    const res = await plantFetch(path, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential, termsVersion }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     })
     if (res.ok) return { ok: true as const, live: (await res.json()) as LivePayload }
-    const body = (await res.json().catch(() => null)) as { error?: string } | null
-    return { ok: false as const, error: body?.error ?? 'auth' }
+    const answer = (await res.json().catch(() => null)) as { error?: string; message?: string } | null
+    return { ok: false as const, error: answer?.error ?? 'auth', message: answer?.message }
   } catch {
-    return { ok: false as const, error: 'offline' }
+    return { ok: false as const, error: 'offline', message: undefined }
   } finally {
     window.clearTimeout(timer)
   }

@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 /**
  * UI regression. Runs against a deployed or local app; it never starts a server.
- * PLANTX_E2E_URL: the app (default local QA web). PLANTX_TEST_TOKEN: PP test login (QA uses the session route).
+ * PLANTX_E2E_URL: the app (default local QA web). PLANTX_PP_PASSWORD (+ PLANTX_PP_ADMIN_*): PP email + password logins (QA uses the session route).
  * VERCEL_AUTOMATION_BYPASS_SECRET: passes Vercel deployment protection on previews.
  */
 const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()

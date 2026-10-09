@@ -24,6 +24,7 @@
     "seed:empty": "tsx scripts/reset-data.ts empty",
     "seed:demo": "tsx scripts/reset-data.ts demo",
     "seed:preprod": "tsx scripts/preprod-seed.ts",
+    "logins:preprod": "tsx scripts/preprod-logins.ts",
     "load:preprod": "node scripts/preprod-load.mjs",
     "build": "tsc && tsc -p tsconfig.server.json && vite build",
     "e2e": "playwright test",

@@ -19,5 +19,5 @@ export default {
   decorators: [withApp],
 }
 
-/** Renders only when /api/session/test-users answers (preprod). Empty elsewhere. */
+/** Renders only when the server says this is PP. Empty elsewhere. */
 export const OnlyOnPreprod = () => <PreprodBar />

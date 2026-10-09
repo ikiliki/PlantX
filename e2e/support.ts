@@ -8,8 +8,25 @@ import type { Catalog, Diagnosis } from '../src/mock/types'
 /** Admin exists on QA and PP. */
 export const ADMIN = 'u-admin'
 
+/**
+ * PP: the testers' password (scripts/preprod-logins.ts). Set means the run targets a PP preview, which signs in
+ * with email + password like a person; QA uses the passwordless session route.
+ */
+const PP_PASSWORD = process.env.PLANTX_PP_PASSWORD?.trim() ?? ''
+export const ON_PP = Boolean(PP_PASSWORD)
+
 /** A plain member: PP's first tester, or the one scripts/e2e-seed.mjs adds to the CI QA stack. */
-export const MEMBER = process.env.PLANTX_TEST_TOKEN?.trim() ? 'test-user-001' : 'e2e-member'
+export const MEMBER = ON_PP ? 'test-user-001' : 'e2e-member'
+
+/** PP email + password for a seeded user id. */
+export function ppLogin(userId: string) {
+  return userId === ADMIN
+    ? {
+        email: process.env.PLANTX_PP_ADMIN_EMAIL?.trim() || 'admin@preprod.invalid',
+        password: process.env.PLANTX_PP_ADMIN_PASSWORD?.trim() ?? '',
+      }
+    : { email: `${userId}@preprod.invalid`, password: PP_PASSWORD }
+}
 
 const CORE = ['health', 'size', 'stage', 'area']
 
@@ -61,7 +78,7 @@ function cachedSession(userId: string): Cookies | null {
 }
 
 /**
- * QA: the session route. PP: the test-login route with the token. Signs in once per user and run, then
+ * QA: the session route. PP: email + password. Signs in once per user and run, then
  * reuses the cookie. A fresh sign-in also accepts the current Terms, so a test meets the consent dialog
  * only when it asks for it.
  */
@@ -71,9 +88,8 @@ export async function signIn(page: Page, userId = ADMIN) {
     await page.context().addCookies(cached)
     return
   }
-  const token = process.env.PLANTX_TEST_TOKEN?.trim()
-  const res = token
-    ? await page.request.post('/api/session/test-login', { headers: { 'X-Test-Token': token }, data: { userId } })
+  const res = ON_PP
+    ? await page.request.post('/api/session/password', { data: { ...ppLogin(userId), termsVersion: LEGAL_VERSION } })
     : await page.request.post('/api/session', { data: { userId } })
   const detail = res.ok() ? '' : ` ${(await res.text().catch(() => '')).slice(0, 200)}`
   expect(res.ok(), `sign in as ${userId}: HTTP ${res.status()}${detail}`).toBeTruthy()

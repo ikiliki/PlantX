@@ -65,6 +65,7 @@ import {
   postEnableUser,
   postPreapproved,
   postGoogleSessionResult,
+  postPasswordSessionResult,
   postConsent,
   deleteMyAccount,
   patchAccount,
@@ -217,6 +218,11 @@ interface StoreApi {
   loginByEmail: (email: string) => Promise<boolean>
   /** Google Identity Services ID token → session. */
   loginWithGoogle: (credential: string, termsVersion?: string) => Promise<{ ok: true } | { ok: false; reason: string }>
+  /** PP: email + password sign-in or sign-up → session. `message` is the server's reason, for the form. */
+  loginWithPassword: (
+    mode: 'login' | 'register',
+    input: { email: string; password: string; name?: string; termsVersion?: string },
+  ) => Promise<{ ok: true } | { ok: false; reason: string; message?: string }>
   /** The signed-in member agrees to the current Terms and Privacy Policy. */
   acceptTerms: () => Promise<boolean>
   /** Erases the signed-in member's account (not the admin) and signs out. */
@@ -895,6 +901,13 @@ export function StoreProvider({
     loginWithGoogle: async (credential, termsVersion) => {
       const result = await postGoogleSessionResult(credential, termsVersion)
       if (!result.ok) return { ok: false as const, reason: result.error }
+      applyLive(result.live)
+      setLiveStatus('up')
+      return { ok: true as const }
+    },
+    loginWithPassword: async (mode, input) => {
+      const result = await postPasswordSessionResult(mode, input)
+      if (!result.ok) return { ok: false as const, reason: result.error, message: result.message }
       applyLive(result.live)
       setLiveStatus('up')
       return { ok: true as const }
