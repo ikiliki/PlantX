@@ -1,4 +1,5 @@
 import { analyticsService } from '../analytics/analytics.service.ts'
+import { generateNickname } from '../../../../src/features/profile/avatarIcons.ts'
 import { UNKNOWN_AREA } from '../../../../src/mock/locations.ts'
 import type { TermsConsent, User } from '../../../../src/mock/types.ts'
 import { greenhouseLevel } from '../../../../src/features/greenhouse/greenhouseLevel.ts'
@@ -45,6 +46,8 @@ function newMember(input: { name: string; email: string } & TermsConsent, preapp
     nameHe: input.name,
     email: input.email,
     role: 'grower',
+    // The public name; editable in Profile, never empty.
+    nickname: generateNickname(),
     region: UNKNOWN_AREA.region,
     regionHe: UNKNOWN_AREA.regionHe,
     lat: UNKNOWN_AREA.lat,

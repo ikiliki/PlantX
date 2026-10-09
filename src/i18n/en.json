@@ -831,7 +831,8 @@
     "iconLabel": "Icon",
     "iconSeed": "Seed",
     "iconHint": "Starts as a seed. More icons unlock as your greenhouse levels up.",
-    "placeLabel": "Greenhouse place"
+    "placeLabel": "Greenhouse place",
+    "nicknameRequired": "A nickname can't be empty."
   },
   "auth": {
     "buyTitle": "Log in to purchase",

@@ -784,6 +784,8 @@ export function StoreProvider({
       })
     },
     setAccount: async (patch) => {
+      // A nickname can change but not go blank.
+      if (patch.nickname !== undefined && !cleanNickname(patch.nickname)) return false
       const ownerId = db.currentUserId
       const before = db.users.find((item) => item.id === ownerId && item.role !== 'guest')
       if (!before) return false
@@ -795,7 +797,6 @@ export function StoreProvider({
         if (patch.nickname !== undefined) {
           const nickname = cleanNickname(patch.nickname)
           if (nickname) user.nickname = nickname
-          else delete user.nickname
         }
         if (patch.avatarIcon) user.avatarIcon = patch.avatarIcon
         return d

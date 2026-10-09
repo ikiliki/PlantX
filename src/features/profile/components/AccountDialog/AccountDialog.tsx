@@ -108,9 +108,14 @@ export function AccountDialog({ onClose, view = 'profile' }: { onClose: () => vo
   const level = greenhouseLevel(currentUser.id, db.plants, db.todos).level
   const icon = avatarIconId(currentUser.avatarIcon)
   const nicknameDirty = cleanNickname(nickname) !== cleanNickname(currentUser.nickname ?? '')
+  const nicknameEmpty = cleanNickname(nickname) === ''
 
   const saveNickname = async () => {
     const next = cleanNickname(nickname)
+    if (!next) {
+      setStatus('failed')
+      return
+    }
     setNickname(next)
     if (next === cleanNickname(currentUser.nickname ?? '')) return
     const ok = await setAccount({ nickname: next })
@@ -188,11 +193,11 @@ export function AccountDialog({ onClose, view = 'profile' }: { onClose: () => vo
                 setNickname(event.target.value)
               }}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' && nicknameDirty) void saveNickname()
+                if (event.key === 'Enter' && nicknameDirty && !nicknameEmpty) void saveNickname()
               }}
             />
             {nicknameDirty && (
-              <Button type="button" variant="growth" onClick={() => void saveNickname()}>
+              <Button type="button" variant="growth" disabled={nicknameEmpty} onClick={() => void saveNickname()}>
                 {t.common.save}
               </Button>
             )}
@@ -201,6 +206,8 @@ export function AccountDialog({ onClose, view = 'profile' }: { onClose: () => vo
                 ? t.profile.nicknameSaved
                 : status === 'failed'
                   ? t.profile.nicknameFailed
+                  : nicknameEmpty
+                  ? t.profile.nicknameRequired
                   : t.profile.nicknameHint}
             </Hint>
           </Block>
