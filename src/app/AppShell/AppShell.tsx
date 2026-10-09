@@ -79,7 +79,7 @@ export function AppShell() {
   const bottom: { to: string; label: string; icon: IconName; pageId?: PageId }[] = (
     [
       { to: '/home', label: t.nav.home, icon: 'home' as const, pageId: 'home' as const },
-      // The feed takes the market's slot; market and catalog are icons in the phone top bar.
+      // Catalog is an icon in the phone top bar; Market sits at the far end of the dock.
       { to: '/feed', label: t.nav.feed, icon: 'feed' as const, pageId: 'home' as const },
       { to: '/greenhouse', label: t.nav.greenhouse, icon: 'greenhouse' as const, pageId: 'greenhouse' as const },
       {
@@ -89,6 +89,7 @@ export function AppShell() {
         pageId: 'todo' as const,
       },
       { to: '/rank', label: t.nav.rank, icon: 'rank' as const, pageId: 'rank' as const },
+      { to: '/market', label: t.nav.market, icon: 'market' as const, pageId: 'market' as const },
     ] satisfies { to: string; label: string; icon: IconName; pageId: PageId }[]
   ).filter((item) => {
     if (!item.pageId || !isPageNavigable(db.system, item.pageId)) return false
@@ -96,6 +97,7 @@ export function AppShell() {
       greenhouse: 'greenhouse.board',
       todo: 'todo.board',
       rank: 'rank.board',
+      market: 'market.board',
     }
     const id = board[item.pageId]
     return !id || isPlacementEnabled(db.system, id)

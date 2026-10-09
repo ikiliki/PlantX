@@ -1,13 +1,15 @@
 import { MEMBER, expect, expectPage, signIn, test } from './support'
 
-/** Phone Home redesign: Feed tab in the dock, market and catalog as top bar icons, the daily Home, the Feed page. */
+/** Phone Home redesign: Feed tab in the dock, Market last, catalog as a top bar icon, the daily Home, the Feed page. */
 test.describe('phone navigation', { tag: '@prod' }, () => {
-  test('the dock has Feed instead of Market and Catalog; Catalog is a top bar icon', async ({ page }, testInfo) => {
+  test('the dock has Feed, Market last and no Catalog; Catalog is a top bar icon', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'phone', 'The dock is the phone navigation')
     await expectPage(page, '/greenhouse')
     const dock = page.locator('[data-dock]')
     await expect(dock.locator('a[href="/feed"]')).toBeVisible()
-    await expect(dock.locator('a[href="/market"]')).toHaveCount(0)
+    // Market, when it is on, is the last dock item.
+    const market = dock.locator('a[href="/market"]')
+    if ((await market.count()) > 0) await expect(dock.locator('a').last()).toHaveAttribute('href', '/market')
     await expect(dock.locator('a[href="/wiki"]')).toHaveCount(0)
 
     await page.getByRole('banner').getByRole('link', { name: 'Catalog' }).click()

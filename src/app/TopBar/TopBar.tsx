@@ -150,19 +150,8 @@ export function TopBar() {
       </NavItems>
 
       <Actions>
-        {/* The phone dock has no room for these two; they sit here as icons. */}
+        {/* The phone dock has no room for the catalog; it sits here as an icon. */}
         <MobileOnly>
-          {show('market') && (
-            <TopIcon
-              to="/market"
-              $active={isActive('/market')}
-              aria-label={t.nav.market}
-              title={t.nav.market}
-              aria-current={isActive('/market') ? 'page' : undefined}
-            >
-              <Icon name="market" size={20} />
-            </TopIcon>
-          )}
           {show('wiki') && (
             <TopIcon
               to="/wiki"
