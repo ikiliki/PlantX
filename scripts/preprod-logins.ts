@@ -37,10 +37,6 @@ export async function syncPreprodLogins() {
     console.error('Passwords need at least 8 characters.')
     process.exit(1)
   }
-  if (testerPassword === adminPassword) {
-    console.error('Use a different admin password: testers and bots share PP_TESTER_PASSWORD.')
-    process.exit(1)
-  }
 
   const admin = async (path: string, method = 'GET', body?: unknown) => {
     const res = await fetch(`${url}/auth/v1/admin/${path}`, {
