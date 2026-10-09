@@ -355,6 +355,8 @@
     "publicHint": "Everyone can see this plant and its activity.",
     "privateHint": "Only you see this plant and its activity.",
     "deletePlant": "Delete plant",
+    "deleteHint": "Removes it from your greenhouse and its tasks. An admin can restore it.",
+    "settingsTab": "Settings",
     "deleteTitle": "Delete {name}?",
     "deleteLead": "It leaves your greenhouse and its tasks stop. Its activity stays in your log.",
     "deleteConfirm": "Delete",
@@ -1423,6 +1425,8 @@
     "savedNote": "Saved on this device only. Log in and they move into your greenhouse."
   },
   "common": {
+    "saving": "Saving…",
+    "saved": "Saved",
     "ils": "₪",
     "backToTop": "Back to top",
     "back": "Back",

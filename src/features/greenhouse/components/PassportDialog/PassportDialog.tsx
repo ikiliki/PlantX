@@ -5,6 +5,7 @@ import { useStore } from '../../../../mock/store'
 import type { TodoSubcategory } from '../../../../mock/types'
 import { GuestView } from '../../../../components/GuestView/GuestView'
 import { SheetGrip, useSheetDrag } from '../../../../components/SheetGrip/SheetGrip'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 import { forAudience } from '../../../../theme/audience'
 import { PlantPassport } from '../PlantPassport/PlantPassport'
 import { Backdrop, Close, CloseBar, Dialog, GuestPane } from './PassportDialog.styles'
@@ -15,17 +16,22 @@ export function PassportDialog({
   tab = 'grading',
   activityKey,
   careMark,
+  routed = false,
 }: {
   plantId: string
   onClose: () => void
   tab?: 'grading' | 'todo' | 'activity' | 'market'
   activityKey?: string
   careMark?: TodoSubcategory
+  /** Opened by its own URL (`/plants/:id`): back already closes it, so it adds no history entry of its own. */
+  routed?: boolean
 }) {
   const { t } = useI18n()
   const { signedIn } = useStore()
   const dialogRef = useRef<HTMLDivElement>(null)
   const sheet = useSheetDrag(onClose)
+  // A layer: pull to refresh leaves the page alone, and back closes the passport.
+  useDialogLayer(onClose, { history: !routed })
 
   useLayoutEffect(() => {
     const y = window.scrollY

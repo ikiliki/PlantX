@@ -73,6 +73,7 @@ test.describe('activity sheet popups', () => {
     await expect(sheet).toBeVisible()
     await sheet.getByRole('button', { name: new RegExp(plant.title) }).last().click()
 
+    await page.getByRole('tab', { name: 'Settings' }).click()
     const privacy = page.getByRole('radiogroup', { name: 'Who can see this plant' })
     await expect(privacy).toBeVisible()
     await privacy.getByRole('radio', { name: 'Private' }).click()

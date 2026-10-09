@@ -6,6 +6,7 @@ import type { PhotoCheck } from '../../../../mock/types'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import {
   Gallery,
+  PhotoBlur,
   PhotoFrame,
   PhotoSticker,
   Thumb,
@@ -17,6 +18,7 @@ import {
   ViewerStrip,
   ViewerThumb,
 } from './PlantPhotoGallery.styles'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 type PlantPhotoGalleryProps = {
   photos: string[]
@@ -53,9 +55,9 @@ function PlantPhotoViewer({
   const { t } = useI18n()
   const safe = Math.min(index, Math.max(0, photos.length - 1))
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(onClose)
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
       if (event.key === 'ArrowRight') onIndexChange(Math.min(safe + 1, photos.length - 1))
@@ -63,7 +65,6 @@ function PlantPhotoViewer({
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
     }
   }, [onClose, onIndexChange, photos.length, safe])
@@ -140,6 +141,8 @@ export function PlantPhotoGallery({
           aria-label={t.passport.photos}
           onClick={() => openViewer(safeIndex)}
         >
+          {/* The whole photo always shows; a soft blur of it fills the space around a tall or wide one. */}
+          <PhotoBlur aria-hidden style={{ backgroundImage: `url("${photos[safeIndex]}")` }} />
           <PlantImage src={photos[safeIndex]} alt={alt} />
           {checkAt(checks, safeIndex) ? (
             <PhotoSticker key={safeIndex}>

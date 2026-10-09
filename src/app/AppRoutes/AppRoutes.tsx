@@ -158,7 +158,7 @@ export function AppRoutes() {
         </Route>
         <Route path="*" element={<Navigate to="/greenhouse" replace />} />
       </Routes>
-      {plantId && fromGreenhouse && <PassportDialog plantId={plantId} onClose={closeOverlay} />}
+      {plantId && fromGreenhouse && <PassportDialog plantId={plantId} onClose={closeOverlay} routed />}
       {sellerId && !sellerFull && <SellerDialog userId={sellerId} onClose={closeOverlay} />}
       {profilePreview && !sellerId && (
         <SellerDialog

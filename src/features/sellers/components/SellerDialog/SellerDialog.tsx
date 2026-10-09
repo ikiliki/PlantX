@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { SellerProfile } from '../SellerProfile/SellerProfile'
 import { Backdrop, Close, CloseBar, Dialog } from './SellerDialog.styles'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 const TITLE_ID = 'seller-profile-title'
 
@@ -10,9 +11,9 @@ export function SellerDialog({ userId, onClose }: { userId: string; onClose: () 
   const { t } = useI18n()
   const dialogRef = useRef<HTMLDivElement>(null)
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(onClose, { history: false })
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     dialogRef.current?.scrollTo(0, 0)
     dialogRef.current?.focus()
     const onKey = (event: KeyboardEvent) => {
@@ -28,7 +29,6 @@ export function SellerDialog({ userId, onClose }: { userId: string; onClose: () 
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
     }
   }, [onClose, userId])

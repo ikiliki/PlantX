@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-/** Who can see the plant, under its name. */
+/** Who can see the plant (Public / Private), in the passport's Settings tab. */
 export const Row = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -11,21 +11,9 @@ export const Row = styled.div`
   min-width: 0;
 `
 
-/**
- * Delete sits at the very bottom of the passport side column (pushed down by `margin-top: auto`); stacked
- * on a phone it comes last, after the owner and greenhouse rows.
- */
 export const DeleteSlot = styled.div`
   display: flex;
   justify-content: flex-start;
-  margin-top: auto;
-  padding-top: 8px;
-  order: 3;
-
-  /* Under the owner rows, which already take the free space above them. */
-  [data-owner-label] ~ & {
-    margin-top: 0;
-  }
 `
 
 /** Public / Private as one two-way pill; the chosen side is filled. */
@@ -72,11 +60,11 @@ export const Delete = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 30px;
-  padding: 0 10px;
-  border: 0;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--c-danger) 40%, transparent);
   border-radius: ${theme.radii.pill};
-  background: none;
+  background: ${theme.colors.creamCard};
   color: ${theme.colors.danger};
   font: inherit;
   font-size: 12px;

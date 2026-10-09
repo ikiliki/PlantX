@@ -30,6 +30,7 @@ import {
   Top,
   WikiButton,
 } from './MarketPeek.styles'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 export function MarketPeekCard({
   classId,
@@ -178,16 +179,15 @@ export function MarketPeekDialog({
   const { t } = useI18n()
   const sheetRef = useRef<HTMLDivElement>(null)
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(onClose)
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     sheetRef.current?.focus()
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
     }
   }, [onClose])
