@@ -68,6 +68,20 @@ test.describe('member Home and Feed', () => {
     await expect(feed.locator('[data-feed-post="e2e-feed-1"]')).toHaveCount(0)
   })
 
+  test('the activity bell shows on the Greenhouse page only and opens a sheet grouped by day', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'phone', 'The bell is the phone way into greenhouse activity')
+    const bell = page.getByRole('banner').getByRole('button', { name: 'Greenhouse activities' })
+    await expectPage(page, '/home')
+    await expect(bell).toHaveCount(0)
+    await expectPage(page, '/greenhouse')
+    await bell.click()
+    const sheet = page.getByRole('dialog', { name: 'Greenhouse activities' })
+    await expect(sheet).toBeVisible()
+    await expect(sheet.getByRole('radio', { name: 'XP' })).toBeChecked()
+    await page.keyboard.press('Escape')
+    await expect(sheet).toHaveCount(0)
+  })
+
   test('the account dialog splits into Profile, Appearance and Account tabs', async ({ page }) => {
     await page.goto('/greenhouse?account=1')
     const dialog = page.getByRole('dialog', { name: 'Account' })

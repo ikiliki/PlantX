@@ -1,23 +1,32 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 import type { FeedUpdateKind } from '../../../../mock/types'
-import { momentSurface } from '../../../feed/components/ActivityMoment/ActivityMoment.styles'
+import { kindInk } from '../../../feed/components/ActivityMoment/ActivityMoment.styles'
 
-export const Root = styled.aside<{ $height?: number }>`
+type Variant = 'rail' | 'sheet'
+
+/** Rail: a calm card beside the shelf. Sheet: no card of its own, it fills the phone dialog. */
+export const Root = styled.aside<{ $height?: number; $variant: Variant }>`
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
-  width: min(300px, 100%);
-  height: ${({ $height }) => ($height ? `${$height}px` : 'min(52svh, 420px)')};
-  min-height: ${({ $height }) => ($height ? `${$height}px` : '220px')};
-  max-height: ${({ $height }) => ($height ? `${$height}px` : 'min(52svh, 420px)')};
-  border-radius: ${theme.radii.lg};
-  border: 1px solid ${theme.colors.border};
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--c-creamCard) 98%, transparent), color-mix(in srgb, var(--c-chipGreen) 35%, transparent)),
-    ${theme.colors.creamCard};
-  box-shadow: ${theme.shadow.soft};
   overflow: hidden;
+
+  ${({ $variant, $height }) =>
+    $variant === 'sheet'
+      ? `
+    width: 100%;
+    height: min(64svh, 560px);
+  `
+      : `
+    width: min(340px, 100%);
+    height: ${$height ? `${$height}px` : 'min(56svh, 460px)'};
+    min-height: ${$height ? `${$height}px` : '240px'};
+    max-height: ${$height ? `${$height}px` : 'min(56svh, 460px)'};
+    border-radius: ${theme.radii.lg};
+    background: ${theme.colors.creamCard};
+    box-shadow: ${theme.shadow.card};
+  `}
 
   @container (min-width: 961px) {
     align-self: start;
@@ -29,196 +38,184 @@ export const Root = styled.aside<{ $height?: number }>`
 `
 
 /** Title, then XP / All. In a narrow rail the toggle drops under the title instead of squeezing it. */
-export const Head = styled.div`
+export const Head = styled.div<{ $variant: Variant }>`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 6px 8px;
+  gap: 8px;
   min-width: 0;
-  padding: 10px 12px 8px;
-  border-bottom: 1px solid ${theme.colors.border};
+  padding: ${({ $variant }) => ($variant === 'sheet' ? '0 0 10px' : '14px 16px 10px')};
 `
 
 export const Title = styled.h2`
   margin: 0;
   min-width: 0;
-  white-space: nowrap;
   font-family: ${theme.fonts.display};
   font-weight: ${theme.fonts.displayWeight};
-  font-size: 18px;
+  font-size: ${theme.text.md};
   line-height: 1.2;
-  color: ${theme.colors.forest};
+  color: ${theme.colors.ink};
 `
 
-export const ScrollFrame = styled.div`
-  position: relative;
-  min-height: 0;
-  height: 100%;
-`
-
-export const Scroll = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 0;
-  height: 100%;
-  overflow-y: auto;
-  padding: 12px;
-
-  @container (max-width: 960px) {
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-      width: 0;
-      height: 0;
-    }
-  }
-`
-
-/** Top hint that older activity still sits above. The bar itself stays hidden. */
-export const MoreAbove = styled.div<{ $on?: boolean }>`
-  display: none;
-
-  @container (max-width: 960px) {
-    display: block;
-    position: absolute;
-    z-index: 2;
-    inset-inline: 0;
-    inset-block-start: 0;
-    height: 64px;
-    pointer-events: none;
-    opacity: ${({ $on }) => ($on ? 1 : 0)};
-    transition: opacity ${theme.motion.base} ${theme.motion.ease};
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--c-creamCard) 98%, transparent) 0%,
-      color-mix(in srgb, var(--c-creamCard) 55%, transparent) 48%,
-      transparent 100%
-    );
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset-inline: 12px;
-      inset-block-start: 0;
-      height: 1px;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        color-mix(in srgb, var(--c-moss) 40%, transparent) 14%,
-        color-mix(in srgb, var(--c-moss) 40%, transparent) 86%,
-        transparent 100%
-      );
-    }
-  }
-`
-
-export const Message = styled.div<{ $kind?: FeedUpdateKind; $open?: boolean }>`
-  position: relative;
+export const Scroll = styled.div<{ $variant: Variant }>`
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  flex: none;
-  width: 100%;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: ${({ $variant }) => ($variant === 'sheet' ? '2px 0 12px' : '2px 10px 14px')};
+  scrollbar-width: thin;
+`
+
+export const Day = styled.section`
+  display: grid;
+  gap: 4px;
+`
+
+/** Today / Yesterday / Sat 4 Oct: sticks to the top while its rows scroll under it. */
+export const DayLabel = styled.h3`
+  position: sticky;
+  top: 0;
+  z-index: 1;
   margin: 0;
-  padding: 10px 12px;
-  border-radius: ${theme.radii.md};
-  border: 1px solid ${theme.colors.border};
-  background: color-mix(in srgb, var(--c-creamCard) 88%, transparent);
+  padding: 4px 6px;
+  font-size: ${theme.text.xs};
+  font-weight: 800;
+  color: ${theme.colors.muted};
+  background: ${theme.colors.creamCard};
+`
+
+export const Rows = styled.ul`
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li + li {
+    border-top: 1px solid ${theme.colors.border};
+  }
+`
+
+export const Row = styled.div<{ $open?: boolean }>`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: ${theme.radii.sm};
+  background: transparent;
   color: inherit;
   font: inherit;
   text-align: start;
-  text-decoration: none;
-  overflow: hidden;
-  ${({ $kind }) => $kind && momentSurface($kind)}
-  ${({ $open }) =>
-    $open &&
-    css`
-      cursor: pointer;
+  cursor: ${({ $open }) => ($open ? 'pointer' : 'default')};
+  transition: background ${theme.motion.fast} ease;
 
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: ${theme.shadow.soft};
-      }
+  &:hover {
+    background: ${({ $open }) => ($open ? theme.colors.chipNeutral : 'transparent')};
+  }
 
-      &:focus-visible {
-        outline: 2px solid ${theme.colors.moss};
-        outline-offset: 2px;
-      }
-    `}
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.growth};
+    outline-offset: -2px;
+  }
 `
 
-export const Photo = styled.div<{ $scan?: boolean }>`
+export const Thumb = styled.span<{ $scan?: boolean }>`
   position: relative;
-  z-index: 1;
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: ${theme.radii.pill};
-  overflow: hidden;
-  background: ${({ $scan }) => ($scan ? theme.colors.forest : theme.colors.chipGreen)};
-  color: ${theme.colors.growth};
+  width: 42px;
+  height: 42px;
+  border-radius: ${theme.radii.sm};
+  background: ${({ $scan }) => ($scan ? theme.colors.chipNeutral : theme.colors.chipGreen)};
+  color: ${theme.colors.forest};
   font-size: 16px;
-  flex-shrink: 0;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: inherit;
   }
 `
 
-export const Meta = styled.div`
-  position: relative;
-  z-index: 1;
+/** The kind's glyph in a small coin at the thumb's bottom corner. */
+export const Badge = styled.span<{ $kind: FeedUpdateKind }>`
+  position: absolute;
+  inset-block-end: -4px;
+  inset-inline-end: -4px;
   display: grid;
-  gap: 4px;
-  min-width: 0;
-  /* Clears the corner motion so the scan frame and other marks stay off the words. */
-  padding-inline-end: 40px;
-`
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.creamCard};
+  box-shadow: 0 0 0 2px ${theme.colors.creamCard};
+  color: ${({ $kind }) => kindInk($kind)};
 
-export const Event = styled.p`
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.4;
-  color: ${theme.colors.ink};
-  overflow-wrap: anywhere;
-
-  strong {
-    font-weight: 700;
+  > * {
+    transform: scale(0.8);
   }
 `
 
-export const When = styled.span`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
+export const Text = styled.span`
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+`
+
+export const Name = styled.span`
+  font-size: ${theme.text.sm};
+  font-weight: 800;
+  color: ${theme.colors.ink};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const Label = styled.span`
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: ${theme.text.xs};
+  line-height: 1.35;
+  color: ${theme.colors.muted};
+  overflow-wrap: anywhere;
+`
+
+export const Side = styled.span`
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+`
+
+export const Time = styled.time`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: ${theme.type.labelTracking};
-  text-transform: ${theme.type.labelCase};
-  color: ${theme.colors.moss};
+  color: ${theme.colors.muted};
+  font-variant-numeric: tabular-nums;
 `
 
 export const Tag = styled.span<{ $pending: boolean }>`
-  padding: 2px 7px;
+  display: inline-block;
+  margin-inline-start: 6px;
+  padding: 0 6px;
   border-radius: ${theme.radii.pill};
+  font-size: 10px;
+  font-weight: 800;
   background: ${({ $pending }) => ($pending ? theme.colors.chipWarm : theme.colors.growth)};
   color: ${({ $pending }) => ($pending ? theme.colors.warn : theme.colors.onGrowth)};
-  font-size: 10px;
-  letter-spacing: 0.05em;
 `
 
 export const Empty = styled.p`
-  margin: auto 0;
-  padding: 24px 8px;
+  margin: 0;
+  padding: 28px 12px;
   text-align: center;
-  font-size: 14px;
+  font-size: ${theme.text.sm};
   color: ${theme.colors.muted};
 `

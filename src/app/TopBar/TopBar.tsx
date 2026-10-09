@@ -166,9 +166,12 @@ export function TopBar() {
         </MobileOnly>
         {signedIn && currentUser ? (
           <>
-            <MobileOnly>
-              <ActivityBell />
-            </MobileOnly>
+            {/* Your own activity belongs to your greenhouse: the bell shows on that page only. */}
+            {loc.pathname === '/greenhouse' ? (
+              <MobileOnly>
+                <ActivityBell />
+              </MobileOnly>
+            ) : null}
             <Account>
               <AvatarBubble
                 type="button"

@@ -59,23 +59,20 @@ function writeSeen(ownerId: string, level: number) {
 /**
  * Presentational card. `GreenhouseLevelCard` feeds it the owner's live numbers.
  * `owner` puts the grower's avatar on the level ring; the card is the page's header, so no name is shown.
- * The owner's own tiles: `scans` (AI scans left) and `place` (set your greenhouse place, only when it is unknown).
- * Wide, they stand in a column at the end of the card. On a phone they wait behind two buttons in the top row:
- * "!" opens the scans and the level rules (it replaces the (?) after the XP line), and an orange pin, only
- * when the place is missing, opens the place tile.
+ * The owner's own tile: `place` (set your greenhouse place, only when it is unknown). Wide, it stands at the end
+ * of the card. On a phone it waits behind an orange pin in the top row; "?" there opens the level rules.
+ * AI scans left live in the account dialog, not here.
  */
 export function GreenhouseLevelView({
   summary,
   owner,
   celebrate = false,
-  scans,
   place,
   onOwner,
 }: {
   summary: GreenhouseLevel
   owner?: { name: string; color: string; icon?: string }
   celebrate?: boolean
-  scans?: ReactNode
   place?: ReactNode
   /** Tapping the pinned avatar (a grower's public greenhouse: their profile preview). */
   onOwner?: () => void
@@ -174,22 +171,14 @@ export function GreenhouseLevelView({
         </Ledger>
       </Progress>
 
-      {scans || place ? (
-        <End>
-          {scans}
-          {place}
-        </End>
-      ) : null}
+      {place ? <End>{place}</End> : null}
 
       {panel ? (
         <Panel id={panelId}>
           {panel === 'place' ? (
             place
           ) : (
-            <>
-              {scans}
-              <PanelRules>{rules}</PanelRules>
-            </>
+            <PanelRules>{rules}</PanelRules>
           )}
         </Panel>
       ) : null}
@@ -234,12 +223,10 @@ export function GreenhouseLevelSkeleton({ blurred = false }: { blurred?: boolean
 export function GreenhouseLevelCard({
   ownerId,
   publicView = false,
-  scans,
   place,
 }: {
   ownerId: string
   publicView?: boolean
-  scans?: ReactNode
   place?: ReactNode
 }) {
   const { db } = useStore()
@@ -281,12 +268,7 @@ export function GreenhouseLevelCard({
     return undefined
   }, [ownerId, publicView, fetching, summary.level])
 
-  if (!isPlacementEnabled(db.system, 'greenhouse.level')) return scans || place ? (
-      <End $loose>
-        {scans}
-        {place}
-      </End>
-    ) : null
+  if (!isPlacementEnabled(db.system, 'greenhouse.level')) return place ? <End $loose>{place}</End> : null
   const waiting = local ? fetching : !remoteSettled
   if (waiting) return <GreenhouseLevelSkeleton />
   const shown = local ? summary : remote
@@ -308,7 +290,6 @@ export function GreenhouseLevelCard({
       summary={shown}
       owner={owner}
       celebrate={celebrate}
-      scans={scans}
       place={place}
       onOwner={owner ? openProfile : undefined}
     />

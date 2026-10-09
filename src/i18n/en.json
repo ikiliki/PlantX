@@ -396,7 +396,7 @@
     "levelPlantsOne": "1 plant",
     "levelCareOne": "1 task done",
     "levelHow": "How to level up",
-    "levelInfo": "Level and AI scans",
+    "levelInfo": "How levels work",
     "levelEarnPlant": "+{xp} XP for every plant you add",
     "levelEarnCare": "+{xp} XP for every care task you complete",
     "levelRank1": "Seedling",
@@ -503,7 +503,9 @@
     "activityXp": "XP",
     "activityAll": "All",
     "setPlaceShort": "Set your place",
-    "setPlaceHint": "So new plants know where they grow"
+    "setPlaceHint": "So new plants know where they grow",
+    "activityToday": "Today",
+    "activityYesterday": "Yesterday"
   },
   "todo": {
     "cancel": "Cancel",

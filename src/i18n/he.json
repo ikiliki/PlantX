@@ -396,7 +396,7 @@
     "levelPlantsOne": "צמח אחד",
     "levelCareOne": "משימה אחת בוצעה",
     "levelHow": "איך עולים רמה",
-    "levelInfo": "רמה וסריקות AI",
+    "levelInfo": "איך עולים ברמה",
     "levelEarnPlant": "+{xp} XP על כל צמח שמוסיפים",
     "levelEarnCare": "+{xp} XP על כל משימת טיפול שמסיימים",
     "levelRank1": "נבט",
@@ -503,7 +503,9 @@
     "activityXp": "XP",
     "activityAll": "הכול",
     "setPlaceShort": "הגדירו מיקום",
-    "setPlaceHint": "כדי שצמחים חדשים יידעו איפה הם גדלים"
+    "setPlaceHint": "כדי שצמחים חדשים יידעו איפה הם גדלים",
+    "activityToday": "היום",
+    "activityYesterday": "אתמול"
   },
   "todo": {
     "cancel": "ביטול",
