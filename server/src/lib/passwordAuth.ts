@@ -10,7 +10,14 @@ import { preprodEnabled } from './preprod.ts'
 function config() {
   const url = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '')
   const key = (process.env.SUPABASE_ANON_KEY || '').trim()
-  return url && key ? { url, key } : null
+  if (!url || !key) return null
+  // The project's API URL (https://<ref>.supabase.co), never a database URL: those carry a password, and
+  // a failed request would print it into the logs. Refused without echoing the value.
+  if (!/^https:\/\/[^/@\s]+$/.test(url)) {
+    logger.error('SUPABASE_URL must be https://<ref>.supabase.co; password sign-in stays off')
+    return null
+  }
+  return { url, key }
 }
 
 export function passwordAuthEnabled() {
@@ -41,7 +48,9 @@ async function call(path: string, body: Record<string, unknown>) {
       signal: AbortSignal.timeout(10_000),
     })
   } catch (error) {
-    logger.error('password auth unreachable', {}, error)
+    // Name and code only: the message can repeat the URL.
+    const cause = (error as { cause?: { code?: string } })?.cause?.code
+    logger.error('password auth unreachable', { error: (error as Error)?.name, cause })
     throw Errors.internal('Sign-in is unavailable. Try again in a moment.')
   }
   const answer = (await res.json().catch(() => ({}))) as AuthAnswer
