@@ -34,7 +34,7 @@ export const UserButton = styled.button<{ $current: boolean }>`
   border-radius: ${theme.radii.sm};
   border: 1px solid ${({ $current }) => ($current ? theme.colors.growth : 'color-mix(in srgb, var(--c-creamCard) 20%, transparent)')};
   background: ${({ $current }) => ($current ? theme.colors.growth : 'transparent')};
-  color: ${({ $current }) => ($current ? theme.colors.forest : theme.colors.creamCard)};
+  color: ${({ $current }) => ($current ? theme.colors.onGrowth : theme.colors.creamCard)};
   font: inherit;
   font-weight: 600;
   text-align: start;

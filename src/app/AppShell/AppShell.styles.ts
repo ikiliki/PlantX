@@ -64,7 +64,7 @@ export const BottomIcon = styled.span<{ $active?: boolean }>`
   height: 30px;
   border-radius: ${theme.radii.pill};
   background: ${({ $active }) => ($active ? theme.surface.dockActive : 'transparent')};
-  color: ${({ $active }) => ($active ? theme.colors.forest : 'inherit')};
+  color: ${({ $active }) => ($active ? theme.colors.onGrowth : 'inherit')};
   transform: scale(${({ $active }) => ($active ? 1.06 : 0.92)}) translateY(${({ $active }) => ($active ? '-2px' : '0')});
   transition:
     background ${theme.motion.base} ${theme.motion.ease},

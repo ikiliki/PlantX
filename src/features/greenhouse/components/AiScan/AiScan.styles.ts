@@ -244,7 +244,7 @@ export const Stamp = styled.span<{ $tone: 'ok' | 'warn' }>`
   text-transform: ${theme.type.labelCase};
   box-shadow: ${theme.shadow.lift};
   background: ${({ $tone }) => ($tone === 'ok' ? theme.colors.growth : theme.colors.chipWarm)};
-  color: ${({ $tone }) => ($tone === 'ok' ? theme.colors.forest : theme.colors.warn)};
+  color: ${({ $tone }) => ($tone === 'ok' ? theme.colors.onGrowth : theme.colors.warn)};
   animation: ${stampIn} 520ms ${theme.motion.spring} both;
 `
 

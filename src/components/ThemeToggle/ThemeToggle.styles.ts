@@ -20,7 +20,7 @@ export const Toggle = styled.button`
 
   &:hover {
     background: ${theme.colors.growth};
-    color: ${theme.colors.deep};
+    color: ${theme.colors.onGrowth};
   }
 `
 

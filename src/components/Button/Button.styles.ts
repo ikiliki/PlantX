@@ -35,7 +35,7 @@ const variants = {
   `,
   growth: css`
     background: ${theme.colors.growth};
-    color: ${theme.colors.forest};
+    color: ${theme.colors.onGrowth};
     border: 1px solid ${theme.colors.growth};
     box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--c-forest) 22%, transparent), ${theme.shadow.soft};
     &:hover:not(:disabled) {

@@ -263,6 +263,7 @@ export const InfoLink = styled(Link)`
   box-shadow: ${theme.shadow.card};
   &:hover {
     background: ${theme.colors.growth};
+    color: ${theme.colors.onGrowth};
   }
 `
 

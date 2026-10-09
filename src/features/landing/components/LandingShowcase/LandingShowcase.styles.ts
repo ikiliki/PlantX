@@ -257,7 +257,7 @@ export const XpGain = styled.span`
   padding: 4px 8px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;

@@ -22,6 +22,8 @@ const day = {
     /** A leaf-green surface that stays deep in both gardens (dock, level badge). */
     deep: '#1F5135',
     onDeep: '#F4F1E8',
+    /** Text and icons on the lime accent: dark in both gardens. */
+    onGrowth: '#173A26',
     cream: '#F4F1E8',
     creamCard: '#FFFFFF',
     ink: '#20302A',
@@ -93,6 +95,7 @@ const night: typeof day = {
     /** Still deeper than the page, so the dock and the level badge anchor it. */
     deep: '#1A2B22',
     onDeep: '#F0F5EC',
+    onGrowth: '#173A26',
     cream: '#24332B',
     creamCard: '#2F4137',
     ink: '#F0F5EC',

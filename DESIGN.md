@@ -47,6 +47,7 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 
 - New UI reads tokens; no raw hex in `*.styles.ts`.
 - Anything in the dock uses `surface.dock*`.
+- Text or icons on the lime accent (or on peach `warmth`) use `colors.onGrowth`, which stays dark in both gardens. Never `forest` or `ink` there: at night they turn light.
 - One elevation per surface: the clay shadow, no border on top of it.
 
 ## Home feed

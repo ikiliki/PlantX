@@ -24,7 +24,7 @@ export const Mark = styled.span`
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.growth};
   box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--c-forest) 22%, transparent);
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
 `
 
 export const Title = styled.strong`

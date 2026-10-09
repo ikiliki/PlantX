@@ -190,7 +190,7 @@ export const Point = styled.li`
     height: 22px;
     border-radius: 50%;
     background: ${theme.colors.growth};
-    color: ${theme.colors.forest};
+    color: ${theme.colors.onGrowth};
     font-style: normal;
     font-size: 12px;
     font-weight: 800;

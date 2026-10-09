@@ -17,7 +17,7 @@ const busyPulse = keyframes`
 const tones: Record<StickerTone, ReturnType<typeof css>> = {
   ok: css`
     background: ${theme.colors.growth};
-    color: ${theme.colors.forest};
+    color: ${theme.colors.onGrowth};
   `,
   warn: css`
     background: ${theme.colors.chipWarm};

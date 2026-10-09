@@ -114,7 +114,7 @@ export const Mark = styled.span<{ $source: PlantIdentificationSource }>`
   border-radius: ${theme.radii.pill};
   font-size: 0.9em;
   background: ${({ $source }) => ($source === 'ai' ? theme.colors.growth : 'color-mix(in srgb, var(--c-warn) 14%, transparent)')};
-  color: ${({ $source }) => ($source === 'ai' ? theme.colors.forest : theme.colors.warn)};
+  color: ${({ $source }) => ($source === 'ai' ? theme.colors.onGrowth : theme.colors.warn)};
 `
 
 export const Text = styled.span`

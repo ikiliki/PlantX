@@ -210,7 +210,7 @@ export const Tag = styled.span<{ $pending: boolean }>`
   padding: 2px 7px;
   border-radius: ${theme.radii.pill};
   background: ${({ $pending }) => ($pending ? theme.colors.chipWarm : theme.colors.growth)};
-  color: ${({ $pending }) => ($pending ? theme.colors.warn : theme.colors.forest)};
+  color: ${({ $pending }) => ($pending ? theme.colors.warn : theme.colors.onGrowth)};
   font-size: 10px;
   letter-spacing: 0.05em;
 `

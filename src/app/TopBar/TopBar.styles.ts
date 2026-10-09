@@ -90,13 +90,13 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
-  color: ${({ $active }) => ($active ? theme.colors.deep : theme.surface.barMuted)};
+  color: ${({ $active }) => ($active ? theme.colors.onGrowth : theme.surface.barMuted)};
   transition:
     color ${theme.motion.fast} ${theme.motion.ease},
     background ${theme.motion.base} ${theme.motion.ease},
     transform ${theme.motion.base} ${theme.motion.ease};
   &:hover {
-    color: ${({ $active }) => ($active ? theme.colors.deep : theme.surface.barInk)};
+    color: ${({ $active }) => ($active ? theme.colors.onGrowth : theme.surface.barInk)};
     background: ${({ $active }) => ($active ? theme.colors.growth : theme.colors.chipGreen)};
     transform: translateY(-1px);
   }

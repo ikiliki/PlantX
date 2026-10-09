@@ -394,7 +394,7 @@ export const ConfirmMark = styled.div`
   margin-top: -32px;
   border-radius: 50%;
   background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
   box-shadow: ${theme.shadow.soft};
 `
 

@@ -164,6 +164,7 @@ export const WikiButton = styled(Link)`
   font-weight: 700;
   &:hover {
     background: ${theme.colors.growth};
+    color: ${theme.colors.onGrowth};
   }
 `
 

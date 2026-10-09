@@ -45,7 +45,7 @@ export const SeasonTab = styled.button<{ $on: boolean }>`
   border-radius: ${theme.radii.pill};
   background: ${({ $on }) => ($on ? theme.colors.warmth : 'transparent')};
   box-shadow: ${({ $on }) => ($on ? `0 0 0 2px ${theme.colors.creamCard}, 0 0 0 3px ${theme.colors.warmth}` : 'none')};
-  color: ${({ $on }) => ($on ? theme.colors.ink : theme.colors.muted)};
+  color: ${({ $on }) => ($on ? theme.colors.onGrowth : theme.colors.muted)};
   font-size: 14px;
   font-weight: ${({ $on }) => ($on ? 700 : 500)};
   white-space: nowrap;

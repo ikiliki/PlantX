@@ -187,7 +187,7 @@ export const Plus = styled.span`
   height: 64px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
   font-size: 34px;
   font-weight: 400;
   line-height: 1;
@@ -227,7 +227,7 @@ export const Hint = styled.span<{ $solid?: boolean }>`
       padding: 0 20px;
       border-radius: ${theme.radii.pill};
       background: ${theme.colors.growth};
-      color: ${theme.colors.forest};
+      color: ${theme.colors.onGrowth};
       font-size: 14px;
       font-weight: 800;
     `}

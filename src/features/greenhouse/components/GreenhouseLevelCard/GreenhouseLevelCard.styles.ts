@@ -162,7 +162,7 @@ export const Burst = styled.span`
   box-shadow: ${theme.shadow.soft};
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
   font-size: 12px;
   font-weight: 800;
   animation:

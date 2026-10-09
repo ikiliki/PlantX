@@ -77,7 +77,7 @@ export const Pin = styled.button<{ $on: boolean }>`
   border-radius: ${theme.radii.pill};
   border: 1px solid ${({ $on }) => ($on ? theme.colors.growth : 'color-mix(in srgb, var(--c-creamCard) 25%, transparent)')};
   background: ${({ $on }) => ($on ? theme.colors.growth : 'transparent')};
-  color: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.creamCard)};
+  color: ${({ $on }) => ($on ? theme.colors.onGrowth : theme.colors.creamCard)};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;

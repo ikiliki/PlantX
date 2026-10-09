@@ -196,7 +196,8 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
         : $tone === 'due'
           ? theme.colors.chipWarm
           : 'color-mix(in srgb, var(--c-creamCard) 92%, transparent)'};
-  color: ${theme.colors.forest};
+  /* Lime and peach stay light at night, so their text stays dark. */
+  color: ${({ $tone }) => ($tone === 'warm' || $tone === 'fresh' ? theme.colors.onGrowth : theme.colors.forest)};
   font-family: ${theme.fonts.display};
   font-size: 12px;
   font-weight: 600;
@@ -217,6 +218,7 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
       ${Root}:focus-within &,
       ${Root}:active & {
         background: ${theme.colors.growth};
+        color: ${theme.colors.onGrowth};
         border-style: solid;
         border-color: ${theme.colors.forest};
         transform: translateY(-1px);
@@ -245,6 +247,7 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
 
         ${Root}:active & {
           background: ${theme.colors.growth};
+          color: ${theme.colors.onGrowth};
           border-style: solid;
           border-color: ${theme.colors.forest};
           transform: translateY(-1px);
