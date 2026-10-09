@@ -29,26 +29,6 @@ export const Hero = styled.section`
   }
 `
 
-/** Who it is for, said quietly under the actions with a live lime dot. */
-export const Kicker = styled.p`
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin: 22px 0 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: ${theme.colors.forest};
-
-  &::before {
-    content: '';
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: ${theme.colors.growth};
-    box-shadow: 0 0 0 4px ${theme.colors.chipGreen};
-  }
-`
-
 export const Title = styled.h1`
   margin: 0;
   font-family: ${theme.fonts.display};
@@ -147,19 +127,6 @@ export const Secondary = styled.a`
   &:hover {
     background: ${theme.colors.chipGreen};
     transform: translateY(-2px);
-  }
-`
-
-export const LoginLine = styled.p`
-  margin: 18px 0 0;
-  color: ${theme.colors.muted};
-  font-size: 14px;
-
-  a {
-    color: ${theme.colors.forest};
-    font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 3px;
   }
 `
 

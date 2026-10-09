@@ -3,7 +3,6 @@ import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButto
 import { LandingAi } from '../../features/landing/components/LandingAi/LandingAi'
 import { LandingHero } from '../../features/landing/components/LandingHero/LandingHero'
 import { LandingJoin } from '../../features/landing/components/LandingJoin/LandingJoin'
-import { LandingNav } from '../../features/landing/components/LandingNav/LandingNav'
 import { LandingProof } from '../../features/landing/components/LandingProof/LandingProof'
 import { LandingSoon } from '../../features/landing/components/LandingSoon/LandingSoon'
 import { LandingTour } from '../../features/landing/components/LandingTour/LandingTour'
@@ -22,7 +21,6 @@ export function LandingPage() {
 
   return (
     <Page>
-      <LandingNav />
       <Main>
         <LandingHero />
         <LandingProof />
