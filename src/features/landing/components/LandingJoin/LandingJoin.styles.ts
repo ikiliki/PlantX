@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
+import { scrollReveal, sectionTitle, srOnly } from '../../landingType'
 
 export const Wrap = styled.section`
   width: min(1180px, 100%);
@@ -15,13 +16,14 @@ export const Box = styled.div`
   gap: 28px;
   align-items: center;
   min-width: 0;
-  border-radius: 30px;
+  ${scrollReveal}
+  border-radius: ${theme.radii.lg};
   padding: 28px;
   background:
     radial-gradient(90% 120% at 0% 0%, color-mix(in srgb, var(--c-growth) 35%, transparent), transparent 60%),
     ${theme.colors.creamCard};
-  border: 1px solid ${theme.colors.border};
-  box-shadow: ${theme.shadow.card};
+  border: 0;
+  box-shadow: ${theme.shadow.lift};
 
   @container landing (min-width: 900px) {
     grid-template-columns: minmax(0, 1fr) min(400px, 100%);
@@ -31,21 +33,11 @@ export const Box = styled.div`
 `
 
 export const Kicker = styled.p`
-  margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: ${theme.type.labelTracking};
-  text-transform: ${theme.type.labelCase};
-  color: ${theme.colors.moss};
+  ${srOnly}
 `
 
 export const Title = styled.h2`
-  margin: 14px 0 0;
-  font-family: ${theme.fonts.display};
-  font-weight: ${theme.fonts.displayWeight};
-  font-size: clamp(34px, 5cqi, 52px);
-  line-height: 1.02;
-  color: ${theme.colors.forest};
+  ${sectionTitle}
 `
 
 export const Body = styled.p`
@@ -63,12 +55,46 @@ export const Card = styled.div`
 
 export const Open = styled(Link)`
   ${pressable}
-  display: inline-flex;
-  justify-content: center;
   width: 100%;
-  padding: 16px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 28px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.forest};
   color: ${theme.colors.cream};
-  font-weight: 800;
+  font-family: ${theme.fonts.display};
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22), ${theme.shadow.soft};
+
+  &:hover {
+    background: ${theme.colors.forestMid};
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+  }
+
+  /* The arrow points on and out (up-right; up-left in RTL) and nudges further on hover. */
+  svg {
+    transform: rotate(45deg);
+    transition: transform ${theme.motion.base} ${theme.motion.ease};
+  }
+
+  &:hover svg {
+    transform: translate(2px, -2px) rotate(45deg);
+  }
+
+  [dir='rtl'] & svg {
+    transform: rotate(-45deg);
+  }
+
+  [dir='rtl'] &:hover svg {
+    transform: translate(-2px, -2px) rotate(-45deg);
+  }
 `

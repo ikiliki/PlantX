@@ -36,6 +36,7 @@ export const Brand = styled(Link)`
   gap: 10px;
   flex-shrink: 0;
   font-family: ${theme.fonts.display};
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 24px;
   color: inherit;
 `
@@ -55,7 +56,11 @@ export const BrandMark = styled.img<{ $solid: boolean }>`
 export const Links = styled.nav`
   display: none;
   align-items: center;
-  gap: 22px;
+  gap: 4px;
+  padding: 5px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.creamCard};
+  box-shadow: ${theme.shadow.soft};
 
   @media (min-width: ${theme.breakpoints.md}) {
     display: flex;
@@ -63,13 +68,22 @@ export const Links = styled.nav`
 `
 
 export const Jump = styled.a`
-  font-size: 14px;
-  font-weight: 500;
-  color: inherit;
-  opacity: 0.82;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: ${theme.radii.pill};
+  font-family: ${theme.fonts.display};
+  font-size: 15px;
+  font-weight: 600;
+  color: ${theme.surface.barMuted};
+  transition:
+    background ${theme.motion.fast} ${theme.motion.ease},
+    color ${theme.motion.fast} ${theme.motion.ease};
 
   &:hover {
-    opacity: 1;
+    background: ${theme.colors.chipGreen};
+    color: ${theme.surface.barInk};
   }
 `
 
@@ -116,11 +130,17 @@ export const Enter = styled(Link)`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 8px 18px;
+  min-height: 42px;
+  padding: 0 20px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.forest};
   color: ${theme.colors.cream};
-  font-size: 13px;
-  font-weight: 700;
+  font-family: ${theme.fonts.display};
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+
+  &:hover {
+    background: ${theme.colors.forestMid};
+  }
 `

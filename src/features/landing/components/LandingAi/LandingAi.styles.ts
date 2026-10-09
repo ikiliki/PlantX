@@ -1,5 +1,6 @@
 import styled, { css, keyframes } from 'styled-components'
 import { theme } from '../../../../theme/tokens'
+import { scrollReveal, sectionLead, sectionTitle, srOnly } from '../../landingType'
 
 const fill = keyframes`
   from { transform: scaleX(0); }
@@ -18,35 +19,23 @@ export const Band = styled.section`
 `
 
 export const Head = styled.div`
+  ${scrollReveal}
   display: grid;
-  gap: 12px;
+  gap: 16px;
   max-width: 62ch;
   margin-bottom: 32px;
 `
 
 export const Kicker = styled.p`
-  margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: ${theme.type.labelTracking};
-  text-transform: ${theme.type.labelCase};
-  color: ${theme.colors.moss};
+  ${srOnly}
 `
 
 export const Title = styled.h2`
-  margin: 0;
-  font-family: ${theme.fonts.display};
-  font-weight: ${theme.fonts.displayWeight};
-  font-size: clamp(32px, 5cqi, 48px);
-  line-height: 1.05;
-  color: ${theme.colors.forest};
+  ${sectionTitle}
 `
 
 export const Lead = styled.p`
-  margin: 0;
-  color: ${theme.colors.muted};
-  font-size: 17px;
-  line-height: 1.6;
+  ${sectionLead}
 `
 
 export const Stage = styled.div`

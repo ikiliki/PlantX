@@ -57,3 +57,11 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 ## Pull to refresh (phone)
 
 - Home refreshes from its feed (`useFeedRefresh`). Market, Greenhouse, Tasks and Catalog get the same pull from the shell (`usePageRefresh`, page map in `src/app/pageRefresh.ts`): an open page refetches only its own slices; a page still coming soon or under maintenance reloads everything, system config included, so a launch shows on the next pull. A guest refetches only what a guest may load. Add a page to the map when it shows server data.
+
+## Landing
+
+- Same world as the app: the garden glow behind the page, Fredoka headings, clay actions with the moulded lip, the garden toggle in the nav, the nav links as a pebble tray.
+- One heading voice for every section (`src/features/landing/landingType.ts`): big balanced Fredoka titles, a readable lead. Section labels ("AI identify", "Take the tour") stay for screen readers only; the heading carries the section.
+- Hero: a large title, the primary action as a chunky leaf-green button with an up-right arrow, a light secondary, who it is for as a quiet line with a lime dot under the actions, the product floating slowly over a lime glow.
+- Benefits show on phones too, as clay tiles with a lime icon each. The tour sits on a full-bleed soft-green band; coming-soon cards stay dashed (a preview, not a door); the join box is a lifted clay card.
+- Sections rise in as they scroll into view (scroll-driven animation where supported, shown plainly elsewhere and under reduced motion).

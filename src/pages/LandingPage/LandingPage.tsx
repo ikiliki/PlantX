@@ -31,6 +31,7 @@ export function LandingPage() {
         <LandingSoon />
         <LandingJoin />
         <Foot>
+          <strong>{t.appName}</strong>
           <span>{t.landing.footerCopy}</span>
           <span>{t.landing.footerNote}</span>
           <FootLinks>

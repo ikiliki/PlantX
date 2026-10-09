@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ThemeToggle } from '../../../../components/ThemeToggle/ThemeToggle'
 import { canChooseLocale } from '../../../../i18n/locales'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { appHref, landingHref } from '../../../../lib/siteUrls'
@@ -51,6 +52,7 @@ export function LandingNav() {
             </LangBtn>
           </Lang>
         )}
+        <ThemeToggle toNight={t.nav.toNight} toDay={t.nav.toDay} />
         <Enter to={appHref('/greenhouse')}>{t.landing.goToApp}</Enter>
       </Actions>
     </Bar>
