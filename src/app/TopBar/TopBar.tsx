@@ -101,14 +101,6 @@ export function TopBar() {
             {t.nav.feed}
           </NavItem>
         )}
-        {show('market') && (
-          <NavItem to="/market" $active={isActive('/market')} aria-current={isActive('/market') ? 'page' : undefined}>
-            <NavIcon aria-hidden>
-              <Icon name="market" size={18} />
-            </NavIcon>
-            {t.nav.market}
-          </NavItem>
-        )}
         {show('greenhouse') && (
           <NavMenu
             label={t.nav.greenhouse}
@@ -134,6 +126,14 @@ export function TopBar() {
               <Icon name="rank" size={18} />
             </NavIcon>
             {t.nav.rank}
+          </NavItem>
+        )}
+        {show('market') && (
+          <NavItem to="/market" $active={isActive('/market')} aria-current={isActive('/market') ? 'page' : undefined}>
+            <NavIcon aria-hidden>
+              <Icon name="market" size={18} />
+            </NavIcon>
+            {t.nav.market}
           </NavItem>
         )}
         {show('wiki') && (
