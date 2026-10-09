@@ -1,11 +1,10 @@
 import { useSyncExternalStore } from 'react'
 import { palettes, type GardenMode } from './tokens'
 
-/** The grower's choice; nothing stored means "follow the device". `index.html` reads it before first paint. */
+/** The grower's choice; nothing stored means the sunny garden. `index.html` reads it before first paint. */
 const KEY = 'plantx.garden'
 
 const listeners = new Set<() => void>()
-const darkQuery = () => window.matchMedia('(prefers-color-scheme: dark)')
 
 function storedChoice(): GardenMode | null {
   try {
@@ -16,9 +15,9 @@ function storedChoice(): GardenMode | null {
   }
 }
 
-/** The garden on screen: the stored choice, else the device's light or dark setting. */
+/** The garden on screen: the stored choice, else the sunny garden (whatever the device's dark setting). */
 export function currentGarden(): GardenMode {
-  return storedChoice() ?? (darkQuery().matches ? 'night' : 'day')
+  return storedChoice() ?? 'day'
 }
 
 /** The phone status bar and browser chrome take the page colour of the garden on screen. */
@@ -68,20 +67,12 @@ export function setGarden(mode: GardenMode, from?: { x: number; y: number }) {
 
 function subscribe(listener: () => void) {
   listeners.add(listener)
-  const query = darkQuery()
-  const onDevice = () => {
-    if (storedChoice()) return
-    paintChrome(currentGarden())
-    listener()
-  }
-  query.addEventListener('change', onDevice)
   return () => {
     listeners.delete(listener)
-    query.removeEventListener('change', onDevice)
   }
 }
 
-/** The garden on screen, re-rendering when the grower switches or the device changes. */
+/** The garden on screen, re-rendering when the grower switches. */
 export function useGarden(): GardenMode {
   return useSyncExternalStore(subscribe, currentGarden, () => 'day')
 }

@@ -19,8 +19,7 @@
         try {
           var garden = localStorage.getItem('plantx.garden')
           if (garden === 'day' || garden === 'night') document.documentElement.dataset.theme = garden
-          var night = garden === 'night' || (!garden && matchMedia('(prefers-color-scheme: dark)').matches)
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', night ? '#24332B' : '#F4F1E8')
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', garden === 'night' ? '#24332B' : '#F4F1E8')
         } catch (e) {}
       })()
     </script>

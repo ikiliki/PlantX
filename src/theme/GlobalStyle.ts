@@ -2,7 +2,7 @@ import { createGlobalStyle } from 'styled-components'
 import { paletteCss, theme } from './tokens'
 
 export const GlobalStyle = createGlobalStyle`
-  /* Sunny garden by default; night garden when chosen, or when the device is dark and nothing was chosen. */
+  /* Sunny garden by default; the night garden only when the grower picks it. */
   :root {
     color-scheme: light;
     ${paletteCss('day')}
@@ -11,13 +11,6 @@ export const GlobalStyle = createGlobalStyle`
     color-scheme: dark;
     ${paletteCss('night')}
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='day']) {
-      color-scheme: dark;
-      ${paletteCss('night')}
-    }
-  }
-
   /* Switching gardens: the new one spreads out from the toggle (see themeMode.ts). */
   ::view-transition-old(root),
   ::view-transition-new(root) {

@@ -10,7 +10,7 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 
 - **Sunny garden** (day) and **Night garden** (the same bench at dusk: a muted green-grey page #24332B, cards #2F4137, moonlit leaf green #C4EAAE for actions and active text, the same lime #CFEA78 as the accent; the dock and level badge stay deeper, #1A2B22).
 - Every colour, surface and shadow token is a CSS variable (`theme.colors.forest` is `var(--c-forest)`). `tokens.ts` holds the raw `day` / `night` palettes; `GlobalStyle` writes both. Translucent tints are `color-mix()` of a token, never a raw `rgba()` of a light colour.
-- The device decides until the grower chooses; the choice is stored (`plantx.garden`) and painted before the app loads (`index.html`), and the browser chrome colour follows (`theme-color`). Logic: `src/theme/themeMode.ts`.
+- The sunny garden is the default (the device's dark setting does not switch it); the night garden only when the grower picks it. The choice is stored (`plantx.garden`) and painted before the app loads (`index.html`), and the browser chrome colour follows (`theme-color`). Logic: `src/theme/themeMode.ts`.
 - `ThemeToggle` (top bar): sun and moon swap with a tumble; the new garden spreads out from the button in a circle (View Transitions), instant under reduced motion or without support.
 - `colors.deep` / `onDeep` stay deep in both gardens (dock, level badge disc).
 

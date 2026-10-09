@@ -21,10 +21,10 @@ test.describe('garden mode', { tag: '@prod' }, () => {
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(244, 241, 232)')
   })
 
-  test('a dark device with no choice opens in the night garden', async ({ page }) => {
+  test('the sunny garden is the default, even on a dark device', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' })
     await expectPage(page, '/greenhouse')
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(36, 51, 43)')
-    await expect(page.getByRole('banner').getByRole('button', { name: 'Switch to the sunny garden' })).toBeVisible()
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(244, 241, 232)')
+    await expect(page.getByRole('banner').getByRole('button', { name: 'Switch to the night garden' })).toBeVisible()
   })
 })
