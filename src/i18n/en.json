@@ -1594,7 +1594,10 @@
     "scientific": "Scientific name",
     "ticker": "Ticker",
     "lead": "{name} ({scientific}) is a {rarity} plant class on PlantX. Typical growth time is {time}.",
-    "leadCare": "It prefers {light}. Watering: {water}."
+    "leadCare": "It prefers {light}. Watering: {water}.",
+    "search": "Search plants",
+    "allRarities": "All",
+    "noMatch": "No plants match. Try another name."
   },
   "release": {
     "notLaunched": "Not launched yet",

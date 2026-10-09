@@ -1594,7 +1594,10 @@
     "scientific": "שם מדעי",
     "ticker": "טיקר",
     "lead": "{name} ({scientific}) הוא מחלקת צמח {rarity} ב-PlantX. זמן הגידול האופייני הוא {time}.",
-    "leadCare": "מעדיף {light}. השקיה: {water}."
+    "leadCare": "מעדיף {light}. השקיה: {water}.",
+    "search": "חיפוש צמחים",
+    "allRarities": "הכול",
+    "noMatch": "אין צמחים מתאימים. נסו שם אחר."
   },
   "release": {
     "notLaunched": "עדיין לא הושק",

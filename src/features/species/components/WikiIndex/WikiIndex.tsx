@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Button } from '../../../../components/Button/Button'
+import { FilterChips } from '../../../../components/FilterChips/FilterChips'
+import type { PlantRarity } from '../../../../mock/types'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { createCatalog } from '../../../../mock/catalog'
 import { useStore } from '../../../../mock/store'
@@ -11,12 +13,12 @@ import { useMySuggestions } from '../../../catalog/useCatalogSuggestions'
 import type { ComponentView } from '../../../../theme/view'
 import { catalogSpeciesList } from '../../catalogSpecies'
 import { speciesName } from '../../../market/categoryData'
-import { groupByRarity, wikiRarityTitle } from '../../wikiGroups'
-import { wikiHref } from '../GuideLink/GuideLink'
+import { WIKI_RARITY_ORDER, groupByRarity, wikiRarityTitle } from '../../wikiGroups'
+import { CatalogPreview } from '../CatalogPreview/CatalogPreview'
+import { CatalogTile } from '../CatalogTile/CatalogTile'
 import { WikiCard } from '../WikiCard/WikiCard'
 import { WikiSection } from '../WikiSection/WikiSection'
-import { WikiToc } from '../WikiToc/WikiToc'
-import { Body, Empty, Grid, Layout, SuggestRow, TocWrap } from './WikiIndex.styles'
+import { Body, Empty, Grid, Layout, Search, SuggestRow, TileGrid, Tools } from './WikiIndex.styles'
 
 export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]; view?: ComponentView }) {
   const { db } = useStore()
@@ -33,12 +35,17 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
   const { signedIn, openAuth } = useAuth()
   const { suggestions, submit } = useMySuggestions()
   const [suggesting, setSuggesting] = useState(false)
+  const [query, setQuery] = useState('')
+  const [rarity, setRarity] = useState<'all' | PlantRarity>('all')
+  const [previewId, setPreviewId] = useState<string | null>(null)
   // The full catalog page offers the form and the member's pending rows; a widget or a filtered list does not.
   const withSuggestions = view === 'page' && !speciesIds
 
   useEffect(() => {
     const hash = loc.hash.replace('#', '')
     if (!hash) return
+    // The Catalog menu links to a rarity (#rare): the page opens on that chip.
+    if ((WIKI_RARITY_ORDER as string[]).includes(hash)) setRarity(hash as PlantRarity)
     setOpen((current) => ({ ...current, [hash]: true }))
     window.requestAnimationFrame(() => {
       document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -90,23 +97,57 @@ export function WikiIndex({ speciesIds, view = 'page' }: { speciesIds?: string[]
     )
   }
 
+  if (view === 'page') {
+    // Photo grid sorted by rarity (common first), then name; a search box and rarity chips narrow it.
+    const needle = query.trim().toLocaleLowerCase()
+    const rank = (value: PlantRarity) => WIKI_RARITY_ORDER.indexOf(value)
+    const matches = rows
+      .filter((species) => rarity === 'all' || species.rarity === rarity)
+      .filter(
+        (species) =>
+          !needle ||
+          [species.commonName, species.commonNameHe, species.scientificName].some((name) =>
+            name.toLocaleLowerCase().includes(needle),
+          ),
+      )
+      .sort((a, b) => rank(a.rarity) - rank(b.rarity) || speciesName(a, locale).localeCompare(speciesName(b, locale), locale))
+    const chips = [
+      { id: 'all' as const, label: t.guide.allRarities, count: rows.length },
+      ...WIKI_RARITY_ORDER.map((value) => ({
+        id: value,
+        label: wikiRarityTitle(value, t.plant),
+        count: rows.filter((species) => species.rarity === value).length,
+      })).filter((chip) => chip.count > 0),
+    ]
+    return (
+      <Body data-view={view} data-catalog-grid>
+        {suggestRow}
+        {pendingSection}
+        <Tools>
+          <Search
+            id="catalog-search"
+            type="search"
+            aria-label={t.guide.search}
+            placeholder={t.guide.search}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <FilterChips<'all' | PlantRarity> label={t.guide.wiki} options={chips} value={rarity} onChange={setRarity} />
+        </Tools>
+        {matches.length === 0 ? <Empty>{t.guide.noMatch}</Empty> : null}
+        <TileGrid>
+          {matches.map((species) => (
+            <CatalogTile key={species.id} species={species} onOpen={() => setPreviewId(species.id)} />
+          ))}
+        </TileGrid>
+        {previewId ? <CatalogPreview speciesId={previewId} onClose={() => setPreviewId(null)} /> : null}
+        {dialog}
+      </Body>
+    )
+  }
+
   return (
     <Layout data-view={view}>
-      {view === 'page' ? (
-        <TocWrap>
-          <WikiToc
-            items={groups.map((group) => ({
-              id: group.rarity,
-              title: group.title,
-              children: group.items.map((species) => ({
-                id: species.id,
-                title: speciesName(species, locale),
-                href: wikiHref(species.id),
-              })),
-            }))}
-          />
-        </TocWrap>
-      ) : null}
       <Body>
         {suggestRow}
         {pendingSection}
