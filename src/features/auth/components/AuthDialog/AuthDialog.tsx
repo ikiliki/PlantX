@@ -4,6 +4,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import type { AuthReason } from '../../AuthProvider'
 import { AuthPanel } from '../AuthPanel/AuthPanel'
 import { Backdrop, Close, Frame } from './AuthDialog.styles'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 export function AuthDialog({
   reason,
@@ -18,9 +19,9 @@ export function AuthDialog({
 }) {
   const { t } = useI18n()
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(onClose)
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       event.stopImmediatePropagation()
@@ -28,7 +29,6 @@ export function AuthDialog({
     }
     window.addEventListener('keydown', onKey, true)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey, true)
     }
   }, [onClose])

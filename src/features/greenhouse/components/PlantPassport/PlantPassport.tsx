@@ -43,6 +43,7 @@ import { emptyClassDraft, sizeChoices, stageChoices } from '../../plantClass'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import type { PlantPatch } from '../../../../mock/liveApi'
 import { PlantDelete, PlantOwnerControls } from '../PlantOwnerControls/PlantOwnerControls'
+import { OwnerFoot } from '../PlantOwnerControls/PlantOwnerControls.styles'
 import { ModerationDialog, type ModerationRequest } from '../../../admin/components/ModerationDialog/ModerationDialog'
 import { Badge } from '../../../../components/Badge/Badge'
 import {
@@ -490,10 +491,7 @@ export function PlantPassport({
           </NameBlock>
         </IdentityHead>
 
-          {/* The owner: who sees the plant, and delete it. Admin on someone else's plant: hide or delete it (#69). */}
-          {canEdit && isOwner ? (
-            <PlantOwnerControls plant={plant} />
-          ) : null}
+          {/* Admin on someone else's plant: hide or delete it (#69). The owner's controls sit at the foot. */}
           {canEdit && isAdmin && !isOwner ? (
             <ManageRow>
               {plant.visibility ? (
@@ -706,8 +704,12 @@ export function PlantPassport({
             ) : null}
           </>
         )}
+        {/* The owner: who sees the plant, then delete it, together at the foot of the side column. */}
         {canEdit && isOwner ? (
-          <PlantDelete plant={plant} onDeleted={() => navigate('/greenhouse', { replace: true })} />
+          <OwnerFoot>
+            <PlantOwnerControls plant={plant} />
+            <PlantDelete plant={plant} onDeleted={() => navigate('/greenhouse', { replace: true })} />
+          </OwnerFoot>
         ) : null}
       </Aside>
 

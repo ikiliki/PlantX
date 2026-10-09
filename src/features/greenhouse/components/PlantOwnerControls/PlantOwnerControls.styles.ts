@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-/** Who can see the plant, under its name. */
+/** Who can see the plant (Public / Private), just above Delete plant. */
 export const Row = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -12,12 +12,13 @@ export const Row = styled.div`
 `
 
 /**
- * Delete sits at the very bottom of the passport side column (pushed down by `margin-top: auto`); stacked
- * on a phone it comes last, after the owner and greenhouse rows.
+ * The owner's controls (who sees the plant, then delete) at the very bottom of the passport side column
+ * (pushed down by `margin-top: auto`); stacked on a phone they come last, after the owner and greenhouse rows.
  */
-export const DeleteSlot = styled.div`
-  display: flex;
-  justify-content: flex-start;
+export const OwnerFoot = styled.div`
+  display: grid;
+  justify-items: start;
+  gap: 6px;
   margin-top: auto;
   padding-top: 8px;
   order: 3;
@@ -26,6 +27,11 @@ export const DeleteSlot = styled.div`
   [data-owner-label] ~ & {
     margin-top: 0;
   }
+`
+
+export const DeleteSlot = styled.div`
+  display: flex;
+  justify-content: flex-start;
 `
 
 /** Public / Private as one two-way pill; the chosen side is filled. */

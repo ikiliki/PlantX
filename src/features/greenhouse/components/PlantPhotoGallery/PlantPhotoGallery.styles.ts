@@ -86,20 +86,19 @@ export const PhotoFrame = styled.button<{ $embedded?: boolean; $dialog?: boolean
     pointer-events: none;
   }
 
+  /* The whole photo, never cropped: "zoomed out" to fit the frame. */
   img {
+    position: relative;
+    z-index: 1;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
-    transition: transform ${theme.motion.slow} ${theme.motion.ease};
   }
 
   &:hover {
     box-shadow: ${theme.shadow.lift};
     transform: translateY(-2px);
-    img {
-      transform: scale(1.04);
-    }
   }
 
   &:focus-visible {
@@ -114,6 +113,17 @@ export const PhotoFrame = styled.button<{ $embedded?: boolean; $dialog?: boolean
     aspect-ratio: 4 / 3;
     max-height: 220px;
   }
+`
+
+/** Behind the photo: the same picture, blurred, filling the bars a tall or wide photo leaves. */
+export const PhotoBlur = styled.span`
+  position: absolute;
+  inset: -12%;
+  background-position: center;
+  background-size: cover;
+  filter: blur(22px) saturate(1.2);
+  opacity: 0.6;
+  pointer-events: none;
 `
 
 export const Thumbs = styled.div`

@@ -27,6 +27,7 @@ import {
   PhotoPreview,
   PhotoText,
 } from './SuggestPlantDialog.styles'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 type Kind = 'new' | 'variety'
 
@@ -55,9 +56,9 @@ export function SuggestPlantDialog({
   closeRef.current = onClose
 
   // Once per open: lock the page, close on Escape, start on the name.
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(() => closeRef.current())
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       event.stopImmediatePropagation()
@@ -66,7 +67,6 @@ export function SuggestPlantDialog({
     window.addEventListener('keydown', onKey, true)
     nameRef.current?.focus()
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey, true)
     }
   }, [])
