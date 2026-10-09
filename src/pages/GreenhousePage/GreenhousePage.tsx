@@ -15,11 +15,7 @@ import {
   GreenhousePlantCardSkeleton,
 } from '../../features/greenhouse/components/GreenhousePlantCard/GreenhousePlantCard'
 import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
-import {
-  GreenhouseBackLink,
-  GreenhouseTabs,
-  type GreenhouseScopeId,
-} from '../../features/greenhouse/components/GreenhouseTabs/GreenhouseTabs'
+import { GreenhouseBackLink } from '../../features/greenhouse/components/GreenhouseBackLink/GreenhouseBackLink'
 import {
   GreenhouseLevelCard,
   GreenhouseLevelSkeleton,
@@ -49,6 +45,8 @@ import {
   PublicHeading,
   PublicPage,
 } from './GreenhousePage.styles'
+
+type GreenhouseScopeId = 'mine' | 'global'
 
 const WIDGET_PLANTS = 2
 const PUBLIC_SKELETON_CARDS = 8
@@ -234,7 +232,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   const board = (
     <Page $fill={view === 'page' && scope === 'mine'}>
       <HeadBlock>
-        {view === 'page' ? <GreenhouseTabs value={scope} /> : null}
         <Heading>
         <HeadingCopy>
           <h1>{t.greenhouse.title}</h1>

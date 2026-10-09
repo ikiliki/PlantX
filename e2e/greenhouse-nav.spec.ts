@@ -1,14 +1,24 @@
 import { MEMBER, expect, expectPage, signIn, test } from './support'
 
-/** My greenhouse / All greenhouses tabs, the directory sort and the grower page's way back. */
-test.describe('greenhouse tabs', { tag: '@prod' }, () => {
-  test('the tabs are on screen and switch to All greenhouses', async ({ page }) => {
+/** Getting to All greenhouses: the phone dock's ^ menu and the desktop drop-down; the directory sort; the way back. */
+test.describe('greenhouse navigation', { tag: '@prod' }, () => {
+  test('the phone dock ^ opens the Greenhouse menu and leads to All greenhouses', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'phone', 'The dock is the phone navigation')
     await expectPage(page, '/greenhouse')
-    const tabs = page.getByRole('navigation', { name: 'Greenhouses' })
-    await expect(tabs.getByRole('link', { name: 'My greenhouse' })).toHaveAttribute('aria-current', 'page')
-    await tabs.getByRole('link', { name: 'All greenhouses' }).click()
+    await page.getByRole('button', { name: 'Open the Greenhouse menu' }).click()
+    const menu = page.getByRole('menu', { name: 'Greenhouse' })
+    await expect(menu).toBeVisible()
+    await menu.getByRole('menuitem', { name: 'All greenhouses' }).click()
     await expect(page).toHaveURL(/\/greenhouse\?scope=global/)
-    await expect(tabs.getByRole('link', { name: 'All greenhouses' })).toHaveAttribute('aria-current', 'page')
+    await expect(menu).toHaveCount(0)
+  })
+
+  test('the desktop Greenhouse drop-down leads to All greenhouses', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'phone', 'The drop-down is the desktop navigation')
+    await expectPage(page, '/greenhouse')
+    await page.getByRole('banner').getByRole('button', { name: 'Greenhouse' }).click()
+    await page.getByRole('menuitem', { name: 'All greenhouses' }).click()
+    await expect(page).toHaveURL(/\/greenhouse\?scope=global/)
   })
 })
 
@@ -35,7 +45,7 @@ test.describe('all greenhouses (member)', () => {
     test.skip((await first.count()) === 0, 'no other greenhouses on this data set')
     await first.click()
     await expect(page).toHaveURL(/\/greenhouse\/[^/?]+$/)
-    await page.getByRole('link', { name: 'All greenhouses' }).first().click()
+    await page.getByRole('main').getByRole('link', { name: 'All greenhouses' }).click()
     await expect(page).toHaveURL(/\/greenhouse\?scope=global/)
   })
 })

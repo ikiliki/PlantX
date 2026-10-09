@@ -3,6 +3,7 @@
   "tagline": "The market infrastructure for living inventory",
   "growVerifyTrade": "Grow it. Verify it. Supply it. Trade it. Reuse it.",
   "nav": {
+    "openMenu": "Open the {name} menu",
     "discover": "Discover",
     "home": "Home",
     "market": "Market",
@@ -362,13 +363,9 @@
     "addNote": "Add a note about this plant"
   },
   "greenhouse": {
+    "myGreenhouse": "My greenhouse",
+    "allGreenhouses": "All greenhouses",
     "title": "Greenhouse",
-    "scopeLabel": "Greenhouse view",
-    "scopeMine": "Mine",
-    "scopeGlobal": "Global",
-    "tabsLabel": "Greenhouses",
-    "tabMine": "My greenhouse",
-    "tabGlobal": "All greenhouses",
     "backToAll": "All greenhouses",
     "directoryTitle": "All greenhouses",
     "directoryLead": "Peek at other growers’ shelves and see how they grow.",

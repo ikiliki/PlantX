@@ -68,7 +68,7 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 
 ## Greenhouses: mine and everyone's
 
-- `GreenhouseTabs` (My greenhouse | All greenhouses) leads the greenhouse page on every screen size, as plain links with `aria-current`; on a phone it sticks under the top bar. It replaces the floating Mine/Global toggle, which people missed.
+- Sub-pages (Greenhouse: My greenhouse / All greenhouses; Catalog: all plants and the rarity groups) come from one list (`src/app/navMenus.ts`), shown as the desktop drop-down (caret) and, on the phone, as a ^ on the dock item that opens `DockMenu` above the dock. The item itself still opens its page. No tabs bar on the page.
 - All greenhouses: a title, a one-line invitation and "N growers · M plants"; a large search field; sort pebbles (Top level by default, Most plants, Recently active) and a Near me filter when the viewer has a region; a titled Verified section; a grid of greenhouse cards. Sorting and filtering live in `greenhouseDirectory.ts`.
 - Greenhouse card (full size): a clay card with a mosaic of up to three plants (one tall, two stacked), the level ring in a cream collar on its lower edge, then name, rank, place and plant count, and two lines of bio. Compact (the Home rail) keeps the single row.
-- A grower's page: an inline "All greenhouses" back link (no floating arrow), the level card, then "On the shelf · N" with clay plant cards.
+- A grower's page: an inline "All greenhouses" back link (`GreenhouseBackLink`, no floating arrow), the level card, then "On the shelf · N" with clay plant cards.
