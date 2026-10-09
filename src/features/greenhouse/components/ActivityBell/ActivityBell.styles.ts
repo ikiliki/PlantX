@@ -21,11 +21,14 @@ export const Bell = styled.button<{ $open?: boolean }>`
   }
 `
 
-/** Bottom sheet on a phone (the only place the bell shows); a centred card if the window is wider. */
+/**
+ * Bottom sheet on a phone (the only place the bell shows); a centred card if the window is wider.
+ * Below the passport (`dialog - 2`) that a row opens, so the passport shows on top of the sheet (#82).
+ */
 export const Backdrop = styled.div`
   position: fixed;
   inset: 0;
-  z-index: ${theme.z.dialog};
+  z-index: ${theme.z.menu};
   display: grid;
   place-items: center;
   padding: ${theme.space.md};
