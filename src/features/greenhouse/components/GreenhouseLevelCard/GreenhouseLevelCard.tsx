@@ -8,9 +8,8 @@ import { fetchGreenhouseLevel } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
 import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { clientEnv } from '../../../../theme/plantxEnv'
-import { isFeatureEnabled, isPlacementEnabled } from '../../../../theme/release'
+import { isPlacementEnabled } from '../../../../theme/release'
 import { CARE_XP, LEVEL_RANKS, PLANT_XP, greenhouseLevel, type GreenhouseLevel } from '../../greenhouseLevel'
-import { canFillTodo, dueTodos } from '../../../todo/todoSchedule'
 import {
   Bar,
   BarFill,
@@ -19,7 +18,6 @@ import {
   Chip,
   Chips,
   Copy,
-  DueChip,
   End,
   InfoButton,
   Inner,
@@ -58,8 +56,8 @@ function writeSeen(ownerId: string, level: number) {
 /**
  * Presentational card. `GreenhouseLevelCard` feeds it the owner's live numbers.
  * The ring around the level number is the XP bar; next to it the level name and the XP still needed for the
- * next one. Under it, the same three icon chips at every width: plants, `due` (care needed today, owner only,
- * links to Tasks) and care done. Wide, a thin bar repeats the progress under the name.
+ * next one. Under it, the same two icon chips at every width: plants and care done (the Needs care filter
+ * below already lists what is due). Wide, a thin bar repeats the progress under the name.
  * `owner` + `onOwner` (a grower's public greenhouse) pins their avatar to the ring as a button.
  * `place` (set your greenhouse place, only when it is unknown): wide, a tile at the end; on a phone it waits
  * behind an orange pin in the top row. "?" opens how levels work. AI scans left live in the account dialog.
@@ -69,15 +67,12 @@ export function GreenhouseLevelView({
   owner,
   celebrate = false,
   place,
-  due,
   onOwner,
 }: {
   summary: GreenhouseLevel
   owner?: { name: string; color: string; icon?: string }
   celebrate?: boolean
   place?: ReactNode
-  /** Plants that need care today (the owner's own greenhouse only). */
-  due?: number
   /** Tapping the pinned avatar (a grower's public greenhouse: their profile preview). */
   onOwner?: () => void
 }) {
@@ -151,12 +146,6 @@ export function GreenhouseLevelView({
               ? t.greenhouse.levelPlantsOne
               : t.greenhouse.levelPlants.replace('{n}', String(summary.plants))}
           </Chip>
-          {due ? (
-            <DueChip to="/tasks" data-level-due>
-              <Icon name="drop" size={15} />
-              {due === 1 ? t.greenhouse.levelDueOne : t.greenhouse.levelDue.replace('{n}', String(due))}
-            </DueChip>
-          ) : null}
           <Chip $tone="care">
             <Icon name="drop" size={15} />
             {summary.care === 1 ? t.greenhouse.levelCareOne : t.greenhouse.levelCare.replace('{n}', String(summary.care))}
@@ -226,10 +215,6 @@ export function GreenhouseLevelCard({
   const local = !publicView || clientEnv() === 'mock'
   const fetching = useSectionFetch(local, ['plants', 'todos'])
   const summary = greenhouseLevel(ownerId, db.plants, db.todos)
-  // Care needed today, on the owner's own greenhouse only (another grower's tasks never reach this browser).
-  const ownTodos =
-    publicView || !isFeatureEnabled(db.system, 'todo') ? [] : db.todos.filter((todo) => todo.ownerId === ownerId)
-  const due = dueTodos(ownTodos).filter((todo) => canFillTodo(todo, ownTodos)).length
   const [remote, setRemote] = useState<GreenhouseLevel | null>(null)
   const [remoteSettled, setRemoteSettled] = useState(false)
   const [celebrate, setCelebrate] = useState(false)
@@ -285,7 +270,6 @@ export function GreenhouseLevelCard({
       owner={owner}
       celebrate={celebrate}
       place={place}
-      due={due}
       onOwner={owner ? openProfile : undefined}
     />
   )

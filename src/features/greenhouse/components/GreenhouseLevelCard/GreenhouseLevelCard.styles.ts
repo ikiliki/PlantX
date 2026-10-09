@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import styled, { css, keyframes } from 'styled-components'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
 import { growX, pressable, riseIn } from '../../../../theme/motion'
@@ -207,7 +206,7 @@ export const BarFill = styled.div`
   }
 `
 
-/** Plants, needs care, care done: the same icon chips on a phone and wide. */
+/** Plants and care done: the same icon chips on a phone and wide. */
 export const Chips = styled.div`
   grid-area: chips;
   display: flex;
@@ -248,27 +247,6 @@ const chipBase = css`
 export const Chip = styled.span<{ $tone: 'plant' | 'care' }>`
   ${chipBase}
   ${({ $tone }) => chipTone[$tone]}
-`
-
-/** Needs care today: warm, and a link to Tasks. */
-export const DueChip = styled(Link)`
-  ${pressable}
-  ${chipBase}
-  background: ${theme.colors.chipWarm};
-  color: ${theme.colors.warn};
-  text-decoration: none;
-
-  &::after {
-    content: ' →';
-  }
-  [dir='rtl'] &::after {
-    content: ' ←';
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.growth};
-    outline-offset: 2px;
-  }
 `
 
 /** The "?" (and, on a phone, the place pin). */

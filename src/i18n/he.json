@@ -505,9 +505,7 @@
     "setPlaceHint": "כדי שצמחים חדשים יידעו איפה הם גדלים",
     "activityToday": "היום",
     "activityYesterday": "אתמול",
-    "levelToNextName": "עוד {left} XP ל{name}",
-    "levelDue": "{n} צריכים טיפול",
-    "levelDueOne": "צמח אחד צריך טיפול"
+    "levelToNextName": "עוד {left} XP ל{name}"
   },
   "todo": {
     "cancel": "ביטול",

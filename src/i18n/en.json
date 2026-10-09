@@ -505,9 +505,7 @@
     "setPlaceHint": "So new plants know where they grow",
     "activityToday": "Today",
     "activityYesterday": "Yesterday",
-    "levelToNextName": "{left} XP to {name}",
-    "levelDue": "{n} need care",
-    "levelDueOne": "1 needs care"
+    "levelToNextName": "{left} XP to {name}"
   },
   "todo": {
     "cancel": "Cancel",
