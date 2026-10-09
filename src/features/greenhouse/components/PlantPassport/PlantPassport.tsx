@@ -38,7 +38,6 @@ import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
-import { PassportDetails } from '../PassportDetails/PassportDetails'
 import { accountHref } from '../../../profile/components/AccountDialog/AccountDialog'
 import { EditPencil, InlineEdit } from '../InlineEdit/InlineEdit'
 import { emptyClassDraft, sizeChoices, stageChoices } from '../../plantClass'
@@ -60,8 +59,6 @@ import {
   AsideStat,
   AsideStats,
   Board,
-  GrowthPhoto,
-  GrowthStrip,
   Frame,
   Code,
   AsideStatButton,
@@ -102,7 +99,7 @@ import {
 /** Longer names end in an ellipsis on the passport head (the tooltip has the full name). */
 const TITLE_MAX = 48
 
-type TabId = 'activity' | 'details' | 'grading' | 'todo' | 'market' | 'settings'
+type TabId = 'grading' | 'todo' | 'activity' | 'market' | 'settings'
 
 /** Drop trailing ×N (or xN) quantity suffixes baked into listing titles. */
 function titleWithoutQuantity(text: string) {
@@ -145,7 +142,7 @@ export function PlantPassport({
   plantId,
   embedded = false,
   dialog = false,
-  initialTab = 'activity',
+  initialTab = 'grading',
   activityKey,
   careMark,
 }: {
@@ -329,17 +326,15 @@ export function PlantPassport({
   const marketOn = isPlacementEnabled(db.system, 'passport.market')
   const rankOn = isPlacementEnabled(db.system, 'passport.rank')
   const todoOn = isPlacementEnabled(db.system, 'passport.todo')
-  // Timeline first (the plant's story), then Details; the older tabs follow, Settings last.
   const tabs: { id: TabId; label: string }[] = [
-    { id: 'activity', label: t.passport.timelineTab },
-    { id: 'details', label: t.passport.detailsTab },
     ...(rankOn ? [{ id: 'grading' as const, label: t.passport.gradingTab }] : []),
     ...(todoOn ? [{ id: 'todo' as const, label: t.passport.todoTab }] : []),
+    { id: 'activity', label: t.passport.activityTab },
     ...(marketOn ? [{ id: 'market' as const, label: t.passport.marketTab }] : []),
     // The owner's actions on the plant (who sees it, delete it), last.
     ...(canEdit && isOwner ? [{ id: 'settings' as const, label: t.passport.settingsTab }] : []),
   ]
-  const fallbackTab: TabId = 'activity'
+  const fallbackTab: TabId = rankOn ? 'grading' : todoOn ? 'todo' : 'activity'
   const activeTab: TabId =
     (tab === 'market' && !marketOn) ||
     (tab === 'grading' && !rankOn) ||
@@ -764,22 +759,8 @@ export function PlantPassport({
             </FeatureGate>
           )}
 
-          {activeTab === 'details' && <PassportDetails plant={plant} isOwner={isOwner} />}
-
           {activeTab === 'activity' && (
             <>
-              {photos.length > 1 ? (
-                <>
-                  <SectionTitle>{t.passport.growthPhotos}</SectionTitle>
-                  <GrowthStrip data-growth-photos>
-                    {photos.map((src, index) => (
-                      <GrowthPhoto key={`${src.slice(-24)}-${index}`}>
-                        <PlantImage src={src} alt="" loading="lazy" />
-                      </GrowthPhoto>
-                    ))}
-                  </GrowthStrip>
-                </>
-              ) : null}
               <SectionTitle>{t.passport.history}</SectionTitle>
               {(() => {
                 const fromActivity = (db.updates ?? [])

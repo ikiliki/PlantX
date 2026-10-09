@@ -356,14 +356,7 @@
     "deleteLead": "הצמח יוצא מהחממה והמשימות שלו נעצרות. הפעילות שלו נשארת ביומן שלכם.",
     "deleteConfirm": "מחיקה",
     "deleteFailed": "המחיקה נכשלה. נסו שוב.",
-    "addNote": "הוסיפו הערה על הצמח",
-    "timelineTab": "ציר זמן",
-    "growthPhotos": "תמונות",
-    "identifiedBy": "זוהה",
-    "marketClass": "קבוצת שוק",
-    "noLineage": "התחיל כאן",
-    "careLight": "אור",
-    "careWater": "השקיה"
+    "addNote": "הוסיפו הערה על הצמח"
   },
   "greenhouse": {
     "myGreenhouse": "שלי",
@@ -507,25 +500,7 @@
     "setPlaceHint": "כדי שצמחים חדשים יידעו איפה הם גדלים",
     "activityToday": "היום",
     "activityYesterday": "אתמול",
-    "levelToNextName": "עוד {left} XP ל{name}",
-    "viewLabel": "הצגת הצמחים",
-    "viewGrid": "רשת",
-    "viewShelves": "מדפים",
-    "shelfAdd": "הוספת מדף",
-    "shelfNamePlaceholder": "מרפסת, סלון…",
-    "shelfName": "שם המדף",
-    "shelfRename": "שינוי שם",
-    "shelfSave": "שמירה",
-    "shelfUp": "להזיז את המדף למעלה",
-    "shelfDown": "להזיז את המדף למטה",
-    "shelfDelete": "מחיקת מדף",
-    "shelfDeleteTitle": "למחוק את {name}?",
-    "shelfDeleteBody": "הצמחים שלו נשארים בחממה, תחת לא על מדף.",
-    "shelfNone": "לא על מדף",
-    "moveTo": "העברה ל…",
-    "shelfEmpty": "עדיין אין כאן צמחים. השתמשו ב״העברה ל…״ על צמח.",
-    "shelfLabel": "מדף",
-    "shelvesFirst": "צרו את המדף הראשון: מרפסת, סלון, משרד…"
+    "levelToNextName": "עוד {left} XP ל{name}"
   },
   "todo": {
     "cancel": "ביטול",
@@ -1594,10 +1569,7 @@
     "scientific": "שם מדעי",
     "ticker": "טיקר",
     "lead": "{name} ({scientific}) הוא מחלקת צמח {rarity} ב-PlantX. זמן הגידול האופייני הוא {time}.",
-    "leadCare": "מעדיף {light}. השקיה: {water}.",
-    "search": "חיפוש צמחים",
-    "allRarities": "הכול",
-    "noMatch": "אין צמחים מתאימים. נסו שם אחר."
+    "leadCare": "מעדיף {light}. השקיה: {water}."
   },
   "release": {
     "notLaunched": "עדיין לא הושק",

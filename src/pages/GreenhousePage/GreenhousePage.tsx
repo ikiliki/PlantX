@@ -204,7 +204,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
       onAdd={openAdd}
       compact={view === 'widget'}
       freshId={freshId}
-      shelves={view !== 'widget'}
     />
   )
 

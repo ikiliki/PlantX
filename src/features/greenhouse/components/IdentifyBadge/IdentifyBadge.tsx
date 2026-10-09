@@ -71,7 +71,6 @@ export function IdentifyBadge({
       $source={source}
       $compact={compact}
       data-not-in-catalog={aiOther ? 'true' : undefined}
-      data-identify-badge
       title={compact ? [title, detail].filter(Boolean).join(' — ') : undefined}
     >
       {source !== 'manual' ? (

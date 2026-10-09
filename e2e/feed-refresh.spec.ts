@@ -1,17 +1,17 @@
 import { MEMBER, expect, expectPage, signIn, test } from './support'
 
-/** Feed refresh on desktop (the phone refreshes with a pull). Signed in, read-only. */
-test.describe('feed refresh', () => {
-  test('the Feed tab has a Refresh button that reloads the posts', async ({ page }, testInfo) => {
+/** Home feed freshness (desktop; the phone refreshes with a pull). Signed in, read-only. */
+test.describe('home feed refresh', () => {
+  test('the feed says how fresh it is, and Refresh confirms it is up to date', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'phone', 'Phones refresh the feed with a pull, not the button')
     await signIn(page, MEMBER)
-    await expectPage(page, '/feed')
+    await expectPage(page, '/home')
 
-    const refresh = page.getByRole('button', { name: 'Refresh' })
-    await expect(refresh).toBeVisible()
-    const reload = page.waitForRequest((request) => request.url().includes('/api/activities') && request.method() === 'GET')
-    await refresh.click()
-    await reload
-    await expect(refresh).toBeEnabled()
+    const status = page.getByText(/^Updated (just now|\d+ (min|h) ago)$/)
+    await expect(status).toBeVisible()
+
+    await page.getByRole('button', { name: 'Refresh' }).click()
+    await expect(page.getByText("You're up to date")).toBeVisible()
+    await expect(page.getByText(/^Updated just now$/)).toBeVisible({ timeout: 8000 })
   })
 })

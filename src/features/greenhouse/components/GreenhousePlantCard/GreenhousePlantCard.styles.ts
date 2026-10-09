@@ -11,10 +11,15 @@ const freshGlow = keyframes`
 `
 
 /** Same living halo as the add-photo plus, kept inside the shelf gap. */
+const livingPulse = keyframes`
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 70%, transparent); }
+  50% { box-shadow: 0 0 0 7px transparent; }
+`
 
 export const Root = styled.article<{
   $fresh?: boolean
   $care?: boolean
+  $living?: boolean
   $skeleton?: boolean
   $blurred?: boolean
 }>`
@@ -90,6 +95,61 @@ export const Root = styled.article<{
     }
   }
 
+  ${({ $living }) =>
+    $living &&
+    css`
+      &&& {
+        border: 2px dashed ${theme.colors.moss};
+        animation:
+          ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards,
+          ${livingPulse} 2.4s ${theme.motion.ease} infinite;
+      }
+
+      &&&:hover,
+      &&&:focus-within {
+        border-style: solid;
+        border-color: ${theme.colors.forest};
+        animation: none;
+        box-shadow: 0 0 0 5px ${theme.colors.chipGreen}, ${theme.shadow.lift};
+      }
+
+      &&&:active {
+        transform: translateY(-1px) scale(0.985);
+        border-style: solid;
+        border-color: ${theme.colors.forest};
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        &&& {
+          animation: none;
+        }
+      }
+
+      @container (max-width: 559px) {
+        &&& {
+          border: 2px dashed ${theme.colors.moss};
+        }
+
+        &&&:hover {
+          transform: none;
+          border-style: dashed;
+          border-color: ${theme.colors.moss};
+          animation:
+            ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards,
+            ${livingPulse} 2.4s ${theme.motion.ease} infinite;
+          box-shadow: none;
+        }
+
+        &&&:active,
+        &&&:focus-within {
+          transform: scale(0.985);
+          border-style: solid;
+          border-color: ${theme.colors.forest};
+          animation: none;
+          box-shadow: 0 0 0 4px ${theme.colors.chipGreen};
+        }
+      }
+    `}
 `
 
 export const PhotoLink = styled(Link)`
@@ -116,6 +176,82 @@ export const Photo = styled.div<{ $stale?: boolean }>`
       css`
         filter: grayscale(0.35);
         opacity: 0.82;
+      `}
+  }
+`
+
+export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due' }>`
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 10px;
+  inset-inline-start: 10px;
+  max-width: calc(100% - 20px);
+  padding: 5px 10px;
+  border-radius: ${theme.radii.pill};
+  background: ${({ $tone }) =>
+    $tone === 'warm'
+      ? theme.colors.warmth
+      : $tone === 'fresh'
+        ? theme.colors.growth
+        : $tone === 'due'
+          ? theme.colors.chipWarm
+          : 'color-mix(in srgb, var(--c-creamCard) 92%, transparent)'};
+  /* Lime and peach stay light at night, so their text stays dark. */
+  color: ${({ $tone }) => ($tone === 'warm' || $tone === 'fresh' ? theme.colors.onGrowth : theme.colors.forest)};
+  font-family: ${theme.fonts.display};
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
+  box-shadow: ${theme.shadow.soft};
+
+  ${({ $tone }) =>
+    $tone === 'calm' &&
+    css`
+      border: 1.5px dashed ${theme.colors.moss};
+      transition:
+        background ${theme.motion.fast} ${theme.motion.ease},
+        border-color ${theme.motion.fast} ${theme.motion.ease},
+        transform ${theme.motion.fast} ${theme.motion.ease};
+
+      ${Root}:hover &,
+      ${Root}:focus-within &,
+      ${Root}:active & {
+        background: ${theme.colors.growth};
+        color: ${theme.colors.onGrowth};
+        border-style: solid;
+        border-color: ${theme.colors.forest};
+        transform: translateY(-1px);
+      }
+    `}
+
+  @container (max-width: 559px) {
+    inset-block-start: 8px;
+    inset-inline-start: 8px;
+    max-width: calc(100% - 16px);
+    padding: 4px 8px;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    white-space: normal;
+
+    ${({ $tone }) =>
+      $tone === 'calm' &&
+      css`
+        ${Root}:hover & {
+          background: color-mix(in srgb, var(--c-creamCard) 92%, transparent);
+          border-style: dashed;
+          border-color: ${theme.colors.moss};
+          transform: none;
+        }
+
+        ${Root}:active & {
+          background: ${theme.colors.growth};
+          color: ${theme.colors.onGrowth};
+          border-style: solid;
+          border-color: ${theme.colors.forest};
+          transform: translateY(-1px);
+        }
       `}
   }
 `
@@ -318,6 +454,22 @@ export const CareDate = styled.span`
   }
 `
 
+/** Identity chips on the bottom of the photo; they leave room for the photo count at the end. */
+export const PhotoTags = styled.span<{ $count?: boolean }>`
+  position: absolute;
+  z-index: 1;
+  inset-block-end: 10px;
+  inset-inline-start: 10px;
+  display: flex;
+  max-width: ${({ $count }) => ($count ? 'calc(100% - 76px)' : 'calc(100% - 20px)')};
+  min-width: 0;
+
+  @container (max-width: 559px) {
+    inset-block-end: 8px;
+    inset-inline-start: 8px;
+  }
+`
+
 export const PhotoCount = styled.span`
   position: absolute;
   z-index: 1;
@@ -368,29 +520,4 @@ export const CollectionGrid = styled.div`
 
   /* Tiles pop in and overshoot a touch, one after another. */
   ${Array.from({ length: 12 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 50}ms; }`).join('\n')}
-`
-
-type StatusTone = 'warm' | 'fresh' | 'calm' | 'due'
-
-/** The card's one status line, under the name: water / photo due is warm, the rest quiet. */
-export const CardStatus = styled.span<{ $tone: StatusTone }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  font-size: ${theme.text.xs};
-  font-weight: 800;
-  color: ${({ $tone }) => ($tone === 'due' ? theme.colors.warn : theme.colors.muted)};
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-export const StatusDot = styled.span<{ $tone: StatusTone }>`
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: ${theme.radii.pill};
-  background: ${({ $tone }) =>
-    $tone === 'due' ? theme.colors.warn : $tone === 'fresh' ? theme.colors.growth : theme.colors.moss};
 `

@@ -30,7 +30,8 @@ test.describe('member Home and Feed', () => {
     await signIn(page, MEMBER)
   })
 
-  test('Home opens with a greeting and short sections, not the endless feed (phone and desktop)', async ({ page }) => {
+  test('phone Home opens with a greeting and short sections, not the endless feed', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'phone', 'Desktop keeps the three-column Home')
     await expectPage(page, '/home')
     const home = page.locator('[data-home-today]')
     await expect(home).toBeVisible()

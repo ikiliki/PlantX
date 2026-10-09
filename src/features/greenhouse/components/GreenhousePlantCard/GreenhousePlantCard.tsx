@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from '../../plantClass'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
@@ -13,6 +14,7 @@ import {
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import { Icon } from '../../../../components/Icon/Icon'
+import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import {
   CareAction,
   CareActions,
@@ -23,13 +25,13 @@ import {
   Name,
   NameRow,
   PassportMark,
-  CardStatus,
-  StatusDot,
   Photo,
   PhotoCount,
   PrivateMark,
+  PhotoTags,
   PhotoLink,
   Root,
+  StatusMark,
   Tags,
 } from './GreenhousePlantCard.styles'
 
@@ -125,7 +127,7 @@ export function GreenhousePlantCard({
     <Root
       $fresh={fresh}
       $care={careMode}
-      data-plant-card
+      $living={status.tone === 'calm'}
       onClick={careMode ? openCare : undefined}
       onKeyDown={
         careMode
@@ -142,6 +144,7 @@ export function GreenhousePlantCard({
       {careMode || preview ? (
         <Photo $stale={isPhotoStale(plant, todos)}>
           <PlantImage src={photos[0]} alt="" />
+          <StatusMark $tone={status.tone}>{status.label}</StatusMark>
           {dayLabel ? <CareDate>{dayLabel}</CareDate> : null}
           {photos.length > 1 ? (
             <PhotoCount title={t.addPlant.photosCount.replace('{n}', String(photos.length))}>
@@ -153,6 +156,15 @@ export function GreenhousePlantCard({
         <PhotoLink to={`/plants/${plant.id}`} aria-haspopup="dialog">
           <Photo $stale={isPhotoStale(plant, todos)}>
             <PlantImage src={photos[0]} alt="" />
+            <StatusMark $tone={status.tone}>{status.label}</StatusMark>
+            {/* Who identified it sits on the photo, like the passport's AI stamp: AI, Edited, or Manual. */}
+            <PhotoTags $count={photos.length > 1}>
+              <IdentifyBadge
+                identification={plant.identification}
+                notInCatalog={plant.speciesId === OTHER_CATEGORY_ID}
+                compact
+              />
+            </PhotoTags>
             {photos.length > 1 ? (
               <PhotoCount title={t.addPlant.photosCount.replace('{n}', String(photos.length))}>
                 <span aria-hidden>▣</span> +{photos.length - 1}
@@ -198,18 +210,11 @@ export function GreenhousePlantCard({
             })}
           </CareActions>
         ) : (
-          <>
-            {/* One status line at the bottom; the photo stays clean (no badges over it). */}
-            <CardStatus $tone={status.tone} data-card-status>
-              <StatusDot $tone={status.tone} aria-hidden />
-              {status.label}
-            </CardStatus>
-            {verified ? (
-              <Tags>
-                <PassportMark>✓ {t.greenhouse.passportOk}</PassportMark>
-              </Tags>
-            ) : null}
-          </>
+          verified ? (
+            <Tags>
+              <PassportMark>✓ {t.greenhouse.passportOk}</PassportMark>
+            </Tags>
+          ) : null
         )}
       </Details>
     </Root>

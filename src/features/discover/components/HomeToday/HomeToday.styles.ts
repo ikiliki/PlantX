@@ -184,22 +184,3 @@ export const FirstAction = styled.button`
     outline-offset: 2px;
   }
 `
-
-/** One column on a phone; wide, your own things on the start side and the community rows on the end. */
-export const Columns = styled.div`
-  display: grid;
-  gap: ${theme.space.lg};
-  min-width: 0;
-
-  @container (min-width: 900px) {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    align-items: start;
-    column-gap: ${theme.space.xl};
-  }
-`
-
-export const Column = styled.div`
-  display: grid;
-  gap: ${theme.space.lg};
-  min-width: 0;
-`

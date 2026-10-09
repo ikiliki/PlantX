@@ -356,14 +356,7 @@
     "deleteLead": "It leaves your greenhouse and its tasks stop. Its activity stays in your log.",
     "deleteConfirm": "Delete",
     "deleteFailed": "Could not delete. Try again.",
-    "addNote": "Add a note about this plant",
-    "timelineTab": "Timeline",
-    "growthPhotos": "Photos",
-    "identifiedBy": "Identified",
-    "marketClass": "Market class",
-    "noLineage": "Started here",
-    "careLight": "Light",
-    "careWater": "Water"
+    "addNote": "Add a note about this plant"
   },
   "greenhouse": {
     "myGreenhouse": "Mine",
@@ -507,25 +500,7 @@
     "setPlaceHint": "So new plants know where they grow",
     "activityToday": "Today",
     "activityYesterday": "Yesterday",
-    "levelToNextName": "{left} XP to {name}",
-    "viewLabel": "Show plants as",
-    "viewGrid": "Grid",
-    "viewShelves": "Shelves",
-    "shelfAdd": "Add shelf",
-    "shelfNamePlaceholder": "Balcony, Living room…",
-    "shelfName": "Shelf name",
-    "shelfRename": "Rename",
-    "shelfSave": "Save",
-    "shelfUp": "Move shelf up",
-    "shelfDown": "Move shelf down",
-    "shelfDelete": "Delete shelf",
-    "shelfDeleteTitle": "Delete {name}?",
-    "shelfDeleteBody": "Its plants stay in your greenhouse, under Not on a shelf.",
-    "shelfNone": "Not on a shelf",
-    "moveTo": "Move to…",
-    "shelfEmpty": "No plants here yet. Use Move to… on a plant.",
-    "shelfLabel": "Shelf",
-    "shelvesFirst": "Make your first shelf: Balcony, Living room, Office…"
+    "levelToNextName": "{left} XP to {name}"
   },
   "todo": {
     "cancel": "Cancel",
@@ -1594,10 +1569,7 @@
     "scientific": "Scientific name",
     "ticker": "Ticker",
     "lead": "{name} ({scientific}) is a {rarity} plant class on PlantX. Typical growth time is {time}.",
-    "leadCare": "It prefers {light}. Watering: {water}.",
-    "search": "Search plants",
-    "allRarities": "All",
-    "noMatch": "No plants match. Try another name."
+    "leadCare": "It prefers {light}. Watering: {water}."
   },
   "release": {
     "notLaunched": "Not launched yet",

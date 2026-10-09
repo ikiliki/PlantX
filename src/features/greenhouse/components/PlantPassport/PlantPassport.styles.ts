@@ -1033,29 +1033,3 @@ export const NoteText = styled.span<{ $empty: boolean }>`
   color: ${({ $empty }) => ($empty ? theme.colors.muted : 'inherit')};
   font-style: ${({ $empty }) => ($empty ? 'italic' : 'normal')};
 `
-
-/** Timeline: every photo of the plant in one sideways row, so you can see it grow. */
-export const GrowthStrip = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 96px;
-  gap: 8px;
-  margin-bottom: 14px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding-bottom: 4px;
-`
-
-export const GrowthPhoto = styled.div`
-  aspect-ratio: 1;
-  overflow: hidden;
-  border-radius: ${theme.radii.sm};
-  background: ${theme.colors.chipGreen};
-
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-`

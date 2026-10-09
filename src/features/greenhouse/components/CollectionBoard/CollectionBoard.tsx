@@ -1,8 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { FilterChips } from '../../../../components/FilterChips/FilterChips'
-import { Segmented } from '../../../../components/Segmented/Segmented'
-import { useShelfView, type ShelfView } from '../../useShelfView'
-import { ShelfBoard } from '../ShelfBoard/ShelfBoard'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { ActivityThread, type ActivityEntry } from '../ActivityThread/ActivityThread'
 import { AddPlantCard } from '../AddPlantCard/AddPlantCard'
@@ -70,10 +67,7 @@ export function CollectionBoard({
   rail,
   addDisabled = false,
   guestPlants = [],
-  shelves = false,
 }: {
-  /** Your own greenhouse: a Grid / Shelves switch next to the filters. */
-  shelves?: boolean
   /**
    * No data on the shelf: the Add tile, then placeholder cards. `loading` while a member's plants
    * arrive; `guest` blurs them (nothing is fetched for a guest).
@@ -101,7 +95,6 @@ export function CollectionBoard({
   const { t } = useI18n()
   const [internalFilter, setInternalFilter] = useState<GreenhouseFilter>('all')
   const [careTodo, setCareTodo] = useState<Todo | undefined>()
-  const { view: shelfView, setView: setShelfView } = useShelfView()
   const marketReady = isPlacementReady(db.system, 'market.board')
   const todoOn = isFeatureEnabled(db.system, 'todo')
   const requested = filterProp ?? internalFilter
@@ -289,17 +282,6 @@ export function CollectionBoard({
       {!compact && living.length > 0 && !empty ? (
         <Toolbar>
           <FilterChips label={t.greenhouse.title} options={filters} value={filter} onChange={setFilter} />
-          {shelves ? (
-            <Segmented<ShelfView>
-              ariaLabel={t.greenhouse.viewLabel}
-              value={shelfView}
-              onChange={setShelfView}
-              options={[
-                { id: 'grid', label: t.greenhouse.viewGrid },
-                { id: 'shelves', label: t.greenhouse.viewShelves },
-              ]}
-            />
-          ) : null}
         </Toolbar>
       ) : null}
 
@@ -364,8 +346,6 @@ export function CollectionBoard({
             ) : null}
           </CareSections>
         )
-      ) : shelves && shelfView === 'shelves' && !empty ? (
-        <ShelfBoard plants={visible} />
       ) : (
         <>
           {visible.length === 0 && !empty ? <Empty>{t.greenhouse.filterEmpty}</Empty> : null}
