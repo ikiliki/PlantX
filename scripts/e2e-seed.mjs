@@ -28,8 +28,8 @@ console.log(`Catalog loaded: ${catalog.categories.length} categories, ${catalog.
 const db = new pg.Client({ connectionString: 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' })
 await db.connect()
 await db.query(
-  `insert into users (id, position, name, name_he, role, avatar_color, email)
-   values ('e2e-member', 1000, 'E2E Member', 'E2E Member', 'grower', '#5D7C4E', 'e2e-member@plantx.test')
+  `insert into users (id, position, name, name_he, role, avatar_color, email, nickname)
+   values ('e2e-member', 1000, 'E2E Member', 'E2E Member', 'grower', '#5D7C4E', 'e2e-member@plantx.test', 'Grower 1000')
    on conflict (id) do nothing`,
 )
 await db.query(
