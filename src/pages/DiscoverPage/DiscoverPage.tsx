@@ -3,7 +3,7 @@ import { GuestCurtain } from '../../components/GuestCurtain/GuestCurtain'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { GreenhouseLure } from '../../features/discover/components/GreenhouseLure/GreenhouseLure'
 import { GuestHomeIntro } from '../../features/discover/components/GuestHomeIntro/GuestHomeIntro'
-import { HomeMobileFloats } from '../../features/discover/components/HomeMobileFloats/HomeMobileFloats'
+import { HomeToday } from '../../features/discover/components/HomeToday/HomeToday'
 import { FeedUpdate, FeedUpdateSkeleton, SKELETON_FEED_KINDS } from '../../features/feed/components/FeedUpdate/FeedUpdate'
 import { MarketRail } from '../../features/feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../features/feed/components/RankRail/RankRail'
@@ -126,6 +126,17 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   // A guest gets a short explainer of what PlantX does, not a blurred feed behind a log-in card.
   const guestFeed = <GuestHomeIntro />
 
+  // A signed-in grower's phone gets the daily Home: today's care, their plants, then short rows.
+  // The full feed has its own dock tab (/feed).
+  if (mobile && signedIn) {
+    return (
+      <Shell>
+        <HomeToday />
+        <ScrollTopButton label={t.common.backToTop} threshold={600} side="start" />
+      </Shell>
+    )
+  }
+
   return (
     <Shell>
       <Layout>
@@ -151,8 +162,6 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
           {todoRail}
         </Rail>
       </Layout>
-      <HomeMobileFloats />
-      {/* Bottom start: the Needs-today chip owns the other corner on phones. */}
       <ScrollTopButton label={t.common.backToTop} threshold={600} side="start" />
       {careDialog}
     </Shell>

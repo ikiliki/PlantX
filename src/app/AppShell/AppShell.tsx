@@ -45,7 +45,7 @@ export function AppShell() {
   const pageRefresh = usePageRefresh(loc.pathname)
   // The ^ menus on dock items with sub-pages (the same places as the desktop drop-downs).
   const menus = useNavMenus()
-  const [dockMenu, setDockMenu] = useState<'greenhouse' | 'wiki' | null>(null)
+  const [dockMenu, setDockMenu] = useState<'greenhouse' | null>(null)
   const closeDockMenu = useCallback(() => setDockMenu(null), [])
   // Holding a dock item with sub-pages opens them too (the ^ is the visible way in).
   const longPress = useLongPress()
@@ -79,7 +79,8 @@ export function AppShell() {
   const bottom: { to: string; label: string; icon: IconName; pageId?: PageId }[] = (
     [
       { to: '/home', label: t.nav.home, icon: 'home' as const, pageId: 'home' as const },
-      { to: '/market', label: t.nav.market, icon: 'market' as const, pageId: 'market' as const },
+      // The feed takes the market's slot; market and catalog are icons in the phone top bar.
+      { to: '/feed', label: t.nav.feed, icon: 'feed' as const, pageId: 'home' as const },
       { to: '/greenhouse', label: t.nav.greenhouse, icon: 'greenhouse' as const, pageId: 'greenhouse' as const },
       {
         to: '/tasks',
@@ -88,16 +89,13 @@ export function AppShell() {
         pageId: 'todo' as const,
       },
       { to: '/rank', label: t.nav.rank, icon: 'rank' as const, pageId: 'rank' as const },
-      { to: '/wiki', label: t.nav.wiki, icon: 'wiki' as const, pageId: 'wiki' as const },
     ] satisfies { to: string; label: string; icon: IconName; pageId: PageId }[]
   ).filter((item) => {
     if (!item.pageId || !isPageNavigable(db.system, item.pageId)) return false
     const board: Partial<Record<PageId, PlacementId>> = {
-      market: 'market.board',
       greenhouse: 'greenhouse.board',
       todo: 'todo.board',
       rank: 'rank.board',
-      wiki: 'wiki.board',
     }
     const id = board[item.pageId]
     return !id || isPlacementEnabled(db.system, id)
@@ -125,7 +123,7 @@ export function AppShell() {
           const active = l.to.startsWith('/admin')
             ? loc.pathname.startsWith('/admin')
             : loc.pathname === l.to || (l.to !== '/' && loc.pathname.startsWith(l.to))
-          const menu = l.pageId === 'greenhouse' ? 'greenhouse' : l.pageId === 'wiki' ? 'wiki' : null
+          const menu = l.pageId === 'greenhouse' ? 'greenhouse' : null
           const open = menu !== null && dockMenu === menu
           return (
             <BottomCell key={l.to}>
@@ -160,7 +158,7 @@ export function AppShell() {
       {dockMenu ? (
         <DockMenu
           id={`dock-menu-${dockMenu}`}
-          title={dockMenu === 'greenhouse' ? t.nav.greenhouse : t.nav.wiki}
+          title={t.nav.greenhouse}
           items={menus[dockMenu].map(({ children: _children, ...item }) => item)}
           onClose={closeDockMenu}
         />

@@ -1,0 +1,28 @@
+import type { ReactNode } from 'react'
+import { MemoryRouter } from 'react-router-dom'
+import { AuthProvider } from '../../features/auth/AuthProvider'
+import { I18nProvider } from '../../i18n/I18nProvider'
+import { StoreProvider } from '../../mock/store'
+import { FeedPage } from './FeedPage'
+
+const withApp = (Story: () => ReactNode) => (
+  <StoreProvider source="example">
+    <I18nProvider>
+      <AuthProvider>
+        <MemoryRouter>
+          <div style={{ width: 390, maxWidth: '100%', padding: 16 }}>
+            <Story />
+          </div>
+        </MemoryRouter>
+      </AuthProvider>
+    </I18nProvider>
+  </StoreProvider>
+)
+
+export default {
+  title: 'Pages/FeedPage',
+  component: FeedPage,
+}
+
+export const Phone = () => <FeedPage />
+Phone.decorators = [withApp]

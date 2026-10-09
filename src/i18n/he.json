@@ -19,8 +19,7 @@
     "configurations": "תצורות",
     "login": "כניסה",
     "language": "שפה",
-    "toNight": "מעבר לגינת הלילה",
-    "toDay": "מעבר לגינה השמשית"
+    "feed": "פיד"
   },
   "demo": {
     "label": "דמו",
@@ -1344,7 +1343,15 @@
   },
   "settings": {
     "region": "מיקום",
-    "placeHint": "צמחים חדשים ישתמשו במקום הזה."
+    "placeHint": "צמחים חדשים ישתמשו במקום הזה.",
+    "tabs": "אזורי החשבון",
+    "profile": "פרופיל",
+    "appearance": "מראה",
+    "account": "חשבון",
+    "theme": "ערכת צבע",
+    "light": "גן שמשי",
+    "dark": "גן לילי",
+    "themeHint": "נשמר במכשיר הזה."
   },
   "feed": {
     "people": "בחממה",
@@ -1862,5 +1869,42 @@
       "care_done": "טיפול בוצע",
       "session_return": "ביקור חוזר"
     }
+  },
+  "homeToday": {
+    "morning": "בוקר טוב, {name}",
+    "afternoon": "צהריים טובים, {name}",
+    "evening": "ערב טוב, {name}",
+    "summaryDue": "{n} צמחים צריכים אותך היום",
+    "summaryOneDue": "צמח אחד צריך אותך היום",
+    "summaryCalm": "אין משימות להיום",
+    "level": "מגדל ברמה {n}",
+    "careAll": "כל המשימות",
+    "careDone": "סיימת להיום. כל הכבוד.",
+    "greenhouse": "החממה שלך",
+    "greenhouseAll": "כל ה-{n}",
+    "firstTitle": "הוסיפו את הצמח הראשון",
+    "firstBody": "צלמו תמונה והצמח יקבל דרכון ותזכורות טיפול.",
+    "firstAction": "הוספת צמח",
+    "feed": "מהפיד",
+    "feedAll": "לפיד"
+  },
+  "feedPage": {
+    "all": "הכול",
+    "added": "צמחים חדשים",
+    "photo": "תמונות",
+    "water": "טיפול",
+    "filters": "הצגה",
+    "openPassport": "דרכון",
+    "tipEyebrow": "מהקטלוג",
+    "tipLine": "{light} · {growth}",
+    "rankEyebrow": "דירוג",
+    "rankTitle": "דרגו את הצמחים של היום",
+    "rankBody": "החליקו S, A, B או C על צמחים מחממות אחרות.",
+    "rankAction": "להתחיל לדרג",
+    "marketEyebrow": "שוק",
+    "marketTitle": "מה מגדלים מוכרים",
+    "marketBody": "כל צמח מגיע עם הדרכון שלו.",
+    "marketAction": "לשוק",
+    "emptyFilter": "עדיין אין כאלה."
   }
 }

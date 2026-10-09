@@ -151,9 +151,6 @@ export const IconChoice = styled.button<{ $on?: boolean }>`
 export const Footer = styled.div`
   display: grid;
   gap: 8px;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid ${theme.colors.border};
 `
 
 export const FooterLink = styled(Link)`
@@ -169,25 +166,6 @@ export const FooterLink = styled(Link)`
   &:hover {
     background: ${theme.colors.chipNeutral};
   }
-`
-
-export const Lang = styled.div`
-  display: flex;
-  gap: 6px;
-  padding: 0 4px;
-`
-
-export const LangBtn = styled.button<{ $on?: boolean }>`
-  flex: 1;
-  min-height: 36px;
-  border: 0;
-  border-radius: ${theme.radii.pill};
-  background: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.chipNeutral)};
-  color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.ink)};
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
 `
 
 /** Privacy · Terms, and Delete my account, under Sign out. */
@@ -216,4 +194,18 @@ export const DangerLink = styled.button`
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
+`
+
+/** Profile · Appearance · Account, under the avatar. */
+export const Tabs = styled.div`
+  margin-bottom: 16px;
+`
+
+/** The guest settings card has no avatar; a plain heading names it. */
+export const GuestTitle = styled.h2`
+  margin: 0 0 16px;
+  font-family: ${theme.fonts.display};
+  font-weight: ${theme.fonts.displayWeight};
+  font-size: ${theme.text.lg};
+  color: ${theme.colors.ink};
 `
