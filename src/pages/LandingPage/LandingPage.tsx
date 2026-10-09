@@ -8,9 +8,9 @@ import { LandingSoon } from '../../features/landing/components/LandingSoon/Landi
 import { LandingTour } from '../../features/landing/components/LandingTour/LandingTour'
 import { PRIVACY_PATH, TERMS_PATH } from '../../features/legal/legalPaths'
 import { useI18n } from '../../i18n/I18nProvider'
-import { appHref } from '../../lib/siteUrls'
+import { appHref, landingHref } from '../../lib/siteUrls'
 import { track } from '../../lib/track'
-import { Foot, FootLinks, Main, Page } from './LandingPage.styles'
+import { Foot, FootLinks, Logo, LogoMark, Main, Page, Top } from './LandingPage.styles'
 
 export function LandingPage() {
   const { t } = useI18n()
@@ -21,6 +21,12 @@ export function LandingPage() {
 
   return (
     <Page>
+      <Top>
+        <Logo href={landingHref()}>
+          <LogoMark src="/icons/brand-mark.svg" alt="" width={36} height={36} />
+          {t.appName}
+        </Logo>
+      </Top>
       <Main>
         <LandingHero />
         <LandingProof />

@@ -8,6 +8,40 @@ export const Page = styled.div`
   color: ${theme.colors.ink};
 `
 
+/** The brand at the top of the page: no bar, it scrolls away with the hero. */
+export const Top = styled.header`
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  padding: 24px ${theme.space.md} 0;
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    padding: 32px 28px 0;
+  }
+`
+
+export const Logo = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: ${theme.fonts.display};
+  font-weight: ${theme.fonts.displayWeight};
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  color: ${theme.colors.forest};
+  text-decoration: none;
+`
+
+export const LogoMark = styled.img`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: transform ${theme.motion.slow} ${theme.motion.spring};
+
+  a:hover > & {
+    transform: rotate(-12deg) scale(1.06);
+  }
+`
+
 /** Landing sections size from this container (`@container landing`), not the viewport. */
 export const Main = styled.main`
   container: landing / inline-size;
