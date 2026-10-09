@@ -58,6 +58,15 @@ test.describe('greenhouse shelves', () => {
     )
   })
 
+  test('plant cards have one status line and nothing over the photo', async ({ page }) => {
+    await expectPage(page, '/greenhouse')
+    const cards = page.locator('[data-plant-card]')
+    const count = await cards.count()
+    test.skip(count === 0, 'this member has no plants')
+    await expect(page.locator('[data-plant-card] [data-card-status]')).toHaveCount(count)
+    await expect(page.locator('[data-plant-card] [data-identify-badge]')).toHaveCount(0)
+  })
+
   test('a grower’s public greenhouse has no Grid / Shelves switch', async ({ page }) => {
     await expectPage(page, '/greenhouse/u-admin')
     await expect(page.getByRole('radiogroup', { name: 'Show plants as' })).toHaveCount(0)
