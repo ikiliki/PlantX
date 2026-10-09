@@ -17,6 +17,8 @@ import { TodoTable } from '../../../todo/components/TodoTable/TodoTable'
 import { canFillTodo, dueTodos } from '../../../todo/todoSchedule'
 import {
   Calm,
+  Column,
+  Columns,
   First,
   FirstAction,
   FirstBody,
@@ -48,7 +50,7 @@ function greetingKey(hour: number) {
 
 /**
  * Home on a phone for a signed-in grower: a greeting with today's count, today's care, the grower's own
- * plants, then short market, rank and feed sections. Desktop keeps the three-column Home.
+ * plants, then short market, rank and feed sections. Wide (900px+ of the page) it splits into two columns.
  */
 export function HomeToday() {
   const { t, tr, locale } = useI18n()
@@ -86,6 +88,9 @@ export function HomeToday() {
         </Summary>
       </Hello>
 
+      {/* Wide: your plants and care on the start side, the community rows on the end. */}
+      <Columns>
+      <Column>
       {plants.length === 0 ? (
         <First data-home-first>
           <FirstTitle>{t.homeToday.firstTitle}</FirstTitle>
@@ -129,7 +134,9 @@ export function HomeToday() {
           </Section>
         </>
       )}
+      </Column>
 
+      <Column>
       <Section data-home-market>
         <MarketRail />
       </Section>
@@ -150,6 +157,8 @@ export function HomeToday() {
           ))}
         </Section>
       </FeatureGate>
+      </Column>
+      </Columns>
 
       {careTodo && carePlant ? (
         <TodoCareDialog
