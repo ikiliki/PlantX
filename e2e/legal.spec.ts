@@ -77,6 +77,8 @@ test.describe('member', () => {
       await route.fulfill({ json: { ...live, currentUser: null, currentUserId: null } })
     })
     await page.goto('/greenhouse?account=1')
+    // Sign out, legal links and Delete my account live on the Account tab.
+    await page.getByRole('dialog').getByRole('tab', { name: 'Account' }).click()
     await page.locator('[data-delete-account]').click()
     const confirm = page.getByRole('dialog', { name: 'Delete your account?' })
     await expect(confirm).toBeVisible()

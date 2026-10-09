@@ -1,30 +1,35 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { InfiniteSentinel, useInfiniteList } from '../../../../components/InfiniteScroll/InfiniteScroll'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { Segmented } from '../../../../components/Segmented/Segmented'
 import { isPublicActivity } from '../../../feed/activityXp'
-import { ActivityMoment, MomentGlyph, MomentPlay } from '../../../feed/components/ActivityMoment/ActivityMoment'
+import { ActivityMoment, MomentGlyph } from '../../../feed/components/ActivityMoment/ActivityMoment'
 import { XpChip } from '../../../feed/components/XpChip/XpChip'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import type { FeedUpdateKind } from '../../../../mock/types'
 import {
+  Badge,
+  Day,
+  DayLabel,
   Empty,
-  Event,
   Head,
-  Message,
-  Meta,
-  MoreAbove,
-  Photo,
+  Label,
+  Name,
   Root,
+  Row,
+  Rows,
   Scroll,
-  ScrollFrame,
+  Side,
   Tag,
+  Text,
+  Thumb,
+  Time,
   Title,
-  When,
 } from './ActivityThread.styles'
 
 export type ActivityEntry = {
+  /** ISO time of the activity. */
   at: string
   plant: string
   plantId?: string
@@ -37,98 +42,102 @@ export type ActivityEntry = {
   tag?: string
 }
 
-function ActivityMessage({ entry, onOpen }: { entry: ActivityEntry; onOpen?: () => void }) {
+function dayKey(iso: string) {
+  const date = new Date(iso)
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+}
+
+function ActivityRow({ entry, onOpen }: { entry: ActivityEntry; onOpen?: () => void }) {
+  const { locale } = useI18n()
   const scan = entry.kind === 'scan'
+  const time = new Date(entry.at).toLocaleTimeString(locale === 'he' ? 'he-IL' : 'en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
   const body = (
     <>
-      {entry.kind ? <MomentPlay kind={entry.kind} /> : null}
-      <Photo $scan={scan}>
-        {entry.photo ? <PlantImage src={entry.photo} alt="" /> : scan ? <span aria-hidden>✦</span> : null}
-      </Photo>
-      <Meta>
-        <Event>
-          <strong>{entry.plant}</strong> — {entry.label}
-        </Event>
-        <When>
-          {entry.kind ? <MomentGlyph kind={entry.kind} /> : null}
-          {entry.at}
-          <XpChip kind={entry.kind} />
+      <Thumb $scan={scan}>
+        {entry.photo ? <PlantImage src={entry.photo} alt="" loading="lazy" /> : <span aria-hidden>{scan ? '✦' : '🌱'}</span>}
+        {entry.kind ? (
+          <Badge $kind={entry.kind} aria-hidden>
+            <MomentGlyph kind={entry.kind} />
+          </Badge>
+        ) : null}
+      </Thumb>
+      <Text>
+        <Name>{entry.plant}</Name>
+        <Label>
+          {entry.label}
           {entry.tag ? <Tag $pending={scan && !entry.plantId}>{entry.tag}</Tag> : null}
-        </When>
-      </Meta>
+        </Label>
+      </Text>
+      <Side>
+        <Time dateTime={entry.at}>{time}</Time>
+        <XpChip kind={entry.kind} />
+      </Side>
     </>
   )
 
   if (onOpen) {
     return (
-      <Message as="button" type="button" onClick={onOpen} $kind={entry.kind} $open data-moment={entry.kind} aria-haspopup="dialog">
+      <Row as="button" type="button" onClick={onOpen} $open data-moment={entry.kind} aria-haspopup="dialog">
         {body}
-      </Message>
+      </Row>
     )
   }
-
-  return (
-    <Message $kind={entry.kind} data-moment={entry.kind}>
-      {body}
-    </Message>
-  )
+  return <Row data-moment={entry.kind}>{body}</Row>
 }
 
-/** The owner's greenhouse log. Opens on activities that earned XP; All adds scans and the rest. */
-export function ActivityThread({ activity: all, height }: { activity: ActivityEntry[]; height?: number }) {
-  const { t } = useI18n()
+/**
+ * The owner's greenhouse log, newest first and grouped by day. Opens on activities that earned XP; All adds
+ * scans and the rest. `rail` is the desktop side panel (a card with its title); `sheet` sits inside the phone
+ * bell's dialog, which already shows the title.
+ */
+export function ActivityThread({
+  activity: all,
+  height,
+  variant = 'rail',
+}: {
+  activity: ActivityEntry[]
+  height?: number
+  variant?: 'rail' | 'sheet'
+}) {
+  const { t, locale } = useI18n()
   const { db, signedIn } = useStore()
   const [show, setShow] = useState<'xp' | 'all'>('xp')
   const activity = show === 'xp' ? all.filter((entry) => entry.kind && isPublicActivity(entry.kind)) : all
   const [openId, setOpenId] = useState<string | null>(null)
   const openUpdate = openId ? db.updates.find((item) => item.id === openId) : undefined
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [moreAbove, setMoreAbove] = useState(false)
-  const stick = useRef(true)
-  const before = useRef({ height: 0, top: 0 })
-  const signature = `${show}|${activity.map((entry) => `${entry.at}|${entry.plant}|${entry.label}`).join('|')}`
-  const list = useInfiniteList(activity, { anchor: 'end', signature })
-  const seen = useRef(signature)
-  if (seen.current !== signature) {
-    seen.current = signature
-    stick.current = true
+  const list = useInfiniteList(activity, {
+    signature: `${show}|${activity.map((entry) => entry.updateId ?? `${entry.at}|${entry.plant}`).join('|')}`,
+  })
+
+  const today = dayKey(new Date().toISOString())
+  const yesterday = dayKey(new Date(Date.now() - 86_400_000).toISOString())
+  const dayName = (iso: string) => {
+    const key = dayKey(iso)
+    if (key === today) return t.greenhouse.activityToday
+    if (key === yesterday) return t.greenhouse.activityYesterday
+    return new Date(iso).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    })
   }
 
-  const loadOlder = () => {
-    const node = scrollRef.current
-    if (node) before.current = { height: node.scrollHeight, top: node.scrollTop }
-    stick.current = false
-    list.loadMore()
+  const days: { key: string; label: string; entries: ActivityEntry[] }[] = []
+  for (const entry of list.shown) {
+    const key = dayKey(entry.at)
+    const last = days[days.length - 1]
+    if (last && last.key === key) last.entries.push(entry)
+    else days.push({ key, label: dayName(entry.at), entries: [entry] })
   }
-
-  useLayoutEffect(() => {
-    const node = scrollRef.current
-    if (!node) return
-    if (stick.current) {
-      node.scrollTop = node.scrollHeight
-      return
-    }
-    node.scrollTop = before.current.top + node.scrollHeight - before.current.height
-  }, [list.shown.length, signature])
-
-  useEffect(() => {
-    const node = scrollRef.current
-    if (!node) return
-    const measure = () => setMoreAbove(node.scrollTop > 24)
-    measure()
-    node.addEventListener('scroll', measure, { passive: true })
-    const observer = new ResizeObserver(measure)
-    observer.observe(node)
-    return () => {
-      node.removeEventListener('scroll', measure)
-      observer.disconnect()
-    }
-  }, [list.shown.length, signature])
 
   return (
-    <Root $height={height} aria-label={t.greenhouse.activityTitle}>
-      <Head>
-        <Title>{t.greenhouse.activityTitle}</Title>
+    <Root $height={height} $variant={variant} aria-label={t.greenhouse.activityTitle} data-activity-thread>
+      <Head $variant={variant}>
+        {variant === 'rail' ? <Title>{t.greenhouse.activityTitle}</Title> : null}
         {/* A guest has no log of their own: just the header. */}
         {signedIn ? (
           <Segmented
@@ -142,30 +151,30 @@ export function ActivityThread({ activity: all, height }: { activity: ActivityEn
           />
         ) : null}
       </Head>
-      <ScrollFrame>
-        <Scroll ref={scrollRef}>
-          {list.total === 0 ? (
-            <Empty>{t.greenhouse.noActivity}</Empty>
-          ) : (
-            <>
-              <InfiniteSentinel
-                hasMore={list.hasMore}
-                onLoadMore={loadOlder}
-                root={scrollRef}
-                tick={list.shown.length}
-              />
-              {list.shown.map((entry, index) => (
-                <ActivityMessage
-                  key={entry.updateId ?? `${entry.at}-${entry.plantId ?? entry.plant}-${index}`}
-                  entry={entry}
-                  onOpen={entry.updateId ? () => setOpenId(entry.updateId ?? null) : undefined}
-                />
-              ))}
-            </>
-          )}
-        </Scroll>
-        <MoreAbove $on={moreAbove} aria-hidden />
-      </ScrollFrame>
+      <Scroll ref={scrollRef} $variant={variant}>
+        {list.total === 0 ? (
+          <Empty>{t.greenhouse.noActivity}</Empty>
+        ) : (
+          <>
+            {days.map((day) => (
+              <Day key={day.key}>
+                <DayLabel>{day.label}</DayLabel>
+                <Rows>
+                  {day.entries.map((entry, index) => (
+                    <li key={entry.updateId ?? `${entry.at}-${entry.plantId ?? entry.plant}-${index}`}>
+                      <ActivityRow
+                        entry={entry}
+                        onOpen={entry.updateId ? () => setOpenId(entry.updateId ?? null) : undefined}
+                      />
+                    </li>
+                  ))}
+                </Rows>
+              </Day>
+            ))}
+            <InfiniteSentinel hasMore={list.hasMore} onLoadMore={list.loadMore} root={scrollRef} tick={list.shown.length} />
+          </>
+        )}
+      </Scroll>
       {openUpdate ? <ActivityMoment update={openUpdate} onClose={() => setOpenId(null)} /> : null}
     </Root>
   )

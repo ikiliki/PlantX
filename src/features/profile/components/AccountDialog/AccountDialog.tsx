@@ -4,15 +4,16 @@ import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
 import { Input } from '../../../../components/Form/Form'
+import { FilterChips } from '../../../../components/FilterChips/FilterChips'
 import { Icon } from '../../../../components/Icon/Icon'
 import { greenhouseLevel } from '../../../greenhouse/greenhouseLevel'
-import { canChooseLocale } from '../../../../i18n/locales'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isOperator } from '../../../../theme/operator'
 import { GreenhousePlace } from '../../../greenhouse/components/GreenhousePlace/GreenhousePlace'
 import { MyScanAllowance } from '../../../greenhouse/components/ScanQuotaNote/ScanQuotaNote'
 import { PRIVACY_PATH, TERMS_PATH } from '../../../legal/legalPaths'
+import { AppearanceSettings } from '../AppearanceSettings/AppearanceSettings'
 import { DeleteAccountDialog } from '../DeleteAccountDialog/DeleteAccountDialog'
 import {
   AVATAR_ICONS,
@@ -31,6 +32,7 @@ import {
   Face,
   FieldLabel,
   Footer,
+  GuestTitle,
   FooterLink,
   HiddenTitle,
   Hint,
@@ -38,16 +40,17 @@ import {
   IconRow,
   Label,
   LabelRow,
-  Lang,
-  LangBtn,
   LegalRow,
   Mark,
   Rows,
+  Tabs,
   Value,
 } from './AccountDialog.styles'
 import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 const TITLE_ID = 'account-dialog-title'
+
+type SettingsTab = 'profile' | 'appearance' | 'account'
 
 function Privacy({ kind, label }: { kind: 'public' | 'private'; label: string }) {
   return (
@@ -65,12 +68,13 @@ function Privacy({ kind, label }: { kind: 'public' | 'private'; label: string })
  * Open it from anywhere with `?account=1` (`accountHref`); the top bar owns it.
  */
 export function AccountDialog({ onClose }: { onClose: () => void }) {
-  const { currentUser, db, loginAs, setAccount, setLocale, deleteAccount } = useStore()
+  const { currentUser, db, loginAs, setAccount, deleteAccount } = useStore()
   const { t, locale } = useI18n()
   const navigate = useNavigate()
   const [nickname, setNickname] = useState(currentUser?.nickname ?? '')
   const [status, setStatus] = useState<'idle' | 'saved' | 'failed'>('idle')
   const [deleting, setDeleting] = useState(false)
+  const [tab, setTab] = useState<SettingsTab>('profile')
 
   useEffect(() => {
     setNickname(currentUser?.nickname ?? '')
@@ -88,13 +92,32 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
     }
   }, [onClose])
 
-  if (!currentUser || currentUser.role === 'guest') return null
+  // A guest has no account yet: the same card holds only Appearance (the top bar gear opens it).
+  if (!currentUser || currentUser.role === 'guest') {
+    return createPortal(
+      <Backdrop onClick={onClose}>
+        <Card
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={TITLE_ID}
+          onClick={(event) => event.stopPropagation()}
+          data-settings-dialog
+        >
+          <Close type="button" onClick={onClose} aria-label={t.common.cancel}>
+            ×
+          </Close>
+          <GuestTitle id={TITLE_ID}>{t.nav.settings}</GuestTitle>
+          <AppearanceSettings />
+        </Card>
+      </Backdrop>,
+      document.body,
+    )
+  }
 
   const name = locale === 'he' ? currentUser.nameHe : currentUser.name
   const shown = publicGrowerName(currentUser, locale === 'he')
   const level = greenhouseLevel(currentUser.id, db.plants, db.todos).level
   const icon = avatarIconId(currentUser.avatarIcon)
-  const chooseLocale = canChooseLocale()
   const nicknameDirty = cleanNickname(nickname) !== cleanNickname(currentUser.nickname ?? '')
 
   const saveNickname = async () => {
@@ -142,7 +165,22 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
           <HiddenTitle id={TITLE_ID}>{t.profile.cardTitle}</HiddenTitle>
           <Privacy kind="public" label={t.profile.publicMark} />
         </Face>
+        <Tabs>
+          <FilterChips<SettingsTab>
+            label={t.settings.tabs}
+            value={tab}
+            onChange={setTab}
+            options={[
+              { id: 'profile', label: t.settings.profile },
+              { id: 'appearance', label: t.settings.appearance },
+              { id: 'account', label: t.settings.account },
+            ]}
+          />
+        </Tabs>
 
+        {tab === 'appearance' ? <AppearanceSettings /> : null}
+
+        {tab === 'profile' ? (
         <Rows>
           <Block>
             <LabelRow>
@@ -228,23 +266,15 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
             <GreenhousePlace id="account-place" />
           </Block>
         </Rows>
+        ) : null}
 
+        {tab === 'account' ? (
         <Footer>
           <MyScanAllowance />
           {isOperator(currentUser) && (
             <FooterLink to="/admin/server" onClick={onClose}>
               {t.admin.title}
             </FooterLink>
-          )}
-          {chooseLocale && (
-            <Lang role="group" aria-label={t.nav.language}>
-              <LangBtn type="button" $on={locale === 'he'} aria-pressed={locale === 'he'} onClick={() => setLocale('he')}>
-                {t.landing.langHe}
-              </LangBtn>
-              <LangBtn type="button" $on={locale === 'en'} aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>
-                {t.landing.langEn}
-              </LangBtn>
-            </Lang>
           )}
           <Button type="button" variant="secondary" block onClick={signOut}>
             {t.profile.signOut}
@@ -266,6 +296,7 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
             )}
           </LegalRow>
         </Footer>
+        ) : null}
         {deleting && (
           <DeleteAccountDialog
             plants={db.plants.filter((plant) => plant.ownerId === currentUser.id).length}

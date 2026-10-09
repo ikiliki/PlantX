@@ -1,28 +1,19 @@
 import styled from 'styled-components'
-import { menuIn, pressable } from '../../../../theme/motion'
+import { backdropEnter, closeButton, dialogEnter, pressable, sheetBackdrop, sheetSurface } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
-
-export const Root = styled.div`
-  position: relative;
-`
 
 export const Bell = styled.button<{ $open?: boolean }>`
   ${pressable}
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  border: 0;
+  border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.pill};
-  background: ${({ $open }) => ($open ? theme.colors.chipGreen : 'transparent')};
+  background: ${({ $open }) => ($open ? theme.colors.chipGreen : theme.colors.chipNeutral)};
   color: ${theme.colors.forest};
   cursor: pointer;
-  box-shadow: ${({ $open }) => ($open ? `0 0 0 3px ${theme.colors.chipGreen}` : 'none')};
-
-  &:hover {
-    background: ${theme.colors.chipGreen};
-  }
 
   &:focus-visible {
     outline: 2px solid ${theme.colors.growth};
@@ -30,47 +21,48 @@ export const Bell = styled.button<{ $open?: boolean }>`
   }
 `
 
-export const Panel = styled.div`
-  animation: ${menuIn} ${theme.motion.base} ${theme.motion.ease} both;
-  transform-origin: top right;
-  [dir='rtl'] & {
-    transform-origin: top left;
-  }
+/** Bottom sheet on a phone (the only place the bell shows); a centred card if the window is wider. */
+export const Backdrop = styled.div`
   position: fixed;
-  top: calc(76px + env(safe-area-inset-top));
-  inset-inline-end: 12px;
-  width: min(360px, calc(100vw - 24px));
-  z-index: ${theme.z.menu};
+  inset: 0;
+  z-index: ${theme.z.dialog};
+  display: grid;
+  place-items: center;
+  padding: ${theme.space.md};
+  background: ${theme.colors.overlay};
+  ${backdropEnter}
+  ${sheetBackdrop}
+`
+
+export const Sheet = styled.div`
+  position: relative;
+  display: grid;
+  gap: 4px;
+  width: min(440px, 100%);
+  padding: 22px 16px 12px;
+  border-radius: ${theme.radii.lg};
+  background: ${theme.colors.creamCard};
   container-type: inline-size;
+  ${dialogEnter}
+  ${sheetSurface}
+`
 
-  /* The thread header (title + XP / All) leaves room for the close button. */
-  aside > :first-child {
-    padding-inline-end: 48px;
-  }
+export const Head = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`
 
-  aside {
-    width: 100%;
-    height: min(62svh, 480px);
-    min-height: 220px;
-    max-height: min(62svh, 480px);
-  }
+export const Title = styled.h2`
+  margin: 0;
+  font-family: ${theme.fonts.display};
+  font-weight: ${theme.fonts.displayWeight};
+  font-size: ${theme.text.lg};
+  color: ${theme.colors.ink};
 `
 
 export const Close = styled.button`
-  position: absolute;
-  z-index: 1;
-  inset-block-start: 8px;
-  inset-inline-end: 8px;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.chipNeutral};
-  color: ${theme.colors.forest};
-  font: inherit;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
+  ${closeButton}
+  flex: none;
 `
