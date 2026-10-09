@@ -500,7 +500,11 @@
     "setPlaceHint": "So new plants know where they grow",
     "activityToday": "Today",
     "activityYesterday": "Yesterday",
-    "levelToNextName": "{left} XP to {name}"
+    "levelToNextName": "{left} XP to {name}",
+    "activitySocial": "Social",
+    "socialReacted": "{name} gave your post a 🌿",
+    "socialCommented": "{name} commented: “{text}”",
+    "socialEmpty": "No leaves or comments on your posts yet."
   },
   "todo": {
     "cancel": "Cancel",
@@ -1368,7 +1372,8 @@
     "reactionsLead": "Newest 🌿 on Feed posts: who gave it and on which post. Posts are the Activities above.",
     "reactionsMock": "Reactions are stored on the server; mock mode has none.",
     "reactionsFailed": "Could not load reactions. Try again.",
-    "reactionsEmpty": "No reactions yet."
+    "reactionsEmpty": "No reactions yet.",
+    "commentsLeadServer": "Newest Feed comments: who wrote them and on which post. Remove one in Moderation → Comments."
   },
   "settings": {
     "region": "Location",

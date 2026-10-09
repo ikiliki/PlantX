@@ -450,6 +450,18 @@ export interface FeedUpdate {
   comments?: number
 }
 
+/** Greenhouse activities → Social: a 🌿 or a comment another grower left on one of your posts. */
+export interface GreenhouseSocialItem {
+  kind: 'reaction' | 'comment'
+  activityId: string
+  plantId: string | null
+  userId: string
+  userName: string
+  /** The comment text; empty for a reaction. */
+  body: string
+  createdAt: string
+}
+
 /** Admin → Server → Reactions: one 🌿, who gave it, and the post. */
 export interface AdminReaction {
   activityId: string

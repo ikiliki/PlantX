@@ -3,6 +3,7 @@ import { InfiniteSentinel, useInfiniteList } from '../../../../components/Infini
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { Segmented } from '../../../../components/Segmented/Segmented'
 import { isPublicActivity } from '../../../feed/activityXp'
+import { useGreenhouseSocial } from '../../useGreenhouseSocial'
 import { ActivityMoment, MomentGlyph } from '../../../feed/components/ActivityMoment/ActivityMoment'
 import { XpChip } from '../../../feed/components/XpChip/XpChip'
 import { useI18n } from '../../../../i18n/I18nProvider'
@@ -36,6 +37,8 @@ export type ActivityEntry = {
   photo?: string
   label: string
   kind?: FeedUpdateKind
+  /** Social rows: a 🌿 or a comment someone left on this post. */
+  social?: 'reaction' | 'comment'
   /** Feed row this line came from. Clicking opens that moment. */
   updateId?: string
   /** Short state next to the text, such as "Not added yet". */
@@ -58,7 +61,11 @@ function ActivityRow({ entry, onOpen }: { entry: ActivityEntry; onOpen?: () => v
     <>
       <Thumb $scan={scan}>
         {entry.photo ? <PlantImage src={entry.photo} alt="" loading="lazy" /> : <span aria-hidden>{scan ? '✦' : '🌱'}</span>}
-        {entry.kind ? (
+        {entry.social ? (
+          <Badge $kind="photo" aria-hidden>
+            {entry.social === 'reaction' ? '🌿' : '💬'}
+          </Badge>
+        ) : entry.kind ? (
           <Badge $kind={entry.kind} aria-hidden>
             <MomentGlyph kind={entry.kind} />
           </Badge>
@@ -104,13 +111,20 @@ export function ActivityThread({
 }) {
   const { t, locale } = useI18n()
   const { db, signedIn } = useStore()
-  const [show, setShow] = useState<'xp' | 'all'>('xp')
-  const activity = show === 'xp' ? all.filter((entry) => entry.kind && isPublicActivity(entry.kind)) : all
+  const [show, setShow] = useState<'all' | 'social' | 'xp'>('xp')
+  // Social: what others left on your posts. All mixes it in with your own log, newest first.
+  const social = useGreenhouseSocial(signedIn && show !== 'xp')
+  const activity =
+    show === 'xp'
+      ? all.filter((entry) => entry.kind && isPublicActivity(entry.kind))
+      : show === 'social'
+        ? social.entries
+        : [...all, ...social.entries].sort((a, b) => b.at.localeCompare(a.at))
   const [openId, setOpenId] = useState<string | null>(null)
   const openUpdate = openId ? db.updates.find((item) => item.id === openId) : undefined
   const scrollRef = useRef<HTMLDivElement>(null)
   const list = useInfiniteList(activity, {
-    signature: `${show}|${activity.map((entry) => entry.updateId ?? `${entry.at}|${entry.plant}`).join('|')}`,
+    signature: `${show}|${activity.map((entry) => `${entry.social ?? 'own'}|${entry.updateId ?? entry.plant}|${entry.at}`).join('|')}`,
   })
 
   const today = dayKey(new Date().toISOString())
@@ -145,15 +159,16 @@ export function ActivityThread({
             value={show}
             onChange={setShow}
             options={[
-              { id: 'xp', label: t.greenhouse.activityXp },
               { id: 'all', label: t.greenhouse.activityAll },
+              { id: 'social', label: t.greenhouse.activitySocial },
+              { id: 'xp', label: t.greenhouse.activityXp },
             ]}
           />
         ) : null}
       </Head>
       <Scroll ref={scrollRef} $variant={variant}>
         {list.total === 0 ? (
-          <Empty>{t.greenhouse.noActivity}</Empty>
+          <Empty>{show === 'social' ? (social.loading ? '…' : t.greenhouse.socialEmpty) : t.greenhouse.noActivity}</Empty>
         ) : (
           <>
             {days.map((day) => (
@@ -161,7 +176,7 @@ export function ActivityThread({
                 <DayLabel>{day.label}</DayLabel>
                 <Rows>
                   {day.entries.map((entry, index) => (
-                    <li key={entry.updateId ?? `${entry.at}-${entry.plantId ?? entry.plant}-${index}`}>
+                    <li key={`${entry.social ?? 'own'}-${entry.updateId ?? entry.plantId ?? entry.plant}-${entry.at}-${index}`}>
                       <ActivityRow
                         entry={entry}
                         onOpen={entry.updateId ? () => setOpenId(entry.updateId ?? null) : undefined}

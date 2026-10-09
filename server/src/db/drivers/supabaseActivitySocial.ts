@@ -105,6 +105,38 @@ export function supabaseActivitySocial(pool: pg.Pool): PlantxStore['activitySoci
       }))
     },
 
+    async forOwner(ownerId, limit) {
+      const result = await pool.query(
+        `select * from (
+           select 'reaction' as kind, r.activity_id, a.plant_id, r.user_id, coalesce(u.name, '') as user_name,
+                  '' as body, r.created_at
+           from activity_reactions r
+           join activities a on a.id = r.activity_id
+           left join users u on u.id = r.user_id
+           where a.user_id = $1 and r.user_id <> $1
+           union all
+           select 'comment' as kind, c.activity_id, a.plant_id, c.user_id, coalesce(u.name, '') as user_name,
+                  c.body, c.created_at
+           from activity_comments c
+           join activities a on a.id = c.activity_id
+           left join users u on u.id = c.user_id
+           where a.user_id = $1 and c.user_id <> $1 and c.deleted_at is null
+         ) social
+         order by created_at desc
+         limit $2`,
+        [ownerId, limit],
+      )
+      return (result.rows as Record<string, unknown>[]).map((row) => ({
+        kind: row.kind === 'comment' ? ('comment' as const) : ('reaction' as const),
+        activityId: String(row.activity_id),
+        plantId: row.plant_id ? String(row.plant_id) : null,
+        userId: String(row.user_id),
+        userName: String(row.user_name),
+        body: String(row.body ?? ''),
+        createdAt: String(row.created_at),
+      }))
+    },
+
     async recentReactions(limit) {
       const result = await pool.query(
         `select r.activity_id, r.user_id, r.created_at, coalesce(u.name, '') as user_name,

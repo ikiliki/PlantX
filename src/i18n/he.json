@@ -500,7 +500,11 @@
     "setPlaceHint": "כדי שצמחים חדשים יידעו איפה הם גדלים",
     "activityToday": "היום",
     "activityYesterday": "אתמול",
-    "levelToNextName": "עוד {left} XP ל{name}"
+    "levelToNextName": "עוד {left} XP ל{name}",
+    "activitySocial": "חברתי",
+    "socialReacted": "{name} נתן/ה 🌿 לפוסט שלך",
+    "socialCommented": "{name} הגיב/ה: ״{text}״",
+    "socialEmpty": "עדיין אין עלים או תגובות על הפוסטים שלך."
   },
   "todo": {
     "cancel": "ביטול",
@@ -1368,7 +1372,8 @@
     "reactionsLead": "העלים האחרונים על פוסטים בפיד: מי נתן ועל איזה פוסט. הפוסטים הם הפעילויות למעלה.",
     "reactionsMock": "העלים נשמרים בשרת; במצב הדמו אין כאלה.",
     "reactionsFailed": "לא הצלחנו לטעון. נסו שוב.",
-    "reactionsEmpty": "עדיין אין עלים."
+    "reactionsEmpty": "עדיין אין עלים.",
+    "commentsLeadServer": "התגובות האחרונות בפיד: מי כתב ועל איזה פוסט. הסרה בניהול תוכן → תגובות."
   },
   "settings": {
     "region": "מיקום",

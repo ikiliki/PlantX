@@ -83,4 +83,27 @@ test.describe('feed reactions and comments', () => {
     await thread.locator('[data-comment="e2e-c2"]').getByRole('button', { name: 'Delete' }).click()
     await expect(thread.getByText('Lovely')).toHaveCount(0)
   })
+
+  test('Greenhouse activities: All, Social and XP; Social lists leaves and comments others left on my posts', async ({ page }, testInfo) => {
+    const at = new Date().toISOString()
+    await page.route('**/api/activities/social/mine', (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            { kind: 'comment', activityId: 'e2e-mine', plantId: null, userId: 'u-admin', userName: 'E2E Admin', body: 'Gorgeous leaves', createdAt: at },
+            { kind: 'reaction', activityId: 'e2e-mine', plantId: null, userId: 'u-admin', userName: 'E2E Admin', body: '', createdAt: at },
+          ],
+        },
+      }),
+    )
+    await expectPage(page, '/greenhouse')
+    if (testInfo.project.name === 'phone') await page.getByRole('banner').getByRole('button', { name: 'Greenhouse activities' }).click()
+    const thread = page.locator('[data-activity-thread]').last()
+    const show = thread.getByRole('radiogroup', { name: 'Show' })
+    await expect(show.getByRole('radio')).toHaveText(['All', 'Social', 'XP'])
+    await expect(show.getByRole('radio', { name: 'XP' })).toBeChecked()
+    await show.getByRole('radio', { name: 'Social' }).click()
+    await expect(thread.getByText('E2E Admin commented: “Gorgeous leaves”')).toBeVisible()
+    await expect(thread.getByText('E2E Admin gave your post a 🌿')).toBeVisible()
+  })
 })

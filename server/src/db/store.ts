@@ -20,7 +20,7 @@ import type {
 import type { SystemConfig } from '../../../src/theme/release.ts'
 import type { IssueContext, IssueReport } from '../../../src/lib/issueReport.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
-import type { ActivityComment, AdminComment, AdminReaction } from '../../../src/mock/types.ts'
+import type { ActivityComment, AdminComment, AdminReaction, GreenhouseSocialItem } from '../../../src/mock/types.ts'
 import type { Todo } from '../features/todo/todo.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
 
@@ -143,6 +143,8 @@ export interface PlantxStore {
     softDeleteComment(id: string): Promise<void>
     /** Newest visible comments, with author and post, for Admin → Moderation. */
     recent(limit: number): Promise<AdminComment[]>
+    /** 🌿 and comments other growers left on this owner's posts, newest first. */
+    forOwner(ownerId: string, limit: number): Promise<GreenhouseSocialItem[]>
     /** Newest 🌿 reactions, with who gave them and the post, for Admin → Server. */
     recentReactions(limit: number): Promise<AdminReaction[]>
   }

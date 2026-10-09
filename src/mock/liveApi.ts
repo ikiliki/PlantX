@@ -420,6 +420,11 @@ export function postComment(activityId: string, body: string) {
   )
 }
 
+/** 🌿 and comments others left on your posts. */
+export function fetchMySocial() {
+  return request<{ items: import('./types').GreenhouseSocialItem[] }>('/api/activities/social/mine')
+}
+
 /** Admin → Server → Reactions. */
 export function fetchAdminReactionsOutcome() {
   return requestOutcome<{ reactions: import('./types').AdminReaction[] }>('/api/admin/reactions')

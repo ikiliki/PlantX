@@ -65,6 +65,11 @@ export const feedSocialService = {
     return getStore().activitySocial.recent(Math.min(Math.max(limit, 1), 200))
   },
 
+  /** Greenhouse activities → Social: what others left on your own posts. */
+  async mine(ownerId: string) {
+    return getStore().activitySocial.forOwner(ownerId, 200)
+  },
+
   /** Admin → Server → Reactions. */
   async recentReactions(limit = 200) {
     return getStore().activitySocial.recentReactions(Math.min(Math.max(limit, 1), 500))
