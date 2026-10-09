@@ -26,7 +26,7 @@ export const Stamp = styled.span<{ $changed?: boolean }>`
   font-weight: 800;
   line-height: 1;
   cursor: help;
-  background: ${({ $changed }) => ($changed ? 'rgba(154, 107, 31, 0.16)' : theme.colors.aiBlue)};
+  background: ${({ $changed }) => ($changed ? 'color-mix(in srgb, var(--c-warn) 16%, transparent)' : theme.colors.aiBlue)};
   color: ${({ $changed }) => ($changed ? theme.colors.warn : '#fff')};
   outline: none;
 
@@ -49,7 +49,7 @@ export const Tip = styled.span`
   border-radius: ${theme.radii.sm};
   background: ${theme.colors.forest};
   color: ${theme.colors.creamCard};
-  box-shadow: 0 6px 18px rgba(18, 60, 45, 0.24);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--c-forest) 24%, transparent);
   text-align: start;
   white-space: normal;
   opacity: 0;

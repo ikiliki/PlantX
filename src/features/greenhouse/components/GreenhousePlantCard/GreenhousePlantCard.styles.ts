@@ -5,15 +5,15 @@ import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const freshGlow = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.95); transform: scale(0.94); }
-  35% { box-shadow: 0 0 0 10px rgba(207, 234, 120, 0.55); transform: scale(1.02); }
-  100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0); transform: none; }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 95%, transparent); transform: scale(0.94); }
+  35% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--c-growth) 55%, transparent); transform: scale(1.02); }
+  100% { box-shadow: 0 0 0 0 transparent; transform: none; }
 `
 
 /** Same living halo as the add-photo plus, kept inside the shelf gap. */
 const livingPulse = keyframes`
-  0%, 100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.7); }
-  50% { box-shadow: 0 0 0 7px rgba(207, 234, 120, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 70%, transparent); }
+  50% { box-shadow: 0 0 0 7px transparent; }
 `
 
 export const Root = styled.article<{
@@ -195,7 +195,7 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
         ? theme.colors.growth
         : $tone === 'due'
           ? theme.colors.chipWarm
-          : 'rgba(255, 254, 250, 0.92)'};
+          : 'color-mix(in srgb, var(--c-creamCard) 92%, transparent)'};
   color: ${theme.colors.forest};
   font-family: ${theme.fonts.display};
   font-size: 12px;
@@ -237,7 +237,7 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
       $tone === 'calm' &&
       css`
         ${Root}:hover & {
-          background: rgba(255, 254, 250, 0.92);
+          background: color-mix(in srgb, var(--c-creamCard) 92%, transparent);
           border-style: dashed;
           border-color: ${theme.colors.moss};
           transform: none;
@@ -477,7 +477,7 @@ export const PhotoCount = styled.span`
   gap: 4px;
   padding: 4px 8px;
   border-radius: ${theme.radii.pill};
-  background: rgba(18, 60, 45, 0.78);
+  background: color-mix(in srgb, var(--c-forest) 78%, transparent);
   color: ${theme.colors.creamCard};
   font-size: 11px;
   font-weight: 800;

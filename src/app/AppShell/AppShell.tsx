@@ -10,6 +10,7 @@ import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { theme } from '../../theme/tokens'
 import { TopBar } from '../TopBar/TopBar'
+import { useDockAway } from '../useDockAway'
 import { usePageNavigationType } from '../pageNavigation'
 import { BottomIcon, BottomLink, BottomNav, Main, Shell } from './AppShell.styles'
 
@@ -32,6 +33,7 @@ export function AppShell() {
   const loc = useLocation()
   // Not useNavigationType(): under <Routes location> it always says POP, and nothing would scroll to the top.
   const navType = usePageNavigationType()
+  const dockAway = useDockAway()
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
   const pathRef = useRef(loc.pathname)
@@ -94,7 +96,7 @@ export function AppShell() {
         </LoaderShell>
       </Main>
       <ScrollTopButton label={t.common.backToTop} />
-      <BottomNav $cols={bottom.length}>
+      <BottomNav $cols={bottom.length} $away={dockAway}>
         {bottom.map((l) => {
           const active = l.to.startsWith('/admin')
             ? loc.pathname.startsWith('/admin')

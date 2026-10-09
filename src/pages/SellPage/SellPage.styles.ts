@@ -234,7 +234,7 @@ export const PriceWell = styled.label`
 
   &:focus-within {
     border-color: ${theme.colors.forest};
-    box-shadow: 0 0 0 3px rgba(207, 234, 120, 0.65);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-growth) 65%, transparent);
   }
 
   input {

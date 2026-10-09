@@ -49,7 +49,7 @@ export const Orb = styled.span<{ $tone?: 'done' }>`
   background:
     radial-gradient(circle at 35% 30%, #fff 0 2px, transparent 3px),
     radial-gradient(circle at 40% 35%, ${theme.colors.warmth}, ${theme.colors.danger} 72%);
-  box-shadow: inset 0 -6px 10px rgba(18, 60, 45, 0.25);
+  box-shadow: inset 0 -6px 10px color-mix(in srgb, var(--c-forest) 25%, transparent);
 
   ${({ $tone }) =>
     $tone === 'done'

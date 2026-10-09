@@ -1,4 +1,11 @@
-export const theme = {
+/**
+ * Two gardens, one set of names. Every colour, surface and shadow is a CSS variable (`theme.colors.forest` is
+ * `var(--c-forest)`), so styled-components follow the mode without re-rendering. `GlobalStyle` writes the raw
+ * values below for each mode; `themeMode.ts` picks the mode.
+ */
+
+/** Sunny garden: warm paper, leaf green, terracotta and one sun-yellow accent. */
+const day = {
   colors: {
     /** Leaf green: primary actions and active text. */
     forest: '#1F5135',
@@ -12,6 +19,9 @@ export const theme = {
     lime: '#FFC94A',
     green: '#5B8C3E',
     greenDark: '#2A6643',
+    /** A leaf-green surface that stays deep in both gardens (dock, level badge). */
+    deep: '#1F5135',
+    onDeep: '#FFF8EC',
     cream: '#FFF8EC',
     creamCard: '#FFFFFF',
     ink: '#20302A',
@@ -41,19 +51,9 @@ export const theme = {
     down: '#C2492B',
     overlay: 'rgba(32, 48, 42, 0.42)',
   },
-  radii: {
-    sm: '12px',
-    md: '18px',
-    lg: '26px',
-    pill: '999px',
-    /** Buttons, chips and segmented items: soft pebbles. */
-    control: '999px',
-  },
-  /** Page and chrome backgrounds (CSS background values). */
   surface: {
     /** Warm paper with morning sun coming in from the top start corner. */
-    page: `radial-gradient(900px 420px at 0% -10%, rgba(255, 201, 74, 0.22), transparent 60%),
-    #FFF8EC`,
+    page: 'radial-gradient(900px 420px at 0% -10%, rgba(255, 201, 74, 0.22), transparent 60%), #FFF8EC',
     bar: '#FFF8EC',
     barScrolled: '#FFF8EC',
     barInk: '#1F5135',
@@ -66,6 +66,7 @@ export const theme = {
     dockInk: '#FFF8EC',
     dockMuted: 'rgba(255, 248, 236, 0.72)',
     dockActive: '#FFC94A',
+    dockEdge: 'transparent',
   },
   shadow: {
     /** Clay: a soft drop under the object plus a faint lower lip, as if it were moulded. */
@@ -74,6 +75,105 @@ export const theme = {
     lift: '0 3px 0 rgba(31, 81, 53, 0.05), 0 26px 44px -14px rgba(31, 81, 53, 0.32)',
     dialog: '0 30px 70px -10px rgba(31, 81, 53, 0.35)',
     focus: '0 0 0 3px #FFF8EC, 0 0 0 6px #FFC94A',
+  },
+}
+
+/** Night garden: the same bench after dark. Deep green-black, moonlit leaves, a firefly-yellow accent. */
+const night: typeof day = {
+  colors: {
+    forest: '#B9E4A0',
+    forestMid: '#A6D68C',
+    forestSoft: '#8FC777',
+    moss: '#8DBF6E',
+    growth: '#FFD873',
+    warmth: '#F29B73',
+    lime: '#FFD873',
+    green: '#8DBF6E',
+    greenDark: '#A6D68C',
+    deep: '#1B2E24',
+    onDeep: '#EAF2E6',
+    cream: '#0F1A15',
+    creamCard: '#17251E',
+    ink: '#EAF2E6',
+    muted: '#A3B5AA',
+    border: '#263A30',
+    borderStrong: '#34493E',
+    chipGreen: '#1F3A2A',
+    chipWarm: '#3A2F1B',
+    chipNeutral: '#1C2B23',
+    chipDanger: '#3D241D',
+    chipInfo: '#1A2D3D',
+    chipAi: '#1B2A40',
+    track: '#22332A',
+    danger: '#F08A6E',
+    warn: '#E8B04C',
+    info: '#7DB6E8',
+    aiBlue: '#7AAEF0',
+    water: '#6FB2F0',
+    metal: '#9AA3AB',
+    up: '#8FD47A',
+    down: '#F08A6E',
+    overlay: 'rgba(0, 0, 0, 0.6)',
+  },
+  surface: {
+    /** Moonlight from the top end corner. */
+    page: 'radial-gradient(900px 420px at 100% -10%, rgba(255, 216, 115, 0.09), transparent 60%), #0F1A15',
+    bar: '#0F1A15',
+    barScrolled: '#0F1A15',
+    barInk: '#B9E4A0',
+    barMuted: '#A3B5AA',
+    barActive: '#FFD873',
+    nav: '#1B2E24',
+    barBorder: 'transparent',
+    dock: '#1B2E24',
+    dockInk: '#EAF2E6',
+    dockMuted: 'rgba(234, 242, 230, 0.68)',
+    dockActive: '#FFD873',
+    dockEdge: 'rgba(185, 228, 160, 0.14)',
+  },
+  shadow: {
+    card: '0 2px 0 rgba(0, 0, 0, 0.25), 0 16px 32px -10px rgba(0, 0, 0, 0.6)',
+    soft: '0 1px 0 rgba(0, 0, 0, 0.25), 0 6px 14px -6px rgba(0, 0, 0, 0.5)',
+    lift: '0 3px 0 rgba(0, 0, 0, 0.25), 0 26px 44px -14px rgba(0, 0, 0, 0.7)',
+    dialog: '0 30px 70px -10px rgba(0, 0, 0, 0.75)',
+    focus: '0 0 0 3px #0F1A15, 0 0 0 6px #FFD873',
+  },
+}
+
+export const palettes = { day, night }
+export type GardenMode = keyof typeof palettes
+
+type Palette = typeof day
+const PREFIX = { colors: 'c', surface: 's', shadow: 'sh' } as const
+
+/** `{ forest: '#1F5135' }` → `{ forest: 'var(--c-forest)' }`. */
+function asVars<G extends keyof typeof PREFIX>(group: G): { [K in keyof Palette[G]]: string } {
+  const out = {} as Record<string, string>
+  for (const key of Object.keys(day[group])) out[key] = `var(--${PREFIX[group]}-${key})`
+  return out as { [K in keyof Palette[G]]: string }
+}
+
+/** The custom-property declarations for one garden. */
+export function paletteCss(mode: GardenMode): string {
+  const palette = palettes[mode]
+  return (Object.keys(PREFIX) as (keyof typeof PREFIX)[])
+    .flatMap((group) =>
+      Object.entries(palette[group]).map(([key, value]) => `--${PREFIX[group]}-${key}: ${value};`),
+    )
+    .join('\n')
+}
+
+export const theme = {
+  colors: asVars('colors'),
+  surface: asVars('surface'),
+  shadow: asVars('shadow'),
+  radii: {
+    sm: '12px',
+    md: '18px',
+    lg: '26px',
+    pill: '999px',
+    /** Buttons, chips and segmented items: soft pebbles. */
+    control: '999px',
   },
   motion: {
     fast: '150ms',

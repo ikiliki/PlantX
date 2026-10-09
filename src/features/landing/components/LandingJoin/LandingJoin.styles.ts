@@ -18,7 +18,7 @@ export const Box = styled.div`
   border-radius: 30px;
   padding: 28px;
   background:
-    radial-gradient(90% 120% at 0% 0%, rgba(207, 234, 120, 0.35), transparent 60%),
+    radial-gradient(90% 120% at 0% 0%, color-mix(in srgb, var(--c-growth) 35%, transparent), transparent 60%),
     ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};
   box-shadow: ${theme.shadow.card};

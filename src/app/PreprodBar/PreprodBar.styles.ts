@@ -16,7 +16,7 @@ export const TokenInput = styled.input`
   min-width: 0;
   background: ${theme.colors.forestSoft};
   color: ${theme.colors.creamCard};
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid color-mix(in srgb, var(--c-creamCard) 15%, transparent);
   border-radius: ${theme.radii.sm};
   padding: ${theme.space.xs} ${theme.space.sm};
   font: inherit;
@@ -32,7 +32,7 @@ export const UserButton = styled.button<{ $current: boolean }>`
   ${pressable}
   padding: 6px 10px;
   border-radius: ${theme.radii.sm};
-  border: 1px solid ${({ $current }) => ($current ? theme.colors.growth : 'rgba(255, 255, 255, 0.2)')};
+  border: 1px solid ${({ $current }) => ($current ? theme.colors.growth : 'color-mix(in srgb, var(--c-creamCard) 20%, transparent)')};
   background: ${({ $current }) => ($current ? theme.colors.growth : 'transparent')};
   color: ${({ $current }) => ($current ? theme.colors.forest : theme.colors.creamCard)};
   font: inherit;

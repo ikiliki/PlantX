@@ -17,7 +17,9 @@
     "settings": "הגדרות",
     "configurations": "תצורות",
     "login": "כניסה",
-    "language": "שפה"
+    "language": "שפה",
+    "toNight": "מעבר לגינת הלילה",
+    "toDay": "מעבר לגינה השמשית"
   },
   "demo": {
     "label": "דמו",

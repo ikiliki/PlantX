@@ -25,7 +25,7 @@ export const Tab = styled.button<{ $open: boolean }>`
   gap: 6px;
   margin: 0 auto;
   padding: 3px 12px 5px;
-  border: 1px solid rgba(207, 234, 120, 0.35);
+  border: 1px solid color-mix(in srgb, var(--c-growth) 35%, transparent);
   border-top: 0;
   border-radius: 0 0 ${theme.radii.pill} ${theme.radii.pill};
   background: ${theme.colors.forest};
@@ -75,7 +75,7 @@ export const Pin = styled.button<{ $on: boolean }>`
   margin-inline-start: auto;
   padding: 4px 10px;
   border-radius: ${theme.radii.pill};
-  border: 1px solid ${({ $on }) => ($on ? theme.colors.growth : 'rgba(255, 255, 255, 0.25)')};
+  border: 1px solid ${({ $on }) => ($on ? theme.colors.growth : 'color-mix(in srgb, var(--c-creamCard) 25%, transparent)')};
   background: ${({ $on }) => ($on ? theme.colors.growth : 'transparent')};
   color: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.creamCard)};
   font-size: 12px;
@@ -105,12 +105,12 @@ export const DemoSelect = styled.select`
   min-width: 0;
   background: ${theme.colors.forestSoft};
   color: ${theme.colors.creamCard};
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid color-mix(in srgb, var(--c-creamCard) 15%, transparent);
   border-radius: ${theme.radii.sm};
   padding: ${theme.space.xs} ${theme.space.sm};
   cursor: pointer;
   &:hover {
-    border-color: rgba(207, 234, 120, 0.5);
+    border-color: color-mix(in srgb, var(--c-growth) 50%, transparent);
   }
 `
 
@@ -118,13 +118,13 @@ export const ResetButton = styled.button`
   ${pressable}
   justify-self: start;
   padding: ${theme.space.xs} 12px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid color-mix(in srgb, var(--c-creamCard) 25%, transparent);
   border-radius: ${theme.radii.pill};
   background: transparent;
   color: ${theme.colors.creamCard};
   font-size: 12px;
   cursor: pointer;
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: color-mix(in srgb, var(--c-creamCard) 8%, transparent);
   }
 `

@@ -75,7 +75,7 @@ export const ShelfMore = styled.div<{ $on?: boolean }>`
   pointer-events: none;
   opacity: ${({ $on }) => ($on ? 1 : 0)};
   transition: opacity ${theme.motion.base} ${theme.motion.ease};
-  background: linear-gradient(180deg, rgba(244, 241, 232, 0) 0%, rgba(244, 241, 232, 0.55) 46%, ${theme.colors.cream} 100%);
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--c-cream) 55%, transparent) 46%, ${theme.colors.cream} 100%);
 
   &::after {
     content: '';
@@ -86,8 +86,8 @@ export const ShelfMore = styled.div<{ $on?: boolean }>`
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(93, 124, 78, 0.4) 14%,
-      rgba(93, 124, 78, 0.4) 86%,
+      color-mix(in srgb, var(--c-moss) 40%, transparent) 14%,
+      color-mix(in srgb, var(--c-moss) 40%, transparent) 86%,
       transparent 100%
     );
   }
@@ -117,8 +117,8 @@ export const Rail = styled.aside`
       pointer-events: none;
       background: linear-gradient(
         180deg,
-        rgba(93, 124, 78, 0.32) 0%,
-        rgba(93, 124, 78, 0.22) 70%,
+        color-mix(in srgb, var(--c-moss) 32%, transparent) 0%,
+        color-mix(in srgb, var(--c-moss) 22%, transparent) 70%,
         transparent 100%
       );
     }

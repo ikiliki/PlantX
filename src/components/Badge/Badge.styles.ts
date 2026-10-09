@@ -23,7 +23,7 @@ export const Badge = styled.span<{ $tone?: 'lime' | 'forest' | 'warn' | 'danger'
       case 'info':
         return `background: ${theme.colors.chipInfo}; color: ${theme.colors.info};`
       default:
-        return `background: ${theme.colors.forest}; color: white;`
+        return `background: ${theme.colors.forest}; color: var(--c-creamCard);`
     }
   }}
 `

@@ -60,7 +60,7 @@ export const PeekMore = styled.span`
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(18, 60, 45, 0.46);
+  background: color-mix(in srgb, var(--c-forest) 46%, transparent);
   color: ${theme.colors.cream};
   font-size: 18px;
   font-weight: 800;

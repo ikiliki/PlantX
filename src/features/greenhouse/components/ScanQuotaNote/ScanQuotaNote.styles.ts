@@ -14,7 +14,7 @@ export const Root = styled.button<{ $out: boolean; $open: boolean }>`
   min-width: min(200px, 100%);
   margin: 0;
   padding: 8px 12px 8px 8px;
-  border: 1px solid ${({ $open }) => ($open ? 'rgba(59, 124, 201, 0.35)' : theme.colors.border)};
+  border: 1px solid ${({ $open }) => ($open ? 'color-mix(in srgb, var(--c-aiBlue) 35%, transparent)' : theme.colors.border)};
   border-radius: ${theme.radii.md};
   background: ${theme.colors.creamCard};
   color: ${theme.colors.ink};
@@ -24,7 +24,7 @@ export const Root = styled.button<{ $out: boolean; $open: boolean }>`
   opacity: ${({ $out }) => ($out ? 0.85 : 1)};
 
   &:hover {
-    border-color: rgba(59, 124, 201, 0.35);
+    border-color: color-mix(in srgb, var(--c-aiBlue) 35%, transparent);
   }
 
   &:focus-visible {
@@ -39,7 +39,7 @@ export const Spark = styled.span<{ $out: boolean }>`
   width: 30px;
   height: 30px;
   border-radius: ${theme.radii.sm};
-  background: ${({ $out }) => ($out ? theme.colors.chipNeutral : 'rgba(59, 124, 201, 0.12)')};
+  background: ${({ $out }) => ($out ? theme.colors.chipNeutral : 'color-mix(in srgb, var(--c-aiBlue) 12%, transparent)')};
   color: ${({ $out }) => ($out ? theme.colors.muted : theme.colors.aiBlue)};
   font-size: 15px;
   line-height: 1;

@@ -31,7 +31,7 @@ export const Face = styled.button`
   min-height: 56px;
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
-  background: rgba(255, 254, 250, 0.96);
+  background: color-mix(in srgb, var(--c-creamCard) 96%, transparent);
   backdrop-filter: blur(10px);
   color: ${theme.colors.forest};
   cursor: inherit;

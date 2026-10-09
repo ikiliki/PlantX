@@ -11,7 +11,7 @@ const face = css<{ $compact?: boolean }>`
   min-width: 0;
   padding: ${({ $compact }) => ($compact ? '8px 10px' : '12px')};
   background:
-    linear-gradient(165deg, rgba(207, 234, 120, 0.22), rgba(255, 254, 250, 0) 52%),
+    linear-gradient(165deg, color-mix(in srgb, var(--c-growth) 22%, transparent), transparent 52%),
     ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
@@ -21,7 +21,7 @@ const face = css<{ $compact?: boolean }>`
 
   &:hover {
     background:
-      linear-gradient(165deg, rgba(207, 234, 120, 0.34), rgba(255, 254, 250, 0) 52%),
+      linear-gradient(165deg, color-mix(in srgb, var(--c-growth) 34%, transparent), transparent 52%),
       ${theme.colors.cream};
   }
 `

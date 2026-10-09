@@ -10,8 +10,8 @@ const orbit = keyframes`
 `
 
 const breathe = keyframes`
-  0%, 100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.6); }
-  50% { box-shadow: 0 0 0 12px rgba(207, 234, 120, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 60%, transparent); }
+  50% { box-shadow: 0 0 0 12px transparent; }
 `
 
 export const Root = styled.button<{ $hero?: boolean }>`
@@ -90,7 +90,7 @@ export const Root = styled.button<{ $hero?: boolean }>`
       padding: 32px;
       border: 0;
       background:
-        radial-gradient(circle at 12% 30%, rgba(207, 234, 120, 0.4), transparent 45%),
+        radial-gradient(circle at 12% 30%, color-mix(in srgb, var(--c-growth) 40%, transparent), transparent 45%),
         linear-gradient(135deg, ${theme.colors.forest} 0%, ${theme.colors.forestSoft} 100%);
       color: ${theme.colors.creamCard};
       text-align: start;
@@ -98,7 +98,7 @@ export const Root = styled.button<{ $hero?: boolean }>`
 
       &:hover {
         background:
-          radial-gradient(circle at 12% 30%, rgba(207, 234, 120, 0.55), transparent 50%),
+          radial-gradient(circle at 12% 30%, color-mix(in srgb, var(--c-growth) 55%, transparent), transparent 50%),
           linear-gradient(135deg, ${theme.colors.forest} 0%, ${theme.colors.forestSoft} 100%);
         transform: translateY(-3px);
       }

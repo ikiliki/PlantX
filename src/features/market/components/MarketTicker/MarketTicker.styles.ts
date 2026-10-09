@@ -94,7 +94,7 @@ export const Item = styled(Link)<{ $variant: 'bar' | 'glance' }>`
     `}
 
   &:hover {
-    background: rgba(93, 124, 78, 0.08);
+    background: color-mix(in srgb, var(--c-moss) 8%, transparent);
   }
 `
 

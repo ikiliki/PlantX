@@ -17,7 +17,9 @@
     "settings": "Settings",
     "configurations": "Configurations",
     "login": "Login",
-    "language": "Language"
+    "language": "Language",
+    "toNight": "Switch to the night garden",
+    "toDay": "Switch to the sunny garden"
   },
   "demo": {
     "label": "Demo",

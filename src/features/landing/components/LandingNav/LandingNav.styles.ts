@@ -14,7 +14,7 @@ export const Bar = styled.header<{ $solid: boolean }>`
   height: 68px;
   padding: 0 ${theme.space.md};
   color: ${theme.colors.forest};
-  background: ${({ $solid }) => ($solid ? 'rgba(255, 254, 250, 0.9)' : 'transparent')};
+  background: ${({ $solid }) => ($solid ? 'color-mix(in srgb, var(--c-creamCard) 90%, transparent)' : 'transparent')};
   backdrop-filter: ${({ $solid }) => ($solid ? 'blur(14px) saturate(1.2)' : 'none')};
   border-bottom: 1px solid ${({ $solid }) => ($solid ? theme.colors.border : 'transparent')};
   box-shadow: ${({ $solid }) => ($solid ? theme.shadow.soft : 'none')};
@@ -44,7 +44,7 @@ export const BrandMark = styled.img<{ $solid: boolean }>`
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  box-shadow: ${({ $solid }) => ($solid ? 'none' : '0 0 0 2px rgba(207, 234, 120, 0.45)')};
+  box-shadow: ${({ $solid }) => ($solid ? 'none' : '0 0 0 2px color-mix(in srgb, var(--c-growth) 45%, transparent)')};
   transition: transform ${theme.motion.slow} ${theme.motion.spring};
 
   a:hover > & {

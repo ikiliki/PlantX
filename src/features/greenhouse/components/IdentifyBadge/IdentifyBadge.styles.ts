@@ -70,7 +70,7 @@ export const Root = styled.span<{ $source: PlantIdentificationSource; $compact?:
   }
 
   &[data-not-in-catalog='true'] > span[aria-hidden] {
-    background: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--c-creamCard) 20%, transparent);
     color: ${theme.colors.creamCard};
   }
 
@@ -88,7 +88,7 @@ export const Root = styled.span<{ $source: PlantIdentificationSource; $compact?:
     $source === 'ai' &&
     css`
       background: ${theme.colors.aiBlue};
-      color: #fff;
+      color: var(--c-creamCard);
     `}
 
   /* In a chip the glyph sits in the text line, so every chip is the same height. */
@@ -113,7 +113,7 @@ export const Mark = styled.span<{ $source: PlantIdentificationSource }>`
   height: 1.7em;
   border-radius: ${theme.radii.pill};
   font-size: 0.9em;
-  background: ${({ $source }) => ($source === 'ai' ? theme.colors.growth : 'rgba(154, 107, 31, 0.14)')};
+  background: ${({ $source }) => ($source === 'ai' ? theme.colors.growth : 'color-mix(in srgb, var(--c-warn) 14%, transparent)')};
   color: ${({ $source }) => ($source === 'ai' ? theme.colors.forest : theme.colors.warn)};
 `
 

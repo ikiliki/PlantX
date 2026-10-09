@@ -4,7 +4,7 @@ import { popIn, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 import type { PlantRarity } from '../../../../mock/types'
 
-const onForest = (alpha: number) => `rgba(244, 241, 232, ${alpha})`
+const onForest = (alpha: number) => `color-mix(in srgb, var(--c-cream) calc(${alpha} * 100%), transparent)`
 const stacked = '@container (max-width: 760px)'
 
 export const Frame = styled.div`
@@ -59,7 +59,7 @@ export const Board = styled.article<{ $embedded?: boolean; $dialog?: boolean }>`
     overscroll-behavior: contain;
     scroll-behavior: auto;
     background:
-      linear-gradient(165deg, rgba(207, 234, 120, 0.5), rgba(255, 254, 250, 0.18) 42%, rgba(243, 246, 236, 0.96) 100%),
+      linear-gradient(165deg, color-mix(in srgb, var(--c-growth) 50%, transparent), color-mix(in srgb, var(--c-creamCard) 18%, transparent) 42%, color-mix(in srgb, var(--c-creamCard) 96%, transparent) 100%),
       #f3f6ec;
   }
 `
@@ -75,7 +75,7 @@ export const Aside = styled.aside<{ $embedded?: boolean; $dialog?: boolean }>`
   padding: ${theme.space.xl} ${theme.space.lg} ${theme.space.lg};
   color: ${theme.colors.ink};
   background:
-    linear-gradient(165deg, rgba(207, 234, 120, 0.5), rgba(255, 254, 250, 0.2) 58%),
+    linear-gradient(165deg, color-mix(in srgb, var(--c-growth) 50%, transparent), color-mix(in srgb, var(--c-creamCard) 20%, transparent) 58%),
     #f3f6ec;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -83,7 +83,7 @@ export const Aside = styled.aside<{ $embedded?: boolean; $dialog?: boolean }>`
     width: 8px;
   }
   &::-webkit-scrollbar-thumb {
-    background: rgba(18, 60, 45, 0.28);
+    background: color-mix(in srgb, var(--c-forest) 28%, transparent);
     border-radius: 99px;
   }
   ${({ $embedded, $dialog }) =>
@@ -157,8 +157,8 @@ export const PhotoIcon = styled.div`
   height: 84px;
   padding: 4px;
   border-radius: ${theme.radii.pill};
-  background: rgba(255, 254, 250, 0.72);
-  box-shadow: 0 0 0 1px rgba(18, 60, 45, 0.12);
+  background: color-mix(in srgb, var(--c-creamCard) 72%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-forest) 12%, transparent);
   animation: ${popIn} ${theme.motion.slow} ${theme.motion.spring} backwards;
   overflow: visible;
   img {
@@ -287,9 +287,9 @@ const asideStatTile = css`
   min-width: 0;
   position: relative;
   padding: 10px 12px;
-  border: 1px solid rgba(18, 60, 45, 0.1);
+  border: 1px solid color-mix(in srgb, var(--c-forest) 10%, transparent);
   border-radius: ${theme.radii.md};
-  background: rgba(255, 254, 250, 0.62);
+  background: color-mix(in srgb, var(--c-creamCard) 62%, transparent);
   text-align: start;
   dt {
     font-size: 12px;
@@ -314,12 +314,12 @@ export const RarityBanner = styled.div<{ $rarity: PlantRarity }>`
   border-radius: ${theme.radii.md};
   border: 1px solid
     ${({ $rarity }) =>
-      $rarity === 'common' ? onForest(0.14) : $rarity === 'rare' ? 'rgba(207, 234, 120, 0.35)' : 'transparent'};
+      $rarity === 'common' ? onForest(0.14) : $rarity === 'rare' ? 'color-mix(in srgb, var(--c-growth) 35%, transparent)' : 'transparent'};
   background: ${({ $rarity }) =>
     $rarity === 'unique'
       ? theme.colors.growth
       : $rarity === 'rare'
-        ? 'rgba(207, 234, 120, 0.2)'
+        ? 'color-mix(in srgb, var(--c-growth) 20%, transparent)'
         : onForest(0.1)};
   color: ${({ $rarity }) => ($rarity === 'unique' ? theme.colors.forest : onForest(0.88))};
   font-size: 11px;
@@ -452,9 +452,9 @@ export const OwnerLink = styled(Link)<{ $wideOnly?: boolean }>`
   min-width: 0;
   max-width: 100%;
   padding: 10px 12px;
-  border: 1px solid rgba(18, 60, 45, 0.1);
+  border: 1px solid color-mix(in srgb, var(--c-forest) 10%, transparent);
   border-radius: ${theme.radii.md};
-  background: rgba(255, 254, 250, 0.62);
+  background: color-mix(in srgb, var(--c-creamCard) 62%, transparent);
   color: ${theme.colors.ink};
   text-decoration: none;
   transition: background ${theme.motion.fast} ${theme.motion.ease};
@@ -516,7 +516,7 @@ export const GradeMark = styled.span`
   place-items: center;
   padding-inline: 6px;
   border-radius: ${theme.radii.md};
-  background: rgba(207, 234, 120, 0.16);
+  background: color-mix(in srgb, var(--c-growth) 16%, transparent);
   color: ${theme.colors.growth};
   font-family: ${theme.fonts.display};
   font-size: 22px;
@@ -655,7 +655,7 @@ const linkButton = css<{ $tone?: 'primary' | 'secondary' }>`
         `
       : css`
           background: ${theme.colors.forest};
-          color: white;
+          color: var(--c-creamCard);
           border: 1px solid ${theme.colors.forest};
           &:hover {
             background: ${theme.colors.forestMid};
@@ -686,9 +686,9 @@ export const TabBar = styled.div`
     order: 3;
     top: -1px;
     padding: 0 8px;
-    background: rgba(243, 246, 236, 0.94);
+    background: color-mix(in srgb, var(--c-creamCard) 94%, transparent);
     backdrop-filter: blur(10px);
-    border-bottom-color: rgba(18, 60, 45, 0.12);
+    border-bottom-color: color-mix(in srgb, var(--c-forest) 12%, transparent);
   }
 `
 
@@ -742,14 +742,14 @@ export const Panel = styled.div<{ $embedded?: boolean; $dialog?: boolean }>`
           overscroll-behavior: contain;
           scrollbar-gutter: stable;
           scrollbar-width: thin;
-          scrollbar-color: rgba(93, 124, 78, 0.55) transparent;
+          scrollbar-color: color-mix(in srgb, var(--c-moss) 55%, transparent) transparent;
           &::-webkit-scrollbar {
             width: 10px;
           }
           &::-webkit-scrollbar-thumb {
             border: 2px solid transparent;
             border-radius: 99px;
-            background: rgba(93, 124, 78, 0.45);
+            background: color-mix(in srgb, var(--c-moss) 45%, transparent);
             background-clip: padding-box;
           }
         `

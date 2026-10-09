@@ -4,9 +4,9 @@ import { drift, growX, pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const pulse = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.9); }
-  70% { box-shadow: 0 0 0 18px rgba(207, 234, 120, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 90%, transparent); }
+  70% { box-shadow: 0 0 0 18px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
 `
 
 const pop = keyframes`
@@ -32,7 +32,7 @@ export const Root = styled.aside<{ $celebrate: boolean }>`
   padding: 20px 22px 18px;
   border-radius: ${theme.radii.lg};
   background:
-    radial-gradient(70% 120% at 100% 0%, rgba(255, 201, 74, 0.45), rgba(255, 201, 74, 0) 65%),
+    radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--c-growth) 45%, transparent), transparent 65%),
     ${theme.colors.chipWarm};
   border: 0;
   box-shadow: ${theme.shadow.card};
@@ -187,8 +187,8 @@ export const Bar = styled.div`
   height: 16px;
   padding: 3px;
   border-radius: ${theme.radii.pill};
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: inset 0 2px 3px rgba(31, 81, 53, 0.12);
+  background: color-mix(in srgb, var(--c-creamCard) 75%, transparent);
+  box-shadow: inset 0 2px 3px color-mix(in srgb, var(--c-forest) 12%, transparent);
   overflow: hidden;
 `
 
@@ -197,7 +197,7 @@ export const BarFill = styled.div`
   border-radius: inherit;
   /* Still growing: soft stripes drift along the fill. */
   background:
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.28) 0 7px, transparent 7px 14px),
+    repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c-creamCard) 28%, transparent) 0 7px, transparent 7px 14px),
     linear-gradient(90deg, ${theme.colors.moss}, ${theme.colors.forestSoft});
   background-size: 28px 100%, 100% 100%;
   transform-origin: left center;
@@ -353,7 +353,7 @@ export const InfoButton = styled.button<{ $on: boolean }>`
 /** Orange pin, only while the greenhouse place is unknown: opens the Set your place tile. */
 export const PlaceButton = styled.button<{ $on: boolean }>`
   ${roundButton}
-  border: 1.5px solid ${({ $on }) => ($on ? theme.colors.warn : 'rgba(154, 107, 31, 0.35)')};
+  border: 1.5px solid ${({ $on }) => ($on ? theme.colors.warn : 'color-mix(in srgb, var(--c-warn) 35%, transparent)')};
   background: ${({ $on }) => ($on ? theme.colors.warn : theme.colors.chipWarm)};
   color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.warn)};
 `

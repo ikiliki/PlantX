@@ -20,7 +20,7 @@ function Frame() {
         height: 280,
         borderRadius: 22,
         background: '#E5F3FB',
-        boxShadow: '0 18px 44px rgba(23, 49, 40, 0.14)',
+        boxShadow: '0 18px 44px color-mix(in srgb, var(--c-ink) 14%, transparent)',
       }}
     >
       <SheetGrip label="Drag down to close" shown {...sheet.grip} />

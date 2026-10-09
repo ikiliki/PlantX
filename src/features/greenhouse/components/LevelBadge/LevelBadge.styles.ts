@@ -21,8 +21,8 @@ export const Ring = styled.div<Size>`
   height: 100%;
   border-radius: 50%;
   background:
-    radial-gradient(closest-side, ${theme.colors.forest} 76%, transparent 78%),
-    conic-gradient(${theme.colors.growth} calc(var(--progress) * 360deg), rgba(18, 60, 45, 0.14) 0);
+    radial-gradient(closest-side, ${theme.colors.deep} 76%, transparent 78%),
+    conic-gradient(${theme.colors.growth} calc(var(--progress) * 360deg), color-mix(in srgb, var(--c-forest) 14%, transparent) 0);
 `
 
 export const RingNumber = styled.span<Size>`

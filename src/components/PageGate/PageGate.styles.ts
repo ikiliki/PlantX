@@ -21,7 +21,7 @@ export const Card = styled.div`
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
   background:
-    radial-gradient(80% 70% at 50% 0%, rgba(207, 234, 120, 0.16), transparent 60%),
+    radial-gradient(80% 70% at 50% 0%, color-mix(in srgb, var(--c-growth) 16%, transparent), transparent 60%),
     ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
 `

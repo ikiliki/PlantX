@@ -2,7 +2,7 @@ import styled, { css } from 'styled-components'
 import { popIn, pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-const onForest = (alpha: number) => `rgba(244, 241, 232, ${alpha})`
+const onForest = (alpha: number) => `color-mix(in srgb, var(--c-cream) calc(${alpha} * 100%), transparent)`
 
 export const Shell = styled.div<{ $dialog?: boolean }>`
   display: grid;
@@ -19,8 +19,8 @@ export const Shell = styled.div<{ $dialog?: boolean }>`
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   background:
-    radial-gradient(120% 80% at 12% -10%, rgba(207, 234, 120, 0.28), transparent 55%),
-    radial-gradient(90% 70% at 100% 110%, rgba(242, 200, 167, 0.18), transparent 50%),
+    radial-gradient(120% 80% at 12% -10%, color-mix(in srgb, var(--c-growth) 28%, transparent), transparent 55%),
+    radial-gradient(90% 70% at 100% 110%, color-mix(in srgb, var(--c-warmth) 18%, transparent), transparent 50%),
     linear-gradient(165deg, ${theme.colors.forestSoft}, ${theme.colors.forest});
   ${({ $dialog }) =>
     $dialog &&

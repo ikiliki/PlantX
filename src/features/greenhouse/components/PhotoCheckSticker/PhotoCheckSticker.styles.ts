@@ -28,7 +28,7 @@ const tones: Record<StickerTone, ReturnType<typeof css>> = {
     color: ${theme.colors.danger};
   `,
   idle: css`
-    background: rgba(255, 254, 250, 0.94);
+    background: color-mix(in srgb, var(--c-creamCard) 94%, transparent);
     color: ${theme.colors.muted};
   `,
   busy: css`
@@ -55,7 +55,7 @@ export const Root = styled.span<{ $tone: StickerTone; $size: 'sm' | 'md' }>`
   line-height: 1.15;
   text-transform: ${theme.type.labelCase};
   white-space: ${({ $size }) => ($size === 'sm' ? 'normal' : 'nowrap')};
-  box-shadow: 0 2px 8px rgba(18, 60, 45, 0.18);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c-forest) 18%, transparent);
   transform: rotate(var(--tilt));
   animation: ${stampIn} 420ms ${theme.motion.spring} both;
   ${({ $tone }) => tones[$tone]}

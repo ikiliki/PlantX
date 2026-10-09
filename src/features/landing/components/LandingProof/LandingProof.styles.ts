@@ -24,7 +24,7 @@ export const Grid = styled.div`
 `
 
 export const Proof = styled.article`
-  background: rgba(255, 253, 248, 0.65);
+  background: color-mix(in srgb, var(--c-creamCard) 65%, transparent);
   border: 1px solid ${theme.colors.border};
   border-radius: 18px;
   padding: 18px;

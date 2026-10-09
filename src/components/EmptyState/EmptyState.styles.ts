@@ -8,7 +8,7 @@ export const Wrap = styled.div`
   gap: 10px;
   padding: ${theme.space.xxl} ${theme.space.lg};
   border: 2px dashed ${theme.colors.borderStrong};
-  background: rgba(255, 255, 255, 0.5);
+  background: color-mix(in srgb, var(--c-creamCard) 50%, transparent);
   border-radius: ${theme.radii.lg};
   text-align: center;
   color: ${theme.colors.muted};
@@ -23,7 +23,7 @@ export const Mark = styled.span`
   margin-bottom: 4px;
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.growth};
-  box-shadow: inset 0 -3px 0 rgba(154, 99, 18, 0.28);
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--c-warn) 28%, transparent);
   color: ${theme.colors.forest};
 `
 

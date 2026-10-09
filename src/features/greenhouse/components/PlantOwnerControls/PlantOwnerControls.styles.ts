@@ -84,7 +84,7 @@ export const Delete = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: rgba(180, 85, 61, 0.08);
+    background: color-mix(in srgb, var(--c-danger) 8%, transparent);
   }
 
   &:focus-visible {

@@ -8,10 +8,12 @@ import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { Avatar } from '../../components/Avatar/Avatar'
 import { Icon } from '../../components/Icon/Icon'
+import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle'
 import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/ActivityBell'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
 import { ACCOUNT_PARAM, AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
+import { useDockAway } from '../useDockAway'
 import { NavMenu } from './NavMenu/NavMenu'
 import {
   Account,
@@ -38,6 +40,7 @@ export function TopBar() {
   const [accountOpen, setAccountOpen] = useState(false)
   const [openNav, setOpenNav] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
+  const dockAway = useDockAway()
   const chooseLocale = canChooseLocale()
 
   useEffect(() => {
@@ -116,7 +119,7 @@ export function TopBar() {
         {t.appName}
       </Brand>
 
-      <NavItems>
+      <NavItems $away={dockAway && openNav === null}>
         {show('home') && (
           <NavItem to="/home" $active={isActive('/home')} aria-current={isActive('/home') ? 'page' : undefined}>
             <NavIcon aria-hidden>
@@ -197,6 +200,7 @@ export function TopBar() {
       </NavItems>
 
       <Actions>
+        <ThemeToggle toNight={t.nav.toNight} toDay={t.nav.toDay} />
         {signedIn && currentUser ? (
           <>
             <MobileOnly>

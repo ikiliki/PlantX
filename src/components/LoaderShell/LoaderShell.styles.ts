@@ -27,7 +27,7 @@ export const Orb = styled.span<{ $compact?: boolean }>`
   background:
     radial-gradient(circle at 35% 30%, #fff 0 3px, transparent 4px),
     radial-gradient(circle at 40% 35%, ${theme.colors.growth}, ${theme.colors.moss} 72%);
-  box-shadow: inset 0 -8px 12px rgba(18, 60, 45, 0.22);
+  box-shadow: inset 0 -8px 12px color-mix(in srgb, var(--c-forest) 22%, transparent);
   animation: ${rise} 900ms ${theme.motion.ease} infinite alternate;
 
   @media (prefers-reduced-motion: reduce) {

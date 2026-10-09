@@ -48,7 +48,7 @@ export const BrandMark = styled.img`
   }
 `
 
-export const NavItems = styled.nav`
+export const NavItems = styled.nav<{ $away?: boolean }>`
   display: none;
   @media (min-width: ${theme.breakpoints.md}) {
     /* Desktop: the nav floats as a dock at the bottom centre of the window. */
@@ -64,8 +64,11 @@ export const NavItems = styled.nav`
     padding: 7px;
     border-radius: ${theme.radii.pill};
     background: ${theme.surface.dock};
+    border: 1px solid ${theme.surface.dockEdge};
     box-shadow: ${theme.shadow.lift};
     overflow: visible;
+    transform: translateY(${({ $away }) => ($away ? 'calc(100% + 40px)' : '0')});
+    transition: transform ${theme.motion.slow} ${theme.motion.ease};
 
     [dir='rtl'] & {
       translate: 50% 0;
@@ -110,6 +113,16 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   &:hover {
     color: ${({ $active }) => ($active ? theme.colors.forest : theme.surface.dockInk)};
     transform: translateY(-2px);
+  }
+
+  /* Mid widths: the dock shows icons only so it never runs into the page controls; the label stays the accessible name. */
+  @media (min-width: ${theme.breakpoints.md}) and (max-width: 1180px) {
+    padding: 0 14px;
+    font-size: 0;
+
+    > span:first-child {
+      margin: 0;
+    }
   }
   &:active {
     transform: translateY(1px) scale(0.96);

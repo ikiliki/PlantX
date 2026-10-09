@@ -8,8 +8,8 @@ const chipIn = keyframes`
 `
 
 const glow = keyframes`
-  0%, 100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0); }
-  50% { box-shadow: 0 0 0 4px rgba(207, 234, 120, 0.85); }
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-growth) 85%, transparent); }
 `
 
 export const Group = styled.fieldset`
@@ -95,7 +95,7 @@ export const RowArrow = styled.button<{ $side: 'start' | 'end' }>`
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.creamCard};
-  box-shadow: 0 2px 8px rgba(18, 60, 45, 0.16);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c-forest) 16%, transparent);
   color: ${theme.colors.forest};
   font: inherit;
   font-size: 18px;

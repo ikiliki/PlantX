@@ -28,7 +28,7 @@ export const Drop = styled.button<{ $dragging: boolean }>`
   border-radius: ${theme.radii.lg};
   border: 2px dashed ${({ $dragging }) => ($dragging ? theme.colors.forest : theme.colors.border)};
   background:
-    radial-gradient(circle at 50% 30%, rgba(207, 234, 120, 0.35), transparent 60%),
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c-growth) 35%, transparent), transparent 60%),
     ${theme.colors.creamCard};
   color: ${theme.colors.ink};
   font: inherit;

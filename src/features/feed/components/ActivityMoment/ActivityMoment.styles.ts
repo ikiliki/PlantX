@@ -29,13 +29,13 @@ const surface: Record<FeedUpdateKind, ReturnType<typeof css>> = {
   `,
   added: css`
     background:
-      radial-gradient(80% 120% at 100% 100%, rgba(207, 234, 120, 0.75), transparent 60%),
+      radial-gradient(80% 120% at 100% 100%, color-mix(in srgb, var(--c-growth) 75%, transparent), transparent 60%),
       linear-gradient(165deg, #eef8d4 0%, ${theme.colors.creamCard} 70%);
     border-color: #8aaa62;
   `,
   photo: css`
     background:
-      radial-gradient(80% 100% at 100% 0%, rgba(242, 200, 167, 0.85), transparent 55%),
+      radial-gradient(80% 100% at 100% 0%, color-mix(in srgb, var(--c-warmth) 85%, transparent), transparent 55%),
       linear-gradient(165deg, #fff1e4 0%, ${theme.colors.creamCard} 70%);
     border-color: #e2b48a;
   `,
@@ -47,13 +47,13 @@ const surface: Record<FeedUpdateKind, ReturnType<typeof css>> = {
   `,
   grade: css`
     background:
-      radial-gradient(70% 100% at 100% 0%, rgba(244, 214, 120, 0.75), transparent 55%),
+      radial-gradient(70% 100% at 100% 0%, color-mix(in srgb, var(--c-growth) 75%, transparent), transparent 55%),
       linear-gradient(165deg, #fff6d8 0%, ${theme.colors.creamCard} 72%);
     border-color: #d4b46a;
   `,
   listing: css`
     background:
-      radial-gradient(80% 100% at 100% 80%, rgba(242, 200, 167, 0.65), transparent 58%),
+      radial-gradient(80% 100% at 100% 80%, color-mix(in srgb, var(--c-warmth) 65%, transparent), transparent 58%),
       linear-gradient(165deg, #fff3e2 0%, ${theme.colors.creamCard} 70%);
     border-color: #e4c29a;
   `,
@@ -66,7 +66,7 @@ const surface: Record<FeedUpdateKind, ReturnType<typeof css>> = {
   `,
   passport: css`
     background:
-      radial-gradient(80% 100% at 100% 0%, rgba(36, 84, 63, 0.18), transparent 55%),
+      radial-gradient(80% 100% at 100% 0%, color-mix(in srgb, var(--c-forestSoft) 18%, transparent), transparent 55%),
       linear-gradient(165deg, #e7f0e8 0%, ${theme.colors.creamCard} 72%);
     border-color: ${theme.colors.forestSoft};
   `,
@@ -158,7 +158,7 @@ export const Ring = styled.span<{ $delay?: string }>`
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid rgba(42, 98, 138, 0.45);
+  border: 2px solid color-mix(in srgb, var(--c-info) 45%, transparent);
   animation: ${ripple} 2.4s ease-out infinite;
   animation-delay: ${({ $delay }) => $delay ?? '0s'};
   ${still}
@@ -233,8 +233,8 @@ export const Flash = styled.span`
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, rgba(242, 200, 167, 0.2) 70%);
-  box-shadow: 0 0 0 3px rgba(154, 98, 48, 0.25);
+  background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--c-warmth) 20%, transparent) 70%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-warn) 25%, transparent);
   animation: ${flash} 2.8s ease-in-out infinite;
   ${still}
 `

@@ -19,7 +19,7 @@ export const Thumb = styled.span<{ $size: number }>`
   border-radius: ${theme.radii.pill};
   overflow: hidden;
   background: ${theme.colors.chipGreen};
-  box-shadow: 0 0 0 1px rgba(18, 60, 45, 0.12);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-forest) 12%, transparent);
   opacity: 0.92;
 
   img {

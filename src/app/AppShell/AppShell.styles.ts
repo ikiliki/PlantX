@@ -22,7 +22,7 @@ export const Main = styled.main<{ $wide?: boolean }>`
   }
 `
 
-export const BottomNav = styled.nav<{ $cols?: number }>`
+export const BottomNav = styled.nav<{ $cols?: number; $away?: boolean }>`
   /* Phone: a floating dock, not a bar glued to the edge. */
   position: fixed;
   bottom: calc(12px + env(safe-area-inset-bottom));
@@ -32,8 +32,12 @@ export const BottomNav = styled.nav<{ $cols?: number }>`
   grid-template-columns: repeat(${({ $cols = 5 }) => Math.max($cols, 1)}, minmax(0, 1fr));
   background: ${theme.surface.dock};
   border-radius: 28px;
+  border: 1px solid ${theme.surface.dockEdge};
   box-shadow: ${theme.shadow.lift};
   padding: 6px;
+  /* Tucks below the edge while the reader scrolls down; back on any scroll up. */
+  transform: translateY(${({ $away }) => ($away ? 'calc(100% + 28px)' : '0')});
+  transition: transform ${theme.motion.slow} ${theme.motion.ease};
   @media (min-width: ${theme.breakpoints.md}) {
     display: none;
   }

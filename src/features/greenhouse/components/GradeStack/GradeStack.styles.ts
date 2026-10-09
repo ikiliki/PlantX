@@ -128,7 +128,7 @@ export const Segment = styled.span<{ $on: boolean }>`
   flex: 1;
   height: 4px;
   border-radius: ${theme.radii.pill};
-  background: ${({ $on }) => ($on ? theme.colors.creamCard : 'rgba(255, 254, 250, 0.38)')};
+  background: ${({ $on }) => ($on ? theme.colors.creamCard : 'color-mix(in srgb, var(--c-creamCard) 38%, transparent)')};
   transition: background ${theme.motion.base} ${theme.motion.ease};
 `
 
@@ -152,22 +152,22 @@ const stampTone: Record<CommunityGradeLetter, ReturnType<typeof css>> = {
   S: css`
     color: ${theme.colors.growth};
     border-color: ${theme.colors.growth};
-    background: rgba(18, 60, 45, 0.55);
+    background: color-mix(in srgb, var(--c-forest) 55%, transparent);
   `,
   A: css`
     color: ${theme.colors.growth};
     border-color: ${theme.colors.growth};
-    background: rgba(18, 60, 45, 0.4);
+    background: color-mix(in srgb, var(--c-forest) 40%, transparent);
   `,
   B: css`
     color: ${theme.colors.warmth};
     border-color: ${theme.colors.warmth};
-    background: rgba(23, 49, 40, 0.4);
+    background: color-mix(in srgb, var(--c-ink) 40%, transparent);
   `,
   C: css`
     color: ${theme.colors.creamCard};
     border-color: ${theme.colors.danger};
-    background: rgba(180, 85, 61, 0.55);
+    background: color-mix(in srgb, var(--c-danger) 55%, transparent);
   `,
 }
 
@@ -236,7 +236,7 @@ export const Meta = styled.div`
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 254, 250, 0.92);
+  color: color-mix(in srgb, var(--c-creamCard) 92%, transparent);
 `
 
 export const MetaPill = styled.span`
@@ -245,8 +245,8 @@ export const MetaPill = styled.span`
   gap: 6px;
   padding: 5px 11px;
   border-radius: ${theme.radii.pill};
-  background: rgba(255, 254, 250, 0.16);
-  border: 1px solid rgba(255, 254, 250, 0.22);
+  background: color-mix(in srgb, var(--c-creamCard) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-creamCard) 22%, transparent);
   backdrop-filter: blur(6px);
 `
 

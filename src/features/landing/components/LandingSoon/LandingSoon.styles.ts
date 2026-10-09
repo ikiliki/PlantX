@@ -63,7 +63,7 @@ export const Card = styled.article`
   padding: 20px;
   border-radius: ${theme.radii.lg};
   border: 1.5px dashed ${theme.colors.border};
-  background: rgba(255, 253, 248, 0.5);
+  background: color-mix(in srgb, var(--c-creamCard) 50%, transparent);
   cursor: default;
 `
 

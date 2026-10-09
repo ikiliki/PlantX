@@ -20,7 +20,7 @@ export const Stage = styled.section<{ $x: number; $y: number; $cover?: boolean; 
   background:
     radial-gradient(
       42% 36% at ${(p) => p.$x}% ${(p) => p.$y}%,
-      rgba(207, 234, 120, 0.45),
+      color-mix(in srgb, var(--c-growth) 45%, transparent),
       transparent 70%
     ),
     ${theme.colors.cream};
@@ -93,7 +93,7 @@ export const Orb = styled.div`
   background:
     radial-gradient(circle at 35% 30%, #fff, transparent 42%),
     ${theme.colors.growth};
-  box-shadow: inset 0 -10px 16px rgba(18, 60, 45, 0.12);
+  box-shadow: inset 0 -10px 16px color-mix(in srgb, var(--c-forest) 12%, transparent);
   animation: ${drift} 3.6s ${theme.motion.ease} infinite alternate;
 
   @media (prefers-reduced-motion: reduce) {

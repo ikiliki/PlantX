@@ -103,7 +103,7 @@ export const Table = styled.table`
   }
 
   tr[data-selected='true'] td {
-    background: rgba(207, 234, 120, 0.22);
+    background: color-mix(in srgb, var(--c-growth) 22%, transparent);
   }
 
   tbody tr[data-openable='true'] {

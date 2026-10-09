@@ -14,7 +14,7 @@ export const Root = styled.aside<{ $height?: number }>`
   border-radius: ${theme.radii.lg};
   border: 1px solid ${theme.colors.border};
   background:
-    linear-gradient(180deg, rgba(255, 254, 250, 0.98), rgba(228, 235, 216, 0.35)),
+    linear-gradient(180deg, color-mix(in srgb, var(--c-creamCard) 98%, transparent), color-mix(in srgb, var(--c-chipGreen) 35%, transparent)),
     ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
   overflow: hidden;
@@ -93,9 +93,9 @@ export const MoreAbove = styled.div<{ $on?: boolean }>`
     transition: opacity ${theme.motion.base} ${theme.motion.ease};
     background: linear-gradient(
       180deg,
-      rgba(255, 254, 250, 0.98) 0%,
-      rgba(255, 254, 250, 0.55) 48%,
-      rgba(255, 254, 250, 0) 100%
+      color-mix(in srgb, var(--c-creamCard) 98%, transparent) 0%,
+      color-mix(in srgb, var(--c-creamCard) 55%, transparent) 48%,
+      transparent 100%
     );
 
     &::after {
@@ -107,8 +107,8 @@ export const MoreAbove = styled.div<{ $on?: boolean }>`
       background: linear-gradient(
         90deg,
         transparent 0%,
-        rgba(93, 124, 78, 0.4) 14%,
-        rgba(93, 124, 78, 0.4) 86%,
+        color-mix(in srgb, var(--c-moss) 40%, transparent) 14%,
+        color-mix(in srgb, var(--c-moss) 40%, transparent) 86%,
         transparent 100%
       );
     }
@@ -127,7 +127,7 @@ export const Message = styled.div<{ $kind?: FeedUpdateKind; $open?: boolean }>`
   padding: 10px 12px;
   border-radius: ${theme.radii.md};
   border: 1px solid ${theme.colors.border};
-  background: rgba(255, 254, 250, 0.88);
+  background: color-mix(in srgb, var(--c-creamCard) 88%, transparent);
   color: inherit;
   font: inherit;
   text-align: start;

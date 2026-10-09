@@ -107,7 +107,7 @@ export const PlacePrompt = styled(Link)`
   &:hover {
     border-style: solid;
     border-color: ${theme.colors.moss};
-    background: rgba(228, 235, 216, 0.4);
+    background: color-mix(in srgb, var(--c-chipGreen) 40%, transparent);
   }
 
   &:focus-visible {

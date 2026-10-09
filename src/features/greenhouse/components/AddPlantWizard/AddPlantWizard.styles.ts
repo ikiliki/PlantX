@@ -20,8 +20,8 @@ const leafFly = keyframes`
 `
 
 const halo = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.9); }
-  100% { box-shadow: 0 0 0 26px rgba(207, 234, 120, 0); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 90%, transparent); }
+  100% { box-shadow: 0 0 0 26px transparent; }
 `
 
 export const Root = styled.div`
@@ -379,7 +379,7 @@ export const Footer = styled.div<{ $static?: boolean }>`
       z-index: 2;
       margin: 0 calc(-1 * ${theme.space.lg}) calc(-1 * ${theme.space.lg});
       padding: 14px ${theme.space.lg} calc(14px + env(safe-area-inset-bottom));
-      background: linear-gradient(180deg, rgba(244, 241, 232, 0.6) 0%, ${theme.colors.cream} 30%);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--c-cream) 60%, transparent) 0%, ${theme.colors.cream} 30%);
       backdrop-filter: blur(6px);
       border-top: 1px solid ${theme.colors.border};
     `}

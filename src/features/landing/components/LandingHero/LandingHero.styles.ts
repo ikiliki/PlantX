@@ -79,7 +79,7 @@ export const Secondary = styled.a`
   align-items: center;
   justify-content: center;
   border: 1px solid ${theme.colors.border};
-  background: rgba(255, 253, 248, 0.75);
+  background: color-mix(in srgb, var(--c-creamCard) 75%, transparent);
   padding: 14px 22px;
   border-radius: ${theme.radii.pill};
   font-weight: 700;
