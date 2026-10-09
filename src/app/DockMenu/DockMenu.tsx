@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { NavMenuLink } from '../TopBar/NavMenu/NavMenu'
-import { Item, Panel, Rule, Title } from './DockMenu.styles'
+import { Item, Panel, Rule } from './DockMenu.styles'
 
 function isOn(item: NavMenuLink, loc: { pathname: string; search: string; hash: string }) {
   if (item.active) return item.active(loc)
@@ -9,8 +9,9 @@ function isOn(item: NavMenuLink, loc: { pathname: string; search: string; hash: 
 }
 
 /**
- * The phone dock's ^ menu: the sub-pages of one dock item, rising above the dock. Top-level entries only
- * (the desktop drop-down also nests the catalog's plants). A tap outside, Escape or any navigation closes it.
+ * The phone dock's ^ menu (also opened by holding the item): its sub-pages, rising above the dock. `title`
+ * names it for screen readers. Top-level entries only (the desktop drop-down also nests the catalog's plants).
+ * A tap outside, Escape or any navigation closes it.
  */
 export function DockMenu({
   id,
@@ -52,7 +53,6 @@ export function DockMenu({
 
   return (
     <Panel ref={ref} id={id} role="menu" aria-label={title}>
-      <Title>{title}</Title>
       {items.map((item) => (
         <Fragment key={item.to}>
           {item.dividerBefore ? <Rule /> : null}

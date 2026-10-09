@@ -93,6 +93,10 @@ export const BottomLink = styled(Link)<{ $active?: boolean }>`
   font-weight: 700;
   padding: 6px 2px;
   border-radius: ${theme.radii.md};
+  /* A long-press opens our menu, not the phone's link preview. */
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
 `
 
 export const BottomIcon = styled.span<{ $active?: boolean }>`

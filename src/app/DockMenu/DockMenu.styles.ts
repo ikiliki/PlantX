@@ -27,14 +27,6 @@ export const Panel = styled.div`
   }
 `
 
-export const Title = styled.p`
-  margin: 4px 10px 6px;
-  font-family: ${theme.fonts.display};
-  font-weight: ${theme.fonts.displayWeight};
-  font-size: ${theme.text.md};
-  color: ${theme.surface.dockInk};
-`
-
 export const Item = styled(Link)<{ $on: boolean }>`
   display: flex;
   align-items: center;

@@ -33,9 +33,15 @@ function writePoint(key: string, point: Point) {
   }
 }
 
+/** A finger that travels this far before the hold arms is scrolling the page, not pressing the chip. */
 const DRAG_THRESHOLD = 8
+/** Hold this long to pick the chip up and drag it. */
+const HOLD_MS = 350
 
-/** Mobile-only floating chip: fixed while scrolling, draggable, tap opens a sheet. */
+/**
+ * Mobile-only floating chip, fixed while scrolling. A tap opens its sheet; a hold picks it up (it lifts and the
+ * phone buzzes) and then it follows the finger. Moving before the hold scrolls the page as usual.
+ */
 export function FloatChip({
   id,
   label,
@@ -64,7 +70,10 @@ export function FloatChip({
     startX: number
     startY: number
     origin: Point
+    /** The hold has passed: the chip is picked up and follows the finger. */
+    armed: boolean
     moved: boolean
+    timer: number
   } | null>(null)
   const chipRef = useRef<HTMLDivElement>(null)
 
@@ -110,17 +119,43 @@ export function FloatChip({
     return () => window.removeEventListener('resize', fit)
   }, [clamp])
 
+  // While the chip is picked up, a touch drag must move the chip, not scroll the page.
+  useEffect(() => {
+    const el = chipRef.current
+    if (!el) return
+    const onTouchMove = (event: TouchEvent) => {
+      if (drag.current?.armed) event.preventDefault()
+    }
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => el.removeEventListener('touchmove', onTouchMove)
+  }, [])
+
+  useEffect(() => () => window.clearTimeout(drag.current?.timer), [])
+
   const onPointerDown = (event: ReactPointerEvent) => {
     if (event.button !== 0) return
-    event.currentTarget.setPointerCapture(event.pointerId)
+    const pointerId = event.pointerId
+    const target = event.currentTarget
     drag.current = {
-      pointerId: event.pointerId,
+      pointerId,
       startX: event.clientX,
       startY: event.clientY,
       origin: pointRef.current,
+      armed: false,
       moved: false,
+      timer: window.setTimeout(() => {
+        const state = drag.current
+        if (!state || state.pointerId !== pointerId) return
+        state.armed = true
+        setDragging(true)
+        try {
+          target.setPointerCapture(pointerId)
+        } catch {
+          /* ignore */
+        }
+        navigator.vibrate?.(12)
+      }, HOLD_MS),
     }
-    setDragging(true)
   }
 
   const onPointerMove = (event: ReactPointerEvent) => {
@@ -128,7 +163,14 @@ export function FloatChip({
     if (!state || state.pointerId !== event.pointerId) return
     const dx = event.clientX - state.startX
     const dy = event.clientY - state.startY
-    if (!state.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return
+    if (!state.armed) {
+      // Moving before the hold: the finger is scrolling the page. Let it, and forget the press.
+      if (Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
+        window.clearTimeout(state.timer)
+        drag.current = null
+      }
+      return
+    }
     state.moved = true
     const next = clamp({ x: state.origin.x + dx, y: state.origin.y + dy })
     pointRef.current = next
@@ -138,6 +180,7 @@ export function FloatChip({
   const endDrag = (event: ReactPointerEvent) => {
     const state = drag.current
     if (!state || state.pointerId !== event.pointerId) return
+    window.clearTimeout(state.timer)
     drag.current = null
     setDragging(false)
     try {
@@ -145,11 +188,13 @@ export function FloatChip({
     } catch {
       /* ignore */
     }
-    if (state.moved) {
-      writePoint(posKey, pointRef.current)
+    if (state.armed) {
+      // Picked up: a drag saves the new spot; a hold without moving just puts it back down.
+      if (state.moved) writePoint(posKey, pointRef.current)
       return
     }
-    setOpen(true)
+    // A tap (released before the hold) opens the sheet. A cancelled touch (the page scrolled) does not.
+    if (event.type === 'pointerup') setOpen(true)
   }
 
   return createPortal(

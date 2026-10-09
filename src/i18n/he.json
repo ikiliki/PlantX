@@ -363,10 +363,10 @@
     "addNote": "הוסיפו הערה על הצמח"
   },
   "greenhouse": {
-    "myGreenhouse": "החממה שלי",
-    "allGreenhouses": "כל החממות",
+    "myGreenhouse": "שלי",
+    "allGreenhouses": "גלובלי",
     "title": "החממה",
-    "backToAll": "כל החממות",
+    "backToAll": "גלובלי",
     "directoryTitle": "כל החממות",
     "directoryLead": "הציצו במדפים של מגדלים אחרים וראו איך הם מגדלים.",
     "directoryStats": "{growers} מגדלים · {plants} צמחים",

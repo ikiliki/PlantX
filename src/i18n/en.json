@@ -363,10 +363,10 @@
     "addNote": "Add a note about this plant"
   },
   "greenhouse": {
-    "myGreenhouse": "My greenhouse",
-    "allGreenhouses": "All greenhouses",
+    "myGreenhouse": "Mine",
+    "allGreenhouses": "Global",
     "title": "Greenhouse",
-    "backToAll": "All greenhouses",
+    "backToAll": "Global",
     "directoryTitle": "All greenhouses",
     "directoryLead": "Peek at other growers’ shelves and see how they grow.",
     "directoryStats": "{growers} growers · {plants} plants",

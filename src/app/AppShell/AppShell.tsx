@@ -7,6 +7,7 @@ import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { useI18n } from '../../i18n/I18nProvider'
+import { useLongPress } from '../../lib/useLongPress'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
@@ -46,6 +47,8 @@ export function AppShell() {
   const menus = useNavMenus()
   const [dockMenu, setDockMenu] = useState<'greenhouse' | 'wiki' | null>(null)
   const closeDockMenu = useCallback(() => setDockMenu(null), [])
+  // Holding a dock item with sub-pages opens them too (the ^ is the visible way in).
+  const longPress = useLongPress()
   useEffect(() => {
     if (dockAway) setDockMenu(null)
   }, [dockAway])
@@ -126,7 +129,12 @@ export function AppShell() {
           const open = menu !== null && dockMenu === menu
           return (
             <BottomCell key={l.to}>
-              <BottomLink to={l.to} $active={active} aria-current={active ? 'page' : undefined}>
+              <BottomLink
+                to={l.to}
+                $active={active}
+                aria-current={active ? 'page' : undefined}
+                {...(menu ? longPress(() => setDockMenu(menu)) : {})}
+              >
                 <BottomIcon $active={active}>
                   <Icon name={l.icon} />
                 </BottomIcon>

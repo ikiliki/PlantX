@@ -5,16 +5,25 @@ import { theme } from '../../theme/tokens'
 export const Chip = styled.div<{ $dragging?: boolean }>`
   position: fixed;
   z-index: calc(${theme.z.bottomNav} + 1);
-  touch-action: none;
-  cursor: grab;
+  /* The page scrolls through the chip until a hold picks it up (FloatChip blocks touchmove only then). */
+  touch-action: manipulation;
+  cursor: pointer;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   filter: drop-shadow(0 8px 18px rgba(11, 31, 20, 0.18));
-  opacity: ${({ $dragging }) => ($dragging ? 0.92 : 1)};
-  transition: opacity ${theme.motion.fast} ${theme.motion.ease};
+  /* Picked up: it lifts off the page. */
+  transform: scale(${({ $dragging }) => ($dragging ? 1.1 : 1)});
+  transition:
+    transform ${theme.motion.base} ${theme.motion.spring},
+    filter ${theme.motion.base} ${theme.motion.ease};
 
-  &:active {
+  ${({ $dragging }) =>
+    $dragging &&
+    `
     cursor: grabbing;
-  }
+    filter: drop-shadow(0 18px 28px rgba(11, 31, 20, 0.32));
+  `}
 
   @media (min-width: ${theme.breakpoints.md}) {
     display: none;
