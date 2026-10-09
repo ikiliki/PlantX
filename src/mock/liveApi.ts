@@ -400,6 +400,33 @@ export function postPlant(plant: Plant, identifyRequestIds: (string | undefined)
   })
 }
 
+/** The signed-in grower's shelves and which plant sits on which. */
+export function fetchShelves() {
+  return request<{ shelves: import('./types').Shelf[]; placements: import('./types').ShelfPlacement[] }>('/api/shelves')
+}
+
+export function postShelf(name: string) {
+  return request<{ shelf: import('./types').Shelf }>('/api/shelves', { method: 'POST', body: JSON.stringify({ name }) })
+}
+
+export function patchShelf(id: string, patch: { name?: string; position?: number }) {
+  return request<{ shelves: import('./types').Shelf[] }>(`/api/shelves/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
+export function deleteShelf(id: string) {
+  return request<{ ok: true }>(`/api/shelves/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export function putPlantShelf(plantId: string, shelfId: string | null) {
+  return request<{ placement: import('./types').ShelfPlacement | null }>(`/api/plants/${encodeURIComponent(plantId)}/shelf`, {
+    method: 'PUT',
+    body: JSON.stringify({ shelfId }),
+  })
+}
+
 /** 🌿 on or off for one activity; answers the new count. */
 export function putReaction(activityId: string, on: boolean) {
   return request<{ reactions: number; reacted: boolean }>(`/api/activities/${encodeURIComponent(activityId)}/reaction`, {
