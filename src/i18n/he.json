@@ -356,7 +356,14 @@
     "deleteLead": "הצמח יוצא מהחממה והמשימות שלו נעצרות. הפעילות שלו נשארת ביומן שלכם.",
     "deleteConfirm": "מחיקה",
     "deleteFailed": "המחיקה נכשלה. נסו שוב.",
-    "addNote": "הוסיפו הערה על הצמח"
+    "addNote": "הוסיפו הערה על הצמח",
+    "timelineTab": "ציר זמן",
+    "growthPhotos": "תמונות",
+    "identifiedBy": "זוהה",
+    "marketClass": "קבוצת שוק",
+    "noLineage": "התחיל כאן",
+    "careLight": "אור",
+    "careWater": "השקיה"
   },
   "greenhouse": {
     "myGreenhouse": "שלי",

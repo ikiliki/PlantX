@@ -125,6 +125,10 @@ test.describe('owner', () => {
 
     await expectPage(page, `/plants/${plant.id}`)
     const passport = page.getByRole('dialog').first()
+    // The passport opens on its Timeline; Details holds the owner's Shelf select.
+    await expect(passport.getByRole('tab', { name: 'Timeline' })).toHaveAttribute('aria-selected', 'true')
+    await passport.getByRole('tab', { name: 'Details' }).click()
+    await expect(passport.getByRole('combobox', { name: 'Shelf' })).toBeVisible()
     // Who sees the plant and Delete live in the owner's Settings tab, not in the side column.
     await expect(passport.getByRole('radiogroup', { name: 'Who can see this plant' })).toHaveCount(0)
     await passport.getByRole('tab', { name: 'Settings' }).click()
