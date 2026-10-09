@@ -2,7 +2,8 @@ import { Hono } from 'hono'
 import { plantxEnv } from '../../lib/env.ts'
 import { Errors } from '../../lib/errors.ts'
 import { googleAuthEnabled, googleClientId, verifyGoogleIdToken } from '../../lib/googleAuth.ts'
-import { checkTestToken, preprodEnabled } from '../../lib/preprod.ts'
+import { passwordAuthEnabled } from '../../lib/passwordAuth.ts'
+import { preprodEnabled } from '../../lib/preprod.ts'
 import { requireUser, setSession } from '../../lib/session.ts'
 import { liveService } from '../live/live.service.ts'
 import { rateLimit } from '../../lib/rateLimit.ts'
@@ -70,38 +71,31 @@ sessionRoutes.delete('/account', async (c) => {
   return c.json(await liveService.payload(null))
 })
 
-/** Preprod only: sign in as a seeded user with the test token. Scripts use POST + header. */
-sessionRoutes.post('/test-login', async (c) => {
-  if (!preprodEnabled()) throw Errors.missing()
-  if (!checkTestToken(c.req.header('x-test-token'))) throw Errors.auth('Bad test token')
-  const body = (await c.req.json().catch(() => ({}))) as { userId?: string }
-  if (!body.userId) throw Errors.invalid('userId required')
-  const user = await sessionService.requireById(body.userId)
+/** Whether the login card offers email + password (PP only), and whether this is PP (the PP badge). */
+sessionRoutes.get('/password', (c) => c.json({ enabled: passwordAuthEnabled(), preprod: preprodEnabled() }))
+
+/** PP only: email + password sign-in (Supabase Auth checks the password). */
+sessionRoutes.post('/password', signInLimit, async (c) => {
+  if (!passwordAuthEnabled()) throw Errors.missing()
+  const body = (await c.req.json().catch(() => ({}))) as { email?: unknown; password?: unknown; termsVersion?: unknown }
+  const user = await sessionService.loginWithPassword(body.email, body.password, body.termsVersion)
   await setSession(c, user.id)
-  // No live payload: callers reload (PP bar) or fetch /api/live themselves, so switching stays fast.
-  return c.json({ ok: true, userId: user.id })
+  return c.json(await liveService.payload(user.id))
 })
 
-/** Preprod only: who the PP bar can switch to. Ids and names only; signing in still needs the token. */
-sessionRoutes.get('/test-users', async (c) => {
-  if (!preprodEnabled()) throw Errors.missing()
-  const users = await sessionService.listActive()
-  return c.json({ users: users.map((user) => ({ id: user.id, name: user.name, role: user.role })) })
-})
-
-/** Preprod only: one link for browser AI agents that cannot set headers. Rotate the token after a run. */
-sessionRoutes.get('/test-login', async (c) => {
-  if (!preprodEnabled()) throw Errors.missing()
-  if (!checkTestToken(c.req.query('token'))) throw Errors.auth('Bad test token')
-  const user = await sessionService.requireById(c.req.query('user') ?? '')
+/** PP only: a new email + password account, signed in at once (or waiting for approval while the app is off). */
+sessionRoutes.post('/signup', signInLimit, async (c) => {
+  if (!passwordAuthEnabled()) throw Errors.missing()
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>
+  const user = await sessionService.signUpWithPassword(body)
   await setSession(c, user.id)
-  return c.redirect('/greenhouse', 302)
+  return c.json(await liveService.payload(user.id))
 })
 
 sessionRoutes.post('/google', signInLimit, async (c) => {
   const body = (await c.req.json()) as { credential?: string; termsVersion?: unknown }
   const profile = await verifyGoogleIdToken(body.credential ?? '')
-  const user = await sessionService.loginWithGoogle(profile, body.termsVersion)
+  const user = await sessionService.loginVerified(profile, body.termsVersion)
   await setSession(c, user.id)
   return c.json(await liveService.payload(user.id))
 })

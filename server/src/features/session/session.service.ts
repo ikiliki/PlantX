@@ -11,7 +11,7 @@ import { Errors } from '../../lib/errors.ts'
 import { bootstrapAdmin } from '../../lib/ensureData.ts'
 import { bootstrapAdminEmail } from '../../lib/env.ts'
 import { isActive } from '../../lib/session.ts'
-import type { GoogleProfile } from '../../lib/googleAuth.ts'
+import { PASSWORD_MIN, signInWithPassword, signUpWithPassword } from '../../lib/passwordAuth.ts'
 import { notifySignIn } from '../../lib/events.ts'
 import { systemService } from '../system/system.service.ts'
 import { usersService } from '../users/users.service.ts'
@@ -76,10 +76,10 @@ export const sessionService = {
   },
 
   /**
-   * Sign in from a verified Google profile. Bootstrap Gmail is the sole admin. `termsVersion` is the version
-   * the person ticked on the login page: required to sign up, recorded for a member when it is current.
+   * Sign in from a verified email (Google, or a PP password). Bootstrap Gmail is the sole admin. `termsVersion`
+   * is the version the person ticked on the login page: required to sign up, recorded for a member when it is current.
    */
-  async loginWithGoogle(profile: GoogleProfile, termsVersion?: unknown) {
+  async loginVerified(profile: { email: string; name: string }, termsVersion?: unknown) {
     const consent = consentNow(termsVersion)
     const email = profile.email.toLowerCase()
     const store = getStore()
@@ -130,6 +130,38 @@ export const sessionService = {
     await store.users.upsert(changedSince(before, users))
     await notifySignIn(user)
     return user
+  },
+
+  /** PP: email + password. A correct password with no PlantX account yet (e.g. deleted) signs up again. */
+  async loginWithPassword(email: unknown, password: unknown, termsVersion?: unknown) {
+    if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password) {
+      throw Errors.invalid('Enter your email and password')
+    }
+    const verified = await signInWithPassword(email.trim().toLowerCase(), password)
+    return sessionService.loginVerified({ email: verified, name: '' }, termsVersion)
+  },
+
+  /**
+   * PP: a new email + password account. Refused for an email PlantX already knows (a member or an application),
+   * so nobody can claim a Google member's or the admin's address with a password of their own.
+   */
+  async signUpWithPassword(input: { email?: unknown; password?: unknown; name?: unknown; termsVersion?: unknown }) {
+    const email = typeof input.email === 'string' ? input.email.trim().toLowerCase() : ''
+    const password = typeof input.password === 'string' ? input.password : ''
+    const name = typeof input.name === 'string' ? input.name.trim().slice(0, 60) : ''
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Errors.invalid('Enter a valid email')
+    if (password.length < PASSWORD_MIN) throw Errors.invalid(`Use at least ${PASSWORD_MIN} characters`)
+    if (!consentNow(input.termsVersion).termsVersion) {
+      throw Errors.invalid('Agree to the Terms of Use and Privacy Policy to sign up')
+    }
+    const store = getStore()
+    const [users, applications] = await Promise.all([store.users.list(), store.pendingUsers.list()])
+    const known =
+      users.some((item) => item.role !== 'guest' && item.email?.toLowerCase() === email) ||
+      applications.some((item) => item.email.toLowerCase() === email)
+    if (known || isBootstrapAdminEmail(email)) throw Errors.exists('This email already has an account. Sign in instead.')
+    const verified = await signUpWithPassword(email, password)
+    return sessionService.loginVerified({ email: verified, name }, input.termsVersion)
   },
 
   /** The signed-in member agrees to the current Terms and Privacy Policy. Only the current version counts. */

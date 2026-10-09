@@ -2,11 +2,18 @@
  * Preprod only. N seeded testers use the API at the same time, then an integrity check counts
  * plants that were created and later disappeared (the whole-table saveAll race).
  *
- *   PLANTX_TEST_TOKEN=... [VERCEL_BYPASS=...] npm run load:preprod -- --base https://<preview> --users 200
+ *   PLANTX_PP_PASSWORD=... [VERCEL_BYPASS=...] npm run load:preprod -- --base https://<preview> --users 20
+ *
+ * Testers sign in with email + password (scripts/preprod-logins.ts). Sign-in is rate limited per IP
+ * (30 per 10 minutes here, and Supabase Auth's own limit), so one machine loads at most ~25 testers.
  *
  * Identify runs in mock mode on preprod (the server forces it), so no provider is called.
  */
 import { readFileSync } from 'node:fs'
+
+const LEGAL_VERSION = readFileSync(new URL('../src/features/legal/legalVersion.ts', import.meta.url), 'utf8').match(
+  /LEGAL_VERSION\s*=\s*'([^']+)'/,
+)?.[1]
 
 const args = process.argv.slice(2)
 const opt = (name, fallback) => {
@@ -15,10 +22,10 @@ const opt = (name, fallback) => {
 }
 const base = String(opt('base', 'http://127.0.0.1:8787')).replace(/\/$/, '')
 const users = Number(opt('users', 20))
-const token = (process.env.PLANTX_TEST_TOKEN || '').trim()
+const password = (process.env.PLANTX_PP_PASSWORD || '').trim()
 const bypass = (process.env.VERCEL_BYPASS || '').trim()
-if (!token) {
-  console.error('Set PLANTX_TEST_TOKEN.')
+if (!password) {
+  console.error("Set PLANTX_PP_PASSWORD (the testers' password).")
   process.exit(1)
 }
 
@@ -62,13 +69,16 @@ async function call(label, path, { cookie, method = 'GET', body, headers = {} } 
   return res
 }
 
+function signIn(id) {
+  return call('sign in', '/api/session/password', {
+    method: 'POST',
+    body: { email: `${id}@preprod.invalid`, password, termsVersion: LEGAL_VERSION },
+  })
+}
+
 async function tester(n) {
   const id = testerId(n)
-  const login = await call('test-login', '/api/session/test-login', {
-    method: 'POST',
-    body: { userId: id },
-    headers: { 'x-test-token': token },
-  })
+  const login = await signIn(id)
   const session = login.headers.getSetCookie().find((line) => line.startsWith('plantx_session='))
   if (!session) throw new Error(`no session cookie for ${id}`)
   const cookie = session.split(';')[0]
@@ -117,11 +127,7 @@ for (const [label, list] of timings) {
 }
 
 // Integrity: every plant a tester added should still exist.
-const check = await call('test-login', '/api/session/test-login', {
-  method: 'POST',
-  body: { userId: testerId(1) },
-  headers: { 'x-test-token': token },
-})
+const check = await signIn(testerId(1))
 const cookie = check.headers.getSetCookie().find((line) => line.startsWith('plantx_session='))?.split(';')[0]
 const { plants: after } = await (await call('plants', '/api/plants', { cookie })).json()
 const present = new Set(after.map((plant) => plant.id))

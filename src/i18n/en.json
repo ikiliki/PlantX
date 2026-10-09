@@ -113,12 +113,7 @@
   "preprod": {
     "label": "PP",
     "signedInAs": "Signed in as {name}",
-    "token": "Test token",
-    "guest": "Guest",
-    "admin": "{name} (admin)",
-    "badToken": "Wrong test token.",
-    "failed": "Could not switch user. Try again.",
-    "switching": "Switching user… the page reloads when ready."
+    "guest": "Guest"
   },
   "login": {
     "title": "Sign in to PlantX",
@@ -863,7 +858,18 @@
     "googleUnavailable": "Google sign-in isn't available right now. Try again later.",
     "pausedTitle": "Sign-ups are paused",
     "pausedBody": "PlantX is opening to members gradually, and signing in is paused right now. You can still browse the catalog and try adding a plant.",
-    "continueGuest": "Continue as a guest"
+    "continueGuest": "Continue as a guest",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "passwordHint": "At least {n} characters.",
+    "createAccount": "Create account",
+    "wrongPassword": "Wrong email or password.",
+    "emailTaken": "This email already has an account. Log in instead.",
+    "tooMany": "Too many tries. Wait a minute and try again.",
+    "signInFailed": "Sign-in failed. Try again.",
+    "passwordLoginBody": "Sign in with your email and password.",
+    "passwordRegisterBody": "Create your PlantX account with an email and password."
   },
   "seller": {
     "orders": "Completed orders",

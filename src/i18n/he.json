@@ -113,12 +113,7 @@
   "preprod": {
     "label": "PP",
     "signedInAs": "מחובר כ-{name}",
-    "token": "טוקן בדיקה",
-    "guest": "אורח",
-    "admin": "{name} (מנהל)",
-    "badToken": "טוקן בדיקה שגוי.",
-    "failed": "לא ניתן להחליף משתמש. נסו שוב.",
-    "switching": "מחליפים משתמש… העמוד ייטען מחדש כשמוכן."
+    "guest": "אורח"
   },
   "login": {
     "title": "התחברות ל־PlantX",
@@ -863,7 +858,18 @@
     "googleUnavailable": "ההתחברות עם Google לא זמינה כרגע. נסו שוב מאוחר יותר.",
     "pausedTitle": "ההרשמה מושהית",
     "pausedBody": "PlantX נפתח לחברים בהדרגה, וההתחברות מושהית כרגע. אפשר עדיין לעיין בקטלוג ולנסות להוסיף צמח.",
-    "continueGuest": "להמשיך כאורח"
+    "continueGuest": "להמשיך כאורח",
+    "email": "אימייל",
+    "password": "סיסמה",
+    "name": "שם",
+    "passwordHint": "לפחות {n} תווים.",
+    "createAccount": "יצירת חשבון",
+    "wrongPassword": "אימייל או סיסמה שגויים.",
+    "emailTaken": "לאימייל הזה כבר יש חשבון. אפשר להתחבר.",
+    "tooMany": "יותר מדי ניסיונות. כדאי לחכות דקה ולנסות שוב.",
+    "signInFailed": "ההתחברות נכשלה. אפשר לנסות שוב.",
+    "passwordLoginBody": "התחברות עם אימייל וסיסמה.",
+    "passwordRegisterBody": "יצירת חשבון PlantX עם אימייל וסיסמה."
   },
   "seller": {
     "orders": "הזמנות שהושלמו",

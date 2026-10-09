@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { fetchGoogleAuth } from '../../../../mock/liveApi'
+import { fetchGoogleAuth, fetchPasswordAuth } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
 import { clientEnv } from '../../../../theme/plantxEnv'
 import { track } from '../../../../lib/track'
 import { LEGAL_VERSION } from '../../../legal/legalVersion'
 import { PRIVACY_PATH, TERMS_PATH } from '../../../legal/legalPaths'
 import type { AuthReason } from '../../AuthProvider'
+import { PasswordForm } from '../PasswordForm/PasswordForm'
+import { Divider } from '../PasswordForm/PasswordForm.styles'
 import {
   Brand,
   BrandMark,
@@ -94,7 +96,8 @@ function envGoogleClientId() {
 }
 
 /**
- * Google is the only sign-in. Log in and sign up are one flow: a new Google email signs up. While the app is on
+ * Google signs in everywhere; PP also offers email + password (`PasswordForm`). With Google, log in and sign up are one
+ * flow: a new Google email signs up. While the app is on
  * the account opens and signs in at once; while it is off the card says thanks and the admin pre-approves it.
  * With Google off, the panel says sign-ups are paused and offers the guest path instead of an error.
  */
@@ -135,7 +138,9 @@ export function AuthPanel({
   // Until the server says whether Google is on, show neither the button nor "paused".
   // Google is on but its script did not load (blocked or offline): an error, not "paused".
   const [gisFailed, setGisFailed] = useState(false)
-  const [checking, setChecking] = useState(() => clientEnv() !== 'mock' && !envGoogleClientId())
+  const [checking, setChecking] = useState(() => clientEnv() !== 'mock')
+  // PP only: the server offers email + password next to (or instead of) Google.
+  const [passwordOn, setPasswordOn] = useState(false)
   const googleRef = useRef<HTMLDivElement>(null)
   // Callers and the store pass fresh functions each render; read the latest from refs so Google
   // is initialized once per button, not on every render.
@@ -146,7 +151,8 @@ export function AuthPanel({
 
   const mockSso = clientEnv() === 'mock'
   const showGoogle = !gate && !pending && !mockSso && Boolean(googleClientId)
-  const paused = !gate && !pending && !mockSso && !checking && !googleClientId
+  const showPassword = !gate && !pending && !mockSso && passwordOn
+  const paused = !gate && !pending && !mockSso && !checking && !googleClientId && !passwordOn
   const googleLocale = locale === 'he' ? 'he' : 'en'
 
   const heading = gate
@@ -165,17 +171,20 @@ export function AuthPanel({
       : pending
       ? t.auth.pendingBody
       : mode === 'register'
-        ? reasonBody(reason, t) || t.auth.registerBody
-        : t.auth.loginBody
+        ? reasonBody(reason, t) || (passwordOn ? t.auth.passwordRegisterBody : t.auth.registerBody)
+        : passwordOn
+          ? t.auth.passwordLoginBody
+          : t.auth.loginBody
 
   useEffect(() => {
     if (mockSso) return
-    void fetchGoogleAuth()
-      .then((res) => {
+    void Promise.all([
+      fetchGoogleAuth().then((res) => {
         if (res?.enabled && res.clientId) setGoogleClientId(res.clientId)
         else if (!envGoogleClientId()) setGoogleClientId(null)
-      })
-      .finally(() => setChecking(false))
+      }),
+      fetchPasswordAuth().then((res) => setPasswordOn(Boolean(res?.enabled))),
+    ]).finally(() => setChecking(false))
   }, [mockSso])
 
   const onMockSso = async () => {
@@ -300,7 +309,7 @@ export function AuthPanel({
             </>
           ) : (
             <>
-              {(mockSso || showGoogle) && !gisFailed ? (
+              {((mockSso || showGoogle) && !gisFailed) || showPassword ? (
                 <Consent>
                   <input
                     type="checkbox"
@@ -321,6 +330,10 @@ export function AuthPanel({
                   </span>
                 </Consent>
               ) : null}
+              {showPassword ? (
+                <PasswordForm mode={mode} agreed={agreed} onSuccess={onSuccess} onPending={() => setPending(true)} />
+              ) : null}
+              {showPassword && showGoogle ? <Divider>{t.auth.or}</Divider> : null}
               {mockSso ? (
                 <Submit type="button" onClick={() => void onMockSso()} disabled={busy || !agreed}>
                   {busy ? t.common.loading : t.auth.google}
@@ -331,7 +344,7 @@ export function AuthPanel({
                 <GoogleGate $locked={!agreed} aria-disabled={!agreed || undefined} title={agreed ? undefined : t.legal.agreeFirst}>
                   <GoogleSlot ref={googleRef} aria-label={t.auth.google} aria-busy={busy} />
                 </GoogleGate>
-              ) : (
+              ) : showPassword ? null : (
                 <Pending aria-live="polite">{t.common.loading}</Pending>
               )}
               {error && <ErrorText>{error}</ErrorText>}

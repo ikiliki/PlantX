@@ -5,7 +5,7 @@ import { useSyncExternalStore } from 'react'
  * and the admin alike. `SaveIndicator` reads it. Writes that already have their own feedback stay out:
  * sign-in, analytics, crash reports and the AI scan.
  */
-const QUIET = [/^\/api\/session(\/google|\/test-login)?$/, /^\/api\/events/, /^\/api\/health/, /^\/api\/identify/, /^\/api\/issues/]
+const QUIET = [/^\/api\/session(\/google|\/password|\/signup)?$/, /^\/api\/events/, /^\/api\/health/, /^\/api\/identify/, /^\/api\/issues/]
 
 let pending = 0
 let lastFailed = false

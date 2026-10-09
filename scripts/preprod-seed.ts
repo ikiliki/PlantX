@@ -2,7 +2,9 @@
  * Preprod only. Wipes the preprod database and starts over:
  *   - the bootstrap admin (u-admin) and default system settings,
  *   - the catalog copied from CATALOG_SOURCE_URL (production), read in a READ ONLY transaction,
- *   - test-user-001 … test-user-NNN with nothing else (emails @preprod.invalid).
+ *   - test-user-001 … test-user-NNN with nothing else (emails @preprod.invalid),
+ *   - every Supabase Auth login wiped, then email + password logins for the admin and testers
+ *     (scripts/preprod-logins.ts; needs PP_SUPABASE_URL, PP_SUPABASE_SECRET_KEY, PP_TESTER_PASSWORD, PP_ADMIN_PASSWORD).
  *
  *   PREPROD_DATABASE_URL=... CATALOG_SOURCE_URL=... npm run seed:preprod -- --users 20
  *
@@ -21,6 +23,14 @@ if (!target) {
 for (const name of ['DATABASE_URL', 'PROD_DATABASE_URL', 'CATALOG_SOURCE_URL']) {
   if ((process.env[name] || '').trim() === target) {
     console.error(`PREPROD_DATABASE_URL equals ${name}. Refusing to wipe it.`)
+    process.exit(1)
+  }
+}
+
+// Checked before wiping: the reset ends by recreating the logins.
+for (const name of ['PP_SUPABASE_URL', 'PP_SUPABASE_SECRET_KEY', 'PP_TESTER_PASSWORD', 'PP_ADMIN_PASSWORD']) {
+  if (!(process.env[name] || '').trim()) {
+    console.error(`Set ${name} (see scripts/preprod-logins.ts).`)
     process.exit(1)
   }
 }
@@ -48,6 +58,9 @@ const tables = (
 ).rows.map((row) => `"${row.tablename}"`)
 if (tables.length) await db.query(`truncate ${tables.join(', ')} restart identity cascade`)
 console.log(`Wiped ${tables.length} tables.`)
+// Sign-ups by people and bots live in Supabase Auth: a reset clears them too.
+const logins = await db.query('delete from auth.users')
+console.log(`Wiped ${logins.rowCount ?? 0} Supabase Auth logins.`)
 
 // 2. Empty world: bootstrap admin, default system, example catalog (replaced below).
 process.env.DATABASE_URL = target
@@ -132,5 +145,6 @@ for (let n = 1; n <= count; n++) {
 await store.users.saveAll(users)
 
 console.log(`Users: ${users.map((user) => user.id).join(', ')}`)
-console.log('Admin: u-admin (Google as the bootstrap Gmail, or the test-login link).')
+const { syncPreprodLogins } = await import('./preprod-logins.ts')
+await syncPreprodLogins()
 process.exit(0)

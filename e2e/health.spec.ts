@@ -1,10 +1,10 @@
-import { ADMIN, expect, expectPage, signIn, test } from './support'
+import { ADMIN, ON_PP, expect, expectPage, signIn, test } from './support'
 
 /**
  * Health and the public surface (#56 #88). Guest checks are read-only, so they also run against production.
  * Nothing here calls an identify provider.
  */
-const onPp = Boolean(process.env.PLANTX_TEST_TOKEN?.trim())
+const onPp = ON_PP
 
 test.describe('public surface', { tag: '@prod' }, () => {
   test('GET /api/health answers with the version and env, and a request id', async ({ page }) => {
@@ -26,10 +26,18 @@ test.describe('public surface', { tag: '@prod' }, () => {
     expect(res.headers()['x-content-type-options']).toBe('nosniff')
   })
 
-  test('test login routes are off outside PP', async ({ page }) => {
-    test.skip(onPp, 'PP has the test login on purpose')
+  test('the old token test login is gone everywhere', async ({ page }) => {
     expect((await page.request.get('/api/session/test-users')).status()).toBe(404)
     expect((await page.request.post('/api/session/test-login', { data: { userId: ADMIN } })).status()).toBe(404)
+  })
+
+  test('password sign-in is off outside PP', async ({ page }) => {
+    test.skip(onPp, 'PP signs in with email + password on purpose')
+    const config = (await (await page.request.get('/api/session/password')).json()) as { enabled: boolean; preprod: boolean }
+    expect(config).toEqual({ enabled: false, preprod: false })
+    const login = { email: 'test-user-001@preprod.invalid', password: 'not-a-password' }
+    expect((await page.request.post('/api/session/password', { data: login })).status()).toBe(404)
+    expect((await page.request.post('/api/session/signup', { data: login })).status()).toBe(404)
   })
 
   test('the API docs are for the admin in production', async ({ page }) => {
