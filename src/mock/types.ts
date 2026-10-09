@@ -444,6 +444,53 @@ export interface FeedUpdate {
   body: string
   bodyHe: string
   createdAt: string
+  /** 🌿 count, whether the viewer reacted, and visible comments. Filled by the server per viewer. */
+  reactions?: number
+  reacted?: boolean
+  comments?: number
+}
+
+/** Greenhouse activities → Social: a 🌿 or a comment another grower left on one of your posts. */
+export interface GreenhouseSocialItem {
+  kind: 'reaction' | 'comment'
+  activityId: string
+  plantId: string | null
+  userId: string
+  userName: string
+  /** The comment text; empty for a reaction. */
+  body: string
+  createdAt: string
+}
+
+/** Admin → Server → Reactions: one 🌿, who gave it, and the post. */
+export interface AdminReaction {
+  activityId: string
+  userId: string
+  userName: string
+  createdAt: string
+  postBody: string
+  postUserId: string
+}
+
+/** Admin → Moderation → Comments: a comment with who wrote it and the post it is on. */
+export interface AdminComment {
+  id: string
+  activityId: string
+  userId: string
+  authorName: string
+  body: string
+  createdAt: string
+  postBody: string
+  postUserId: string
+}
+
+/** A comment on an activity (feed post). Deleted comments never reach the client. */
+export interface ActivityComment {
+  id: string
+  activityId: string
+  userId: string
+  body: string
+  createdAt: string
 }
 
 /** Top-level todo bucket. Later: market. */

@@ -8,6 +8,7 @@ import { Icon } from '../../components/Icon/Icon'
 import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/ActivityBell'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
 import { ACCOUNT_PARAM, AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
+import { AccountMenu } from '../../features/profile/components/AccountMenu/AccountMenu'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { useNavMenus } from '../navMenus'
 import { NavMenu } from './NavMenu/NavMenu'
@@ -34,6 +35,8 @@ export function TopBar() {
   const loc = useLocation()
   const navigate = useNavigate()
   const [accountOpen, setAccountOpen] = useState(false)
+  // Profile or Settings, opened from the account menu.
+  const [accountView, setAccountView] = useState<'profile' | 'settings' | null>(null)
   const [openNav, setOpenNav] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
 
@@ -47,6 +50,7 @@ export function TopBar() {
   const menus = useNavMenus()
 
   const pageBoard: Partial<Record<PageId, PlacementId>> = {
+    feed: 'feed.board',
     market: 'market.board',
     greenhouse: 'greenhouse.board',
     todo: 'todo.board',
@@ -64,6 +68,7 @@ export function TopBar() {
 
   useEffect(() => {
     setAccountOpen(false)
+    setAccountView(null)
     setOpenNav(null)
   }, [loc.pathname])
 
@@ -93,7 +98,7 @@ export function TopBar() {
             {t.nav.home}
           </NavItem>
         )}
-        {show('home') && (
+        {show('feed') && (
           <NavItem to="/feed" $active={isActive('/feed')} aria-current={isActive('/feed') ? 'page' : undefined}>
             <NavIcon aria-hidden>
               <Icon name="feed" size={18} />
@@ -180,6 +185,7 @@ export function TopBar() {
                 aria-expanded={accountOpen}
                 aria-haspopup="dialog"
                 onClick={() => setAccountOpen((value) => !value)}
+                data-account-trigger
               >
                 <Avatar
                   name={publicGrowerName(currentUser, locale === 'he')}
@@ -189,7 +195,20 @@ export function TopBar() {
                 />
               </AvatarBubble>
             </Account>
-            {accountOpen && <AccountDialog onClose={() => setAccountOpen(false)} />}
+            {accountOpen && (
+              <AccountMenu
+                onClose={() => setAccountOpen(false)}
+                onProfile={() => {
+                  setAccountOpen(false)
+                  setAccountView('profile')
+                }}
+                onSettings={() => {
+                  setAccountOpen(false)
+                  setAccountView('settings')
+                }}
+              />
+            )}
+            {accountView && <AccountDialog view={accountView} onClose={() => setAccountView(null)} />}
           </>
         ) : (
           <>

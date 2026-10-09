@@ -950,6 +950,8 @@ export function ServerPanel() {
               cell: (row) => plantLink(row.plantId),
               muted: true,
             },
+            { id: 'reactions', header: t.admin.serverColReactions, cell: (row) => row.reactions ?? 0, muted: true },
+            { id: 'comments', header: t.admin.serverColComments, cell: (row) => row.comments ?? 0, muted: true },
             {
               id: 'when',
               header: t.admin.serverColWhen,

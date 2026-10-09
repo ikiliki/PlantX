@@ -4,15 +4,11 @@ import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
 import { Input } from '../../../../components/Form/Form'
-import { FilterChips } from '../../../../components/FilterChips/FilterChips'
 import { Icon } from '../../../../components/Icon/Icon'
 import { greenhouseLevel } from '../../../greenhouse/greenhouseLevel'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
-import { isOperator } from '../../../../theme/operator'
 import { GreenhousePlace } from '../../../greenhouse/components/GreenhousePlace/GreenhousePlace'
-import { MyScanAllowance } from '../../../greenhouse/components/ScanQuotaNote/ScanQuotaNote'
-import { PRIVACY_PATH, TERMS_PATH } from '../../../legal/legalPaths'
 import { AppearanceSettings } from '../AppearanceSettings/AppearanceSettings'
 import { DeleteAccountDialog } from '../DeleteAccountDialog/DeleteAccountDialog'
 import {
@@ -33,24 +29,19 @@ import {
   FieldLabel,
   Footer,
   GuestTitle,
-  FooterLink,
   HiddenTitle,
   Hint,
   IconChoice,
   IconRow,
   Label,
   LabelRow,
-  LegalRow,
   Mark,
   Rows,
-  Tabs,
   Value,
 } from './AccountDialog.styles'
 import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 const TITLE_ID = 'account-dialog-title'
-
-type SettingsTab = 'profile' | 'appearance' | 'account'
 
 function Privacy({ kind, label }: { kind: 'public' | 'private'; label: string }) {
   return (
@@ -62,19 +53,17 @@ function Privacy({ kind, label }: { kind: 'public' | 'private'; label: string })
 }
 
 /**
- * Signed-in account card, and the only settings surface (there is no Settings page): nickname, icon and
- * greenhouse place (public), account name and email (private), AI scans left, language, sign out, the
- * Privacy / Terms links and Delete my account (not for the admin).
- * Open it from anywhere with `?account=1` (`accountHref`); the top bar owns it.
+ * Opened from the account menu (`AccountMenu`). `profile`: nickname, icon and greenhouse place (public),
+ * account name and email (private). `settings`: Delete my account (not for the admin), for now.
+ * A guest gets the same card with Appearance only (the top bar gear opens it).
  */
-export function AccountDialog({ onClose }: { onClose: () => void }) {
-  const { currentUser, db, loginAs, setAccount, deleteAccount } = useStore()
+export function AccountDialog({ onClose, view = 'profile' }: { onClose: () => void; view?: 'profile' | 'settings' }) {
+  const { currentUser, db, setAccount, deleteAccount } = useStore()
   const { t, locale } = useI18n()
   const navigate = useNavigate()
   const [nickname, setNickname] = useState(currentUser?.nickname ?? '')
   const [status, setStatus] = useState<'idle' | 'saved' | 'failed'>('idle')
   const [deleting, setDeleting] = useState(false)
-  const [tab, setTab] = useState<SettingsTab>('profile')
 
   useEffect(() => {
     setNickname(currentUser?.nickname ?? '')
@@ -143,11 +132,6 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
     return true
   }
 
-  const signOut = () => {
-    onClose()
-    loginAs(null)
-    navigate('/login')
-  }
 
   return createPortal(
     <Backdrop onClick={onClose}>
@@ -160,27 +144,17 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
         <Close type="button" onClick={onClose} aria-label={t.common.cancel}>
           ×
         </Close>
-        <Face>
-          <Avatar name={shown} color={currentUser.avatarColor} icon={icon} size={72} />
-          <HiddenTitle id={TITLE_ID}>{t.profile.cardTitle}</HiddenTitle>
-          <Privacy kind="public" label={t.profile.publicMark} />
-        </Face>
-        <Tabs>
-          <FilterChips<SettingsTab>
-            label={t.settings.tabs}
-            value={tab}
-            onChange={setTab}
-            options={[
-              { id: 'profile', label: t.settings.profile },
-              { id: 'appearance', label: t.settings.appearance },
-              { id: 'account', label: t.settings.account },
-            ]}
-          />
-        </Tabs>
+        {view === 'profile' ? (
+          <Face>
+            <Avatar name={shown} color={currentUser.avatarColor} icon={icon} size={72} />
+            <HiddenTitle id={TITLE_ID}>{t.settings.profile}</HiddenTitle>
+            <Privacy kind="public" label={t.profile.publicMark} />
+          </Face>
+        ) : (
+          <GuestTitle id={TITLE_ID}>{t.nav.settings}</GuestTitle>
+        )}
 
-        {tab === 'appearance' ? <AppearanceSettings /> : null}
-
-        {tab === 'profile' ? (
+        {view === 'profile' ? (
         <Rows>
           <Block>
             <LabelRow>
@@ -268,34 +242,16 @@ export function AccountDialog({ onClose }: { onClose: () => void }) {
         </Rows>
         ) : null}
 
-        {tab === 'account' ? (
-        <Footer>
-          <MyScanAllowance />
-          {isOperator(currentUser) && (
-            <FooterLink to="/admin/server" onClick={onClose}>
-              {t.admin.title}
-            </FooterLink>
-          )}
-          <Button type="button" variant="secondary" block onClick={signOut}>
-            {t.profile.signOut}
-          </Button>
-          <LegalRow>
-            <span>
-              <a href={PRIVACY_PATH} target="_blank" rel="noreferrer">
-                {t.legal.privacy}
-              </a>
-              {' · '}
-              <a href={TERMS_PATH} target="_blank" rel="noreferrer">
-                {t.legal.terms}
-              </a>
-            </span>
-            {currentUser.role !== 'admin' && (
+        {view === 'settings' ? (
+          <Footer data-settings-view>
+            {currentUser.role !== 'admin' ? (
               <DangerLink type="button" onClick={() => setDeleting(true)} data-delete-account>
                 {t.legal.deleteAccount}
               </DangerLink>
+            ) : (
+              <Hint>{t.settings.adminNoDelete}</Hint>
             )}
-          </LegalRow>
-        </Footer>
+          </Footer>
         ) : null}
         {deleting && (
           <DeleteAccountDialog

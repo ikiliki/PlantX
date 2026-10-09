@@ -80,7 +80,7 @@ export function AppShell() {
     [
       { to: '/home', label: t.nav.home, icon: 'home' as const, pageId: 'home' as const },
       // Catalog is an icon in the phone top bar; Market sits at the far end of the dock.
-      { to: '/feed', label: t.nav.feed, icon: 'feed' as const, pageId: 'home' as const },
+      { to: '/feed', label: t.nav.feed, icon: 'feed' as const, pageId: 'feed' as const },
       { to: '/greenhouse', label: t.nav.greenhouse, icon: 'greenhouse' as const, pageId: 'greenhouse' as const },
       {
         to: '/tasks',
@@ -94,6 +94,7 @@ export function AppShell() {
   ).filter((item) => {
     if (!item.pageId || !isPageNavigable(db.system, item.pageId)) return false
     const board: Partial<Record<PageId, PlacementId>> = {
+      feed: 'feed.board',
       greenhouse: 'greenhouse.board',
       todo: 'todo.board',
       rank: 'rank.board',

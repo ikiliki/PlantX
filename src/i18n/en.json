@@ -19,7 +19,9 @@
     "configurations": "Configurations",
     "login": "Login",
     "language": "Language",
-    "feed": "Feed"
+    "feed": "Feed",
+    "toNight": "Switch to the night garden",
+    "toDay": "Switch to the sunny garden"
   },
   "demo": {
     "label": "Demo",
@@ -500,7 +502,11 @@
     "setPlaceHint": "So new plants know where they grow",
     "activityToday": "Today",
     "activityYesterday": "Yesterday",
-    "levelToNextName": "{left} XP to {name}"
+    "levelToNextName": "{left} XP to {name}",
+    "activitySocial": "Social",
+    "socialReacted": "{name} gave your post a 🌿",
+    "socialCommented": "{name} commented: “{text}”",
+    "socialEmpty": "No leaves or comments on your posts yet."
   },
   "todo": {
     "cancel": "Cancel",
@@ -1230,7 +1236,9 @@
       "passport.rank": "User rank in the passport",
       "passport.todo": "Tasks tab in the passport",
       "rank.board": "Rank stack",
-      "wiki.board": "Catalog"
+      "wiki.board": "Catalog",
+      "feed.board": "Feed posts",
+      "feed.social": "Feed reactions and comments"
     },
     "systemItem": "Item",
     "systemStatus": "Status",
@@ -1349,7 +1357,25 @@
     "scansCountValue": "{scans} scans · {members} members",
     "rejectConfirmTitle": "Reject {count} applications?",
     "rejectConfirmLead": "They will not be able to sign in. You can find them later under Decided.",
-    "manageInModeration": "Manage in Moderation"
+    "manageInModeration": "Manage in Moderation",
+    "commentsTitle": "Comments",
+    "commentsLead": "Newest Feed comments. Remove takes one out for everyone and logs it on the post.",
+    "commentsMock": "Comments are stored on the server; mock mode has none.",
+    "commentsFailed": "Could not load comments. Try again.",
+    "commentsEmpty": "No comments yet.",
+    "commentsWhen": "When",
+    "commentsAuthor": "By",
+    "commentsBody": "Comment",
+    "commentsPost": "On the post",
+    "commentsRemove": "Remove",
+    "serverColReactions": "🌿",
+    "serverColComments": "💬",
+    "reactionsTitle": "Reactions",
+    "reactionsLead": "Newest 🌿 on Feed posts: who gave it and on which post. Posts are the Activities above.",
+    "reactionsMock": "Reactions are stored on the server; mock mode has none.",
+    "reactionsFailed": "Could not load reactions. Try again.",
+    "reactionsEmpty": "No reactions yet.",
+    "commentsLeadServer": "Newest Feed comments: who wrote them and on which post. Remove one in Moderation → Comments."
   },
   "settings": {
     "region": "Location",
@@ -1361,7 +1387,8 @@
     "theme": "Theme",
     "light": "Sunny garden",
     "dark": "Night garden",
-    "themeHint": "Saved on this device."
+    "themeHint": "Saved on this device.",
+    "adminNoDelete": "The admin account cannot be deleted here."
   },
   "feed": {
     "people": "In the greenhouse",
@@ -1901,7 +1928,7 @@
     "feedAll": "Feed"
   },
   "feedPage": {
-    "all": "Everything",
+    "all": "All",
     "added": "New plants",
     "photo": "Photos",
     "water": "Care",
@@ -1917,6 +1944,18 @@
     "marketTitle": "See what growers are selling",
     "marketBody": "Every plant comes with its passport.",
     "marketAction": "Open the market",
-    "emptyFilter": "Nothing like this yet."
+    "emptyFilter": "Nothing like this yet.",
+    "react": "Give a leaf",
+    "reacted": "Take back your leaf",
+    "comments": "{n} comments",
+    "commentOne": "1 comment",
+    "commentNone": "Comment",
+    "commentsTitle": "Comments",
+    "commentPlaceholder": "Say something nice",
+    "send": "Send",
+    "deleteComment": "Delete",
+    "noComments": "No comments yet. Be the first.",
+    "commentFailed": "Could not send. Try again.",
+    "commentsLoading": "Loading comments"
   }
 }

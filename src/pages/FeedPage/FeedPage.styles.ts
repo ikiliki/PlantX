@@ -10,15 +10,16 @@ export const Page = styled.div`
   margin-inline: auto;
 `
 
+/** Same row as the greenhouse filters (`CollectionBoard` Toolbar); Refresh sits at the end when wide. */
 export const Tools = styled.div`
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: ${theme.space.sm};
+  gap: 8px 12px;
   min-width: 0;
 
-  > :first-child {
-    flex: 1;
-    min-width: 0;
+  > :last-child:not(:first-child) {
+    margin-inline-start: auto;
   }
 `
 

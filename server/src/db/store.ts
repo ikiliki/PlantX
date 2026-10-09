@@ -20,6 +20,7 @@ import type {
 import type { SystemConfig } from '../../../src/theme/release.ts'
 import type { IssueContext, IssueReport } from '../../../src/lib/issueReport.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
+import type { ActivityComment, AdminComment, AdminReaction, GreenhouseSocialItem } from '../../../src/mock/types.ts'
 import type { Todo } from '../features/todo/todo.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
 
@@ -129,6 +130,23 @@ export interface PlantxStore {
     list(): Promise<IssueReport[]>
     add(input: { userId: string | null; note: string; context: IssueContext }): Promise<IssueReport>
     setStatus(id: string, status: 'resolved' | 'dismissed'): Promise<void>
+  }
+  /** 🌿 reactions and comments on activities (feed posts). */
+  activitySocial: {
+    counts(activityIds: string[], viewerId: string | null): Promise<Map<string, { reactions: number; reacted: boolean; comments: number }>>
+    react(activityId: string, userId: string): Promise<void>
+    unreact(activityId: string, userId: string): Promise<void>
+    /** Visible comments, oldest first. */
+    comments(activityId: string): Promise<ActivityComment[]>
+    addComment(input: { activityId: string; userId: string; body: string }): Promise<ActivityComment>
+    getComment(id: string): Promise<ActivityComment | null>
+    softDeleteComment(id: string): Promise<void>
+    /** Newest visible comments, with author and post, for Admin → Moderation. */
+    recent(limit: number): Promise<AdminComment[]>
+    /** 🌿 and comments other growers left on this owner's posts, newest first. */
+    forOwner(ownerId: string, limit: number): Promise<GreenhouseSocialItem[]>
+    /** Newest 🌿 reactions, with who gave them and the post, for Admin → Server. */
+    recentReactions(limit: number): Promise<AdminReaction[]>
   }
   /** AI scan quota (#67). Usage is counted from identify_requests. */
   scanQuota: {

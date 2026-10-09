@@ -13,6 +13,7 @@ import { clientEnv } from '../../../../theme/plantxEnv'
 import { VerifiedStamp } from '../../../greenhouse/components/VerifiedStamp/VerifiedStamp'
 import { activityKindLabel } from '../../activityMoment'
 import { ActivityMoment, MomentGlyph, MomentPlay } from '../ActivityMoment/ActivityMoment'
+import { ReactBar } from '../ReactBar/ReactBar'
 import { Card, Grower, Kind, Line, Meta, Open, ProfileButton, When } from './FeedUpdate.styles'
 
 /** The order a placeholder feed cycles through, so it looks like a real day of care. */
@@ -79,6 +80,7 @@ export function FeedUpdate({ update }: { update: FeedUpdateData }) {
             <Grower $verified={verified}>{verified ? t.greenhouse.verifiedGreenhouse : growerLabel}</Grower>
           </Meta>
           <Line>{tr(update.body, update.bodyHe)}</Line>
+          <ReactBar update={update} readOnly />
           <When dateTime={update.createdAt}>{formatFeedTime(update.createdAt, locale, t.feed)}</When>
         </Open>
       </Card>

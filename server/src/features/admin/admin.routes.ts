@@ -5,6 +5,7 @@ import { Errors } from '../../lib/errors.ts'
 import { requireAdmin } from '../../lib/session.ts'
 import { isWebhookId, sendWebhookTest, setWebhookEnabled, webhookStatuses } from '../../lib/webhookSettings.ts'
 import { moderationService } from '../moderation/moderation.service.ts'
+import { feedSocialService } from '../feed-social/feedSocial.service.ts'
 import { quotaService } from '../quota/quota.service.ts'
 
 /** Operator console API. Every route is admin-only. */
@@ -82,6 +83,18 @@ adminRoutes.post('/moderation/:type/:id', async (c) => {
     admin,
   )
   return c.json(result)
+})
+
+/** Newest Feed comments, with author and post (remove one with DELETE /api/comments/:id). */
+adminRoutes.get('/comments', async (c) => {
+  await requireAdmin(c)
+  return c.json({ comments: await feedSocialService.recent(100) })
+})
+
+/** Newest 🌿 reactions on Feed posts (read-only). */
+adminRoutes.get('/reactions', async (c) => {
+  await requireAdmin(c)
+  return c.json({ reactions: await feedSocialService.recentReactions(200) })
 })
 
 adminRoutes.get('/moderation/log', async (c) => {

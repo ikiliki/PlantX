@@ -400,6 +400,45 @@ export function postPlant(plant: Plant, identifyRequestIds: (string | undefined)
   })
 }
 
+/** 🌿 on or off for one activity; answers the new count. */
+export function putReaction(activityId: string, on: boolean) {
+  return request<{ reactions: number; reacted: boolean }>(`/api/activities/${encodeURIComponent(activityId)}/reaction`, {
+    method: on ? 'PUT' : 'DELETE',
+  })
+}
+
+export function fetchComments(activityId: string) {
+  return request<{ comments: import('./types').ActivityComment[] }>(
+    `/api/activities/${encodeURIComponent(activityId)}/comments`,
+  )
+}
+
+export function postComment(activityId: string, body: string) {
+  return request<{ comment: import('./types').ActivityComment }>(
+    `/api/activities/${encodeURIComponent(activityId)}/comments`,
+    { method: 'POST', body: JSON.stringify({ body }) },
+  )
+}
+
+/** 🌿 and comments others left on your posts. */
+export function fetchMySocial() {
+  return request<{ items: import('./types').GreenhouseSocialItem[] }>('/api/activities/social/mine')
+}
+
+/** Admin → Server → Reactions. */
+export function fetchAdminReactionsOutcome() {
+  return requestOutcome<{ reactions: import('./types').AdminReaction[] }>('/api/admin/reactions')
+}
+
+/** Admin → Moderation → Comments. */
+export function fetchAdminCommentsOutcome() {
+  return requestOutcome<{ comments: import('./types').AdminComment[] }>('/api/admin/comments')
+}
+
+export function deleteComment(commentId: string) {
+  return request<{ ok: true }>(`/api/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' })
+}
+
 export function postTodoComplete(todoId: string, completedOn?: string) {
   return request<{
     todo: Todo

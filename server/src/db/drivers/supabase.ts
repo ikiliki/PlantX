@@ -15,6 +15,7 @@ import type { PlantxStore } from '../store.ts'
 import { supabaseCatalogSuggestions } from './supabaseCatalogSuggestions.ts'
 import { supabaseIdentifyRequests } from './supabaseIdentifyRequests.ts'
 import { supabaseIssueReports } from './supabaseIssueReports.ts'
+import { supabaseActivitySocial } from './supabaseActivitySocial.ts'
 import { supabaseIdentifySettings } from './supabaseIdentifySettings.ts'
 import { supabaseWebhookSettings } from './supabaseWebhookSettings.ts'
 import { supabaseAccounts } from './supabaseAccounts.ts'
@@ -195,6 +196,7 @@ export function createSupabaseStore(): PlantxStore {
     analytics: supabaseAnalytics(pool),
     identifyRequests: supabaseIdentifyRequests(pool),
     issueReports: supabaseIssueReports(pool),
+    activitySocial: supabaseActivitySocial(pool),
     scanQuota: supabaseScanQuota(pool),
     rateLimits: supabaseRateLimits(pool),
     moderation: supabaseModeration(pool),
