@@ -12,7 +12,11 @@ import { VerifiedStamp } from '../../../greenhouse/components/VerifiedStamp/Veri
 import { publicGrowerName } from '../../../profile/avatarIcons'
 import { activityKindLabel } from '../../activityMoment'
 import { formatFeedTime } from '../../formatFeedTime'
+import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { ActivityMoment, MomentGlyph } from '../ActivityMoment/ActivityMoment'
+import { CommentSheet } from '../CommentSheet/CommentSheet'
+import { CommentThread } from '../CommentThread/CommentThread'
+import { ReactBar } from '../ReactBar/ReactBar'
 import { XpChip } from '../XpChip/XpChip'
 import {
   Caption,
@@ -26,6 +30,7 @@ import {
   PhotoSkeleton,
   PlantTitle,
   ProfileButton,
+  Social,
   Who,
 } from './FeedPost.styles'
 
@@ -60,6 +65,9 @@ export function FeedPost({ update }: { update: FeedUpdate }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  // Wide: the comments open under the post. A phone gets a bottom sheet.
+  const wide = useMediaQuery('(min-width: 900px)')
   const user = db.users.find((item) => item.id === update.userId && item.role !== 'guest')
   const plant = update.plantId ? db.plants.find((item) => item.id === update.plantId) : undefined
   const name = user ? publicGrowerName(user, locale === 'he') : ''
@@ -107,8 +115,13 @@ export function FeedPost({ update }: { update: FeedUpdate }) {
           <Caption>{tr(update.body, update.bodyHe)}</Caption>
           {plant ? <PassportLink to={`/plants/${plant.id}`}>{t.feedPage.openPassport}</PassportLink> : null}
         </Foot>
+        <Social>
+          <ReactBar update={update} commentsOpen={commentsOpen} onComments={() => setCommentsOpen((value) => !value)} />
+          {commentsOpen && wide ? <CommentThread update={update} /> : null}
+        </Social>
       </Card>
       {open ? <ActivityMoment update={update} onClose={() => setOpen(false)} /> : null}
+      {commentsOpen && !wide ? <CommentSheet update={update} onClose={() => setCommentsOpen(false)} /> : null}
     </>
   )
 }

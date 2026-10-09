@@ -142,3 +142,12 @@ export const PhotoSkeleton = styled.div`
   border-radius: ${theme.radii.md};
   background: ${theme.colors.chipGreen};
 `
+
+/** 🌿 and comments under the post; wide, the thread opens here too. */
+export const Social = styled.div`
+  display: grid;
+  gap: 10px;
+  padding-inline: 4px;
+  padding-top: 8px;
+  border-top: 1px solid ${theme.colors.border};
+`

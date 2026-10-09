@@ -75,6 +75,7 @@ import {
   deletePlantRequest,
   type PlantPatch,
   postTodoComplete,
+  putReaction,
   postRejectPending,
   postSession,
   putSystem,
@@ -254,6 +255,10 @@ interface StoreApi {
   confirmWater: (plantId: string) => void
   /** Complete a care todo. First watering requires `completedOn`. */
   completeTodo: (todoId: string, completedOn?: string) => void
+  /** 🌿 on a feed post: the count moves at once, then follows the server's answer. */
+  reactToUpdate: (updateId: string, on: boolean) => void
+  /** A comment was added (+1) or removed (-1) on a feed post. */
+  bumpCommentCount: (updateId: string, delta: number) => void
   addGreenhousePlant: (input: {
     title: string
     titleHe: string
@@ -1161,6 +1166,34 @@ export function StoreProvider({
         return
       }
       api.completeTodo(open.id)
+    },
+    reactToUpdate: (updateId, on) => {
+      update((d) => {
+        const row = d.updates?.find((item) => item.id === updateId)
+        if (!row || Boolean(row.reacted) === on) return d
+        row.reacted = on
+        row.reactions = Math.max(0, (row.reactions ?? 0) + (on ? 1 : -1))
+        return d
+      })
+      if (!liveWritable) return
+      void putReaction(updateId, on).then((res) => {
+        if (!res) return
+        update((d) => {
+          const row = d.updates?.find((item) => item.id === updateId)
+          if (row) {
+            row.reactions = res.reactions
+            row.reacted = res.reacted
+          }
+          return d
+        })
+      })
+    },
+    bumpCommentCount: (updateId, delta) => {
+      update((d) => {
+        const row = d.updates?.find((item) => item.id === updateId)
+        if (row) row.comments = Math.max(0, (row.comments ?? 0) + delta)
+        return d
+      })
     },
     completeTodo: (todoId, completedOn) => {
       if (!liveWritable) return

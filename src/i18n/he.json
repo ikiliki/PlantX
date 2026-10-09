@@ -1917,6 +1917,18 @@
     "marketTitle": "מה מגדלים מוכרים",
     "marketBody": "כל צמח מגיע עם הדרכון שלו.",
     "marketAction": "לשוק",
-    "emptyFilter": "עדיין אין כאלה."
+    "emptyFilter": "עדיין אין כאלה.",
+    "react": "לתת עלה",
+    "reacted": "להחזיר את העלה",
+    "comments": "{n} תגובות",
+    "commentOne": "תגובה אחת",
+    "commentNone": "תגובה",
+    "commentsTitle": "תגובות",
+    "commentPlaceholder": "כתבו משהו נחמד",
+    "send": "שליחה",
+    "deleteComment": "מחיקה",
+    "noComments": "עדיין אין תגובות. היו הראשונים.",
+    "commentFailed": "לא נשלח. נסו שוב.",
+    "commentsLoading": "טוען תגובות"
   }
 }

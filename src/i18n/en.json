@@ -1917,6 +1917,18 @@
     "marketTitle": "See what growers are selling",
     "marketBody": "Every plant comes with its passport.",
     "marketAction": "Open the market",
-    "emptyFilter": "Nothing like this yet."
+    "emptyFilter": "Nothing like this yet.",
+    "react": "Give a leaf",
+    "reacted": "Take back your leaf",
+    "comments": "{n} comments",
+    "commentOne": "1 comment",
+    "commentNone": "Comment",
+    "commentsTitle": "Comments",
+    "commentPlaceholder": "Say something nice",
+    "send": "Send",
+    "deleteComment": "Delete",
+    "noComments": "No comments yet. Be the first.",
+    "commentFailed": "Could not send. Try again.",
+    "commentsLoading": "Loading comments"
   }
 }
