@@ -9,21 +9,21 @@ test.describe('member', () => {
     await signIn(page, MEMBER)
   })
 
-  test('/settings opens the account popup with the place and the AI scan allowance', async ({ page }) => {
+  test('/settings opens the account menu with the AI scan allowance; Profile holds the place', async ({ page }) => {
     await page.route('**/api/identify/quota', (route) =>
       route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt: resetsAt() } } }),
     )
     await expectPage(page, '/settings')
     await expect(page).toHaveURL(/\/greenhouse$/)
     const account = page.getByRole('dialog', { name: 'Account' })
-    await expect(account.getByRole('combobox', { name: 'Greenhouse place' })).toBeVisible()
-    // AI scans left sit on the Account tab.
-    await account.getByRole('tab', { name: 'Account' }).click()
     const meter = account.locator('[data-scan-quota]')
     await expect(meter).toContainText('2 of 3 left')
     // Tapping the tile says when the scans reset.
     await meter.click()
     await expect(meter).toContainText('Resets at midnight')
+
+    await account.locator('[data-account-profile]').click()
+    await expect(page.getByRole('dialog', { name: 'Profile' }).getByRole('combobox', { name: 'Greenhouse place' })).toBeVisible()
   })
 
   test('the greenhouse header has no AI scan tile; the allowance lives in the account popup', async ({ page }, testInfo) => {
@@ -102,8 +102,6 @@ test.describe('admin', () => {
   test('the admin sees unlimited AI scans', async ({ page }) => {
     await expectPage(page, '/settings')
     const account = page.getByRole('dialog', { name: 'Account' })
-    // Scans and sign out live on the dialog's Account tab.
-    await account.getByRole('tab', { name: 'Account', exact: true }).click()
     await expect(account.locator('[data-scan-quota="unlimited"]')).toBeVisible()
   })
 

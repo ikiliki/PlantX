@@ -17,7 +17,6 @@ test.describe('signed in', () => {
   test('the account popup signs out without demo wording', async ({ page }) => {
     await expectPage(page, '/settings')
     const account = page.getByRole('dialog', { name: 'Account' })
-    await account.getByRole('tab', { name: 'Account', exact: true }).click()
     await expect(account.getByRole('button', { name: 'Sign out' })).toBeVisible()
     await expect(page.getByText('Exit to demo login')).toHaveCount(0)
   })
