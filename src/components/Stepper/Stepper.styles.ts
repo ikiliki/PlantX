@@ -71,7 +71,7 @@ export const Dot = styled.span<{ $state: StepState; $warn?: boolean }>`
       : $state === 'current'
         ? css`
             background: ${theme.colors.growth};
-            color: ${theme.colors.forest};
+            color: ${theme.colors.onGrowth};
             box-shadow: 0 0 0 5px ${theme.colors.chipGreen};
             transform: scale(1.08);
           `

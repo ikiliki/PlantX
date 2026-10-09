@@ -54,7 +54,7 @@ export const Index = styled.span`
   height: 20px;
   padding: 0 5px;
   border-radius: ${theme.radii.pill};
-  background: rgba(18, 60, 45, 0.72);
+  background: color-mix(in srgb, var(--c-forest) 72%, transparent);
   color: ${theme.colors.creamCard};
   font-size: 10px;
   font-weight: 800;

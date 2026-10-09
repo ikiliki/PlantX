@@ -41,8 +41,8 @@ export const Pending = styled.span`
   color: ${theme.colors.warn};
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   &::before {
     content: '';
     width: 7px;
@@ -61,7 +61,7 @@ export const Body = styled.div`
 export const Name = styled.strong`
   font-family: ${theme.fonts.display};
   font-size: 20px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
   color: ${theme.colors.forest};
   overflow-wrap: anywhere;

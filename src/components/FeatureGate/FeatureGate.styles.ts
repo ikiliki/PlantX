@@ -24,9 +24,9 @@ export const Scrim = styled.div`
   z-index: 1;
   background: linear-gradient(
     180deg,
-    rgba(244, 241, 232, 0.22) 0%,
-    rgba(244, 241, 232, 0.08) 40%,
-    rgba(244, 241, 232, 0.18) 100%
+    color-mix(in srgb, var(--c-cream) 22%, transparent) 0%,
+    color-mix(in srgb, var(--c-cream) 8%, transparent) 40%,
+    color-mix(in srgb, var(--c-cream) 18%, transparent) 100%
   );
   pointer-events: none;
 `
@@ -50,7 +50,7 @@ export const Card = styled.div`
   padding: 8px 10px;
   border-radius: ${theme.radii.md};
   border: 1px solid ${theme.colors.border};
-  background: rgba(255, 254, 250, 0.96);
+  background: color-mix(in srgb, var(--c-creamCard) 96%, transparent);
   box-shadow: ${theme.shadow.soft};
 `
 
@@ -64,15 +64,15 @@ export const Mark = styled.span`
   border: 1px solid ${theme.colors.border};
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
 export const Title = styled.p`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 15px;
   line-height: 1.2;
   color: ${theme.colors.forest};

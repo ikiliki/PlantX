@@ -140,7 +140,7 @@ export const Frame = styled.div<{ $state: AiScanState }>`
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: radial-gradient(rgba(207, 234, 120, 0.5) 1px, transparent 1px);
+    background-image: radial-gradient(color-mix(in srgb, var(--c-growth) 50%, transparent) 1px, transparent 1px);
     background-size: 16px 16px;
     opacity: ${({ $state }) => ($state === 'scanning' ? 0.6 : 0)};
     transition: opacity ${theme.motion.slow} ${theme.motion.ease};
@@ -156,12 +156,12 @@ export const Scanline = styled.span`
   height: 40%;
   background: linear-gradient(
     180deg,
-    rgba(207, 234, 120, 0) 0%,
-    rgba(207, 234, 120, 0.28) 85%,
-    rgba(207, 234, 120, 0.95) 100%
+    transparent 0%,
+    color-mix(in srgb, var(--c-growth) 28%, transparent) 85%,
+    color-mix(in srgb, var(--c-growth) 95%, transparent) 100%
   );
   border-bottom: 2px solid ${theme.colors.growth};
-  filter: drop-shadow(0 4px 10px rgba(207, 234, 120, 0.9));
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--c-growth) 90%, transparent));
   animation: ${sweep} 2.1s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 
   @media (prefers-reduced-motion: reduce) {
@@ -178,8 +178,8 @@ export const Node = styled.span`
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.growth};
   box-shadow:
-    0 0 0 4px rgba(207, 234, 120, 0.25),
-    0 0 18px rgba(207, 234, 120, 0.9);
+    0 0 0 4px color-mix(in srgb, var(--c-growth) 25%, transparent),
+    0 0 18px color-mix(in srgb, var(--c-growth) 90%, transparent);
   animation: ${pulse} 1.3s ease-in-out infinite both;
 `
 
@@ -217,7 +217,7 @@ export const Corner = styled.span<{ $at: keyof typeof cornerAt; $state: AiScanSt
   height: 26px;
   border: 0 solid
     ${({ $state }) =>
-      $state === 'unverified' ? theme.colors.warmth : $state === 'answered' ? theme.colors.growth : 'rgba(255,254,250,0.85)'};
+      $state === 'unverified' ? theme.colors.warmth : $state === 'answered' ? theme.colors.growth : 'color-mix(in srgb, var(--c-creamCard) 85%, transparent)'};
   border-radius: 6px;
   ${({ $at }) => cornerAt[$at]}
   ${({ $state }) =>
@@ -240,11 +240,11 @@ export const Stamp = styled.span<{ $tone: 'ok' | 'warn' }>`
   white-space: nowrap;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   box-shadow: ${theme.shadow.lift};
   background: ${({ $tone }) => ($tone === 'ok' ? theme.colors.growth : theme.colors.chipWarm)};
-  color: ${({ $tone }) => ($tone === 'ok' ? theme.colors.forest : theme.colors.warn)};
+  color: ${({ $tone }) => ($tone === 'ok' ? theme.colors.onGrowth : theme.colors.warn)};
   animation: ${stampIn} 520ms ${theme.motion.spring} both;
 `
 
@@ -265,7 +265,7 @@ export const Head = styled.div`
 export const Title = styled.h3<{ $sparkle?: boolean }>`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 22px;
   line-height: 1.2;
   color: ${theme.colors.forest};
@@ -370,8 +370,8 @@ export const Fact = styled.div`
 export const FactLabel = styled.dt`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
@@ -428,7 +428,7 @@ export const Notice = styled.div`
   padding: 14px 16px;
   border-radius: ${theme.radii.md};
   background: ${theme.colors.chipWarm};
-  border: 1px solid rgba(154, 107, 31, 0.22);
+  border: 1px solid color-mix(in srgb, var(--c-warn) 22%, transparent);
   animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
 
   ${Title} {

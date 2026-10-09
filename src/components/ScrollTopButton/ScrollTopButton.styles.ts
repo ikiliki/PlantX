@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { pressable } from '../../theme/motion'
 import { theme } from '../../theme/tokens'
 
-export const Fab = styled.button<{ $visible: boolean; $side: 'start' | 'end' }>`
+export const Fab = styled.button<{ $visible: boolean; $side: 'start' | 'end'; $docked?: boolean }>`
   ${pressable}
   position: fixed;
   z-index: ${theme.z.floating};
@@ -32,4 +32,19 @@ export const Fab = styled.button<{ $visible: boolean; $side: 'start' | 'end' }>`
     bottom: ${theme.space.xl};
     inset-inline-end: ${theme.space.xl};
   }
+
+  /* Phone: it stands in for the tucked-away dock, at the bottom centre. */
+  ${({ $docked }) =>
+    $docked &&
+    `
+    inset-inline: auto;
+    left: 50%;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+    margin-left: -26px;
+    z-index: ${theme.z.bottomNav};
+    border: 0;
+    box-shadow: ${theme.shadow.lift};
+  `}
 `

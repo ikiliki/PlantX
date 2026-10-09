@@ -57,7 +57,7 @@ export const MapCanvas = styled.div`
   }
 
   .leaflet-control-attribution {
-    background: rgba(255, 254, 250, 0.9);
+    background: color-mix(in srgb, var(--c-creamCard) 90%, transparent);
     color: ${theme.colors.muted};
     font-size: 10px;
     line-height: 1.3;
@@ -145,7 +145,7 @@ const peekBox = css<{ $rtl?: boolean }>`
   min-height: 58px;
   padding: 7px 10px;
   border-radius: ${theme.radii.md};
-  background: rgba(255, 254, 250, 0.96);
+  background: color-mix(in srgb, var(--c-creamCard) 96%, transparent);
   border: 1px solid ${theme.colors.border};
   box-shadow: ${theme.shadow.soft};
   color: ${theme.colors.ink};

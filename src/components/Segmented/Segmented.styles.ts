@@ -9,7 +9,7 @@ export const segmentRow = css`
   min-width: 0;
   min-height: 34px;
   padding: 2px;
-  border-radius: ${theme.radii.pill};
+  border-radius: ${theme.radii.control};
   background: ${theme.colors.chipNeutral};
   border: 1px solid ${theme.colors.border};
   overflow-x: auto;
@@ -29,7 +29,7 @@ export const segmentItem = css<{ $on?: boolean }>`
   height: 28px;
   padding: 0 14px;
   white-space: nowrap;
-  border-radius: ${theme.radii.pill};
+  border-radius: ${theme.radii.control};
   background: ${({ $on }) => ($on ? theme.colors.creamCard : 'transparent')};
   color: ${({ $on }) => ($on ? theme.colors.forest : theme.colors.muted)};
   font-size: 13px;

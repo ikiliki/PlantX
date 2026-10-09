@@ -8,7 +8,7 @@ export const Root = styled.span`
   padding: 2px 7px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.02em;

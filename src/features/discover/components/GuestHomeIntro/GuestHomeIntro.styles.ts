@@ -18,8 +18,8 @@ const fill = keyframes`
 `
 
 const ripple = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(60, 107, 143, 0.45); }
-  100% { box-shadow: 0 0 0 12px rgba(60, 107, 143, 0); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-info) 45%, transparent); }
+  100% { box-shadow: 0 0 0 12px transparent; }
 `
 
 const sway = keyframes`
@@ -36,7 +36,7 @@ export const Root = styled.section`
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
   background:
-    radial-gradient(circle at 100% 0%, rgba(207, 234, 120, 0.28), transparent 42%),
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--c-growth) 28%, transparent), transparent 42%),
     ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.card};
   animation: ${rise} ${theme.motion.slow} ${theme.motion.ease} both;
@@ -61,15 +61,15 @@ export const Eyebrow = styled.p`
   margin: 0;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
 export const Title = styled.h1`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(28px, 6cqi, 40px);
   line-height: 1.08;
   color: ${theme.colors.forest};
@@ -224,12 +224,12 @@ export const StageTag = styled.span`
   inset-inline-start: 12px;
   padding: 4px 10px;
   border-radius: ${theme.radii.pill};
-  background: rgba(255, 254, 250, 0.9);
+  background: color-mix(in srgb, var(--c-creamCard) 90%, transparent);
   color: ${theme.colors.forest};
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
 `
 
 const shown = (on: boolean) => css`
@@ -244,7 +244,7 @@ export const ScanLine = styled.span<{ $on: boolean }>`
   height: 2px;
   border-radius: 2px;
   background: ${theme.colors.growth};
-  box-shadow: 0 0 16px 4px rgba(207, 234, 120, 0.75);
+  box-shadow: 0 0 16px 4px color-mix(in srgb, var(--c-growth) 75%, transparent);
   opacity: ${(p) => (p.$on ? 1 : 0)};
   transition: opacity ${theme.motion.base} ${theme.motion.ease};
   animation: ${scan} 2.4s ease-in-out infinite;
@@ -264,7 +264,7 @@ const chip = css`
   gap: 10px;
   padding: 10px 14px;
   border-radius: ${theme.radii.md};
-  background: rgba(255, 254, 250, 0.95);
+  background: color-mix(in srgb, var(--c-creamCard) 95%, transparent);
   box-shadow: ${theme.shadow.card};
   color: ${theme.colors.forest};
 `
@@ -291,7 +291,7 @@ export const AiChip = styled.span<{ $on: boolean }>`
 
   b {
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: 20px;
   }
 `

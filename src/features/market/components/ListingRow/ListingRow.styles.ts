@@ -7,9 +7,9 @@ export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $stat
   ${columns};
   padding: ${theme.space.sm} 14px;
   border-radius: ${theme.radii.md};
-  border: 1px solid ${({ $selected }) => ($selected ? theme.colors.forest : theme.colors.border)};
+  border: 2px solid ${({ $selected }) => ($selected ? theme.colors.growth : 'transparent')};
   background: ${({ $selected }) => ($selected ? theme.colors.chipGreen : theme.colors.creamCard)};
-  box-shadow: ${({ $selected }) => ($selected ? theme.shadow.soft : 'none')};
+  box-shadow: ${theme.shadow.soft};
   color: ${theme.colors.ink};
   font: inherit;
   text-align: start;
@@ -25,9 +25,8 @@ export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $stat
     !$static &&
     `
     &:hover {
-      border-color: ${$selected ? theme.colors.forest : theme.colors.moss};
-      box-shadow: ${theme.shadow.soft};
-      transform: translateY(-1px);
+      box-shadow: ${theme.shadow.card};
+      transform: translateY(-3px);
     }
     &:active {
       transform: scale(0.995);
@@ -43,9 +42,9 @@ export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $stat
 `
 
 export const Thumb = styled.div<{ $stale?: boolean }>`
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 46px;
+  height: 46px;
+  border-radius: ${theme.radii.sm};
   overflow: hidden;
   background: ${theme.colors.chipGreen};
   img {
@@ -119,7 +118,7 @@ export const Health = styled.span<{ $health: string }>`
           ? theme.colors.chipWarm
           : $health === 'D'
             ? '#E8DDD6'
-            : '#F6DED4'};
+            : theme.colors.chipDanger};
   color: ${({ $health }) =>
     $health === 'S'
       ? theme.colors.cream
@@ -148,7 +147,10 @@ export const Cell = styled.span`
 `
 
 export const Price = styled(Cell)`
-  font-weight: 800;
+  font-family: ${theme.fonts.display};
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: ${theme.colors.forest};
 `
 

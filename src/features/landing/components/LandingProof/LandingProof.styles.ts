@@ -1,22 +1,21 @@
 import styled from 'styled-components'
 import { theme } from '../../../../theme/tokens'
+import { scrollReveal } from '../../landingType'
 
-/* Phones keep the hero lean; the three-benefit band shows from the wide layout up. */
 export const Band = styled.section`
-  display: none;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 0 ${theme.space.md} 48px;
 
   @container landing (min-width: 900px) {
-    display: block;
-    width: min(1180px, 100%);
-    margin: 0 auto;
-    padding: 0 ${theme.space.md} 48px;
+    padding: 0 28px 64px;
   }
 `
 
 export const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
 
   @container landing (min-width: 900px) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -24,15 +23,29 @@ export const Grid = styled.div`
 `
 
 export const Proof = styled.article`
-  background: rgba(255, 253, 248, 0.65);
-  border: 1px solid ${theme.colors.border};
-  border-radius: 18px;
-  padding: 18px;
+  ${scrollReveal}
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: start;
+  background: ${theme.colors.creamCard};
+  border-radius: ${theme.radii.lg};
+  box-shadow: ${theme.shadow.card};
+  padding: 20px;
+
+  > svg {
+    grid-row: span 2;
+    box-sizing: content-box;
+    padding: 10px;
+    border-radius: ${theme.radii.sm};
+    background: ${theme.colors.growth};
+    color: ${theme.colors.onGrowth};
+  }
 
   strong {
     display: block;
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: 20px;
     color: ${theme.colors.forest};
   }

@@ -4,16 +4,25 @@ import { theme } from '../../../../theme/tokens'
 
 export const Card = styled(Link)`
   display: grid;
-  grid-template-rows: 120px auto;
+  grid-template-rows: 140px auto;
   min-width: 0;
+  padding: 8px;
   overflow: hidden;
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.md};
+  border: 0;
+  border-radius: ${theme.radii.lg};
   background: ${theme.colors.creamCard};
+  box-shadow: ${theme.shadow.card};
   color: ${theme.colors.ink};
   text-decoration: none;
+  transition:
+    transform ${theme.motion.base} ${theme.motion.ease},
+    box-shadow ${theme.motion.base} ${theme.motion.ease};
   &:hover {
-    border-color: ${theme.colors.forest};
+    transform: translateY(-6px) rotate(-1deg);
+    box-shadow: ${theme.shadow.lift};
+  }
+  &:active {
+    transform: translateY(1px) scale(0.97);
   }
   &:focus-visible {
     outline: 2px solid ${theme.colors.moss};
@@ -24,6 +33,7 @@ export const Card = styled(Link)`
 export const Photo = styled.div`
   min-height: 0;
   overflow: hidden;
+  border-radius: ${theme.radii.md};
   background: ${theme.colors.chipGreen};
   img {
     width: 100%;
@@ -42,7 +52,7 @@ export const Body = styled.div`
 export const Name = styled.strong`
   font-family: ${theme.fonts.display};
   font-size: 20px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
   color: ${theme.colors.forest};
 `

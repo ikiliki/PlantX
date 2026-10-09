@@ -1,7 +1,23 @@
 import { createGlobalStyle } from 'styled-components'
-import { theme } from './tokens'
+import { paletteCss, theme } from './tokens'
 
 export const GlobalStyle = createGlobalStyle`
+  /* Sunny garden by default; the night garden only when the grower picks it. */
+  :root {
+    color-scheme: light;
+    ${paletteCss('day')}
+  }
+  :root[data-theme='night'] {
+    color-scheme: dark;
+    ${paletteCss('night')}
+  }
+  /* Switching gardens: the new one spreads out from the toggle (see themeMode.ts). */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
   *, *::before, *::after { box-sizing: border-box; }
   html, body, #root { height: 100%; }
   html {
@@ -9,7 +25,7 @@ export const GlobalStyle = createGlobalStyle`
     /* Always show the bar so a popup's scroll lock cannot widen the page into the gap it leaves. */
     overflow-y: scroll;
     scrollbar-gutter: stable;
-    scrollbar-color: rgba(18, 60, 45, 0.28) transparent;
+    scrollbar-color: color-mix(in srgb, ${theme.colors.forest} 28%, transparent) transparent;
     -webkit-text-size-adjust: 100%;
   }
   body {
@@ -33,9 +49,9 @@ export const GlobalStyle = createGlobalStyle`
   img { max-width: 100%; display: block; }
   h1, h2, h3, h4 {
     font-family: ${theme.fonts.display};
-    /* DM Serif Display ships a single regular weight; bolding it would synthesise strokes. */
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-weight: ${theme.fonts.displayWeight};
+    letter-spacing: ${theme.fonts.displayTracking};
+    text-wrap: balance;
     margin: 0;
   }
   p { margin: 0; text-wrap: pretty; }
@@ -51,12 +67,12 @@ export const GlobalStyle = createGlobalStyle`
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(18, 60, 45, 0.22);
+    background: color-mix(in srgb, ${theme.colors.forest} 22%, transparent);
     border: 3px solid transparent;
     border-radius: ${theme.radii.pill};
     background-clip: padding-box;
   }
-  ::-webkit-scrollbar-thumb:hover { background-color: rgba(18, 60, 45, 0.38); }
+  ::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, ${theme.colors.forest} 38%, transparent); }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }

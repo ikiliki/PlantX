@@ -3,13 +3,17 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Icon, type IconName } from '../../components/Icon/Icon'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { LiveBanner } from '../../components/LiveBanner/LiveBanner'
+import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { useI18n } from '../../i18n/I18nProvider'
+import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { theme } from '../../theme/tokens'
 import { TopBar } from '../TopBar/TopBar'
+import { useDockAway } from '../dockState'
+import { usePageRefresh } from '../usePageRefresh'
 import { usePageNavigationType } from '../pageNavigation'
 import { BottomIcon, BottomLink, BottomNav, Main, Shell } from './AppShell.styles'
 
@@ -32,6 +36,10 @@ export function AppShell() {
   const loc = useLocation()
   // Not useNavigationType(): under <Routes location> it always says POP, and nothing would scroll to the top.
   const navType = usePageNavigationType()
+  const dockAway = useDockAway()
+  // Phone: pull to refresh on Market, Greenhouse, Tasks and Catalog (Home has its own in the feed).
+  const phone = useMediaQuery('(max-width: 899px)')
+  const pageRefresh = usePageRefresh(loc.pathname)
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
   const pathRef = useRef(loc.pathname)
@@ -89,12 +97,18 @@ export function AppShell() {
       <TopBar />
       <LiveBanner />
       <Main ref={mainRef} $wide={loc.pathname === '/home'}>
+        <PullToRefresh
+          enabled={phone && pageRefresh.available}
+          busy={pageRefresh.refreshing}
+          label={t.feed.refreshing}
+          onRefresh={pageRefresh.refresh}
+        />
         <LoaderShell>
           <Outlet />
         </LoaderShell>
       </Main>
-      <ScrollTopButton label={t.common.backToTop} />
-      <BottomNav $cols={bottom.length}>
+      <ScrollTopButton label={t.common.backToTop} dock />
+      <BottomNav $cols={bottom.length} $away={dockAway} data-dock={dockAway ? 'away' : 'shown'}>
         {bottom.map((l) => {
           const active = l.to.startsWith('/admin')
             ? loc.pathname.startsWith('/admin')

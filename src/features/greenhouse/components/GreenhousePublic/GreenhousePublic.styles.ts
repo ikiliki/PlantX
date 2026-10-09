@@ -12,7 +12,7 @@ const gentleScroll = css`
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: rgba(93, 124, 78, 0.55) transparent;
+  scrollbar-color: color-mix(in srgb, var(--c-moss) 55%, transparent) transparent;
   &::-webkit-scrollbar {
     width: 10px;
   }
@@ -23,7 +23,7 @@ const gentleScroll = css`
   &::-webkit-scrollbar-thumb {
     border: 2px solid transparent;
     border-radius: 99px;
-    background: rgba(93, 124, 78, 0.45);
+    background: color-mix(in srgb, var(--c-moss) 45%, transparent);
     background-clip: padding-box;
   }
 `
@@ -69,7 +69,7 @@ export const SectionHead = styled.header`
     margin: 0;
     font-family: ${theme.fonts.display};
     font-size: 24px;
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     color: ${theme.colors.forest};
   }
 `

@@ -24,13 +24,12 @@ import {
   PlaceButton,
   TopActions,
   Inner,
+  Ledger,
   Next,
   Progress,
   Rank,
   Root,
-  Side,
   Tally,
-  TallyRow,
   Top,
   TopCopy,
   Xp,
@@ -146,6 +145,16 @@ export function GreenhouseLevelView({
         <Bar aria-hidden>
           <BarFill style={{ width: `${Math.round(summary.progress * 100)}%` }} />
         </Bar>
+        {/* The ledger: where the XP came from, then what is left to the next level. */}
+        <Ledger>
+          <Tally $tone="plant">
+            <Icon name="greenhouse" size={15} />
+            {summary.plants === 1 ? t.greenhouse.levelPlantsOne : t.greenhouse.levelPlants.replace('{n}', String(summary.plants))}
+          </Tally>
+          <Tally $tone="care">
+            <Icon name="drop" size={15} />
+            {summary.care === 1 ? t.greenhouse.levelCareOne : t.greenhouse.levelCare.replace('{n}', String(summary.care))}
+          </Tally>
         <Next>
           {t.greenhouse.levelToNext
             .replace('{left}', left.toLocaleString())
@@ -162,20 +171,8 @@ export function GreenhouseLevelView({
             ?
           </How>
         </Next>
+        </Ledger>
       </Progress>
-
-      <Side>
-      <TallyRow>
-        <Tally $tone="plant">
-          <span aria-hidden>🌱</span>
-          {summary.plants === 1 ? t.greenhouse.levelPlantsOne : t.greenhouse.levelPlants.replace('{n}', String(summary.plants))}
-        </Tally>
-        <Tally $tone="care">
-          <span aria-hidden>💧</span>
-          {summary.care === 1 ? t.greenhouse.levelCareOne : t.greenhouse.levelCare.replace('{n}', String(summary.care))}
-        </Tally>
-      </TallyRow>
-      </Side>
 
       {scans || place ? (
         <End>
@@ -217,14 +214,12 @@ export function GreenhouseLevelSkeleton({ blurred = false }: { blurred?: boolean
         </Top>
         <Progress>
           <Bar aria-hidden />
-          <SkeletonBar width="110px" height={10} />
+          <Ledger>
+            <SkeletonBar width="70px" height={12} />
+            <SkeletonBar width="90px" height={12} />
+            <SkeletonBar width="110px" height={12} />
+          </Ledger>
         </Progress>
-        <Side>
-          <TallyRow>
-            <SkeletonBar width="80px" height={26} />
-            <SkeletonBar width="96px" height={26} />
-          </TallyRow>
-        </Side>
       </Inner>
     </Root>
   )

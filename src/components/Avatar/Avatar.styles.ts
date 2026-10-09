@@ -1,11 +1,12 @@
 import styled from 'styled-components'
+import { theme } from '../../theme/tokens'
 
 export const Circle = styled.span<{ $color: string; $size: number }>`
   width: ${({ $size }) => $size}px;
   height: ${({ $size }) => $size}px;
   border-radius: 50%;
   background: ${({ $color }) => $color};
-  color: #fffefa;
+  color: ${theme.colors.creamCard};
   display: grid;
   place-items: center;
   flex-shrink: 0;

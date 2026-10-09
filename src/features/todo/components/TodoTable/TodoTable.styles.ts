@@ -33,7 +33,7 @@ export const Head = styled.div`
 export const Title = styled.h2`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 22px;
   color: ${theme.colors.forest};
 `

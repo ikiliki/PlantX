@@ -14,7 +14,7 @@ export const Root = styled.aside<{ $height?: number }>`
   border-radius: ${theme.radii.lg};
   border: 1px solid ${theme.colors.border};
   background:
-    linear-gradient(180deg, rgba(255, 254, 250, 0.98), rgba(228, 235, 216, 0.35)),
+    linear-gradient(180deg, color-mix(in srgb, var(--c-creamCard) 98%, transparent), color-mix(in srgb, var(--c-chipGreen) 35%, transparent)),
     ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
   overflow: hidden;
@@ -45,7 +45,7 @@ export const Title = styled.h2`
   min-width: 0;
   white-space: nowrap;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 18px;
   line-height: 1.2;
   color: ${theme.colors.forest};
@@ -93,9 +93,9 @@ export const MoreAbove = styled.div<{ $on?: boolean }>`
     transition: opacity ${theme.motion.base} ${theme.motion.ease};
     background: linear-gradient(
       180deg,
-      rgba(255, 254, 250, 0.98) 0%,
-      rgba(255, 254, 250, 0.55) 48%,
-      rgba(255, 254, 250, 0) 100%
+      color-mix(in srgb, var(--c-creamCard) 98%, transparent) 0%,
+      color-mix(in srgb, var(--c-creamCard) 55%, transparent) 48%,
+      transparent 100%
     );
 
     &::after {
@@ -107,8 +107,8 @@ export const MoreAbove = styled.div<{ $on?: boolean }>`
       background: linear-gradient(
         90deg,
         transparent 0%,
-        rgba(93, 124, 78, 0.4) 14%,
-        rgba(93, 124, 78, 0.4) 86%,
+        color-mix(in srgb, var(--c-moss) 40%, transparent) 14%,
+        color-mix(in srgb, var(--c-moss) 40%, transparent) 86%,
         transparent 100%
       );
     }
@@ -127,7 +127,7 @@ export const Message = styled.div<{ $kind?: FeedUpdateKind; $open?: boolean }>`
   padding: 10px 12px;
   border-radius: ${theme.radii.md};
   border: 1px solid ${theme.colors.border};
-  background: rgba(255, 254, 250, 0.88);
+  background: color-mix(in srgb, var(--c-creamCard) 88%, transparent);
   color: inherit;
   font: inherit;
   text-align: start;
@@ -201,8 +201,8 @@ export const When = styled.span`
   gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
@@ -210,7 +210,7 @@ export const Tag = styled.span<{ $pending: boolean }>`
   padding: 2px 7px;
   border-radius: ${theme.radii.pill};
   background: ${({ $pending }) => ($pending ? theme.colors.chipWarm : theme.colors.growth)};
-  color: ${({ $pending }) => ($pending ? theme.colors.warn : theme.colors.forest)};
+  color: ${({ $pending }) => ($pending ? theme.colors.warn : theme.colors.onGrowth)};
   font-size: 10px;
   letter-spacing: 0.05em;
 `

@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { theme } from '../../../../theme/tokens'
+import { scrollReveal, sectionLead, sectionTitle, srOnly } from '../../landingType'
 
 export const Band = styled.section`
   width: min(1240px, 100%);
@@ -13,35 +14,23 @@ export const Band = styled.section`
 `
 
 export const Head = styled.div`
+  ${scrollReveal}
   display: grid;
-  gap: 12px;
+  gap: 16px;
   max-width: 62ch;
   margin-bottom: 24px;
 `
 
 export const Kicker = styled.p`
-  margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: ${theme.colors.moss};
+  ${srOnly}
 `
 
 export const Title = styled.h2`
-  margin: 0;
-  font-family: ${theme.fonts.display};
-  font-weight: 400;
-  font-size: clamp(32px, 5cqi, 48px);
-  line-height: 1.05;
-  color: ${theme.colors.forest};
+  ${sectionTitle}
 `
 
 export const Lead = styled.p`
-  margin: 0;
-  color: ${theme.colors.muted};
-  font-size: 17px;
-  line-height: 1.6;
+  ${sectionLead}
 `
 
 export const Cards = styled.div`
@@ -61,9 +50,11 @@ export const Card = styled.article`
   display: grid;
   gap: 12px;
   padding: 20px;
+  ${scrollReveal}
+  padding: 24px;
   border-radius: ${theme.radii.lg};
-  border: 1.5px dashed ${theme.colors.border};
-  background: rgba(255, 253, 248, 0.5);
+  border: 2px dashed ${theme.colors.borderStrong};
+  background: ${theme.colors.creamCard};
   cursor: default;
 `
 
@@ -79,15 +70,15 @@ export const CardIcon = styled.span`
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  background: ${theme.colors.chipNeutral};
-  color: ${theme.colors.muted};
+  border-radius: ${theme.radii.sm};
+  background: ${theme.colors.chipGreen};
+  color: ${theme.colors.forest};
 `
 
 export const CardTitle = styled.h3`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 24px;
   color: ${theme.colors.forest};
 `
@@ -100,8 +91,8 @@ export const Pill = styled.span`
   color: ${theme.colors.warn};
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   white-space: nowrap;
 `
 

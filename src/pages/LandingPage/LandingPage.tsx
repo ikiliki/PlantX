@@ -3,15 +3,14 @@ import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButto
 import { LandingAi } from '../../features/landing/components/LandingAi/LandingAi'
 import { LandingHero } from '../../features/landing/components/LandingHero/LandingHero'
 import { LandingJoin } from '../../features/landing/components/LandingJoin/LandingJoin'
-import { LandingNav } from '../../features/landing/components/LandingNav/LandingNav'
 import { LandingProof } from '../../features/landing/components/LandingProof/LandingProof'
 import { LandingSoon } from '../../features/landing/components/LandingSoon/LandingSoon'
 import { LandingTour } from '../../features/landing/components/LandingTour/LandingTour'
 import { PRIVACY_PATH, TERMS_PATH } from '../../features/legal/legalPaths'
 import { useI18n } from '../../i18n/I18nProvider'
-import { appHref } from '../../lib/siteUrls'
+import { appHref, landingHref } from '../../lib/siteUrls'
 import { track } from '../../lib/track'
-import { Foot, FootLinks, Main, Page } from './LandingPage.styles'
+import { Foot, FootLinks, Logo, LogoMark, Main, Page, Top } from './LandingPage.styles'
 
 export function LandingPage() {
   const { t } = useI18n()
@@ -22,7 +21,12 @@ export function LandingPage() {
 
   return (
     <Page>
-      <LandingNav />
+      <Top>
+        <Logo href={landingHref()}>
+          <LogoMark src="/icons/brand-mark.svg" alt="" width={36} height={36} />
+          {t.appName}
+        </Logo>
+      </Top>
       <Main>
         <LandingHero />
         <LandingProof />
@@ -31,6 +35,7 @@ export function LandingPage() {
         <LandingSoon />
         <LandingJoin />
         <Foot>
+          <strong>{t.appName}</strong>
           <span>{t.landing.footerCopy}</span>
           <span>{t.landing.footerNote}</span>
           <FootLinks>
@@ -39,7 +44,7 @@ export function LandingPage() {
           </FootLinks>
         </Foot>
       </Main>
-      <ScrollTopButton label={t.common.backToTop} />
+      <ScrollTopButton label={t.common.backToTop} dock />
     </Page>
   )
 }

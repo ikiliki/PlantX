@@ -5,35 +5,44 @@ import { theme } from '../../theme/tokens'
 const variants = {
   primary: css`
     background: ${theme.colors.forest};
-    color: ${theme.colors.creamCard};
+    color: ${theme.colors.cream};
     border: 1px solid ${theme.colors.forest};
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22), ${theme.shadow.soft};
     &:hover:not(:disabled) {
       background: ${theme.colors.forestMid};
-      box-shadow: ${theme.shadow.soft};
+      transform: translateY(-2px);
+    }
+    &:active:not(:disabled) {
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.22);
     }
   `,
   secondary: css`
     background: ${theme.colors.creamCard};
     color: ${theme.colors.forest};
-    border: 1px solid ${theme.colors.border};
+    border: 1px solid ${theme.colors.borderStrong};
+    box-shadow: inset 0 -2px 0 ${theme.colors.border};
     &:hover:not(:disabled) {
       background: ${theme.colors.chipGreen};
       border-color: ${theme.colors.chipGreen};
+      transform: translateY(-2px);
     }
   `,
   ghost: css`
     background: transparent;
     color: ${theme.colors.forest};
     border: 1px solid ${theme.colors.border};
-    &:hover:not(:disabled) { background: rgba(18, 60, 45, 0.05); }
+    &:hover:not(:disabled) { background: color-mix(in srgb, var(--c-forest) 5%, transparent); }
   `,
   growth: css`
     background: ${theme.colors.growth};
-    color: ${theme.colors.forest};
+    color: ${theme.colors.onGrowth};
     border: 1px solid ${theme.colors.growth};
+    box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--c-forest) 22%, transparent), ${theme.shadow.soft};
     &:hover:not(:disabled) {
-      filter: brightness(0.97);
-      box-shadow: ${theme.shadow.soft};
+      transform: translateY(-2px);
+    }
+    &:active:not(:disabled) {
+      box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--c-forest) 22%, transparent);
     }
   `,
   danger: css`
@@ -53,12 +62,13 @@ const variants = {
 export const Button = styled.button<{ $variant?: keyof typeof variants; $block?: boolean; $size?: 'sm' | 'md' }>`
   appearance: none;
   cursor: pointer;
-  border-radius: ${theme.radii.pill};
-  font-family: ${theme.fonts.body};
-  font-weight: 500;
+  border-radius: ${theme.radii.control};
+  font-family: ${theme.fonts.display};
+  font-weight: 600;
+  letter-spacing: 0.01em;
   padding: ${({ $size }) => ($size === 'sm' ? `${theme.space.sm} ${theme.space.md}` : `12px 20px`)};
   font-size: ${({ $size }) => ($size === 'sm' ? '13px' : '14px')};
-  min-height: ${({ $size }) => ($size === 'sm' ? '34px' : '44px')};
+  min-height: ${({ $size }) => ($size === 'sm' ? theme.control.sm : theme.control.md)};
   display: inline-flex;
   align-items: center;
   justify-content: center;

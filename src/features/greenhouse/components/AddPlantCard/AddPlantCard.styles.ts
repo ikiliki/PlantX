@@ -10,8 +10,8 @@ const orbit = keyframes`
 `
 
 const breathe = keyframes`
-  0%, 100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.6); }
-  50% { box-shadow: 0 0 0 12px rgba(207, 234, 120, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 60%, transparent); }
+  50% { box-shadow: 0 0 0 12px transparent; }
 `
 
 export const Root = styled.button<{ $hero?: boolean }>`
@@ -90,7 +90,7 @@ export const Root = styled.button<{ $hero?: boolean }>`
       padding: 32px;
       border: 0;
       background:
-        radial-gradient(circle at 12% 30%, rgba(207, 234, 120, 0.4), transparent 45%),
+        radial-gradient(circle at 12% 30%, color-mix(in srgb, var(--c-growth) 40%, transparent), transparent 45%),
         linear-gradient(135deg, ${theme.colors.forest} 0%, ${theme.colors.forestSoft} 100%);
       color: ${theme.colors.creamCard};
       text-align: start;
@@ -98,7 +98,7 @@ export const Root = styled.button<{ $hero?: boolean }>`
 
       &:hover {
         background:
-          radial-gradient(circle at 12% 30%, rgba(207, 234, 120, 0.55), transparent 50%),
+          radial-gradient(circle at 12% 30%, color-mix(in srgb, var(--c-growth) 55%, transparent), transparent 50%),
           linear-gradient(135deg, ${theme.colors.forest} 0%, ${theme.colors.forestSoft} 100%);
         transform: translateY(-3px);
       }
@@ -187,7 +187,7 @@ export const Plus = styled.span`
   height: 64px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
   font-size: 34px;
   font-weight: 400;
   line-height: 1;
@@ -227,7 +227,7 @@ export const Hint = styled.span<{ $solid?: boolean }>`
       padding: 0 20px;
       border-radius: ${theme.radii.pill};
       background: ${theme.colors.growth};
-      color: ${theme.colors.forest};
+      color: ${theme.colors.onGrowth};
       font-size: 14px;
       font-weight: 800;
     `}
@@ -247,7 +247,7 @@ export const HeroCopy = styled.span`
 
   strong {
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: clamp(24px, 3vw, 32px);
     line-height: 1.15;
   }

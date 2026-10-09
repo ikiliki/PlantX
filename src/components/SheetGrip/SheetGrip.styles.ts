@@ -24,7 +24,7 @@ export const Grip = styled.div<{ $shown?: boolean }>`
     width: 40px;
     height: 4px;
     border-radius: ${theme.radii.pill};
-    background: rgba(23, 49, 40, 0.28);
+    background: color-mix(in srgb, var(--c-ink) 28%, transparent);
     transition: transform ${theme.motion.fast} ${theme.motion.ease}, background ${theme.motion.fast} ${theme.motion.ease};
   }
 
@@ -34,7 +34,7 @@ export const Grip = styled.div<{ $shown?: boolean }>`
 
   &:active::before {
     transform: scaleX(1.15);
-    background: rgba(23, 49, 40, 0.48);
+    background: color-mix(in srgb, var(--c-ink) 48%, transparent);
   }
 
   @media (max-width: ${theme.breakpoints.sm}) {

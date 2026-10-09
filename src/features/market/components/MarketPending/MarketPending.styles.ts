@@ -35,13 +35,13 @@ export const SoonBanner = styled.div`
     margin: 0;
     padding: 8px 0;
     transform: translate(-50%, -50%) rotate(-12deg);
-    background: rgba(255, 254, 250, 0.94);
+    background: color-mix(in srgb, var(--c-creamCard) 94%, transparent);
     border-block: 1px solid ${theme.colors.border};
     box-shadow: ${theme.shadow.soft};
     color: ${theme.colors.forest};
     font-family: ${theme.fonts.display};
     font-size: clamp(20px, 3vw, 28px);
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     line-height: 1.1;
     text-align: center;
     white-space: nowrap;

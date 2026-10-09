@@ -90,8 +90,8 @@ export const Table = styled.table`
     color: ${theme.colors.moss};
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
   }
 
   th.check,
@@ -103,7 +103,7 @@ export const Table = styled.table`
   }
 
   tr[data-selected='true'] td {
-    background: rgba(207, 234, 120, 0.22);
+    background: color-mix(in srgb, var(--c-growth) 22%, transparent);
   }
 
   tbody tr[data-openable='true'] {
@@ -194,8 +194,8 @@ export const DetailItem = styled.div`
   dt {
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.moss};
   }
 

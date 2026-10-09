@@ -21,7 +21,7 @@ export const Card = styled.div`
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
   background:
-    radial-gradient(80% 70% at 50% 0%, rgba(207, 234, 120, 0.16), transparent 60%),
+    radial-gradient(80% 70% at 50% 0%, color-mix(in srgb, var(--c-growth) 16%, transparent), transparent 60%),
     ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.soft};
 `
@@ -36,15 +36,15 @@ export const Mark = styled.span`
   border: 1px solid ${theme.colors.border};
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.warn};
 `
 
 export const Title = styled.h1`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: clamp(28px, 4vw, 36px);
   line-height: 1.15;
   color: ${theme.colors.forest};

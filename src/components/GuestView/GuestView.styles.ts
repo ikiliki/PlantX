@@ -24,7 +24,7 @@ export const Wrap = styled.section<{ $card?: boolean }>`
 export const Title = styled.h2`
   margin: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 28px;
   line-height: 1.15;
   color: ${theme.colors.forest};

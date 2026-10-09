@@ -63,8 +63,8 @@ export const Week = styled.div`
   grid-template-columns: repeat(7, minmax(0, 1fr));
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
   text-align: center;
 `

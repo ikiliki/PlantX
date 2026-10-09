@@ -50,7 +50,7 @@ export const Head = styled.header`
     margin: 0;
     font-family: ${theme.fonts.display};
     font-size: 26px;
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     line-height: 1.1;
     color: ${theme.colors.forest};
   }
@@ -156,7 +156,7 @@ export const Done = styled.div`
     margin: 0;
     font-family: ${theme.fonts.display};
     font-size: 24px;
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     color: ${theme.colors.forest};
   }
   p {

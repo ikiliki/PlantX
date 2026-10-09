@@ -20,8 +20,8 @@ export const Intro = styled.aside`
 export const Eyebrow = styled.span`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
@@ -96,8 +96,8 @@ export const FieldBox = styled.label`
   > span {
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.moss};
   }
 
@@ -217,8 +217,8 @@ export const PriceBlock = styled.div`
 export const PriceCaption = styled.span`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
@@ -234,7 +234,7 @@ export const PriceWell = styled.label`
 
   &:focus-within {
     border-color: ${theme.colors.forest};
-    box-shadow: 0 0 0 3px rgba(207, 234, 120, 0.65);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-growth) 65%, transparent);
   }
 
   input {
@@ -394,7 +394,7 @@ export const ConfirmMark = styled.div`
   margin-top: -32px;
   border-radius: 50%;
   background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
   box-shadow: ${theme.shadow.soft};
 `
 

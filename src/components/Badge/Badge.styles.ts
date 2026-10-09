@@ -17,13 +17,13 @@ export const Badge = styled.span<{ $tone?: 'lime' | 'forest' | 'warn' | 'danger'
       case 'warn':
         return `background: ${theme.colors.chipWarm}; color: ${theme.colors.forest};`
       case 'danger':
-        return `background: #F6DED4; color: ${theme.colors.danger};`
+        return `background: ${theme.colors.chipDanger}; color: ${theme.colors.danger};`
       case 'muted':
         return `background: ${theme.colors.chipNeutral}; color: ${theme.colors.muted};`
       case 'info':
-        return `background: #e8f1f7; color: ${theme.colors.info};`
+        return `background: ${theme.colors.chipInfo}; color: ${theme.colors.info};`
       default:
-        return `background: ${theme.colors.forest}; color: white;`
+        return `background: ${theme.colors.forest}; color: var(--c-creamCard);`
     }
   }}
 `

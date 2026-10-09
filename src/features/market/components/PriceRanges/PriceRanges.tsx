@@ -88,8 +88,8 @@ export function PriceRanges({
             style={{
               left: `${start * 100}%`,
               width: `${Math.max(0, end - start) * 100}%`,
-              background: row.grade ? tone.soft : 'rgba(93, 124, 78, 0.18)',
-              boxShadow: `inset 0 0 0 1px ${row.grade ? tone.strong : 'rgba(93, 124, 78, 0.4)'}33`,
+              background: row.grade ? tone.soft : 'color-mix(in srgb, var(--c-moss) 18%, transparent)',
+              boxShadow: `inset 0 0 0 1px ${row.grade ? tone.strong : 'color-mix(in srgb, var(--c-moss) 40%, transparent)'}33`,
             }}
             title={`${formatMoney(row.low)} – ${formatMoney(row.high)}`}
           />

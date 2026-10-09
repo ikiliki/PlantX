@@ -2,7 +2,7 @@ import styled, { css } from 'styled-components'
 import { media, popIn, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-const onForest = (alpha: number) => `rgba(244, 241, 232, ${alpha})`
+const onForest = (alpha: number) => `color-mix(in srgb, var(--c-cream) calc(${alpha} * 100%), transparent)`
 
 export const Root = styled.aside<{ $compact?: boolean }>`
   display: grid;
@@ -15,7 +15,7 @@ export const Root = styled.aside<{ $compact?: boolean }>`
   padding: ${theme.space.xl} ${theme.space.lg} ${theme.space.lg};
   color: ${theme.colors.cream};
   background:
-    radial-gradient(120% 70% at 0% 0%, rgba(207, 234, 120, 0.18), transparent 60%),
+    radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--c-growth) 18%, transparent), transparent 60%),
     linear-gradient(165deg, ${theme.colors.forestSoft}, ${theme.colors.forest});
   ${({ $compact }) =>
     $compact &&
@@ -59,7 +59,7 @@ export const Name = styled.h2`
   margin: 0;
   font-family: ${theme.fonts.display};
   font-size: clamp(26px, 3vw, 34px);
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.1;
   color: ${theme.colors.cream};
 `
@@ -122,8 +122,8 @@ export const SpecialtyBlock = styled.div`
 export const Label = styled.span`
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${onForest(0.6)};
 `
 
@@ -137,7 +137,7 @@ export const Specialties = styled.ul`
   li {
     padding: 6px 12px;
     border-radius: ${theme.radii.pill};
-    background: rgba(207, 234, 120, 0.16);
+    background: color-mix(in srgb, var(--c-growth) 16%, transparent);
     color: ${theme.colors.growth};
     font-size: 13px;
     font-weight: 600;

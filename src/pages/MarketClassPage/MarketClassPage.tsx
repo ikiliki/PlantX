@@ -189,7 +189,7 @@ function MarketClassReady({ classId }: { classId?: string }) {
                   ]}
                 />
               ) : (
-                <EmptyState title={t.charts.noTrades} />
+                <EmptyState icon="chart" title={t.charts.noTrades} />
               )}
             </ChartPanel>
           </ChartTabBody>
@@ -306,7 +306,7 @@ function MarketClassPending({ classId }: { classId?: string }) {
                     height={280}
                   />
                 ) : (
-                  <EmptyState title={t.charts.noTrades} />
+                  <EmptyState icon="chart" title={t.charts.noTrades} />
                 )}
               </ChartPanel>
             </Blurred>

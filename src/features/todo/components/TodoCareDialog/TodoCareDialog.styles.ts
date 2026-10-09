@@ -52,8 +52,8 @@ export const DayHead = styled.p`
   margin: 0 0 4px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.muted};
 `
 
@@ -61,7 +61,7 @@ export const Title = styled.h2`
   margin: 0 0 16px;
   margin-inline-end: 36px;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 24px;
   color: ${theme.colors.forest};
 `

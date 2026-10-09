@@ -13,16 +13,15 @@ export const Bar = styled.header<{ $scrolled?: boolean }>`
   gap: ${theme.space.md};
   height: calc(68px + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) ${theme.space.md} 0;
-  background: ${({ $scrolled }) => ($scrolled ? 'rgba(255, 254, 250, 0.86)' : theme.colors.creamCard)};
-  backdrop-filter: ${({ $scrolled }) => ($scrolled ? 'blur(14px) saturate(1.2)' : 'none')};
-  border-bottom: 1px solid ${theme.colors.border};
+  background: ${({ $scrolled }) => ($scrolled ? theme.surface.barScrolled : theme.surface.bar)};
+  border-bottom: 1px solid ${theme.surface.barBorder};
   box-shadow: ${({ $scrolled }) => ($scrolled ? theme.shadow.soft : 'none')};
   transition:
     background ${theme.motion.base} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease};
   @media (min-width: ${theme.breakpoints.md}) {
     height: ${theme.layout.topBar};
-    padding: 0 56px;
+    padding: 0 40px;
   }
 `
 
@@ -32,9 +31,9 @@ export const Brand = styled(Link)`
   gap: 10px;
   flex-shrink: 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 24px;
-  color: ${theme.colors.forest};
+  color: ${theme.surface.barInk};
 `
 
 export const BrandMark = styled.img`
@@ -51,10 +50,15 @@ export const BrandMark = styled.img`
 export const NavItems = styled.nav`
   display: none;
   @media (min-width: ${theme.breakpoints.md}) {
+    /* Desktop: the nav sits in the top bar as a row of pebbles, centred between the wordmark and the account. */
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 4px;
     min-width: 0;
+    padding: 5px;
+    border-radius: ${theme.radii.pill};
+    background: ${theme.colors.creamCard};
+    box-shadow: ${theme.shadow.soft};
     overflow: visible;
   }
 `
@@ -78,29 +82,48 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 6px 0;
-  font-family: ${theme.fonts.body};
-  font-size: 14px;
-  font-weight: ${({ $active }) => ($active ? 700 : 500)};
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: ${theme.radii.pill};
+  background: ${({ $active }) => ($active ? theme.colors.growth : 'transparent')};
+  font-family: ${theme.fonts.display};
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
-  color: ${({ $active }) => ($active ? theme.colors.forest : theme.colors.muted)};
-  transition: color ${theme.motion.fast} ${theme.motion.ease};
-  &::after {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: 2px;
-    border-radius: ${theme.radii.pill};
-    background: ${theme.colors.forest};
-    transform: scaleX(${({ $active }) => ($active ? 1 : 0)});
-    transition: transform ${theme.motion.base} ${theme.motion.ease};
-  }
+  color: ${({ $active }) => ($active ? theme.colors.onGrowth : theme.surface.barMuted)};
+  transition:
+    color ${theme.motion.fast} ${theme.motion.ease},
+    background ${theme.motion.base} ${theme.motion.ease},
+    transform ${theme.motion.base} ${theme.motion.ease};
   &:hover {
-    color: ${theme.colors.forest};
+    color: ${({ $active }) => ($active ? theme.colors.onGrowth : theme.surface.barInk)};
+    background: ${({ $active }) => ($active ? theme.colors.growth : theme.colors.chipGreen)};
+    transform: translateY(-1px);
   }
-  &:hover::after {
-    transform: scaleX(1);
+
+  /* Mid widths: icons only so the bar never overflows; the label stays the accessible name. */
+  @media (min-width: ${theme.breakpoints.md}) and (max-width: 1180px) {
+    padding: 0 14px;
+    font-size: 0;
+
+    > span:first-child {
+      margin: 0;
+    }
+  }
+  &:active {
+    transform: translateY(1px) scale(0.96);
+  }
+`
+
+/** Icon in front of a nav label; each design direction decides whether the top bar shows it. */
+export const NavIcon = styled.span`
+  display: none;
+  flex: none;
+  place-items: center;
+  margin-inline-end: 8px;
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    display: inline-grid;
   }
 `
 
@@ -161,8 +184,8 @@ export const MenuLang = styled.div`
   > span {
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: ${theme.type.labelTracking};
+    text-transform: ${theme.type.labelCase};
     color: ${theme.colors.muted};
   }
 
@@ -268,12 +291,13 @@ export const LoginButton = styled(Link)`
   padding: 0 18px;
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.forest};
-  color: ${theme.colors.creamCard};
-  font-size: 14px;
-  font-weight: 700;
+  color: ${theme.colors.cream};
+  font-family: ${theme.fonts.display};
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
   text-decoration: none;
-  box-shadow: ${theme.shadow.soft};
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22), ${theme.shadow.soft};
   transition:
     background ${theme.motion.fast} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease},

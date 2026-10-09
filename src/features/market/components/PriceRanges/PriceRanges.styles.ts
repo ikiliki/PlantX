@@ -31,7 +31,7 @@ export const Title = styled.h2`
   margin: 0;
   font-family: ${theme.fonts.display};
   font-size: 24px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   color: ${theme.colors.forest};
 `
 
@@ -201,7 +201,7 @@ export const Dot = styled.span<{ $index: number; $size?: number }>`
   height: ${({ $size = 10 }) => $size}px;
   border: 2px solid ${theme.colors.creamCard};
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(23, 49, 40, 0.25);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--c-ink) 25%, transparent);
   transform: translate(-50%, -50%);
   animation: ${pop} 360ms ${theme.motion.spring} backwards;
   animation-delay: ${({ $index }) => 200 + Math.min($index, 12) * 40}ms;

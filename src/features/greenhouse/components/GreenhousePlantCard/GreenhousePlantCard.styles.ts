@@ -5,15 +5,15 @@ import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
 const freshGlow = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.95); transform: scale(0.94); }
-  35% { box-shadow: 0 0 0 10px rgba(207, 234, 120, 0.55); transform: scale(1.02); }
-  100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0); transform: none; }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 95%, transparent); transform: scale(0.94); }
+  35% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--c-growth) 55%, transparent); transform: scale(1.02); }
+  100% { box-shadow: 0 0 0 0 transparent; transform: none; }
 `
 
 /** Same living halo as the add-photo plus, kept inside the shelf gap. */
 const livingPulse = keyframes`
-  0%, 100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.7); }
-  50% { box-shadow: 0 0 0 7px rgba(207, 234, 120, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 70%, transparent); }
+  50% { box-shadow: 0 0 0 7px transparent; }
 `
 
 export const Root = styled.article<{
@@ -25,10 +25,13 @@ export const Root = styled.article<{
 }>`
   display: grid;
   grid-template-rows: auto 1fr;
+  /* A clay tile: the photo is pressed into it with a soft lip all round. */
+  padding: 8px;
   border-radius: ${theme.radii.lg};
   overflow: hidden;
   background: ${theme.colors.creamCard};
-  border: 1px solid ${({ $fresh }) => ($fresh ? theme.colors.moss : theme.colors.border)};
+  border: 2px solid ${({ $fresh }) => ($fresh ? theme.colors.growth : 'transparent')};
+  box-shadow: ${theme.shadow.card};
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     box-shadow ${theme.motion.base} ${theme.motion.ease};
@@ -60,13 +63,19 @@ export const Root = styled.article<{
       opacity ${theme.motion.slow} ${theme.motion.ease};
   }
 
+  /* The back-out ease makes the lift overshoot and settle: a small hop. */
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-6px) rotate(-1deg);
     box-shadow: ${theme.shadow.lift};
   }
 
   &:hover img {
-    transform: scale(1.04);
+    transform: scale(1.07);
+  }
+
+  &:active {
+    transform: translateY(1px) scale(0.97);
+    transition-duration: 80ms;
   }
 
   @container (max-width: 559px) {
@@ -153,6 +162,7 @@ export const Photo = styled.div<{ $stale?: boolean }>`
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
+  border-radius: ${theme.radii.md};
   background: ${theme.colors.chipGreen};
 
   img {
@@ -185,12 +195,14 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
         ? theme.colors.growth
         : $tone === 'due'
           ? theme.colors.chipWarm
-          : 'rgba(255, 254, 250, 0.92)'};
-  color: ${theme.colors.forest};
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+          : 'color-mix(in srgb, var(--c-creamCard) 92%, transparent)'};
+  /* Lime and peach stay light at night, so their text stays dark. */
+  color: ${({ $tone }) => ($tone === 'warm' || $tone === 'fresh' ? theme.colors.onGrowth : theme.colors.forest)};
+  font-family: ${theme.fonts.display};
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   box-shadow: ${theme.shadow.soft};
 
   ${({ $tone }) =>
@@ -206,6 +218,7 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
       ${Root}:focus-within &,
       ${Root}:active & {
         background: ${theme.colors.growth};
+        color: ${theme.colors.onGrowth};
         border-style: solid;
         border-color: ${theme.colors.forest};
         transform: translateY(-1px);
@@ -226,7 +239,7 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
       $tone === 'calm' &&
       css`
         ${Root}:hover & {
-          background: rgba(255, 254, 250, 0.92);
+          background: color-mix(in srgb, var(--c-creamCard) 92%, transparent);
           border-style: dashed;
           border-color: ${theme.colors.moss};
           transform: none;
@@ -234,6 +247,7 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
 
         ${Root}:active & {
           background: ${theme.colors.growth};
+          color: ${theme.colors.onGrowth};
           border-style: solid;
           border-color: ${theme.colors.forest};
           transform: translateY(-1px);
@@ -244,9 +258,9 @@ export const StatusMark = styled.span<{ $tone?: 'warm' | 'fresh' | 'calm' | 'due
 
 export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
   display: grid;
-  gap: 10px;
+  gap: 8px;
   align-content: start;
-  padding: 14px 16px 16px;
+  padding: 12px 6px 4px;
 
   @container (max-width: 559px) {
     ${({ $care, $preview }) =>
@@ -311,10 +325,10 @@ export const Name = styled(Link)`
   min-width: 0;
   overflow-wrap: anywhere;
   font-family: ${theme.fonts.display};
-  font-size: 20px;
-  font-weight: 400;
+  font-size: 19px;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
-  color: ${theme.colors.ink};
+  color: ${theme.colors.forest};
   text-decoration: none;
 
   &:hover {
@@ -334,7 +348,7 @@ export const CareName = styled.span`
   min-width: 0;
   font-family: ${theme.fonts.display};
   font-size: 20px;
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   line-height: 1.15;
   color: ${theme.colors.ink};
   overflow-wrap: anywhere;
@@ -367,7 +381,7 @@ export const CareAction = styled.span<{ $tone: 'water' | 'photo' }>`
   min-height: 28px;
   padding: 0 10px;
   border-radius: ${theme.radii.pill};
-  background: ${({ $tone }) => ($tone === 'photo' ? '#8B929A' : '#3B7CC9')};
+  background: ${({ $tone }) => ($tone === 'photo' ? theme.colors.metal : theme.colors.aiBlue)};
   color: ${theme.colors.creamCard};
   font-size: 12px;
   font-weight: 700;
@@ -466,7 +480,7 @@ export const PhotoCount = styled.span`
   gap: 4px;
   padding: 4px 8px;
   border-radius: ${theme.radii.pill};
-  background: rgba(18, 60, 45, 0.78);
+  background: color-mix(in srgb, var(--c-forest) 78%, transparent);
   color: ${theme.colors.creamCard};
   font-size: 11px;
   font-weight: 800;
@@ -491,7 +505,7 @@ export const CollectionGrid = styled.div`
   grid-template-columns: repeat(2, minmax(0, 1fr));
 
   @container (min-width: 560px) {
-    gap: ${theme.space.md};
+    gap: 20px;
     grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
   }
 
@@ -504,5 +518,6 @@ export const CollectionGrid = styled.div`
     min-width: 0;
   }
 
-  ${Array.from({ length: 8 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 45}ms; }`).join('\n')}
+  /* Tiles pop in and overshoot a touch, one after another. */
+  ${Array.from({ length: 12 }, (_, i) => `> :nth-child(${i + 2}) { animation-delay: ${(i + 1) * 50}ms; }`).join('\n')}
 `

@@ -31,7 +31,7 @@ export const Face = styled.button`
   min-height: 56px;
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
-  background: rgba(255, 254, 250, 0.96);
+  background: color-mix(in srgb, var(--c-creamCard) 96%, transparent);
   backdrop-filter: blur(10px);
   color: ${theme.colors.forest};
   cursor: inherit;
@@ -81,7 +81,7 @@ export const SheetClose = styled.button`
 export const SheetTitle = styled.h2`
   margin: 0 36px 14px 0;
   font-family: ${theme.fonts.display};
-  font-weight: 400;
+  font-weight: ${theme.fonts.displayWeight};
   font-size: 22px;
   color: ${theme.colors.forest};
 

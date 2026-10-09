@@ -12,7 +12,7 @@ export const Card = styled.div<{ $compact?: boolean }>`
   background: ${({ $compact }) =>
     $compact
       ? 'transparent'
-      : `linear-gradient(165deg, rgba(207, 234, 120, 0.45), rgba(255, 254, 250, 0) 55%),
+      : `linear-gradient(165deg, color-mix(in srgb, var(--c-growth) 45%, transparent), transparent 55%),
     ${theme.colors.creamCard}`};
   border: ${({ $compact }) => ($compact ? '0' : `1px solid ${theme.colors.border}`)};
   box-shadow: ${({ $compact }) => ($compact ? 'none' : theme.shadow.soft)};
@@ -52,8 +52,8 @@ export const Copy = styled(Link)`
 export const Eyebrow = styled.span`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 
@@ -212,7 +212,7 @@ export const SheetCard = styled.div`
   padding-top: 28px;
   border-radius: ${theme.radii.lg};
   background:
-    linear-gradient(165deg, rgba(207, 234, 120, 0.45), rgba(255, 254, 250, 0) 55%),
+    linear-gradient(165deg, color-mix(in srgb, var(--c-growth) 45%, transparent), transparent 55%),
     ${theme.colors.creamCard};
   border: 1px solid ${theme.colors.border};
   box-shadow: ${theme.shadow.soft};

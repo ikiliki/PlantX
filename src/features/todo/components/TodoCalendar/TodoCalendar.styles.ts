@@ -2,8 +2,8 @@ import styled, { keyframes } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-const water = '#3B7CC9'
-const metal = '#8B929A'
+const water = theme.colors.water
+const metal = theme.colors.metal
 
 export const Root = styled.section`
   container-type: inline-size;
@@ -164,8 +164,8 @@ export const Week = styled.div`
   gap: 4px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
   text-align: center;
 
@@ -225,7 +225,7 @@ export const Day = styled.div<{
     }};
   border-radius: ${theme.radii.md};
   background: ${({ $tone, $selected }) => {
-    if ($selected) return 'linear-gradient(180deg, rgba(207, 234, 120, 0.35) 0%, #F7FAF3 100%)'
+    if ($selected) return 'linear-gradient(180deg, color-mix(in srgb, var(--c-growth) 35%, transparent) 0%, #F7FAF3 100%)'
     if ($tone === 'water') return 'linear-gradient(180deg, #E8F1FB 0%, #F7FAFD 100%)'
     if ($tone === 'photo') return 'linear-gradient(180deg, #ECEEF0 0%, #F7F7F8 100%)'
     if ($tone === 'mixed')
@@ -427,7 +427,7 @@ export const PlantKind = styled.span`
   height: 14px;
   border-radius: 999px;
   background: ${theme.colors.creamCard};
-  box-shadow: 0 0 0 1px rgba(23, 49, 40, 0.12);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-ink) 12%, transparent);
   line-height: 0;
 `
 
@@ -473,7 +473,7 @@ export const DropIcon = styled.div<{ $kind: 'water' | 'photo' }>`
   top: 28%;
   pointer-events: none;
   animation: ${dropIn} 720ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
-  filter: drop-shadow(0 10px 16px ${({ $kind }) => ($kind === 'water' ? 'rgba(59, 124, 201, 0.45)' : 'rgba(139, 146, 154, 0.45)')});
+  filter: drop-shadow(0 10px 16px ${({ $kind }) => ($kind === 'water' ? 'color-mix(in srgb, var(--c-aiBlue) 45%, transparent)' : 'rgba(139, 146, 154, 0.45)')});
 `
 
 export const DayPanel = styled.section`

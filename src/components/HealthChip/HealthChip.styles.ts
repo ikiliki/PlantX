@@ -5,7 +5,7 @@ function tone(health: string) {
   if (health === 'S') return { bg: theme.colors.forest, fg: theme.colors.cream }
   if (health === 'A') return { bg: theme.colors.chipGreen, fg: theme.colors.forest }
   if (health === 'B') return { bg: theme.colors.chipWarm, fg: theme.colors.warn }
-  if (health === 'C') return { bg: '#F6DED4', fg: theme.colors.danger }
+  if (health === 'C') return { bg: theme.colors.chipDanger, fg: theme.colors.danger }
   if (health === 'D') return { bg: '#E8DDD6', fg: theme.colors.muted }
   return { bg: theme.colors.chipNeutral, fg: theme.colors.muted }
 }

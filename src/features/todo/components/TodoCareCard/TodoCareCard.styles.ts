@@ -2,8 +2,8 @@ import styled, { css } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-const water = '#3B7CC9'
-const metal = '#8B929A'
+const water = theme.colors.water
+const metal = theme.colors.metal
 
 const cardFace = css<{ $tone: 'water' | 'photo' }>`
   display: grid;
@@ -63,8 +63,8 @@ export const Tone = styled.span<{ $tone: 'water' | 'photo' }>`
   color: ${theme.colors.creamCard};
   font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
 
   span {
     color: ${theme.colors.creamCard};

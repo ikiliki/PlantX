@@ -23,7 +23,7 @@ export const Heading = styled.header`
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} both;
   h1 {
     font-family: ${theme.fonts.display};
-    font-weight: 400;
+    font-weight: ${theme.fonts.displayWeight};
     font-size: clamp(28px, 8cqw, 36px);
     line-height: 1.05;
     color: ${theme.colors.ink};
@@ -33,8 +33,8 @@ export const Heading = styled.header`
 export const Eyebrow = styled.span`
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: ${theme.type.labelTracking};
+  text-transform: ${theme.type.labelCase};
   color: ${theme.colors.moss};
 `
 

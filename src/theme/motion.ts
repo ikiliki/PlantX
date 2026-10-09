@@ -13,8 +13,14 @@ export const fadeIn = keyframes`
 `
 
 export const riseIn = keyframes`
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(16px) scale(0.94); }
   to { opacity: 1; transform: none; }
+`
+
+/** A fill growing from the start edge. */
+export const growX = keyframes`
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 `
 
 export const popIn = keyframes`
@@ -97,6 +103,7 @@ export const pressable = css`
     border-color ${theme.motion.fast} ${theme.motion.ease},
     box-shadow ${theme.motion.fast} ${theme.motion.ease};
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: translateY(2px) scale(0.98);
+    transition-duration: 70ms;
   }
 `

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Icon } from '../../../components/Icon/Icon'
-import { NavItem, NavMark } from '../TopBar.styles'
+import { Icon, type IconName } from '../../../components/Icon/Icon'
+import { NavIcon, NavItem, NavMark } from '../TopBar.styles'
 import { Caret, Drop, Group, GroupLabel, Item, Nested, Panel, Rule, Trigger } from './NavMenu.styles'
 
 export type NavMenuLink = {
@@ -16,6 +16,7 @@ export type NavMenuLink = {
 export function NavMenu({
   label,
   mark,
+  icon,
   to,
   items,
   open,
@@ -24,6 +25,7 @@ export function NavMenu({
 }: {
   label: string
   mark?: string
+  icon?: IconName
   to: string
   items: NavMenuLink[]
   open: boolean
@@ -79,6 +81,11 @@ export function NavMenu({
     >
       <Trigger>
         <NavItem to={to} $active={active} aria-current={active ? 'page' : undefined}>
+          {icon ? (
+            <NavIcon aria-hidden>
+              <Icon name={icon} size={18} />
+            </NavIcon>
+          ) : null}
           {mark ? <NavMark aria-hidden>{mark}</NavMark> : null}
           {label}
         </NavItem>

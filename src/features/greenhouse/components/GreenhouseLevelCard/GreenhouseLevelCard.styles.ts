@@ -1,12 +1,18 @@
 import styled, { css, keyframes } from 'styled-components'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
-import { pressable, riseIn } from '../../../../theme/motion'
+import { growX, pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
+/** A slow band of light crossing the XP fill, then a long rest. */
+const sheen = keyframes`
+  0% { transform: translateX(-120%); }
+  30%, 100% { transform: translateX(120%); }
+`
+
 const pulse = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0.9); }
-  70% { box-shadow: 0 0 0 18px rgba(207, 234, 120, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(207, 234, 120, 0); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 90%, transparent); }
+  70% { box-shadow: 0 0 0 18px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
 `
 
 const pop = keyframes`
@@ -28,12 +34,13 @@ export const Root = styled.aside<{ $celebrate: boolean }>`
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 16px 18px 14px;
+  /* A fresh garden plaque. */
+  padding: 20px 22px 18px;
   border-radius: ${theme.radii.lg};
   background:
-    radial-gradient(120% 90% at 0% 0%, rgba(207, 234, 120, 0.5), rgba(255, 254, 250, 0) 60%),
-    ${theme.colors.creamCard};
-  border: 1px solid ${theme.colors.border};
+    radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--c-growth) 45%, transparent), transparent 65%),
+    ${theme.colors.chipGreen};
+  border: 0;
   box-shadow: ${theme.shadow.card};
   color: ${theme.colors.forest};
   container-type: inline-size;
@@ -52,35 +59,20 @@ export const Inner = styled.div`
   grid-template-areas:
     'top'
     'bar'
-    'tally'
     'end'
     'rules';
-  gap: 12px 14px;
+  gap: 14px;
   align-items: center;
   min-width: 0;
 
+  /* Wide: level on the start, progress and its ledger filling the middle, the owner's tiles at the end. */
   @container (min-width: 640px) {
-    grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) auto;
     grid-template-areas:
-      'top side end'
-      'bar side end'
+      'top bar end'
       'rules rules rules';
-    column-gap: 28px;
+    column-gap: 36px;
     row-gap: 8px;
-  }
-`
-
-/** On desktop the counts sit to the right of the level block. */
-export const Side = styled.div`
-  display: contents;
-
-  @container (min-width: 640px) {
-    display: flex;
-    grid-area: side;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 18px;
-    padding-inline-start: 48px;
   }
 `
 
@@ -145,9 +137,9 @@ export const TopCopy = styled.div`
 
 export const Rank = styled.strong`
   font-family: ${theme.fonts.display};
-  font-weight: 400;
-  font-size: 24px;
-  line-height: 1.1;
+  font-weight: ${theme.fonts.displayWeight};
+  font-size: 30px;
+  line-height: 1.05;
   color: ${theme.colors.forest};
   overflow-wrap: anywhere;
 `
@@ -170,7 +162,7 @@ export const Burst = styled.span`
   box-shadow: ${theme.shadow.soft};
   border-radius: ${theme.radii.pill};
   background: ${theme.colors.growth};
-  color: ${theme.colors.forest};
+  color: ${theme.colors.onGrowth};
   font-size: 12px;
   font-weight: 800;
   animation:
@@ -183,51 +175,88 @@ export const Burst = styled.span`
 `
 
 export const Bar = styled.div`
-  height: 8px;
+  height: 16px;
+  padding: 3px;
   border-radius: ${theme.radii.pill};
-  background: ${theme.colors.track};
+  background: color-mix(in srgb, var(--c-creamCard) 75%, transparent);
+  box-shadow: inset 0 2px 3px color-mix(in srgb, var(--c-forest) 12%, transparent);
   overflow: hidden;
 `
 
+/**
+ * The fill grows in slowly with the ring, then rests. Every few seconds a soft light passes over it,
+ * slow enough to read as daylight, not as loading.
+ */
 export const BarFill = styled.div`
+  position: relative;
   height: 100%;
+  overflow: hidden;
   border-radius: inherit;
-  background: linear-gradient(90deg, ${theme.colors.moss}, ${theme.colors.growth});
+  background: linear-gradient(90deg, ${theme.colors.moss}, ${theme.colors.forestSoft});
+  transform-origin: left center;
+  animation: ${growX} 1.8s cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
   transition: width ${theme.motion.slow} ${theme.motion.ease};
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      color-mix(in srgb, var(--c-creamCard) 55%, transparent) 50%,
+      transparent 80%
+    );
+    transform: translateX(-120%);
+    animation: ${sheen} 8s ease-in-out 2.4s infinite;
+  }
+
+  [dir='rtl'] & {
+    transform-origin: right center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+
+    &::after {
+      animation: none;
+    }
+  }
+`
+
+/** Under the bar: where the XP came from on the start side, what is left to the next level at the end. */
+export const Ledger = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 10px;
+  min-width: 0;
 `
 
 export const Next = styled.p`
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 6px 0 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: ${theme.colors.muted};
+  margin: 0;
+  margin-inline-start: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: ${theme.colors.forest};
 `
 
-export const TallyRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  grid-area: tally;
-
-  @container (min-width: 640px) {
-    align-self: center;
-    justify-self: end;
-  }
-`
-
+/** One XP source (plants added, care done) as plain ledger text with its icon. */
 export const Tally = styled.span<{ $tone: 'plant' | 'care' }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
-  border-radius: ${theme.radii.pill};
-  font-size: 12px;
-  font-weight: 700;
-  background: ${({ $tone }) => ($tone === 'plant' ? theme.colors.chipGreen : 'rgba(60, 107, 143, 0.12)')};
-  color: ${({ $tone }) => ($tone === 'plant' ? theme.colors.forest : theme.colors.info)};
+  font-size: 13px;
+  font-weight: 600;
+  color: ${theme.colors.muted};
+
+  svg {
+    color: ${({ $tone }) => ($tone === 'plant' ? theme.colors.moss : theme.colors.water)};
+  }
 `
 
 /** "?" at the end of the level line, same size and gray as that line. Padding only grows the tap area. */
@@ -332,7 +361,7 @@ export const InfoButton = styled.button<{ $on: boolean }>`
 /** Orange pin, only while the greenhouse place is unknown: opens the Set your place tile. */
 export const PlaceButton = styled.button<{ $on: boolean }>`
   ${roundButton}
-  border: 1.5px solid ${({ $on }) => ($on ? theme.colors.warn : 'rgba(154, 107, 31, 0.35)')};
+  border: 1.5px solid ${({ $on }) => ($on ? theme.colors.warn : 'color-mix(in srgb, var(--c-warn) 35%, transparent)')};
   background: ${({ $on }) => ($on ? theme.colors.warn : theme.colors.chipWarm)};
   color: ${({ $on }) => ($on ? theme.colors.creamCard : theme.colors.warn)};
 `
