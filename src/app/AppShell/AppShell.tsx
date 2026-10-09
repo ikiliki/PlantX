@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Icon, type IconName } from '../../components/Icon/Icon'
 import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
@@ -7,15 +7,18 @@ import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
 import { useI18n } from '../../i18n/I18nProvider'
+import { useLongPress } from '../../lib/useLongPress'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { theme } from '../../theme/tokens'
 import { TopBar } from '../TopBar/TopBar'
+import { DockMenu } from '../DockMenu/DockMenu'
 import { useDockAway } from '../dockState'
+import { useNavMenus } from '../navMenus'
 import { usePageRefresh } from '../usePageRefresh'
 import { usePageNavigationType } from '../pageNavigation'
-import { BottomIcon, BottomLink, BottomNav, Main, Shell } from './AppShell.styles'
+import { BottomCaret, BottomCell, BottomIcon, BottomLink, BottomNav, Main, Shell } from './AppShell.styles'
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -40,6 +43,15 @@ export function AppShell() {
   // Phone: pull to refresh on Market, Greenhouse, Tasks and Catalog (Home has its own in the feed).
   const phone = useMediaQuery('(max-width: 899px)')
   const pageRefresh = usePageRefresh(loc.pathname)
+  // The ^ menus on dock items with sub-pages (the same places as the desktop drop-downs).
+  const menus = useNavMenus()
+  const [dockMenu, setDockMenu] = useState<'greenhouse' | 'wiki' | null>(null)
+  const closeDockMenu = useCallback(() => setDockMenu(null), [])
+  // Holding a dock item with sub-pages opens them too (the ^ is the visible way in).
+  const longPress = useLongPress()
+  useEffect(() => {
+    if (dockAway) setDockMenu(null)
+  }, [dockAway])
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
   const pathRef = useRef(loc.pathname)
@@ -113,16 +125,46 @@ export function AppShell() {
           const active = l.to.startsWith('/admin')
             ? loc.pathname.startsWith('/admin')
             : loc.pathname === l.to || (l.to !== '/' && loc.pathname.startsWith(l.to))
+          const menu = l.pageId === 'greenhouse' ? 'greenhouse' : l.pageId === 'wiki' ? 'wiki' : null
+          const open = menu !== null && dockMenu === menu
           return (
-            <BottomLink key={l.to} to={l.to} $active={active} aria-current={active ? 'page' : undefined}>
-              <BottomIcon $active={active}>
-                <Icon name={l.icon} />
-              </BottomIcon>
-              {l.label}
-            </BottomLink>
+            <BottomCell key={l.to}>
+              <BottomLink
+                to={l.to}
+                $active={active}
+                aria-current={active ? 'page' : undefined}
+                {...(menu ? longPress(() => setDockMenu(menu)) : {})}
+              >
+                <BottomIcon $active={active}>
+                  <Icon name={l.icon} />
+                </BottomIcon>
+                {l.label}
+              </BottomLink>
+              {menu ? (
+                <BottomCaret
+                  type="button"
+                  $open={open}
+                  aria-label={t.nav.openMenu.replace('{name}', l.label)}
+                  aria-haspopup="menu"
+                  aria-expanded={open}
+                  aria-controls={`dock-menu-${menu}`}
+                  onClick={() => setDockMenu(open ? null : menu)}
+                >
+                  <Icon name="chevron" size={14} />
+                </BottomCaret>
+              ) : null}
+            </BottomCell>
           )
         })}
       </BottomNav>
+      {dockMenu ? (
+        <DockMenu
+          id={`dock-menu-${dockMenu}`}
+          title={dockMenu === 'greenhouse' ? t.nav.greenhouse : t.nav.wiki}
+          items={menus[dockMenu].map(({ children: _children, ...item }) => item)}
+          onClose={closeDockMenu}
+        />
+      ) : null}
     </Shell>
   )
 }

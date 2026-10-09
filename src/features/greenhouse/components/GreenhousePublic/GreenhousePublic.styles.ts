@@ -34,7 +34,7 @@ export const Root = styled.div<{ $compact?: boolean }>`
   align-content: start;
   min-width: 0;
   min-height: 0;
-  padding: ${theme.space.xl} ${theme.space.lg};
+  padding: 0;
   ${({ $compact }) =>
     $compact &&
     css`
@@ -169,10 +169,11 @@ const stagger = [1, 2, 3, 4, 5, 6, 7, 8]
   .map((n) => `& > :nth-child(${n}) { animation-delay: ${n * 50}ms; }`)
   .join('\n')
 
+/** The full page: clay plant cards, two across on a phone, then as many as fit. */
 export const PlantGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: ${theme.space.sm};
+  grid-template-columns: repeat(auto-fill, minmax(min(170px, 42vw), 1fr));
+  gap: 16px;
   & > * {
     animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
   }
@@ -190,6 +191,45 @@ export const PlantTile = styled.button`
   ${tileFace}
   ${pressable}
   width: 100%;
+  padding: 8px 8px 12px;
+  border: 0;
+  border-radius: ${theme.radii.lg};
+  background: ${theme.colors.creamCard};
+  box-shadow: ${theme.shadow.card};
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    transform ${theme.motion.base} ${theme.motion.ease},
+    box-shadow ${theme.motion.base} ${theme.motion.ease};
+
+  img {
+    transition: transform ${theme.motion.slow} ${theme.motion.ease};
+  }
+
+  &:hover {
+    transform: translateY(-5px) rotate(-0.6deg);
+    box-shadow: ${theme.shadow.lift};
+  }
+
+  &:hover img {
+    transform: scale(1.06);
+  }
+
+  > span:not(:first-child) {
+    padding-inline: 4px;
+  }
+
+  > span:nth-child(2) {
+    font-family: ${theme.fonts.display};
+    font-size: 16px;
+    color: ${theme.colors.forest};
+  }
+
+  > span:nth-child(3) {
+    font-weight: 600;
+    color: ${theme.colors.muted};
+  }
 `
 
 export const PlantThumb = styled.span`

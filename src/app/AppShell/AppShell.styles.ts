@@ -43,6 +43,44 @@ export const BottomNav = styled.nav<{ $cols?: number; $away?: boolean }>`
   }
 `
 
+/** One dock item: its link, plus a ^ when it has sub-pages. */
+export const BottomCell = styled.div`
+  position: relative;
+  display: grid;
+  min-width: 0;
+`
+
+/** The ^ on a dock item: opens its sub-pages above the dock, like the desktop drop-down's caret. */
+export const BottomCaret = styled.button<{ $open: boolean }>`
+  ${pressable}
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: ${({ $open }) => ($open ? theme.surface.dockActive : theme.colors.chipNeutral)};
+  color: ${({ $open }) => ($open ? theme.colors.onGrowth : theme.surface.dockInk)};
+  box-shadow: ${theme.shadow.soft};
+  cursor: pointer;
+
+  svg {
+    transform: rotate(${({ $open }) => ($open ? '0deg' : '180deg')});
+    transition: transform ${theme.motion.base} ${theme.motion.ease};
+  }
+
+  /* A finger-sized target around the small circle. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+`
+
 export const BottomLink = styled(Link)<{ $active?: boolean }>`
   ${pressable}
   position: relative;
@@ -55,6 +93,10 @@ export const BottomLink = styled(Link)<{ $active?: boolean }>`
   font-weight: 700;
   padding: 6px 2px;
   border-radius: ${theme.radii.md};
+  /* A long-press opens our menu, not the phone's link preview. */
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
 `
 
 export const BottomIcon = styled.span<{ $active?: boolean }>`

@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
-import { catalogSpecies } from '../../features/species/catalogSpecies'
-import { groupByRarity, wikiRarityTitle } from '../../features/species/wikiGroups'
 import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { Avatar } from '../../components/Avatar/Avatar'
@@ -13,6 +11,7 @@ import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/
 import { publicGrowerName } from '../../features/profile/avatarIcons'
 import { ACCOUNT_PARAM, AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
+import { useNavMenus } from '../navMenus'
 import { NavMenu } from './NavMenu/NavMenu'
 import {
   Account,
@@ -48,15 +47,7 @@ export function TopBar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const wikiPlants = db.catalog.categories.map((category) => {
-    const species = catalogSpecies(db, category.speciesId)
-    return {
-      id: category.speciesId,
-      label: locale === 'he' ? category.nameHe : category.name,
-      rarity: species?.rarity ?? 'common',
-    }
-  })
-  const wikiGroups = groupByRarity(wikiPlants)
+  const menus = useNavMenus()
 
   const pageBoard: Partial<Record<PageId, PlacementId>> = {
     market: 'market.board',
@@ -142,19 +133,7 @@ export function TopBar() {
             open={openNav === 'greenhouse'}
             onOpen={() => setOpenNav('greenhouse')}
             onClose={() => setOpenNav((current) => (current === 'greenhouse' ? null : current))}
-            items={[
-              {
-                to: '/greenhouse',
-                label: t.greenhouse.scopeMine,
-                active: (here) => here.pathname === '/greenhouse' && !new URLSearchParams(here.search).has('scope'),
-              },
-              {
-                to: '/greenhouse?scope=global',
-                label: t.greenhouse.scopeGlobal,
-                active: (here) =>
-                  here.pathname === '/greenhouse' && new URLSearchParams(here.search).get('scope') === 'global',
-              },
-            ]}
+            items={menus.greenhouse}
           />
         )}
         {show('todo') && (
@@ -181,18 +160,7 @@ export function TopBar() {
             open={openNav === 'wiki'}
             onOpen={() => setOpenNav('wiki')}
             onClose={() => setOpenNav((current) => (current === 'wiki' ? null : current))}
-            items={[
-              { to: '/wiki', label: `${t.guide.all} (${wikiPlants.length})` },
-              ...wikiGroups.map((group, index) => ({
-                to: `/wiki#${group.rarity}`,
-                label: `${wikiRarityTitle(group.rarity, t.plant)} (${group.items.length})`,
-                dividerBefore: index === 0,
-                children: group.items.map((item) => ({
-                  to: `/wiki/${item.id}`,
-                  label: item.label,
-                })),
-              })),
-            ]}
+            items={menus.wiki}
           />
         )}
       </NavItems>

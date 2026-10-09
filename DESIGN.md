@@ -65,3 +65,14 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 - Hero: a large title, the primary action as a chunky leaf-green button with an up-right arrow, a light secondary, who it is for as a quiet line with a lime dot under the actions, the product floating slowly over a lime glow.
 - Benefits show on phones too, as clay tiles with a lime icon each. The tour sits on a full-bleed soft-green band; coming-soon cards stay dashed (a preview, not a door); the join box is a lifted clay card.
 - Sections rise in as they scroll into view (scroll-driven animation where supported, shown plainly elsewhere and under reduced motion).
+
+## Greenhouses: mine and everyone's
+
+- Sub-pages (Greenhouse: Mine / Global; Catalog: all plants and the rarity groups) come from one list (`src/app/navMenus.ts`), shown as the desktop drop-down (caret) and, on the phone, as a ^ on the dock item that opens `DockMenu` above the dock; holding the item (0.5s, `useLongPress`) opens it too. A tap on the item still opens its page. No tabs bar on the page.
+- All greenhouses: a title, a one-line invitation and "N growers · M plants"; a large search field; sort pebbles (Top level by default, Most plants, Recently active) and a Near me filter when the viewer has a region; a titled Verified section; a grid of greenhouse cards. Sorting and filtering live in `greenhouseDirectory.ts`.
+- Greenhouse card (full size): a clay card with a mosaic of up to three plants (one tall, two stacked), the level ring in a cream collar on its lower edge, then name, rank, place and plant count, and two lines of bio. Compact (the Home rail) keeps the single row.
+- A grower's page: an inline "Global" back link (`GreenhouseBackLink`, no floating arrow), the level card, then "On the shelf · N" with clay plant cards.
+
+## Floating chips (phone)
+
+- `FloatChip` (Home's tasks chip): a tap opens its sheet; a hold (0.35s) picks it up (it lifts, the phone buzzes) and then it follows the finger. A finger that moves before the hold scrolls the page through the chip.
