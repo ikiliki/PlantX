@@ -56,6 +56,12 @@ The tester password only opens test accounts. Give agents the tester password, n
 4. GitHub → Settings → Secrets → Actions: add `PLANTX_PP_PASSWORD` (tester password), `PLANTX_PP_ADMIN_PASSWORD`
    and `PLANTX_PP_ADMIN_EMAIL` (the admin email the script printed); delete `PLANTX_TEST_TOKEN`.
 
+## Run PP locally
+`npm run dev:pp` serves web on 5176 and the API on 8790 against the PlantX-PP database, acting like a preview
+(email + password, PP badge, mock identify). It reads `.env.preprod` (repo root, else `../plantx-preprod/.env.preprod`):
+`PREPROD_DATABASE_URL`, `SESSION_SECRET`, `SUPABASE_ANON_KEY` (`SUPABASE_URL` defaults to the database's project).
+Without the anon key the login card shows Google only.
+
 ## Vercel login wall
 If Deployment Protection is on for previews, an agent hits a Vercel login page first. Do one of these:
 - Settings → Deployment Protection → set Vercel Authentication to **Production only** or off.

@@ -25,6 +25,7 @@ PlantX is a bilingual (English + Hebrew) marketplace for living plants.
 | mock | `npm run dev` | 5174 | none | browser localStorage (`src/mock/seed.ts`) |
 | qa | `npm run qa:up` then `npm run dev:qa` | 5173 | 8787 | Docker Supabase (Studio 54323) |
 | prod | `npm run dev:prod` | 5175 | 8789 | hosted Supabase (`PROD_DATABASE_URL`) |
+| pp | `npm run dev:pp` | 5176 | 8790 | PlantX-PP, acting like a PP preview (`.env.preprod`) |
 
 - `npm run qa:reset` reapplies migrations. `npm run seed:fixtures` regenerates `server/fixtures/demo` from `src/mock`.
 - Deploy: `npm run build:prod` builds the client and bundles the API into Vercel Build Output (`/api/*` → function). With `VITE_LANDING_URL` / `VITE_APP_URL` set it also adds the two-domain host redirects (`src/lib/siteUrls.ts` is the client side). Production needs `SESSION_SECRET` (signed session cookie).
