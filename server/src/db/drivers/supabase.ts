@@ -16,6 +16,7 @@ import { supabaseCatalogSuggestions } from './supabaseCatalogSuggestions.ts'
 import { supabaseIdentifyRequests } from './supabaseIdentifyRequests.ts'
 import { supabaseIssueReports } from './supabaseIssueReports.ts'
 import { supabaseActivitySocial } from './supabaseActivitySocial.ts'
+import { supabaseShelves } from './supabaseShelves.ts'
 import { supabaseIdentifySettings } from './supabaseIdentifySettings.ts'
 import { supabaseWebhookSettings } from './supabaseWebhookSettings.ts'
 import { supabaseAccounts } from './supabaseAccounts.ts'
@@ -197,6 +198,7 @@ export function createSupabaseStore(): PlantxStore {
     identifyRequests: supabaseIdentifyRequests(pool),
     issueReports: supabaseIssueReports(pool),
     activitySocial: supabaseActivitySocial(pool),
+    shelves: supabaseShelves(pool),
     scanQuota: supabaseScanQuota(pool),
     rateLimits: supabaseRateLimits(pool),
     moderation: supabaseModeration(pool),
@@ -600,6 +602,12 @@ export function createSupabaseStore(): PlantxStore {
       await client.query('update plants set parent_id = $2 where id = $1', [plant.id, parentId])
     }
     const kept = [...keptIds]
+    // Shelves belong to the greenhouse: a plant that changed owner leaves the old owner's shelf.
+    await client.query(
+      `delete from shelf_plants sp using shelves s, plants p
+       where sp.shelf_id = s.id and p.id = sp.plant_id and s.owner_id <> p.owner_id and sp.plant_id = any($1::text[])`,
+      [kept],
+    )
     await client.query('delete from plant_photos where plant_id = any($1::text[])', [kept])
     await client.query('delete from plant_traits where plant_id = any($1::text[])', [kept])
     await client.query('delete from plant_history where plant_id = any($1::text[])', [kept])

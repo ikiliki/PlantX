@@ -450,6 +450,21 @@ export interface FeedUpdate {
   comments?: number
 }
 
+/** A grower's own shelf in their greenhouse (Balcony, Living room…). Private to the owner for now. */
+export interface Shelf {
+  id: string
+  ownerId: string
+  name: string
+  position: number
+}
+
+/** Which shelf a plant sits on. A plant is on at most one shelf; none means "Not on a shelf". */
+export interface ShelfPlacement {
+  plantId: string
+  shelfId: string
+  position: number
+}
+
 /** A comment on an activity (feed post). Deleted comments never reach the client. */
 export interface ActivityComment {
   id: string

@@ -20,7 +20,7 @@ import type {
 import type { SystemConfig } from '../../../src/theme/release.ts'
 import type { IssueContext, IssueReport } from '../../../src/lib/issueReport.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
-import type { ActivityComment } from '../../../src/mock/types.ts'
+import type { ActivityComment, Shelf, ShelfPlacement } from '../../../src/mock/types.ts'
 import type { Todo } from '../features/todo/todo.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
 
@@ -130,6 +130,20 @@ export interface PlantxStore {
     list(): Promise<IssueReport[]>
     add(input: { userId: string | null; note: string; context: IssueContext }): Promise<IssueReport>
     setStatus(id: string, status: 'resolved' | 'dismissed'): Promise<void>
+  }
+  /** A grower's shelves, and which of their plants sits on which. */
+  shelves: {
+    list(ownerId: string): Promise<Shelf[]>
+    placements(ownerId: string): Promise<ShelfPlacement[]>
+    /** Appends at the end. */
+    add(ownerId: string, name: string): Promise<Shelf>
+    rename(id: string, name: string): Promise<void>
+    /** Positions 0..n-1 in this order. */
+    reorder(ownerId: string, orderedIds: string[]): Promise<void>
+    /** Its placements go with it (cascade); the plants stay in the greenhouse. */
+    remove(id: string): Promise<void>
+    /** Puts the plant at the end of the shelf, or takes it off its shelf (`null`). */
+    place(plantId: string, shelfId: string | null): Promise<ShelfPlacement | null>
   }
   /** 🌿 reactions and comments on activities (feed posts). */
   activitySocial: {

@@ -4,6 +4,7 @@ import { signedIn, type SignedInEnv } from '../../lib/session.ts'
 import { activityService, visibleTo } from '../activity/activity.service.ts'
 import { todoService } from '../todo/todo.service.ts'
 import { greenhouseService, type PlantPatch } from './greenhouse.service.ts'
+import { shelvesService } from '../shelves/shelves.service.ts'
 import { moderationService } from '../moderation/moderation.service.ts'
 import { Errors } from '../../lib/errors.ts'
 import { assertPhotos } from '../../lib/images.ts'
@@ -43,6 +44,13 @@ greenhouseRoutes.patch('/:id', async (c) => {
     await moderationService.logEdit('plant', plant.id, plant.title, user, changed)
   }
   return c.json({ plant, changed })
+})
+
+/** Put your plant on one of your shelves, or take it off (`{ shelfId: null }`). */
+greenhouseRoutes.put('/:id/shelf', async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { shelfId?: unknown }
+  const shelfId = typeof body.shelfId === 'string' && body.shelfId ? body.shelfId : null
+  return c.json({ placement: await shelvesService.place(c.get('user').id, c.req.param('id'), shelfId) })
 })
 
 /** The owner deletes their plant (an admin may too); see greenhouseService.remove. */
