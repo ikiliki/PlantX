@@ -65,6 +65,9 @@ function onPop() {
   }
 }
 
+/** A layer closed without back: its history entry goes on the next tick, unless a new layer takes it first. */
+let leaving: { key: string; timer: number } | null = null
+
 function pushLayer(close: () => void) {
   if (!listening) {
     window.addEventListener('popstate', onPop)
@@ -72,7 +75,15 @@ function pushLayer(close: () => void) {
   }
   const key = `layer-${++seq}`
   const state = (window.history.state as Record<string, unknown> | null) ?? {}
-  window.history.pushState({ ...state, [LAYER_KEY]: key }, '')
+  if (leaving && currentLayer() === leaving.key) {
+    // The entry of a layer that just closed is still on top (React re-running the effect in development, or
+    // one popup closing as another opens): reuse it, so one popup is always one entry.
+    window.clearTimeout(leaving.timer)
+    leaving = null
+    window.history.replaceState({ ...state, [LAYER_KEY]: key }, '')
+  } else {
+    window.history.pushState({ ...state, [LAYER_KEY]: key }, '')
+  }
   stack.push(key)
   closers.set(key, close)
   return () => {
@@ -80,11 +91,15 @@ function pushLayer(close: () => void) {
     const index = stack.indexOf(key)
     if (index < 0) return // Closed by back: its entry is already gone.
     stack.splice(index, 1)
-    // Closed another way: drop its entry, unless something newer (a navigation, or React re-running the
-    // effect in development) has replaced it since.
-    window.setTimeout(() => {
-      if (currentLayer() === key) window.history.back()
-    }, 0)
+    // Closed another way: drop its entry, unless a navigation has replaced it or a new layer reuses it.
+    const entry = {
+      key,
+      timer: window.setTimeout(() => {
+        if (leaving === entry) leaving = null
+        if (currentLayer() === key) window.history.back()
+      }, 0),
+    }
+    leaving = entry
   }
 }
 
