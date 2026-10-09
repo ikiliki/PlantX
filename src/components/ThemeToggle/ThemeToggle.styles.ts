@@ -13,7 +13,7 @@ export const Toggle = styled.button`
   overflow: hidden;
   border: 0;
   border-radius: ${theme.radii.pill};
-  background: ${theme.colors.chipWarm};
+  background: ${theme.colors.chipGreen};
   color: ${theme.colors.forest};
   box-shadow: inset 0 -2px 0 ${theme.colors.border};
   cursor: pointer;

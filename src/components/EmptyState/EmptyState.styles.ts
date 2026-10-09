@@ -23,7 +23,7 @@ export const Mark = styled.span`
   margin-bottom: 4px;
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.growth};
-  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--c-warn) 28%, transparent);
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--c-forest) 22%, transparent);
   color: ${theme.colors.forest};
 `
 

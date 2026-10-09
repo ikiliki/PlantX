@@ -18,7 +18,7 @@ test.describe('garden mode', { tag: '@prod' }, () => {
 
     await toDay.click()
     await expect(html).toHaveAttribute('data-theme', 'day')
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 248, 236)')
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(244, 241, 232)')
   })
 
   test('a dark device with no choice opens in the night garden', async ({ page }) => {

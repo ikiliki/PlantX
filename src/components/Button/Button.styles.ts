@@ -37,12 +37,12 @@ const variants = {
     background: ${theme.colors.growth};
     color: ${theme.colors.forest};
     border: 1px solid ${theme.colors.growth};
-    box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--c-warn) 28%, transparent), ${theme.shadow.soft};
+    box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--c-forest) 22%, transparent), ${theme.shadow.soft};
     &:hover:not(:disabled) {
       transform: translateY(-2px);
     }
     &:active:not(:disabled) {
-      box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--c-warn) 28%, transparent);
+      box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--c-forest) 22%, transparent);
     }
   `,
   danger: css`

@@ -28,12 +28,12 @@ export const Root = styled.aside<{ $celebrate: boolean }>`
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  /* A sunny garden plaque. */
+  /* A fresh garden plaque. */
   padding: 20px 22px 18px;
   border-radius: ${theme.radii.lg};
   background:
     radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--c-growth) 45%, transparent), transparent 65%),
-    ${theme.colors.chipWarm};
+    ${theme.colors.chipGreen};
   border: 0;
   box-shadow: ${theme.shadow.card};
   color: ${theme.colors.forest};

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#FFF8EC" />
+    <meta name="theme-color" content="#F4F1E8" />
     <script>
       // Paint the chosen garden before the app loads, so a night-garden visit never flashes sunny.
       ;(function () {
@@ -12,7 +12,7 @@
           var garden = localStorage.getItem('plantx.garden')
           if (garden === 'day' || garden === 'night') document.documentElement.dataset.theme = garden
           var night = garden === 'night' || (!garden && matchMedia('(prefers-color-scheme: dark)').matches)
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', night ? '#0F1A15' : '#FFF8EC')
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', night ? '#0F1A15' : '#F4F1E8')
         } catch (e) {}
       })()
     </script>

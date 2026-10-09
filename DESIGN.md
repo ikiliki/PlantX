@@ -4,11 +4,11 @@ The chosen redesign direction (`feature/redesign-garden`). Source: UI/UX Pro Max
 
 ## World
 
-A sunny potting bench. Warm paper with morning light in one corner, chunky clay pieces you want to press, leaf green and terracotta with one bright sun-yellow accent. Friendly, tactile, a little bouncy, never childish.
+A sunny potting bench. Production's cream paper with a fresh lime glow in one corner, chunky clay pieces you want to press, a light leaf green with production's lime as the one bright accent. Friendly, tactile, a little bouncy, never childish.
 
 ## Two gardens
 
-- **Sunny garden** (day) and **Night garden** (the same bench after dark: deep green-black #0F1A15, moonlit leaf green #B9E4A0 for actions and active text, firefly yellow #FFD873 as the accent, cards #17251E).
+- **Sunny garden** (day) and **Night garden** (the same bench after dark: deep green-black #0F1A15, moonlit leaf green #B9E4A0 for actions and active text, the same lime #CFEA78 as the accent, cards #17251E).
 - Every colour, surface and shadow token is a CSS variable (`theme.colors.forest` is `var(--c-forest)`). `tokens.ts` holds the raw `day` / `night` palettes; `GlobalStyle` writes both. Translucent tints are `color-mix()` of a token, never a raw `rgba()` of a light colour.
 - The device decides until the grower chooses; the choice is stored (`plantx.garden`) and painted before the app loads (`index.html`), and the browser chrome colour follows (`theme-color`). Logic: `src/theme/themeMode.ts`.
 - `ThemeToggle` (top bar): sun and moon swap with a tumble; the new garden spreads out from the button in a circle (View Transitions), instant under reduced motion or without support.
@@ -16,8 +16,8 @@ A sunny potting bench. Warm paper with morning light in one corner, chunky clay 
 
 ## Tokens (`src/theme/tokens.ts`)
 
-- **Surfaces:** warm page (#FFF8EC) with a soft sun glow from the top start corner; white clay tiles; a leaf-green dock (`surface.dock*`).
-- **Colour:** `forest` #1F5135 leaf green for actions and text, `growth` #FFC94A sunshine for active states and the growth action, `warmth` #F08A5D terracotta, `water` #3B8FD9.
+- **Surfaces:** cream page (#F4F1E8, as in production) with a soft lime glow from the top start corner; white clay tiles; a leaf-green dock (`surface.dock*`).
+- **Colour:** `forest` #1F5135 leaf green for actions and text, `growth` #CFEA78 lime (production's accent) for active states and the growth action, `warmth` #F2C8A7 soft peach, `water` #3B8FD9.
 - **Type:** Fredoka (display, 600; it carries Hebrew too) + Nunito (body). Bigger base size (15px) and display (clamp 34–52px).
 - **Shape:** radii 12 / 18 / 26, pebble controls, control heights 38 / 48 (thumb-friendly).
 - **Elevation:** clay. No borders on tiles; the moulded shadow is the edge. Buttons have a darker lower lip that flattens when pressed.
@@ -26,12 +26,12 @@ A sunny potting bench. Warm paper with morning light in one corner, chunky clay 
 
 - Slim top bar: wordmark and account only.
 - The dock tucks below the edge while you scroll down a long page and comes back on any scroll up, near the top, or at the end (`useDockAway`). Between 900 and 1180px it shows icons only; the labels stay the accessible names. At night it carries a faint leaf edge.
-- The main navigation is a floating leaf-green dock at the bottom centre on desktop (icons + labels, active item a sun-yellow pebble, menus open upward) and a floating rounded dock on the phone.
+- The main navigation is a floating leaf-green dock at the bottom centre on desktop (icons + labels, active item a lime pebble, menus open upward) and a floating rounded dock on the phone.
 
 ## Greenhouse
 
-- Plant cards are clay tiles: an 8px lip around a rounded photo, Fredoka name in leaf green, fresh plants get a sun-yellow rim.
-- The level card is a sunny plaque: yellow glow, a 30px Fredoka rank, white pebble counts, and a chunky inset XP bar whose stripes keep drifting while it grows.
+- Plant cards are clay tiles: an 8px lip around a rounded photo, Fredoka name in leaf green, fresh plants get a lime rim.
+- The level card is a fresh plaque on soft green: lime glow, a 30px Fredoka rank, white pebble counts, and a chunky inset XP bar whose stripes keep drifting while it grows.
 - Care section headings are Fredoka.
 
 ## Motion

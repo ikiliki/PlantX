@@ -8,7 +8,7 @@ export const Row = styled.button<{ $selected?: boolean; $masked?: boolean; $stat
   padding: ${theme.space.sm} 14px;
   border-radius: ${theme.radii.md};
   border: 2px solid ${({ $selected }) => ($selected ? theme.colors.growth : 'transparent')};
-  background: ${({ $selected }) => ($selected ? theme.colors.chipWarm : theme.colors.creamCard)};
+  background: ${({ $selected }) => ($selected ? theme.colors.chipGreen : theme.colors.creamCard)};
   box-shadow: ${theme.shadow.soft};
   color: ${theme.colors.ink};
   font: inherit;
