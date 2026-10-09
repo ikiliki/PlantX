@@ -15,7 +15,11 @@ import {
   GreenhousePlantCardSkeleton,
 } from '../../features/greenhouse/components/GreenhousePlantCard/GreenhousePlantCard'
 import { GreenhousePublic } from '../../features/greenhouse/components/GreenhousePublic/GreenhousePublic'
-import { GreenhouseBack, GreenhouseScope, useHeaderNav, type GreenhouseScopeId } from '../../features/greenhouse/components/GreenhouseScope/GreenhouseScope'
+import {
+  GreenhouseBackLink,
+  GreenhouseTabs,
+  type GreenhouseScopeId,
+} from '../../features/greenhouse/components/GreenhouseTabs/GreenhouseTabs'
 import {
   GreenhouseLevelCard,
   GreenhouseLevelSkeleton,
@@ -72,7 +76,6 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
   const usersLoading = useSectionFetch(!compact, ['users'])
   const user = db.users.find((item) => item.id === ownerId && item.role !== 'guest')
   const name = user ? publicGrowerName(user, locale === 'he') : t.nav.greenhouse
-  const headerNav = useHeaderNav()
   // A shared link explains itself to a guest instead of bouncing to the list.
   if (!signedIn) {
     const card = <GuestView card title={t.guest.globalTitle} body={t.guest.globalBody} action={t.guest.logIn} />
@@ -80,6 +83,7 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
     return (
       <PageGate pageId="greenhouse" title={t.nav.greenhouse}>
         <PublicPage>
+          <GreenhouseBackLink />
           <PublicHeading>
             <h1>{t.nav.greenhouse}</h1>
             <GreenhouseLevelSkeleton blurred />
@@ -91,7 +95,6 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
               ))}
             </CollectionGrid>
           </GuestCurtain>
-          {headerNav ? null : <GreenhouseBack />}
         </PublicPage>
       </PageGate>
     )
@@ -105,12 +108,12 @@ function PublicGreenhouse({ ownerId, compact }: { ownerId: string; compact: bool
     <PageGate pageId="greenhouse" title={name}>
       <FeatureGate placement="greenhouse.board" title={name}>
         <PublicPage>
+          <GreenhouseBackLink />
           <PublicHeading>
             <h1>{name}</h1>
             <GreenhouseLevelCard ownerId={ownerId} publicView />
           </PublicHeading>
           {plants}
-          {headerNav ? null : <GreenhouseBack />}
         </PublicPage>
       </FeatureGate>
     </PageGate>
@@ -126,7 +129,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   const { t, tr } = useI18n()
   const [adding, setAdding] = useState(false)
   const [freshId, setFreshId] = useState<string>()
-  const headerNav = useHeaderNav()
   const filter = greenhouseFilter(params.get('tab'))
   const ownerId = currentUser?.id ?? ''
 
@@ -140,13 +142,6 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
     const nextParams = new URLSearchParams(params)
     if (next === 'all') nextParams.delete('tab')
     else nextParams.set('tab', next)
-    setParams(nextParams, { replace: true })
-  }
-
-  const setScope = (next: GreenhouseScopeId) => {
-    const nextParams = new URLSearchParams(params)
-    if (next === 'mine') nextParams.delete('scope')
-    else nextParams.set('scope', next)
     setParams(nextParams, { replace: true })
   }
 
@@ -239,7 +234,7 @@ function GreenhouseOwner({ view }: { view: ComponentView }) {
   const board = (
     <Page $fill={view === 'page' && scope === 'mine'}>
       <HeadBlock>
-        {view === 'page' && !headerNav && <GreenhouseScope value={scope} onChange={setScope} floating />}
+        {view === 'page' ? <GreenhouseTabs value={scope} /> : null}
         <Heading>
         <HeadingCopy>
           <h1>{t.greenhouse.title}</h1>

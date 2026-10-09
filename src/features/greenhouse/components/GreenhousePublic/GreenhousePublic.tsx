@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { EmptyState } from '../../../../components/EmptyState/EmptyState'
 import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
@@ -52,13 +53,11 @@ export function GreenhousePublic({
   return (
     <Root $compact={compact}>
       <Section $compact={compact}>
-        {/* The full page leads with the level card; only the grower popup labels its list. */}
-        {compact ? (
-          <SectionHead>
-            <h3>{t.seller.greenhouse}</h3>
-            <Count>{plants.length}</Count>
-          </SectionHead>
-        ) : null}
+        {/* The popup names the greenhouse; the full page (under the level card) names the shelf. */}
+        <SectionHead>
+          <h3>{compact ? t.seller.greenhouse : t.greenhouse.shelfTitle}</h3>
+          <Count>{plants.length}</Count>
+        </SectionHead>
         {plants.length ? (
           compact ? (
             <PlantScroll $rows={previewRows(plants.length)}>
@@ -88,8 +87,10 @@ export function GreenhousePublic({
               })}
             </PlantGrid>
           )
-        ) : (
+        ) : compact ? (
           <Empty>{t.seller.greenhouseEmpty}</Empty>
+        ) : (
+          <EmptyState title={t.seller.greenhouseEmpty} />
         )}
         {compact && <GoGreenhouse to={`/greenhouse/${ownerId}`}>{t.seller.goToGreenhouse}</GoGreenhouse>}
       </Section>

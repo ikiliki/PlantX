@@ -65,3 +65,10 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 - Hero: a large title, the primary action as a chunky leaf-green button with an up-right arrow, a light secondary, who it is for as a quiet line with a lime dot under the actions, the product floating slowly over a lime glow.
 - Benefits show on phones too, as clay tiles with a lime icon each. The tour sits on a full-bleed soft-green band; coming-soon cards stay dashed (a preview, not a door); the join box is a lifted clay card.
 - Sections rise in as they scroll into view (scroll-driven animation where supported, shown plainly elsewhere and under reduced motion).
+
+## Greenhouses: mine and everyone's
+
+- `GreenhouseTabs` (My greenhouse | All greenhouses) leads the greenhouse page on every screen size, as plain links with `aria-current`; on a phone it sticks under the top bar. It replaces the floating Mine/Global toggle, which people missed.
+- All greenhouses: a title, a one-line invitation and "N growers · M plants"; a large search field; sort pebbles (Top level by default, Most plants, Recently active) and a Near me filter when the viewer has a region; a titled Verified section; a grid of greenhouse cards. Sorting and filtering live in `greenhouseDirectory.ts`.
+- Greenhouse card (full size): a clay card with a mosaic of up to three plants (one tall, two stacked), the level ring in a cream collar on its lower edge, then name, rank, place and plant count, and two lines of bio. Compact (the Home rail) keeps the single row.
+- A grower's page: an inline "All greenhouses" back link (no floating arrow), the level card, then "On the shelf · N" with clay plant cards.

@@ -9,7 +9,20 @@ import type { Plant, User } from '../../../../mock/types'
 import type { GreenhouseLevel } from '../../greenhouseLevel'
 import { LevelBadge } from '../LevelBadge/LevelBadge'
 import { VerifiedStamp } from '../VerifiedStamp/VerifiedStamp'
-import { Bio, CardLink, CardShell, Copy, EmptyTile, LevelLine, Meta, Name, NameRow, PlantTile, Shelf } from './GreenhouseCard.styles'
+import {
+  BadgeSlot,
+  Bio,
+  CardLink,
+  CardShell,
+  Copy,
+  EmptyTile,
+  LevelLine,
+  Meta,
+  Name,
+  NameRow,
+  PlantTile,
+  Shelf,
+} from './GreenhouseCard.styles'
 
 const SHELF = 3
 
@@ -31,13 +44,15 @@ export function greenhouseShelf(plants: Plant[], ownerId: string) {
 export function GreenhouseCardSkeleton() {
   return (
     <CardShell aria-hidden $compact={false} data-greenhouse-skeleton>
-      <SkeletonBar width="44px" height={44} round />
+      <BadgeSlot $compact={false}>
+        <SkeletonBar width="44px" height={44} round />
+      </BadgeSlot>
       <Copy $stamp={false}>
         <SkeletonBar width="55%" height={16} />
         <SkeletonBar width="35%" height={12} />
         <SkeletonBar width="60%" height={12} />
       </Copy>
-      <Shelf aria-hidden>
+      <Shelf aria-hidden $compact={false}>
         {Array.from({ length: SHELF }, (_, index) => (
           <EmptyTile key={index} $compact={false}>
             <Icon name="greenhouse" size={16} />
@@ -48,7 +63,10 @@ export function GreenhouseCardSkeleton() {
   )
 }
 
-/** A greenhouse row: name, then a shelf of up to three plants. */
+/**
+ * A greenhouse. Full size (the Global list): a mosaic of up to three plants on top, the grower's level ring on
+ * its edge, then name, rank, place and bio. Compact (the Home rail): one row with a small shelf under it.
+ */
 export function GreenhouseCard({
   user,
   href,
@@ -83,17 +101,19 @@ export function GreenhouseCard({
   return (
     <CardLink to={href} $compact={compact} data-greenhouse={user.id} data-verified={verified ? 'true' : undefined}>
       {verified && !compact ? <VerifiedStamp /> : null}
-      {level ? (
-        <LevelBadge
-          level={level.level}
-          progress={level.progress}
-          owner={{ name, color: user.avatarColor, icon: user.avatarIcon }}
-          size="sm"
-        />
-      ) : (
-        <Avatar name={name} color={user.avatarColor} icon={user.avatarIcon} size={compact ? 28 : 36} />
-      )}
-      <Copy $stamp={verified && !compact}>
+      <BadgeSlot $compact={compact}>
+        {level ? (
+          <LevelBadge
+            level={level.level}
+            progress={level.progress}
+            owner={{ name, color: user.avatarColor, icon: user.avatarIcon }}
+            size="sm"
+          />
+        ) : (
+          <Avatar name={name} color={user.avatarColor} icon={user.avatarIcon} size={compact ? 28 : 36} />
+        )}
+      </BadgeSlot>
+      <Copy $stamp={verified && compact}>
         <NameRow>
           <Name>{name}</Name>
           {verified && compact ? <VerifiedStamp place="icon" /> : null}
@@ -107,7 +127,7 @@ export function GreenhouseCard({
         <Meta>{meta}</Meta>
         {!compact && bio ? <Bio>{bio}</Bio> : null}
       </Copy>
-      <Shelf aria-hidden>
+      <Shelf aria-hidden $compact={compact}>
         {shelf.map((photo) => (
           <PlantTile key={photo.id} $compact={compact}>
             <PlantImage src={photo.src} alt="" />
