@@ -22,10 +22,17 @@ test.describe('legal pages @prod', () => {
     await page.waitForLoadState('networkidle')
     const agree = page.locator('[data-terms-agree]')
     // With Google sign-in off the panel says sign-ups are paused, and there is nothing to agree to.
-    test.skip(!(await agree.isVisible()), 'Google sign-in is off here')
-    await expect(page.locator('[aria-disabled="true"]').filter({ has: page.locator('[aria-busy]') })).toHaveCount(1)
+    test.skip(!(await agree.isVisible()), 'no sign-in here')
+    // PP: email + password, whose button waits for the box too. Google is off on previews.
+    const password = page.locator('[data-password-form] button[type="submit"]')
+    const google = page.locator('[aria-busy]')
+    if (await password.isVisible()) await expect(password).toBeDisabled()
+    if (await google.count()) {
+      await expect(page.locator('[aria-disabled="true"]').filter({ has: google })).toHaveCount(1)
+    }
     await agree.check()
-    await expect(page.locator('[aria-disabled="true"]').filter({ has: page.locator('[aria-busy]') })).toHaveCount(0)
+    if (await password.isVisible()) await expect(password).toBeEnabled()
+    await expect(page.locator('[aria-disabled="true"]').filter({ has: google })).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy')
   })
 })
