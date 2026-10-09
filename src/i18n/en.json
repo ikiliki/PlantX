@@ -388,7 +388,6 @@
     "owned": "Owned",
     "levelLabel": "Greenhouse level",
     "levelN": "Level {n}",
-    "levelToNext": "{left} XP to level {n}",
     "levelXp": "{xp} XP",
     "levelUp": "Level up!",
     "levelPlants": "{n} plants",
@@ -505,7 +504,10 @@
     "setPlaceShort": "Set your place",
     "setPlaceHint": "So new plants know where they grow",
     "activityToday": "Today",
-    "activityYesterday": "Yesterday"
+    "activityYesterday": "Yesterday",
+    "levelToNextName": "{left} XP to {name}",
+    "levelDue": "{n} need care",
+    "levelDueOne": "1 needs care"
   },
   "todo": {
     "cancel": "Cancel",

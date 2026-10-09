@@ -388,7 +388,6 @@
     "owned": "בבעלות",
     "levelLabel": "רמת החממה",
     "levelN": "רמה {n}",
-    "levelToNext": "עוד {left} XP לרמה {n}",
     "levelXp": "{xp} XP",
     "levelUp": "עלית רמה!",
     "levelPlants": "{n} צמחים",
@@ -505,7 +504,10 @@
     "setPlaceShort": "הגדירו מיקום",
     "setPlaceHint": "כדי שצמחים חדשים יידעו איפה הם גדלים",
     "activityToday": "היום",
-    "activityYesterday": "אתמול"
+    "activityYesterday": "אתמול",
+    "levelToNextName": "עוד {left} XP ל{name}",
+    "levelDue": "{n} צריכים טיפול",
+    "levelDueOne": "צמח אחד צריך טיפול"
   },
   "todo": {
     "cancel": "ביטול",

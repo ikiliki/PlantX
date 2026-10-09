@@ -85,6 +85,21 @@ test.describe('member Home and Feed', () => {
     await expect(sheet).toHaveCount(0)
   })
 
+  test('the greenhouse header shows the level name, what is next, and plant and care chips', async ({ page }) => {
+    await expectPage(page, '/greenhouse')
+    const header = page.getByRole('complementary', { name: /Greenhouse level/ })
+    await expect(header.getByText(/^Level \d+ · [\d,]+ XP$/)).toBeVisible()
+    await expect(header.getByText(/^[\d,]+ XP to /)).toBeVisible()
+    await expect(header.getByText(/^(1 plant|\d+ plants)$/)).toBeVisible()
+    await expect(header.getByText(/^(1 task done|\d+ tasks done)$/)).toBeVisible()
+    // Needs care shows only when something is due, and then leads to Tasks.
+    const due = header.locator('[data-level-due]')
+    if ((await due.count()) > 0) {
+      await due.click()
+      await expect(page).toHaveURL(/\/tasks/)
+    }
+  })
+
   test('the account dialog splits into Profile, Appearance and Account tabs', async ({ page }) => {
     await page.goto('/greenhouse?account=1')
     const dialog = page.getByRole('dialog', { name: 'Account' })
