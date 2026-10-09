@@ -20,7 +20,7 @@ Passwords live in PlantX-PP's **Supabase Auth** (Authentication → Users); Plan
 checks the password with Supabase, finds the PlantX user with that email, and signs its usual session cookie.
 
 - **Admin:** `u-admin` (Omri). Its own email (`admin@preprod.invalid` when the row had none) + `PP_ADMIN_PASSWORD`.
-- **Testers:** `test-user-001` … `test-user-020`, email `test-user-NNN@preprod.invalid` + `PP_TESTER_PASSWORD`.
+- **Testers:** `test-user-001` … `test-user-005` today (a reset makes `--users N`), email `test-user-NNN@preprod.invalid` + `PP_TESTER_PASSWORD`.
   They're empty: no plants, todos or friends.
 - **New accounts:** anyone (a person or a bot) can sign up on `/login?mode=signup` with a name, email and
   password, and is signed in at once (or waits for approval while the app is off, as with Google).
@@ -80,8 +80,8 @@ and the login card shows Google only. Photo identify runs in **mock** mode on PP
 | `PROD_DATABASE_URL` | same URL |
 | `SESSION_SECRET` | from `.env.preprod` |
 | `PLANTX_PREPROD` | `1` |
-| `SUPABASE_URL` | `https://<pp ref>.supabase.co` (PlantX-PP → Project Settings → API) |
-| `SUPABASE_ANON_KEY` | PlantX-PP publishable (anon) key. Server only, never a `VITE_` variable |
+| `SUPABASE_URL` | `https://<pp ref>.supabase.co` (PlantX-PP → Project Settings → API). The API URL, **not** the database URL: anything else turns password sign-in off |
+| `SUPABASE_ANON_KEY` | PlantX-PP publishable (anon) key, no quotes. Server only, never a `VITE_` variable. A key from another project shows "Sign-in is misconfigured" |
 
 ## Reset PP
 This wipes all data and every Supabase Auth login, then recreates the admin, the prod catalog (read only),
