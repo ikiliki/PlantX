@@ -125,6 +125,9 @@ test.describe('owner', () => {
 
     await expectPage(page, `/plants/${plant.id}`)
     const passport = page.getByRole('dialog').first()
+    // Who sees the plant and Delete live in the owner's Settings tab, not in the side column.
+    await expect(passport.getByRole('radiogroup', { name: 'Who can see this plant' })).toHaveCount(0)
+    await passport.getByRole('tab', { name: 'Settings' }).click()
     const privacy = passport.getByRole('radiogroup', { name: 'Who can see this plant' })
     await expect(privacy.getByRole('radio', { name: 'Public' })).toHaveAttribute('aria-checked', 'true')
 
