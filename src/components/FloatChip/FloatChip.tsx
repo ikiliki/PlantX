@@ -10,6 +10,7 @@ import {
 import { createPortal } from 'react-dom'
 import { useI18n } from '../../i18n/I18nProvider'
 import { Backdrop, Chip, Face, Sheet, SheetBody, SheetClose, SheetTitle } from './FloatChip.styles'
+import { useDialogLayer } from '../../lib/dialogLayer'
 
 type Point = { x: number; y: number }
 
@@ -81,16 +82,15 @@ export function FloatChip({
     pointRef.current = point
   }, [point])
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(() => setOpen(false), { enabled: open })
   useEffect(() => {
     if (!open) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
     }
   }, [open])

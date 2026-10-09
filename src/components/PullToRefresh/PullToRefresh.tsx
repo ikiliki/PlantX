@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { isLayerOpen } from '../../lib/dialogLayer'
 import { Arrow, Indicator, Spinner } from './PullToRefresh.styles'
 
 /** How far the finger travels (after damping) before a release refreshes. */
@@ -32,6 +33,12 @@ export function PullToRefresh({
     root.style.overscrollBehaviorY = 'contain'
 
     const onStart = (event: TouchEvent) => {
+      // A pull inside a popup scrolls the popup; it never refreshes the page underneath.
+      const target = event.target as Element | null
+      if (isLayerOpen() || target?.closest?.('[role="dialog"], [aria-modal="true"], [role="menu"]')) {
+        start.current = null
+        return
+      }
       start.current = window.scrollY <= 0 ? event.touches[0].clientY : null
     }
     const onMove = (event: TouchEvent) => {

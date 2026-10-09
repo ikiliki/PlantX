@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useDialogLayer } from '../../lib/dialogLayer'
 import type { NavMenuLink } from '../TopBar/NavMenu/NavMenu'
 import { Item, Panel, Rule } from './DockMenu.styles'
 
@@ -27,6 +28,8 @@ export function DockMenu({
   const loc = useLocation()
   const ref = useRef<HTMLDivElement>(null)
   const opened = useRef(`${loc.pathname}${loc.search}${loc.hash}`)
+  // A layer: back closes the menu instead of leaving the page.
+  useDialogLayer(onClose)
 
   useEffect(() => {
     if (`${loc.pathname}${loc.search}${loc.hash}` !== opened.current) onClose()

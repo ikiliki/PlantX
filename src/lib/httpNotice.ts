@@ -1,5 +1,6 @@
 import { clientEnv } from '../theme/plantxEnv'
 import { sanitizeContext, type IssueContext, type IssueKind } from './issueReport'
+import { beginSave, isTrackedSave } from './pendingSaves'
 
 export type NoticeTone = 'fail' | 'done'
 
@@ -122,8 +123,11 @@ function messageFromBody(raw: string) {
 export function plantFetch(path: string, init?: RequestInit) {
   const method = (init?.method ?? 'GET').toUpperCase()
   const clean = path.split('?')[0] || path
+  // A save shows the Saving / Saved pill (SaveIndicator).
+  const endSave = isTrackedSave(method, clean) ? beginSave() : undefined
   return fetch(path, init).then(
     async (res) => {
+      endSave?.(res.ok)
       const requestId = res.headers.get('x-request-id') ?? ''
       if (requestId) lastRequestId = requestId
       if (res.status >= 500) {
@@ -142,6 +146,7 @@ export function plantFetch(path: string, init?: RequestInit) {
       return res
     },
     (err: unknown) => {
+      endSave?.(false)
       const error = err instanceof Error ? err : new Error('Request failed')
       const timedOut = error.name === 'AbortError'
       reportError({

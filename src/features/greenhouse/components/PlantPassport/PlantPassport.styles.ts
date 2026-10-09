@@ -692,10 +692,13 @@ export const TabBar = styled.div`
   }
 `
 
-export const Tab = styled.button<{ $on?: boolean }>`
+/** `$settings`: the owner's Settings tab, set apart at the end of the bar with its gear. */
+export const Tab = styled.button<{ $on?: boolean; $settings?: boolean }>`
   appearance: none;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
+  margin-inline-start: ${({ $settings }) => ($settings ? 'auto' : '0')};
   max-width: 100%;
   margin-bottom: -1px;
   padding: 12px 14px 10px;

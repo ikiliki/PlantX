@@ -76,3 +76,10 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 ## Floating chips (phone)
 
 - `FloatChip` (Home's tasks chip): a tap opens its sheet; a hold (0.35s) picks it up (it lifts, the phone buzzes) and then it follows the finger. A finger that moves before the hold scrolls the page through the chip.
+
+## Popups and saving
+
+- Popups lock the page behind them for real and close with the phone's back button (`useDialogLayer`). A pull inside a popup never refreshes the page.
+- The passport photo always shows the whole picture (`object-fit: contain`); a soft blur of the same photo fills the bars around a tall or wide one.
+- The passport has an owner-only **Settings** tab (last, set apart with a gear): an actions list where each row has an icon, what it is, what it does, and its control: who can see the plant (Public / Private), then Delete plant as a danger row (`PlantSettings`).
+- Saves show one small pill at the top: "Saving…" (after 0.2s, so quick edits never flash), then "Saved" with a lime tick.

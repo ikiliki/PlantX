@@ -34,6 +34,7 @@ import {
   Stem,
   When,
 } from './ActivityMoment.styles'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 /** Corner motion for a feed or activity row. The row sets `data-moment` so hover can play with it. */
 export function MomentPlay({ kind }: { kind: FeedUpdateKind }) {
@@ -109,15 +110,14 @@ function MomentSheet({
   const photos = scanned(update, plant)
   const sheet = useSheetDrag(onClose)
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(onClose)
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
     }
   }, [onClose])

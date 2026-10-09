@@ -16,6 +16,7 @@ import {
   Reset,
   Title,
 } from './MarketFiltersDialog.styles'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 function toggle<T>(list: T[], item: T) {
   return list.includes(item) ? list.filter((entry) => entry !== item) : [...list, item]
@@ -42,15 +43,14 @@ export function MarketFiltersDialog({
     setDraft(value)
   }, [value])
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(onClose)
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
     }
   }, [onClose])

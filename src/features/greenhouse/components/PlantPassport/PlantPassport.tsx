@@ -6,6 +6,7 @@ import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
 import { HealthChip } from '../../../../components/HealthChip/HealthChip'
+import { Icon } from '../../../../components/Icon/Icon'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useAuth } from '../../../auth/AuthProvider'
 import {
@@ -42,7 +43,7 @@ import { EditPencil, InlineEdit } from '../InlineEdit/InlineEdit'
 import { emptyClassDraft, sizeChoices, stageChoices } from '../../plantClass'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import type { PlantPatch } from '../../../../mock/liveApi'
-import { PlantDelete, PlantOwnerControls } from '../PlantOwnerControls/PlantOwnerControls'
+import { PlantSettings } from '../PlantSettings/PlantSettings'
 import { ModerationDialog, type ModerationRequest } from '../../../admin/components/ModerationDialog/ModerationDialog'
 import { Badge } from '../../../../components/Badge/Badge'
 import {
@@ -98,7 +99,7 @@ import {
 /** Longer names end in an ellipsis on the passport head (the tooltip has the full name). */
 const TITLE_MAX = 48
 
-type TabId = 'grading' | 'todo' | 'activity' | 'market'
+type TabId = 'grading' | 'todo' | 'activity' | 'market' | 'settings'
 
 /** Drop trailing ×N (or xN) quantity suffixes baked into listing titles. */
 function titleWithoutQuantity(text: string) {
@@ -330,12 +331,15 @@ export function PlantPassport({
     ...(todoOn ? [{ id: 'todo' as const, label: t.passport.todoTab }] : []),
     { id: 'activity', label: t.passport.activityTab },
     ...(marketOn ? [{ id: 'market' as const, label: t.passport.marketTab }] : []),
+    // The owner's actions on the plant (who sees it, delete it), last.
+    ...(canEdit && isOwner ? [{ id: 'settings' as const, label: t.passport.settingsTab }] : []),
   ]
   const fallbackTab: TabId = rankOn ? 'grading' : todoOn ? 'todo' : 'activity'
   const activeTab: TabId =
     (tab === 'market' && !marketOn) ||
     (tab === 'grading' && !rankOn) ||
-    (tab === 'todo' && !todoOn)
+    (tab === 'todo' && !todoOn) ||
+    (tab === 'settings' && !(canEdit && isOwner))
       ? fallbackTab
       : tab
 
@@ -490,10 +494,7 @@ export function PlantPassport({
           </NameBlock>
         </IdentityHead>
 
-          {/* The owner: who sees the plant, and delete it. Admin on someone else's plant: hide or delete it (#69). */}
-          {canEdit && isOwner ? (
-            <PlantOwnerControls plant={plant} />
-          ) : null}
+          {/* Admin on someone else's plant: hide or delete it (#69). The owner's controls sit at the foot. */}
           {canEdit && isAdmin && !isOwner ? (
             <ManageRow>
               {plant.visibility ? (
@@ -706,9 +707,6 @@ export function PlantPassport({
             ) : null}
           </>
         )}
-        {canEdit && isOwner ? (
-          <PlantDelete plant={plant} onDeleted={() => navigate('/greenhouse', { replace: true })} />
-        ) : null}
       </Aside>
 
       <Main $embedded={embedded} $dialog={dialog}>
@@ -720,8 +718,10 @@ export function PlantPassport({
               role="tab"
               aria-selected={activeTab === item.id}
               $on={activeTab === item.id}
+              $settings={item.id === 'settings'}
               onClick={() => setTab(item.id)}
             >
+              {item.id === 'settings' ? <Icon name="admin" size={16} /> : null}
               {item.label}
             </Tab>
           ))}
@@ -812,6 +812,10 @@ export function PlantPassport({
                 )
               })()}
             </>
+          )}
+
+          {activeTab === 'settings' && canEdit && isOwner && (
+            <PlantSettings plant={plant} onDeleted={() => navigate('/greenhouse', { replace: true })} />
           )}
 
           {activeTab === 'market' && marketOn && (

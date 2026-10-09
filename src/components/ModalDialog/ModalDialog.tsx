@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useI18n } from '../../i18n/I18nProvider'
 import { Backdrop, Body, Close, Footer, Frame, Head, Lead, Title } from './ModalDialog.styles'
+import { useDialogLayer } from '../../lib/dialogLayer'
 
 /**
  * Small form dialog: title, optional lead, body, footer actions. Portaled above other dialogs,
@@ -30,9 +31,9 @@ export function ModalDialog({
   const closeRef = useRef(onClose)
   closeRef.current = dismissible ? onClose : () => undefined
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(() => closeRef.current(), { history: dismissible })
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       event.stopImmediatePropagation()
@@ -40,7 +41,6 @@ export function ModalDialog({
     }
     window.addEventListener('keydown', onKey, true)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey, true)
     }
   }, [])

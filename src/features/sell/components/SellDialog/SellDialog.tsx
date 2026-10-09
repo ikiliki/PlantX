@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { SellPage } from '../../../../pages/SellPage/SellPage'
 import { Backdrop, Close, Dialog } from './SellDialog.styles'
+import { useDialogLayer } from '../../../../lib/dialogLayer'
 
 export function SellDialog({
   plantId,
@@ -13,15 +14,14 @@ export function SellDialog({
 }) {
   const { t } = useI18n()
 
+  // A layer: the page behind stays put, and back closes it.
+  useDialogLayer(onClose)
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
     }
   }, [onClose])
