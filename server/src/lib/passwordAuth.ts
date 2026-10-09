@@ -63,7 +63,10 @@ export async function signInWithPassword(email: string, password: string) {
   if (res.ok && answer.user?.email) return answer.user.email.toLowerCase()
   if (res.status === 429 || code === 'over_request_rate_limit') throw Errors.rateLimited(60)
   if (code === 'email_not_confirmed') throw Errors.auth('Confirm your email first')
-  throw Errors.auth('Wrong email or password')
+  if (code === 'invalid_credentials') throw Errors.auth('Wrong email or password')
+  // Anything else is the setup (a key from another project, a wrong URL), not the person's password.
+  logger.error('password sign-in refused by Supabase', { status: res.status, code: code || undefined })
+  throw Errors.internal('Sign-in is misconfigured on this environment')
 }
 
 /**
