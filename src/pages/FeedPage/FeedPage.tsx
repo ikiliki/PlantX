@@ -1,15 +1,16 @@
 import { Fragment, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FeatureGate } from '../../components/FeatureGate/FeatureGate'
 import { FilterChips } from '../../components/FilterChips/FilterChips'
+import { GuestCurtain } from '../../components/GuestCurtain/GuestCurtain'
 import { GuestView } from '../../components/GuestView/GuestView'
 import { InfiniteSentinel, useInfiniteList } from '../../components/InfiniteScroll/InfiniteScroll'
 import { PageGate } from '../../components/PageGate/PageGate'
 import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
 import { RefreshButton } from '../../components/RefreshButton/RefreshButton'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
-import { FeedPost } from '../../features/feed/components/FeedPost/FeedPost'
+import { FeedPost, FeedPostSkeleton } from '../../features/feed/components/FeedPost/FeedPost'
 import { FeedSuggestion, useSuggestionKinds } from '../../features/feed/components/FeedSuggestion/FeedSuggestion'
-import { FeedUpdateSkeleton, SKELETON_FEED_KINDS } from '../../features/feed/components/FeedUpdate/FeedUpdate'
 import { useFeedRefresh } from '../../features/feed/useFeedRefresh'
 import { useHomeFeed } from '../../features/feed/useHomeFeed'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -57,7 +58,7 @@ function FeedStream() {
         )}
       </Tools>
       {loading ? (
-        SKELETON_FEED_KINDS.map((kind, index) => <FeedUpdateSkeleton key={index} kind={kind} />)
+        [0, 1, 2].map((index) => <FeedPostSkeleton key={index} />)
       ) : (
         <>
           {list.total === 0 ? <Empty>{filter === 'all' ? t.feed.empty : t.feedPage.emptyFilter}</Empty> : null}
@@ -82,13 +83,31 @@ function FeedStream() {
 export function FeedPage() {
   const { t } = useI18n()
   const { signedIn } = useStore()
+  const navigate = useNavigate()
   useServerSlices(['users', 'plants', 'updates', 'catalog'])
 
   return (
     <PageGate pageId="home" title={t.nav.feed}>
       <Page data-feed-page>
         {forAudience(signedIn, {
-          guest: <GuestView title={t.guest.homeTitle} body={t.guest.homeBody} action={t.guest.logIn} />,
+          // Like Tasks: the page's own shape, blurred (nothing fetched), with the log-in card on top.
+          guest: (
+            <GuestCurtain
+              card={
+                <GuestView
+                  card
+                  title={t.guest.homeTitle}
+                  body={t.guest.homeBody}
+                  action={t.guest.logIn}
+                  secondary={{ label: t.guest.tryAddPlant, onClick: () => navigate('/greenhouse?add=1') }}
+                />
+              }
+            >
+              {[0, 1, 2].map((index) => (
+                <FeedPostSkeleton key={index} />
+              ))}
+            </GuestCurtain>
+          ),
           signedIn: (
             <FeatureGate placement="home.feed" title={t.nav.feed}>
               <FeedStream />

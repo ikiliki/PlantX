@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { personaScenarioId } from '../../../../mock/personas'
 import { useStore } from '../../../../mock/store'
@@ -22,10 +23,32 @@ import {
   Kind,
   PassportLink,
   Photo,
+  PhotoSkeleton,
   PlantTitle,
   ProfileButton,
   Who,
 } from './FeedPost.styles'
+
+/** The same post with shimmer bars: loading for a member, and the blurred page behind a guest's log-in card. */
+export function FeedPostSkeleton() {
+  return (
+    <Card aria-hidden>
+      <Head>
+        <SkeletonBar width="36px" height={36} round />
+        <Who>
+          <SkeletonBar width="110px" height={12} />
+          <SkeletonBar width="80px" height={10} />
+        </Who>
+        <SkeletonBar width="48px" height={18} />
+      </Head>
+      <PhotoSkeleton />
+      <Foot>
+        <SkeletonBar width="55%" height={16} />
+        <SkeletonBar width="85%" height={12} />
+      </Foot>
+    </Card>
+  )
+}
 
 /**
  * One activity on the Feed tab: the grower, a big photo of the plant, its name and the activity line, and a

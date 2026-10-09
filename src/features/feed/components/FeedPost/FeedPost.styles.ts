@@ -135,3 +135,10 @@ export const PassportLink = styled(Link)`
     content: ' ←';
   }
 `
+
+export const PhotoSkeleton = styled.div`
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: ${theme.radii.md};
+  background: ${theme.colors.chipGreen};
+`

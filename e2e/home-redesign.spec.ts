@@ -16,9 +16,12 @@ test.describe('phone navigation', { tag: '@prod' }, () => {
     await expect(page).toHaveURL(/\/wiki/)
   })
 
-  test('a guest on Feed gets the log-in prompt, not a blank page', async ({ page }) => {
+  test('a guest on Feed sees blurred posts under a log-in card, like Tasks', async ({ page }) => {
     await expectPage(page, '/feed')
     await expect(page.getByText("Log in to see what's growing")).toBeVisible()
+    await expect(page.getByRole('button', { name: /try adding a plant/i })).toBeVisible()
+    // Nothing real behind the card: placeholder posts only.
+    await expect(page.locator('[data-feed-post]')).toHaveCount(0)
   })
 })
 
