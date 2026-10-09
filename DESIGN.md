@@ -53,3 +53,7 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 ## Home feed
 
 - Above the feed (desktop): a status line with a small live dot ("Updated 3 min ago") and a labelled Refresh pill. After a refresh it says "You're up to date" with a lime dot for a few seconds. Coming back to a tab that has been away over 2 minutes refreshes by itself (`useFeedRefresh`). Phones keep pull to refresh.
+
+## Pull to refresh (phone)
+
+- Home refreshes from its feed (`useFeedRefresh`). Market, Greenhouse, Tasks and Catalog get the same pull from the shell (`usePageRefresh`, page map in `src/app/pageRefresh.ts`): an open page refetches only its own slices; a page still coming soon or under maintenance reloads everything, system config included, so a launch shows on the next pull. A guest refetches only what a guest may load. Add a page to the map when it shows server data.
