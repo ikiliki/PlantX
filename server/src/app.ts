@@ -21,6 +21,7 @@ import { usersRoutes } from './features/users/users.routes.ts'
 import { adminRoutes } from './features/admin/admin.routes.ts'
 import { healthRoutes } from './features/health/health.routes.ts'
 import { analyticsRoutes } from './features/analytics/analytics.routes.ts'
+import { activitySocialRoutes, commentRoutes } from './features/feed-social/feedSocial.routes.ts'
 
 let booted: Promise<void> | null = null
 
@@ -116,7 +117,10 @@ app.route('/api/system', systemRoutes)
 app.route('/api/catalog', catalogRoutes)
 app.route('/api/identify', identifyRoutes)
 app.route('/api/issues', issueRoutes)
+// Reactions and comments first, so /:id/comments is not taken for /:type/:userId.
+app.route('/api/activities', activitySocialRoutes)
 app.route('/api/activities', activityRoutes)
+app.route('/api/comments', commentRoutes)
 app.route('/api/todos', todoRoutes)
 app.route('/api/plants', greenhouseRoutes)
 app.route('/api/admin', adminRoutes)

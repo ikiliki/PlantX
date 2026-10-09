@@ -444,6 +444,19 @@ export interface FeedUpdate {
   body: string
   bodyHe: string
   createdAt: string
+  /** 🌿 count, whether the viewer reacted, and visible comments. Filled by the server per viewer. */
+  reactions?: number
+  reacted?: boolean
+  comments?: number
+}
+
+/** A comment on an activity (feed post). Deleted comments never reach the client. */
+export interface ActivityComment {
+  id: string
+  activityId: string
+  userId: string
+  body: string
+  createdAt: string
 }
 
 /** Top-level todo bucket. Later: market. */

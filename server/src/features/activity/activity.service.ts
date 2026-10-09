@@ -22,11 +22,27 @@ function newestFirst(a: Activity, b: Activity) {
  */
 export async function visibleTo(activities: Activity[], viewer: Pick<User, 'id' | 'role'> | null | undefined) {
   const index = await loadVisibility()
-  return visibleActivities(
+  const visible = visibleActivities(
     activities.filter((activity) => canSeeActivity(activity, viewer)),
     index,
     viewer,
   )
+  return withSocial(visible, viewer?.id ?? null)
+}
+
+/** Each activity with its 🌿 count, whether this viewer reacted, and its visible comment count. */
+async function withSocial(activities: Activity[], viewerId: string | null): Promise<Activity[]> {
+  if (activities.length === 0) return activities
+  const counts = await getStore()
+    .activitySocial.counts(
+      activities.map((activity) => activity.id),
+      viewerId,
+    )
+    .catch((err) => {
+      logger.warn('activity social counts unavailable', {}, err)
+      return new Map<string, { reactions: number; reacted: boolean; comments: number }>()
+    })
+  return activities.map((activity) => ({ ...activity, ...(counts.get(activity.id) ?? {}) }))
 }
 
 export const activityService = {

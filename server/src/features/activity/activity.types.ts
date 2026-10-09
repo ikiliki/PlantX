@@ -13,6 +13,10 @@ export interface Activity extends VisibilityMeta {
   body: string
   bodyHe: string
   createdAt: string
+  /** Per viewer, added on the way out (`visibleTo`); never stored on the activity row. */
+  reactions?: number
+  reacted?: boolean
+  comments?: number
 }
 
 export type ActivityInput = Omit<Activity, 'id' | 'createdAt'> & {
