@@ -19,8 +19,7 @@
     "configurations": "Configurations",
     "login": "Login",
     "language": "Language",
-    "toNight": "Switch to the night garden",
-    "toDay": "Switch to the sunny garden"
+    "feed": "Feed"
   },
   "demo": {
     "label": "Demo",
@@ -384,7 +383,6 @@
     "owned": "Owned",
     "levelLabel": "Greenhouse level",
     "levelN": "Level {n}",
-    "levelToNext": "{left} XP to level {n}",
     "levelXp": "{xp} XP",
     "levelUp": "Level up!",
     "levelPlants": "{n} plants",
@@ -392,7 +390,7 @@
     "levelPlantsOne": "1 plant",
     "levelCareOne": "1 task done",
     "levelHow": "How to level up",
-    "levelInfo": "Level and AI scans",
+    "levelInfo": "How levels work",
     "levelEarnPlant": "+{xp} XP for every plant you add",
     "levelEarnCare": "+{xp} XP for every care task you complete",
     "levelRank1": "Seedling",
@@ -499,7 +497,10 @@
     "activityXp": "XP",
     "activityAll": "All",
     "setPlaceShort": "Set your place",
-    "setPlaceHint": "So new plants know where they grow"
+    "setPlaceHint": "So new plants know where they grow",
+    "activityToday": "Today",
+    "activityYesterday": "Yesterday",
+    "levelToNextName": "{left} XP to {name}"
   },
   "todo": {
     "cancel": "Cancel",
@@ -1352,7 +1353,15 @@
   },
   "settings": {
     "region": "Location",
-    "placeHint": "New plants use this place."
+    "placeHint": "New plants use this place.",
+    "tabs": "Account sections",
+    "profile": "Profile",
+    "appearance": "Appearance",
+    "account": "Account",
+    "theme": "Theme",
+    "light": "Sunny garden",
+    "dark": "Night garden",
+    "themeHint": "Saved on this device."
   },
   "feed": {
     "people": "In the greenhouse",
@@ -1872,5 +1881,42 @@
       "care_done": "Care done",
       "session_return": "Return visit"
     }
+  },
+  "homeToday": {
+    "morning": "Good morning, {name}",
+    "afternoon": "Good afternoon, {name}",
+    "evening": "Good evening, {name}",
+    "summaryDue": "{n} plants need you today",
+    "summaryOneDue": "1 plant needs you today",
+    "summaryCalm": "Nothing due today",
+    "level": "Level {n} grower",
+    "careAll": "All tasks",
+    "careDone": "All done for today. Nice work.",
+    "greenhouse": "Your greenhouse",
+    "greenhouseAll": "All {n}",
+    "firstTitle": "Add your first plant",
+    "firstBody": "Snap a photo and it gets a passport and care reminders.",
+    "firstAction": "Add a plant",
+    "feed": "From the feed",
+    "feedAll": "Feed"
+  },
+  "feedPage": {
+    "all": "Everything",
+    "added": "New plants",
+    "photo": "Photos",
+    "water": "Care",
+    "filters": "Show",
+    "openPassport": "Passport",
+    "tipEyebrow": "From the catalog",
+    "tipLine": "{light} · {growth}",
+    "rankEyebrow": "Rank",
+    "rankTitle": "Rate today's plants",
+    "rankBody": "Swipe S, A, B or C on plants from other greenhouses.",
+    "rankAction": "Start swiping",
+    "marketEyebrow": "Market",
+    "marketTitle": "See what growers are selling",
+    "marketBody": "Every plant comes with its passport.",
+    "marketAction": "Open the market",
+    "emptyFilter": "Nothing like this yet."
   }
 }

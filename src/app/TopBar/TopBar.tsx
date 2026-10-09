@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { canChooseLocale } from '../../i18n/locales'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { Avatar } from '../../components/Avatar/Avatar'
 import { Icon } from '../../components/Icon/Icon'
-import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle'
 import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/ActivityBell'
 import { publicGrowerName } from '../../features/profile/avatarIcons'
 import { ACCOUNT_PARAM, AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
@@ -20,25 +18,24 @@ import {
   Bar,
   Brand,
   BrandMark,
-  Lang,
-  LangBtn,
   LoginButton,
   MobileOnly,
   NavIcon,
   NavItem,
   NavItems,
+  TopIcon,
+  TopIconButton,
 } from './TopBar.styles'
 
 export function TopBar() {
   const { t, locale } = useI18n()
-  const { currentUser, db, signedIn, setLocale } = useStore()
+  const { currentUser, db, signedIn } = useStore()
   const tasks = useTaskTabCount()
   const loc = useLocation()
   const navigate = useNavigate()
   const [accountOpen, setAccountOpen] = useState(false)
   const [openNav, setOpenNav] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
-  const chooseLocale = canChooseLocale()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -80,27 +77,6 @@ export function TopBar() {
     setAccountOpen(true)
   }, [loc.pathname, loc.search, loc.state, navigate, signedIn])
 
-  const langToggle = (
-    <Lang role="group" aria-label={t.nav.language}>
-      <LangBtn
-        type="button"
-        $on={locale === 'he'}
-        aria-pressed={locale === 'he'}
-        onClick={() => setLocale('he')}
-      >
-        {t.landing.langHe}
-      </LangBtn>
-      <LangBtn
-        type="button"
-        $on={locale === 'en'}
-        aria-pressed={locale === 'en'}
-        onClick={() => setLocale('en')}
-      >
-        {t.landing.langEn}
-      </LangBtn>
-    </Lang>
-  )
-
   return (
     <Bar $scrolled={scrolled}>
       <Brand to="/greenhouse">
@@ -117,12 +93,12 @@ export function TopBar() {
             {t.nav.home}
           </NavItem>
         )}
-        {show('market') && (
-          <NavItem to="/market" $active={isActive('/market')} aria-current={isActive('/market') ? 'page' : undefined}>
+        {show('home') && (
+          <NavItem to="/feed" $active={isActive('/feed')} aria-current={isActive('/feed') ? 'page' : undefined}>
             <NavIcon aria-hidden>
-              <Icon name="market" size={18} />
+              <Icon name="feed" size={18} />
             </NavIcon>
-            {t.nav.market}
+            {t.nav.feed}
           </NavItem>
         )}
         {show('greenhouse') && (
@@ -152,6 +128,14 @@ export function TopBar() {
             {t.nav.rank}
           </NavItem>
         )}
+        {show('market') && (
+          <NavItem to="/market" $active={isActive('/market')} aria-current={isActive('/market') ? 'page' : undefined}>
+            <NavIcon aria-hidden>
+              <Icon name="market" size={18} />
+            </NavIcon>
+            {t.nav.market}
+          </NavItem>
+        )}
         {show('wiki') && (
           <NavMenu
             label={t.nav.wiki}
@@ -166,12 +150,28 @@ export function TopBar() {
       </NavItems>
 
       <Actions>
-        <ThemeToggle toNight={t.nav.toNight} toDay={t.nav.toDay} />
+        {/* The phone dock has no room for the catalog; it sits here as an icon. */}
+        <MobileOnly>
+          {show('wiki') && (
+            <TopIcon
+              to="/wiki"
+              $active={isActive('/wiki')}
+              aria-label={t.nav.wiki}
+              title={t.nav.wiki}
+              aria-current={isActive('/wiki') ? 'page' : undefined}
+            >
+              <Icon name="wiki" size={20} />
+            </TopIcon>
+          )}
+        </MobileOnly>
         {signedIn && currentUser ? (
           <>
-            <MobileOnly>
-              <ActivityBell />
-            </MobileOnly>
+            {/* Your own activity belongs to your greenhouse: the bell shows on that page only. */}
+            {loc.pathname === '/greenhouse' ? (
+              <MobileOnly>
+                <ActivityBell />
+              </MobileOnly>
+            ) : null}
             <Account>
               <AvatarBubble
                 type="button"
@@ -193,7 +193,18 @@ export function TopBar() {
           </>
         ) : (
           <>
-            {chooseLocale && langToggle}
+            {/* Guests have no account card; the gear opens the same dialog with Appearance only. */}
+            <TopIconButton
+              type="button"
+              aria-label={t.nav.settings}
+              title={t.nav.settings}
+              aria-haspopup="dialog"
+              aria-expanded={accountOpen}
+              onClick={() => setAccountOpen(true)}
+            >
+              <Icon name="admin" size={20} />
+            </TopIconButton>
+            {accountOpen && <AccountDialog onClose={() => setAccountOpen(false)} />}
             <LoginButton to="/login" aria-current={isActive('/login') ? 'page' : undefined}>
               {t.auth.login}
             </LoginButton>

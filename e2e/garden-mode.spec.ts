@@ -1,22 +1,30 @@
 import { expect, expectPage, test } from './support'
 
-/** Sunny garden ↔ night garden. Signed out; only the browser's own storage changes, so it also runs on production. */
+/**
+ * Sunny garden ↔ night garden, chosen under Settings → Appearance (a guest opens it from the top bar gear).
+ * Signed out; only the browser's own storage changes, so it also runs on production.
+ */
 test.describe('garden mode', { tag: '@prod' }, () => {
-  test('the toggle switches to the night garden, keeps it after a reload, and switches back', async ({ page }) => {
+  test('Settings switches to the night garden, keeps it after a reload, and switches back', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
     await expectPage(page, '/greenhouse')
     const html = page.locator('html')
+    const openSettings = async () => {
+      await page.getByRole('banner').getByRole('button', { name: 'Settings' }).click()
+      return page.getByRole('dialog', { name: 'Settings' })
+    }
 
-    await page.getByRole('banner').getByRole('button', { name: 'Switch to the night garden' }).click()
+    let settings = await openSettings()
+    await settings.getByRole('radio', { name: 'Night garden' }).click()
     await expect(html).toHaveAttribute('data-theme', 'night')
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(36, 51, 43)')
 
     await page.reload()
     await expect(html).toHaveAttribute('data-theme', 'night')
-    const toDay = page.getByRole('banner').getByRole('button', { name: 'Switch to the sunny garden' })
-    await expect(toDay).toBeVisible()
+    settings = await openSettings()
+    await expect(settings.getByRole('radio', { name: 'Night garden' })).toHaveAttribute('aria-checked', 'true')
 
-    await toDay.click()
+    await settings.getByRole('radio', { name: 'Sunny garden' }).click()
     await expect(html).toHaveAttribute('data-theme', 'day')
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(244, 241, 232)')
   })
@@ -25,6 +33,10 @@ test.describe('garden mode', { tag: '@prod' }, () => {
     await page.emulateMedia({ colorScheme: 'dark' })
     await expectPage(page, '/greenhouse')
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(244, 241, 232)')
-    await expect(page.getByRole('banner').getByRole('button', { name: 'Switch to the night garden' })).toBeVisible()
+    await page.getByRole('banner').getByRole('button', { name: 'Settings' }).click()
+    await expect(page.getByRole('dialog', { name: 'Settings' }).getByRole('radio', { name: 'Sunny garden' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
   })
 })

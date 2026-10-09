@@ -17,6 +17,8 @@ test.describe('member', () => {
     await expect(page).toHaveURL(/\/greenhouse$/)
     const account = page.getByRole('dialog', { name: 'Account' })
     await expect(account.getByRole('combobox', { name: 'Greenhouse place' })).toBeVisible()
+    // AI scans left sit on the Account tab.
+    await account.getByRole('tab', { name: 'Account' }).click()
     const meter = account.locator('[data-scan-quota]')
     await expect(meter).toContainText('2 of 3 left')
     // Tapping the tile says when the scans reset.
@@ -24,19 +26,18 @@ test.describe('member', () => {
     await expect(meter).toContainText('Resets at midnight')
   })
 
-  test('the greenhouse header holds the AI scan tile (behind "!" on a phone)', async ({ page }, testInfo) => {
+  test('the greenhouse header has no AI scan tile; the allowance lives in the account popup', async ({ page }, testInfo) => {
     await page.route('**/api/identify/quota', (route) =>
       route.fulfill({ json: { quota: { used: 1, limit: 3, extra: 0, remaining: 2, resetsAt: resetsAt() } } }),
     )
     await expectPage(page, '/greenhouse')
     const header = page.getByRole('complementary', { name: /Greenhouse level/ })
     if (testInfo.project.name === 'phone') {
-      // The tile waits behind the top-row "!", which also holds the level rules.
-      await expect(header.locator('[data-scan-quota]:visible')).toHaveCount(0)
-      await header.getByRole('button', { name: 'Level and AI scans' }).click()
+      // The top-row "?" holds only the level rules now.
+      await header.getByRole('button', { name: 'How levels work' }).click()
       await expect(header.getByText('How to level up')).toBeVisible()
     }
-    await expect(header.locator('[data-scan-quota]:visible')).toContainText('2 of 3 left')
+    await expect(header.locator('[data-scan-quota]')).toHaveCount(0)
   })
 
   test('on a phone, an unknown place is an orange pin that opens Set your place', async ({ page }, testInfo) => {

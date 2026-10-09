@@ -26,6 +26,7 @@ import { accountHref } from '../../features/profile/components/AccountDialog/Acc
 import { CategoriesPage } from '../../pages/CategoriesPage/CategoriesPage'
 import { CategoryPage } from '../../pages/CategoryPage/CategoryPage'
 import { DiscoverPage } from '../../pages/DiscoverPage/DiscoverPage'
+import { FeedPage } from '../../pages/FeedPage/FeedPage'
 import { GreenhousePage } from '../../pages/GreenhousePage/GreenhousePage'
 import { LandingPage } from '../../pages/LandingPage/LandingPage'
 import { LandingStillsPage } from '../../pages/LandingStills/LandingStills'
@@ -125,6 +126,7 @@ export function AppRoutes() {
         <Route element={<ProductShell />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="home" element={<DiscoverPage />} />
+          <Route path="feed" element={<FeedPage />} />
           <Route path="dashboard" element={<Navigate to="/greenhouse" replace />} />
           <Route path="market" element={<MarketPage />} />
           <Route path="market/categories" element={<CategoriesPage />} />

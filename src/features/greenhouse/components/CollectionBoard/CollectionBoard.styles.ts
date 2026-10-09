@@ -15,7 +15,7 @@ export const Board = styled.div<{ $split?: boolean }>`
     height: 100%;
 
     @container (min-width: 961px) {
-      grid-template-columns: minmax(0, 1fr) min(300px, 32%);
+      grid-template-columns: minmax(0, 1fr) min(340px, 34%);
       column-gap: 0;
       /* Breathing room: the first shelf card and the activity rail stay off the page edges. */
       padding-inline: ${theme.space.lg};

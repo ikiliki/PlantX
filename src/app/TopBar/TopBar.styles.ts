@@ -324,3 +324,36 @@ export const LoginLink = styled(Link)`
     background: ${theme.colors.chipGreen};
   }
 `
+
+/** Round icon-only controls: market and catalog on the phone, the guest settings gear everywhere. */
+const roundIcon = `
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.chipNeutral};
+  color: ${theme.colors.forest};
+  cursor: pointer;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.growth};
+    outline-offset: 2px;
+  }
+`
+
+export const TopIcon = styled(Link)<{ $active?: boolean }>`
+  ${pressable}
+  ${roundIcon}
+  ${({ $active }) => ($active ? `background: ${theme.colors.forest}; color: ${theme.colors.onDeep}; border-color: transparent;` : '')}
+`
+
+export const TopIconButton = styled.button`
+  ${pressable}
+  ${roundIcon}
+`

@@ -24,7 +24,7 @@ function withoutTitle(label: string, title: string) {
   return rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : label
 }
 
-/** This owner's greenhouse log, every kind (scans included), oldest first so the latest sits at the bottom. */
+/** This owner's greenhouse log, every kind (scans included), newest first. */
 export function ownerActivity(
   db: MockDb,
   ownerId: string,
@@ -35,13 +35,13 @@ export function ownerActivity(
   if (!ownerId) return []
   return db.updates
     .filter((item) => item.userId === ownerId)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .map((item) => {
       const plant = item.plantId ? plants.find((entry) => entry.id === item.plantId) : undefined
       const scan = item.kind === 'scan'
       const title = plant ? tr(plant.title, plant.titleHe) : t.feed[ACTIVITY_KIND_KEY[item.kind]]
       return {
-        at: item.createdAt.slice(0, 16).replace('T', ' '),
+        at: item.createdAt,
         plant: title,
         plantId: plant?.id,
         photo: plant?.photos[0],
