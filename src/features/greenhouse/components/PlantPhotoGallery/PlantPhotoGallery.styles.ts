@@ -94,6 +94,8 @@ export const PhotoFrame = styled.button<{ $embedded?: boolean; $dialog?: boolean
     height: 100%;
     object-fit: contain;
     display: block;
+    /* PlantImage paints a placeholder colour; here it would cover the blur around the photo. */
+    background: transparent;
   }
 
   &:hover {
