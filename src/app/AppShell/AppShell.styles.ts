@@ -18,7 +18,7 @@ export const Main = styled.main<{ $wide?: boolean }>`
   min-width: 0;
   margin: 0 auto;
   @media (min-width: ${theme.breakpoints.md}) {
-    padding: 48px ${theme.space.xl} 140px;
+    padding: 48px ${theme.space.xl} 72px;
   }
 `
 

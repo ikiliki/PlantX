@@ -12,6 +12,7 @@ import { WikiRail } from '../../features/feed/components/WikiRail/WikiRail'
 import { TodoTable } from '../../features/todo/components/TodoTable/TodoTable'
 import { TodoCareDialog } from '../../features/todo/components/TodoCareDialog/TodoCareDialog'
 import { useHomeFeed } from '../../features/feed/useHomeFeed'
+import { useFeedRefresh, useMinutesSince } from '../../features/feed/useFeedRefresh'
 import { InfiniteSentinel, useInfiniteList } from '../../components/InfiniteScroll/InfiniteScroll'
 import { Reveal } from '../../components/Reveal/Reveal'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -21,12 +22,12 @@ import { forAudience } from '../../theme/audience'
 import { isFeatureEnabled } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
 import type { Todo } from '../../mock/types'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
 import { RefreshButton } from '../../components/RefreshButton/RefreshButton'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
 import { useMediaQuery } from '../../lib/useMediaQuery'
-import { Empty, Feed, FeedTools, Layout, Rail, RailLure, Shell, Widget } from './DiscoverPage.styles'
+import { Empty, Feed, FeedStatus, FeedTools, Layout, Rail, RailLure, Shell, Widget } from './DiscoverPage.styles'
 
 const WIDGET_ITEMS = 2
 
@@ -37,16 +38,17 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   const { db, signedIn, currentUser, completeTodo } = useStore()
   const [careTodo, setCareTodo] = useState<Todo | undefined>()
   const empty = t.feed.empty
-  // Refresh is a pull on the phone shell, and a button at the top of the feed when it is wider.
+  // Refresh is a pull on the phone shell; wider, a status row at the top of the feed says how fresh it is.
   const mobile = useMediaQuery('(max-width: 899px)')
-  const { reloadSlice } = useStore()
-  const [refreshing, setRefreshing] = useState(false)
-  const refresh = useCallback(() => {
-    if (refreshing) return
-    setRefreshing(true)
-    const minimum = new Promise((resolve) => window.setTimeout(resolve, 600))
-    void Promise.all([reloadSlice('updates'), reloadSlice('todos'), reloadSlice('plants'), minimum]).finally(() => setRefreshing(false))
-  }, [reloadSlice, refreshing])
+  const { refresh, refreshing, updatedAt, justRefreshed } = useFeedRefresh()
+  const minutes = useMinutesSince(updatedAt)
+  const freshness = justRefreshed
+    ? t.feed.upToDate
+    : minutes < 1
+      ? t.feed.updatedNow
+      : minutes < 60
+        ? t.feed.updatedMinutes.replace('{n}', String(minutes))
+        : t.feed.updatedHours.replace('{n}', String(Math.floor(minutes / 60)))
   const feed = useInfiniteList(items, {
     enabled: paged && view === 'page',
     signature: items.map((item) => item.id).join('|'),
@@ -99,7 +101,10 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
       <PullToRefresh enabled={mobile} busy={refreshing} label={t.feed.refreshing} onRefresh={refresh} />
       {mobile ? null : (
         <FeedTools>
-          <RefreshButton label={t.feed.refresh} busy={refreshing} onClick={refresh} />
+          <FeedStatus aria-live="polite" $done={justRefreshed}>
+            {refreshing ? t.feed.refreshing : freshness}
+          </FeedStatus>
+          <RefreshButton label={t.feed.refresh} text={t.feed.refresh} busy={refreshing} onClick={refresh} />
         </FeedTools>
       )}
       {feedLoading ? (

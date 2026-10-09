@@ -21,23 +21,22 @@ export const Caret = styled.button<{ $open?: boolean }>`
   padding: 0;
   border: 0;
   background: transparent;
-  color: ${theme.surface.dockMuted};
+  color: ${theme.surface.barMuted};
   cursor: pointer;
   transform: rotate(${({ $open }) => ($open ? 180 : 0)}deg);
   transition:
     transform ${theme.motion.base} ${theme.motion.ease},
     color ${theme.motion.fast} ${theme.motion.ease};
   &:hover {
-    color: ${theme.surface.dockInk};
+    color: ${theme.surface.barInk};
   }
 `
 
 export const Panel = styled.div`
   animation: ${menuIn} ${theme.motion.base} ${theme.motion.ease} both;
   transform-origin: top center;
-  /* The dock sits at the bottom, so its menus open upward. */
   position: absolute;
-  bottom: calc(100% + 14px);
+  top: calc(100% + 12px);
   inset-inline-start: 50%;
   translate: -50% 0;
   [dir='rtl'] & {

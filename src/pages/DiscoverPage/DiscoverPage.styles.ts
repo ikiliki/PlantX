@@ -90,10 +90,35 @@ export const Empty = styled.p`
 `
 
 /** Feed filter chips with the refresh icon at the end of the same row. */
+/** Above the feed: how fresh it is on the start side, Refresh at the end. */
 export const FeedTools = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
   min-width: 0;
+  padding: 4px 4px 4px 8px;
+`
+
+export const FeedStatus = styled.span<{ $done: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: ${theme.text.sm};
+  font-weight: 600;
+  color: ${({ $done }) => ($done ? theme.colors.forest : theme.colors.muted)};
+  transition: color ${theme.motion.base} ${theme.motion.ease};
+
+  /* A small live dot: lime once it has just checked, quiet otherwise. */
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: ${({ $done }) => ($done ? theme.colors.growth : theme.colors.borderStrong)};
+    box-shadow: ${({ $done }) => ($done ? `0 0 0 4px ${theme.colors.chipGreen}` : 'none')};
+    transition:
+      background ${theme.motion.base} ${theme.motion.ease},
+      box-shadow ${theme.motion.base} ${theme.motion.ease};
+  }
 `

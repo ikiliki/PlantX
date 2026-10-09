@@ -6,16 +6,21 @@ export const spin = keyframes`
   to { transform: rotate(360deg); }
 `
 
-export const Btn = styled.button<{ $busy: boolean }>`
+export const Btn = styled.button<{ $busy: boolean; $pill?: boolean }>`
   ${pressable}
   flex: none;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: ${({ $pill }) => ($pill ? 'auto' : '36px')};
+  height: ${({ $pill }) => ($pill ? theme.control.sm : '36px')};
+  padding: ${({ $pill }) => ($pill ? '0 16px 0 12px' : '0')};
   border: 1px solid ${theme.colors.border};
-  border-radius: 50%;
+  border-radius: ${theme.radii.pill};
+  font-family: ${theme.fonts.display};
+  font-size: ${theme.text.sm};
+  font-weight: 600;
   background: ${theme.colors.creamCard};
   color: ${theme.colors.forest};
   cursor: pointer;

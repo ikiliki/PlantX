@@ -1,9 +1,19 @@
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
 type Size = { $size: 'sm' | 'md' }
 
 const RING = { sm: 44, md: 62 }
+
+/** The ring fills from empty to the grower's progress, slowly, when it arrives. */
+const fill = keyframes`
+  from { --progress: 0; }
+`
+
+const numberIn = keyframes`
+  from { opacity: 0; transform: translateY(6px) scale(0.8); }
+  to { opacity: 1; transform: none; }
+`
 
 export const Root = styled.div<Size>`
   position: relative;
@@ -23,6 +33,11 @@ export const Ring = styled.div<Size>`
   background:
     radial-gradient(closest-side, ${theme.colors.deep} 76%, transparent 78%),
     conic-gradient(${theme.colors.growth} calc(var(--progress) * 360deg), color-mix(in srgb, var(--c-forest) 14%, transparent) 0);
+  animation: ${fill} 1.8s cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 export const RingNumber = styled.span<Size>`
@@ -30,6 +45,11 @@ export const RingNumber = styled.span<Size>`
   font-size: ${({ $size }) => ($size === 'sm' ? 19 : 26)}px;
   line-height: 1;
   color: ${theme.colors.growth};
+  animation: ${numberIn} 900ms ${theme.motion.ease} 900ms both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 const pinned = css<Size>`

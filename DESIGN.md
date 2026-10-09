@@ -24,14 +24,13 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 
 ## Shell
 
-- Slim top bar: wordmark and account only.
-- The dock tucks below the edge while you scroll down a long page and comes back on any scroll up, near the top, or at the end (`useDockAway`). Between 900 and 1180px it shows icons only; the labels stay the accessible names. At night it carries a faint leaf edge.
-- The main navigation is a floating leaf-green dock at the bottom centre on desktop (icons + labels, active item a lime pebble, menus open upward) and a floating rounded dock on the phone.
+- Desktop top bar: wordmark, the nav as a tray of pebbles with icons (active page a lime pebble, menus open downward; icons only between 900 and 1180px), the garden toggle and the account.
+- Phone: the nav is a floating rounded leaf-green dock that tucks below the edge while you scroll down and comes back on any scroll up, near the top, or at the end (`useDockAway`). At night it carries a faint leaf edge.
 
 ## Greenhouse
 
 - Plant cards are clay tiles: an 8px lip around a rounded photo, Fredoka name in leaf green, fresh plants get a lime rim.
-- The level card is a fresh plaque on soft green: lime glow, a 30px Fredoka rank, white pebble counts, and a chunky inset XP bar whose stripes keep drifting while it grows.
+- The level card reads level → progress → where the XP came from: the ring and rank on the start, the XP bar in the middle with a ledger under it (plants added and care done, each with its icon, then "60 XP to level 3" and the rules), the owner's tiles at the end. The ring fills slowly from empty (1.8s, a registered `--progress`), the bar grows in at the same pace, and a soft band of light crosses the bar every 8 seconds.
 - Care section headings are Fredoka.
 
 ## Motion
@@ -49,3 +48,7 @@ A sunny potting bench. Production's cream paper with a fresh lime glow in one co
 - New UI reads tokens; no raw hex in `*.styles.ts`.
 - Anything in the dock uses `surface.dock*`.
 - One elevation per surface: the clay shadow, no border on top of it.
+
+## Home feed
+
+- Above the feed (desktop): a status line with a small live dot ("Updated 3 min ago") and a labelled Refresh pill. After a refresh it says "You're up to date" with a lime dot for a few seconds. Coming back to a tab that has been away over 2 minutes refreshes by itself (`useFeedRefresh`). Phones keep pull to refresh.

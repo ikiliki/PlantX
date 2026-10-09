@@ -14,7 +14,6 @@ export const Bar = styled.header<{ $scrolled?: boolean }>`
   height: calc(68px + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) ${theme.space.md} 0;
   background: ${({ $scrolled }) => ($scrolled ? theme.surface.barScrolled : theme.surface.bar)};
-  /* No backdrop filter: it would trap the fixed dock inside the bar. */
   border-bottom: 1px solid ${theme.surface.barBorder};
   box-shadow: ${({ $scrolled }) => ($scrolled ? theme.shadow.soft : 'none')};
   transition:
@@ -48,33 +47,19 @@ export const BrandMark = styled.img`
   }
 `
 
-export const NavItems = styled.nav<{ $away?: boolean }>`
+export const NavItems = styled.nav`
   display: none;
   @media (min-width: ${theme.breakpoints.md}) {
-    /* Desktop: the nav floats as a dock at the bottom centre of the window. */
-    position: fixed;
-    bottom: 22px;
-    left: 50%;
-    translate: -50% 0;
-    z-index: ${theme.z.bottomNav};
+    /* Desktop: the nav sits in the top bar as a row of pebbles, centred between the wordmark and the account. */
     display: flex;
     align-items: center;
     gap: 4px;
     min-width: 0;
-    padding: 7px;
+    padding: 5px;
     border-radius: ${theme.radii.pill};
-    background: ${theme.surface.dock};
-    border: 1px solid ${theme.surface.dockEdge};
-    box-shadow: ${theme.shadow.lift};
+    background: ${theme.colors.creamCard};
+    box-shadow: ${theme.shadow.soft};
     overflow: visible;
-    transform: translateY(${({ $away }) => ($away ? 'calc(100% + 40px)' : '0')});
-    transition: transform ${theme.motion.slow} ${theme.motion.ease};
-
-    [dir='rtl'] & {
-      translate: 50% 0;
-      left: auto;
-      right: 50%;
-    }
   }
 `
 
@@ -97,25 +82,26 @@ export const NavItem = styled(Link)<{ $active?: boolean }>`
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 16px;
+  min-height: 40px;
+  padding: 0 14px;
   border-radius: ${theme.radii.pill};
-  background: ${({ $active }) => ($active ? theme.surface.dockActive : 'transparent')};
+  background: ${({ $active }) => ($active ? theme.colors.growth : 'transparent')};
   font-family: ${theme.fonts.display};
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
-  color: ${({ $active }) => ($active ? theme.colors.forest : theme.surface.dockMuted)};
+  color: ${({ $active }) => ($active ? theme.colors.deep : theme.surface.barMuted)};
   transition:
     color ${theme.motion.fast} ${theme.motion.ease},
     background ${theme.motion.base} ${theme.motion.ease},
     transform ${theme.motion.base} ${theme.motion.ease};
   &:hover {
-    color: ${({ $active }) => ($active ? theme.colors.forest : theme.surface.dockInk)};
-    transform: translateY(-2px);
+    color: ${({ $active }) => ($active ? theme.colors.deep : theme.surface.barInk)};
+    background: ${({ $active }) => ($active ? theme.colors.growth : theme.colors.chipGreen)};
+    transform: translateY(-1px);
   }
 
-  /* Mid widths: the dock shows icons only so it never runs into the page controls; the label stays the accessible name. */
+  /* Mid widths: icons only so the bar never overflows; the label stays the accessible name. */
   @media (min-width: ${theme.breakpoints.md}) and (max-width: 1180px) {
     padding: 0 14px;
     font-size: 0;

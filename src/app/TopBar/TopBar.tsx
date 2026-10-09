@@ -13,7 +13,6 @@ import { ActivityBell } from '../../features/greenhouse/components/ActivityBell/
 import { publicGrowerName } from '../../features/profile/avatarIcons'
 import { ACCOUNT_PARAM, AccountDialog } from '../../features/profile/components/AccountDialog/AccountDialog'
 import { useTaskTabCount } from '../../features/todo/useTaskTabCount'
-import { useDockAway } from '../useDockAway'
 import { NavMenu } from './NavMenu/NavMenu'
 import {
   Account,
@@ -40,7 +39,6 @@ export function TopBar() {
   const [accountOpen, setAccountOpen] = useState(false)
   const [openNav, setOpenNav] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
-  const dockAway = useDockAway()
   const chooseLocale = canChooseLocale()
 
   useEffect(() => {
@@ -119,7 +117,7 @@ export function TopBar() {
         {t.appName}
       </Brand>
 
-      <NavItems $away={dockAway && openNav === null}>
+      <NavItems>
         {show('home') && (
           <NavItem to="/home" $active={isActive('/home')} aria-current={isActive('/home') ? 'page' : undefined}>
             <NavIcon aria-hidden>

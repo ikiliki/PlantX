@@ -1,9 +1,31 @@
 import { Btn } from './RefreshButton.styles'
 
-/** Round refresh icon; it spins while `busy`. */
-export function RefreshButton({ label, busy, onClick }: { label: string; busy: boolean; onClick: () => void }) {
+/**
+ * Refresh control; the arrow spins while `busy`. Round icon by default; with `text` it is a pill that says
+ * what it does (the label then comes from the text, not a tooltip).
+ */
+export function RefreshButton({
+  label,
+  busy,
+  onClick,
+  text,
+}: {
+  label: string
+  busy: boolean
+  onClick: () => void
+  text?: string
+}) {
   return (
-    <Btn type="button" aria-label={label} title={label} aria-busy={busy} $busy={busy} disabled={busy} onClick={onClick}>
+    <Btn
+      type="button"
+      aria-label={text ? undefined : label}
+      title={text ? undefined : label}
+      aria-busy={busy}
+      $busy={busy}
+      $pill={Boolean(text)}
+      disabled={busy}
+      onClick={onClick}
+    >
       <svg viewBox="0 0 20 20" aria-hidden>
         <path
           d="M16 10a6 6 0 1 1-1.76-4.24M16 4v3.5h-3.5"
@@ -14,6 +36,7 @@ export function RefreshButton({ label, busy, onClick }: { label: string; busy: b
           strokeLinejoin="round"
         />
       </svg>
+      {text ? <span>{text}</span> : null}
     </Btn>
   )
 }

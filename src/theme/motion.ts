@@ -17,12 +17,6 @@ export const riseIn = keyframes`
   to { opacity: 1; transform: none; }
 `
 
-/** Progress that is still growing: soft stripes drifting along the fill. */
-export const drift = keyframes`
-  from { background-position: 0 0; }
-  to { background-position: 28px 0; }
-`
-
 /** A fill growing from the start edge. */
 export const growX = keyframes`
   from { transform: scaleX(0); }
