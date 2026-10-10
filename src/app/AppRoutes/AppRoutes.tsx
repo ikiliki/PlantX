@@ -84,6 +84,8 @@ export function AppRoutes() {
   const navigationType = useNavigationType()
   const backRef = useRef<Location | null>(null)
   const plantId = matchPath('/plants/:id', location.pathname)?.params.id
+  // `?tab=care` opens the passport on its Tasks tab (a "Set schedule" task links there).
+  const passportTab = plantId && new URLSearchParams(location.search).get('tab') === 'care' ? ('care' as const) : undefined
   const sellerId = matchPath('/sellers/:id', location.pathname)?.params.id
   const previewState = location.state as SellerState
   const sellerFull = Boolean(previewState?.sellerFull)
@@ -149,7 +151,7 @@ export function AppRoutes() {
         <Route path="*" element={<Navigate to="/greenhouse" replace />} />
       </Routes>
       {/* A passport opens over whatever page linked to it (feed, home, rank, greenhouse); a direct visit sits on the greenhouse. */}
-      {plantId && <PassportDialog plantId={plantId} onClose={closeOverlay} routed />}
+      {plantId && <PassportDialog plantId={plantId} onClose={closeOverlay} routed tab={passportTab} />}
       {sellerId && !sellerFull && <SellerDialog userId={sellerId} onClose={closeOverlay} />}
       {profilePreview && !sellerId && (
         <SellerDialog

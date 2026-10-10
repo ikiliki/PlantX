@@ -87,14 +87,43 @@ test.describe('care plan', () => {
     }
     await expect(passport.locator('[data-care-kind="water"]')).toContainText('Due today')
     await expect(passport.locator('[data-care-kind="feed"]')).toContainText('2d overdue')
-    // Rotate is off by default; the owner still sees it, to turn it on.
-    await expect(passport.locator('[data-care-kind="rotate"]')).toContainText('Off')
+    // Turning to the light is only for linked categories: a pothos does not get it.
+    await expect(passport.locator('[data-care-kind="rotate"]')).toHaveCount(0)
+    // The 12 weeks read as one square per week, with a legend.
+    await expect(passport.locator('[data-care-weeks] li')).toHaveCount(12)
+    await expect(passport.getByText('Nothing due', { exact: true })).toBeVisible()
 
     await passport.getByRole('button', { name: 'Edit Water' }).click()
     const editor = page.getByRole('dialog', { name: 'Edit Water' })
+    // The catalog's suggestion comes first, marked as the default.
+    await expect(editor.getByText(/^Suggested.*Every 7 days.*(default)$/)).toBeVisible()
     await editor.getByText('Every 3 days', { exact: true }).click()
     await editor.getByRole('button', { name: 'Save' }).click()
     await expect.poll(() => patched).not.toBeNull()
-    expect(patched!.care).toEqual({ water: { everyDays: 3 } })
+    expect(patched!.care).toEqual({ water: { interval: { everyDays: 3 } } })
+  })
+
+  test('the admin sees the general tasks and adds one (nothing is written)', async ({ page }) => {
+    await signIn(page, ADMIN)
+    let saved: { careTasks?: { id: string; audience: string }[] } | null = null
+    await page.route('**/api/catalog', async (route) => {
+      if (route.request().method() !== 'PUT') return route.fallback()
+      const body = route.request().postDataJSON() as { catalog: typeof saved }
+      saved = body.catalog
+      return route.fulfill({ json: { catalog: body.catalog } })
+    })
+    await expectPage(page, '/admin/server')
+    await page.getByRole('button', { name: /Care plans/ }).click()
+    const panel = page.locator('[data-care-plans]')
+    await expect(panel.locator('[data-care-task="water"]')).toBeVisible()
+    await expect(panel.locator('[data-care-task="photo"]')).toBeVisible()
+
+    await panel.getByRole('button', { name: '+ New task' }).click()
+    const dialog = page.getByRole('dialog', { name: 'New task' })
+    await dialog.getByLabel('Name (English)').fill('E2E Prune')
+    await dialog.getByRole('radio', { name: 'Optional (owners add it)' }).click()
+    await dialog.getByRole('button', { name: 'Save' }).click()
+    await expect.poll(() => saved).not.toBeNull()
+    expect(saved!.careTasks?.find((task) => task.id === 'e2e-prune')?.audience).toBe('optional')
   })
 })

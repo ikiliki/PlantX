@@ -64,6 +64,11 @@ export function canFillTodo(todo: Todo, todos: Todo[], now = todayIso()) {
   return todo.dueOn <= now
 }
 
+/** An undated task that is not a first watering: the owner still has to set how often ("Set schedule"). */
+export function isSetTodo(todo: Todo, todos: Todo[]) {
+  return isOpenTodo(todo) && todo.dueOn == null && !isFirstWaterTodo(todo, todos)
+}
+
 /** Signed-in grower with no plants yet. The first-plant task is undated and mandatory. */
 export function needsFirstPlant(plants: Plant[], ownerId: string | null) {
   if (!ownerId) return false
@@ -161,23 +166,25 @@ function careTodo(plant: CarePlant, kind: TodoSubcategory, dueOn: string | null,
 }
 
 /**
- * Makes a plant's open tasks match its care plan (`careFor`): one open task per kind that is on, due one
- * interval after that care was last done (or after the plant was added); a plant never watered gets a
- * first-watering session instead; a kind turned off loses its open task; a photo task waits for a photo.
- * Existing due days stay unless `move` is set (the plan itself changed). Shared by the server and mock mode.
+ * Makes a plant's open tasks match its care plan (`careFor`): one open task per task that applies, due one
+ * interval after it was last done (or from today when it never was); a plant never watered gets a
+ * first-watering session; a task with no interval anywhere gets an undated "Set schedule" task; a task that
+ * no longer applies loses its open task; a photo task waits for a photo. Existing due days stay unless
+ * `move` is set (the plan itself changed). Shared by the server and mock mode.
  */
 export function syncCareTodos(
   todos: Todo[],
   plant: CarePlant,
-  catalog: Pick<Catalog, 'categories' | 'subcategories'>,
+  catalog: Pick<Catalog, 'categories' | 'careTasks' | 'careRules'>,
   { move = false }: { move?: boolean } = {},
 ): { todos: Todo[]; removed: string[] } {
   if (plant.status === 'sold') return { todos, removed: [] }
   let rows = todos
   const removed: string[] = []
-  for (const { kind, rule } of careFor(plant, catalog)) {
+  for (const { task, active, interval } of careFor(plant, catalog)) {
+    const kind = task.id
     const open = openTodo(rows, plant.id, kind)
-    if (!rule) {
+    if (!active) {
       if (open) {
         removed.push(open.id)
         rows = rows.filter((row) => row.id !== open.id)
@@ -190,9 +197,17 @@ export function syncCareTodos(
       continue
     }
     if (kind === 'photo' && !open && plant.photos.length === 0) continue
-    const dueOn = nextCareDue(rule, done ?? plant.createdAt.slice(0, 10))
+    if (!interval) {
+      // Nothing says how often: ask the owner with an undated task.
+      if (!open) rows = [careTodo(plant, kind, null), ...rows]
+      else if (open.dueOn != null) rows = rows.map((row) => (row.id === open.id ? { ...row, dueOn: null } : row))
+      continue
+    }
+    // Never done: count from today (a task the owner just added, or the catalog just turned on), not from
+    // the day the plant was added, which would make it overdue at once.
+    const dueOn = nextCareDue(interval, done ?? todayIso())
     if (!open) rows = [careTodo(plant, kind, dueOn), ...rows]
-    else if (move && open.dueOn != null && open.dueOn !== dueOn) {
+    else if (open.dueOn == null || (move && open.dueOn !== dueOn)) {
       rows = rows.map((row) => (row.id === open.id ? { ...row, dueOn } : row))
     }
   }
@@ -203,7 +218,7 @@ export function syncCareTodos(
 export function seedCareTodos(
   plants: Plant[],
   todos: Todo[],
-  catalog: Pick<Catalog, 'categories' | 'subcategories'>,
+  catalog: Pick<Catalog, 'categories' | 'careTasks' | 'careRules'>,
   care: CareDates = {},
 ): Todo[] {
   let rows = todos

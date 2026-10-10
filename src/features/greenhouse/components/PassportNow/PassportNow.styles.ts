@@ -1,10 +1,10 @@
 import styled, { css } from 'styled-components'
 import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
-import type { TodoSubcategory } from '../../../../mock/types'
+import type { CareIcon } from '../../../../mock/types'
 import { careColor, careTint } from '../../../todo/careKinds'
 
-type Tone = TodoSubcategory | 'calm'
+type Tone = CareIcon | 'calm'
 
 const tint = (tone: Tone) => (tone === 'calm' ? 'color-mix(in srgb, var(--c-creamCard) 70%, transparent)' : careTint(tone))
 

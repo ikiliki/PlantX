@@ -1,8 +1,6 @@
 import { catalogSlug } from '../../mock/catalog'
 import { defaultPlantPhoto } from '../../mock/images'
-import { cleanCarePlan } from '../todo/carePlan'
 import type {
-  CarePlan,
   Catalog,
   CatalogCategory,
   CatalogProperty,
@@ -35,7 +33,7 @@ export function parseOptionList(en: string, he: string): CatalogPropertyOption[]
 export function upsertCategory(
   catalog: Catalog,
   species: Species[],
-  input: { id?: string; name: string; nameHe: string; ticker: string; photo: string; care?: CarePlan },
+  input: { id?: string; name: string; nameHe: string; ticker: string; photo: string },
 ): { catalog: Catalog; species: Species[] } {
   const ticker = input.ticker.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
   const name = input.name.trim()
@@ -56,8 +54,6 @@ export function upsertCategory(
     ticker,
     photo: input.photo || defaultPlantPhoto,
   }
-  const care = cleanCarePlan(input.care)
-  if (care) row.care = care
 
   if (existing) {
     const index = categories.findIndex((item) => item.id === id)
@@ -105,6 +101,8 @@ export function deleteCategory(catalog: Catalog, categoryId: string): Catalog {
       ...item,
       categoryIds: item.categoryIds.filter((id) => id !== categoryId),
     })),
+    careTasks: catalog.careTasks,
+    careRules: catalog.careRules.filter((rule) => rule.categoryId !== categoryId),
   }
 }
 
@@ -117,7 +115,6 @@ export function upsertSubcategory(
     nameHe: string
     code: string
     photo?: string
-    care?: CarePlan
   },
 ): Catalog {
   const code = input.code.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 8)
@@ -138,8 +135,6 @@ export function upsertSubcategory(
     code,
     photo: input.photo,
   }
-  const care = cleanCarePlan(input.care)
-  if (care) row.care = care
 
   if (existing) {
     const index = subcategories.findIndex((item) => item.id === id)
@@ -161,6 +156,7 @@ export function deleteSubcategory(catalog: Catalog, subcategoryId: string): Cata
       ...item,
       subcategoryIds: item.subcategoryIds.filter((id) => id !== subcategoryId),
     })),
+    careRules: catalog.careRules.filter((rule) => rule.subcategoryId !== subcategoryId),
   }
 }
 

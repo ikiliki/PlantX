@@ -1,11 +1,16 @@
 import type { ReactNode } from 'react'
-import { CARE_KINDS } from '../../carePlan'
-import { TodoKindIcon } from './TodoKindIcon'
+import { I18nProvider } from '../../../../i18n/I18nProvider'
+import { StoreProvider } from '../../../../mock/store'
+import { CARE_ICONS, TodoKindIcon } from './TodoKindIcon'
 
 const withPad = (Story: () => ReactNode) => (
-  <div style={{ display: 'flex', gap: 16, padding: 24, alignItems: 'center', background: '#F4F1E8' }}>
-    <Story />
-  </div>
+  <StoreProvider source="example">
+    <I18nProvider>
+      <div style={{ display: 'flex', gap: 16, padding: 24, alignItems: 'center', background: '#F4F1E8' }}>
+        <Story />
+      </div>
+    </I18nProvider>
+  </StoreProvider>
 )
 
 export default {
@@ -18,15 +23,15 @@ export const Water = () => <TodoKindIcon kind="water" size={24} />
 export const Photo = () => <TodoKindIcon kind="photo" size={24} />
 export const AllKinds = () => (
   <>
-    {CARE_KINDS.map((kind) => (
-      <TodoKindIcon key={kind} kind={kind} size={24} />
+    {CARE_ICONS.map((icon) => (
+      <TodoKindIcon key={icon} icon={icon} size={24} />
     ))}
   </>
 )
 export const Marks = () => (
   <>
-    {CARE_KINDS.map((kind) => (
-      <TodoKindIcon key={kind} kind={kind} size={20} mark />
+    {CARE_ICONS.map((icon) => (
+      <TodoKindIcon key={icon} icon={icon} size={20} mark />
     ))}
   </>
 )

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import type { TodoSubcategory } from '../../../../mock/types'
+import type { CareIcon } from '../../../../mock/types'
 import { theme } from '../../../../theme/tokens'
 import { careColor, careTint } from '../../careKinds'
 
@@ -32,11 +32,6 @@ export const BlockHead = styled.div`
   min-width: 0;
 `
 
-export const HeadNote = styled.span`
-  font-size: 12px;
-  color: ${theme.colors.muted};
-`
-
 export const List = styled.ul`
   display: grid;
   gap: 8px;
@@ -46,7 +41,7 @@ export const List = styled.ul`
 `
 
 /** One kind of care in the plan: icon, cadence, next due, and the owner's pencil. */
-export const PlanRow = styled.li<{ $tone: TodoSubcategory; $off?: boolean; $mark?: boolean }>`
+export const PlanRow = styled.li<{ $tone: CareIcon; $off?: boolean; $mark?: boolean }>`
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   gap: 10px;
@@ -62,7 +57,7 @@ export const PlanRow = styled.li<{ $tone: TodoSubcategory; $off?: boolean; $mark
 `
 
 /** The next-due chip on a plan row; a link to the task for its owner. */
-export const Due = styled.span<{ $tone: TodoSubcategory; $late?: boolean }>`
+export const Due = styled.span<{ $tone: CareIcon; $late?: boolean }>`
   padding: 3px 9px;
   border-radius: ${theme.radii.pill};
   background: ${({ $tone, $late }) => ($late ? theme.colors.chipWarm : careTint($tone, 18))};
@@ -116,14 +111,90 @@ export const Weeks = styled.ol`
   list-style: none;
 `
 
-export const Week = styled.li<{ $tone?: TodoSubcategory }>`
+type WeekState = 'all' | 'some' | 'missed' | 'none'
+
+/** A week's colour: green all done, yellow some, red missed, grey nothing due. */
+const weekColor = (state: WeekState) =>
+  state === 'all'
+    ? theme.colors.moss
+    : state === 'some'
+      ? '#E0B03C'
+      : state === 'missed'
+        ? theme.colors.danger
+        : 'color-mix(in srgb, var(--c-forest) 10%, transparent)'
+
+export const Week = styled.li<{ $state: WeekState }>`
   aspect-ratio: 1;
   border-radius: 4px;
-  background: ${({ $tone }) => ($tone ? careColor($tone) : 'color-mix(in srgb, var(--c-forest) 8%, transparent)')};
+  background: ${({ $state }) => weekColor($state)};
+`
+
+/** "12 weeks ago" under the first square, "This week" under the last. */
+export const WeekEnds = styled.div`
+  display: flex;
+  justify-content: space-between;
+  max-width: 360px;
+  font-size: 11px;
+  color: ${theme.colors.muted};
+`
+
+export const Legend = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 12px;
+  color: ${theme.colors.muted};
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+`
+
+export const LegendDot = styled.i<{ $state: WeekState }>`
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: ${({ $state }) => weekColor($state)};
+`
+
+/** Optional tasks the owner can take on: a row of + chips under the plan. */
+export const AddRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: ${theme.colors.muted};
+`
+
+export const AddChip = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px dashed ${theme.colors.borderStrong};
+  border-radius: ${theme.radii.pill};
+  background: transparent;
+  color: ${theme.colors.forest};
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-style: solid;
+  }
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.growth};
+    outline-offset: 2px;
+  }
 `
 
 /** A finished task in the history. */
-export const DoneRow = styled.li<{ $tone: TodoSubcategory; $mark?: boolean }>`
+export const DoneRow = styled.li<{ $tone: CareIcon; $mark?: boolean }>`
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;

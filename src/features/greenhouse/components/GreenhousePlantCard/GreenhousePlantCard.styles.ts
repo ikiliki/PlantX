@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
 import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
-import type { TodoSubcategory } from '../../../../mock/types'
+import type { CareIcon } from '../../../../mock/types'
 import { careColor } from '../../../todo/careKinds'
 
 const freshGlow = keyframes`
@@ -376,7 +376,7 @@ export const CareActions = styled.div`
   }
 `
 
-export const CareAction = styled.span<{ $tone: TodoSubcategory }>`
+export const CareAction = styled.span<{ $tone: CareIcon }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;

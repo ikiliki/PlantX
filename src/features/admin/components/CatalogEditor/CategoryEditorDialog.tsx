@@ -4,8 +4,7 @@ import { Field, FormGrid, FormRow, Input } from '../../../../components/Form/For
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { defaultPlantPhoto } from '../../../../mock/images'
-import type { CarePlan, CatalogCategory } from '../../../../mock/types'
-import { CarePlanFields } from '../CarePlanFields/CarePlanFields'
+import type { CatalogCategory } from '../../../../mock/types'
 import { readPhotoFile } from '../../../../utils/readPhoto'
 import {
   Backdrop,
@@ -24,7 +23,6 @@ export type CategoryDraft = {
   nameHe: string
   ticker: string
   photo: string
-  care?: CarePlan
 }
 
 export function CategoryEditorDialog({
@@ -33,7 +31,7 @@ export function CategoryEditorDialog({
   onDelete,
   onClose,
 }: {
-  initial?: Partial<Pick<CatalogCategory, 'id' | 'name' | 'nameHe' | 'ticker' | 'photo' | 'care'>>
+  initial?: Partial<Pick<CatalogCategory, 'id' | 'name' | 'nameHe' | 'ticker' | 'photo'>>
   onConfirm: (draft: CategoryDraft) => void
   onDelete?: () => void
   onClose: () => void
@@ -44,11 +42,10 @@ export function CategoryEditorDialog({
   const [nameHe, setNameHe] = useState(initial?.nameHe ?? '')
   const [ticker, setTicker] = useState(initial?.ticker ?? '')
   const [photo, setPhoto] = useState(initial?.photo ?? defaultPlantPhoto)
-  const [care, setCare] = useState<CarePlan | undefined>(initial?.care)
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    onConfirm({ id: initial?.id, name, nameHe, ticker, photo, care })
+    onConfirm({ id: initial?.id, name, nameHe, ticker, photo })
   }
 
   return (
@@ -92,10 +89,6 @@ export function CategoryEditorDialog({
                 <Input value={ticker} onChange={(event) => setTicker(event.target.value)} required />
               </Field>
             </FormRow>
-            <Field as="div">
-              {t.admin.careHeading}
-              <CarePlanFields value={care} onChange={setCare} />
-            </Field>
             <Footer>
               {initial && onDelete ? (
                 <Button type="button" variant="danger" size="sm" onClick={onDelete}>

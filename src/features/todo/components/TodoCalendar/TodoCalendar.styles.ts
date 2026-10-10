@@ -1,10 +1,10 @@
 import styled, { keyframes } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
-import type { TodoSubcategory } from '../../../../mock/types'
+import type { CareIcon } from '../../../../mock/types'
 import { careColor, careTint } from '../../careKinds'
 
-type DayTone = TodoSubcategory | 'mixed'
+type DayTone = CareIcon | 'mixed'
 
 /** A day's edge: its one kind's colour, or water's when several kinds share it. */
 const dayEdge = (tone: DayTone) => (tone === 'mixed' ? water : careColor(tone))
@@ -277,7 +277,7 @@ export const DayNum = styled.span`
 `
 
 /** Care done on this day: a small tick in the corner, tinted by kind. */
-export const DoneMark = styled.span<{ $kind: TodoSubcategory }>`
+export const DoneMark = styled.span<{ $kind: CareIcon }>`
   position: absolute;
   inset-block-start: 4px;
   inset-inline-end: 4px;
@@ -395,7 +395,7 @@ export const Stack = styled.div`
   }
 `
 
-export const PlantBtn = styled.span<{ $tone: TodoSubcategory; $open?: boolean; $stacked?: boolean }>`
+export const PlantBtn = styled.span<{ $tone: CareIcon; $open?: boolean; $stacked?: boolean }>`
   position: relative;
   display: block;
   flex: 0 0 auto;
@@ -470,7 +470,7 @@ const dropIn = keyframes`
   }
 `
 
-export const DropIcon = styled.div<{ $kind: TodoSubcategory }>`
+export const DropIcon = styled.div<{ $kind: CareIcon }>`
   position: absolute;
   z-index: 5;
   left: 50%;

@@ -1,8 +1,11 @@
 import pg from 'pg'
 import { generateNickname } from '../../../../src/features/profile/avatarIcons.ts'
 import type {
-  CarePlan,
+  CareRule,
+  CareTask,
+  CareTaskRule,
   Catalog,
+  PlantCare,
   CatalogProperty,
   PhotoCheck,
   Plant,
@@ -841,6 +844,8 @@ export function createSupabaseStore(): PlantxStore {
     )
     const categoryLinks = await rows(client, 'select * from catalog_property_categories')
     const subcategoryLinks = await rows(client, 'select * from catalog_property_subcategories')
+    const tasks = await rows(client, 'select * from care_tasks order by position, id')
+    const rules = await rows(client, 'select * from care_rules order by category_id, subcategory_id nulls first, task_id')
     return {
       categories: categories.map((row) => ({
         id: text(row, 'id'),
@@ -849,7 +854,6 @@ export function createSupabaseStore(): PlantxStore {
         nameHe: text(row, 'name_he'),
         ticker: text(row, 'ticker'),
         photo: text(row, 'photo'),
-        ...(careOf(row) ? { care: careOf(row) } : {}),
       })),
       subcategories: subcategories.map((row) => {
         const item = {
@@ -858,12 +862,38 @@ export function createSupabaseStore(): PlantxStore {
           name: text(row, 'name'),
           nameHe: text(row, 'name_he'),
           code: text(row, 'code'),
-          ...(careOf(row) ? { care: careOf(row) } : {}),
         }
         const photo = optional(row, 'photo')
         return photo ? { ...item, photo } : item
       }),
       properties: properties.map((row) => propertyFrom(row, options, categoryLinks, subcategoryLinks)),
+      careTasks: tasks.map((row) => {
+        const interval = intervalOf(row)
+        const task: CareTask = {
+          id: text(row, 'id'),
+          name: text(row, 'name'),
+          nameHe: text(row, 'name_he'),
+          icon: text(row, 'icon') as CareTask['icon'],
+          audience: text(row, 'audience') as CareTask['audience'],
+        }
+        if (interval) task.interval = interval
+        if (row.built_in) task.builtIn = true
+        return task
+      }),
+      careRules: rules.map((row) => {
+        const interval = intervalOf(row)
+        const rule: CareTaskRule = {
+          id: text(row, 'id'),
+          taskId: text(row, 'task_id'),
+          categoryId: text(row, 'category_id'),
+          mode: text(row, 'mode') as CareTaskRule['mode'],
+          source: text(row, 'source') as CareTaskRule['source'],
+        }
+        const subcategoryId = optional(row, 'subcategory_id')
+        if (subcategoryId) rule.subcategoryId = subcategoryId
+        if (interval) rule.interval = interval
+        return rule
+      }),
     }
   }
 
@@ -871,34 +901,32 @@ export function createSupabaseStore(): PlantxStore {
     const categoryIds = catalog.categories.map((item) => item.id)
     for (const [position, item] of catalog.categories.entries()) {
       await client.query(
-        `insert into catalog_categories (id, position, species_id, name, name_he, ticker, photo, care)
-         values ($1,$2,$3,$4,$5,$6,$7,$8)
+        `insert into catalog_categories (id, position, species_id, name, name_he, ticker, photo)
+         values ($1,$2,$3,$4,$5,$6,$7)
          on conflict (id) do update set
            position = excluded.position,
            species_id = excluded.species_id,
            name = excluded.name,
            name_he = excluded.name_he,
            ticker = excluded.ticker,
-           photo = excluded.photo,
-           care = excluded.care`,
-        [item.id, position, item.speciesId, item.name, item.nameHe, item.ticker, item.photo ?? '', item.care ? JSON.stringify(item.care) : null],
+           photo = excluded.photo`,
+        [item.id, position, item.speciesId, item.name, item.nameHe, item.ticker, item.photo ?? ''],
       )
     }
     const knownCategories = new Set(categoryIds)
     for (const [position, item] of catalog.subcategories.entries()) {
       if (!knownCategories.has(item.categoryId)) continue
       await client.query(
-        `insert into catalog_subcategories (id, position, category_id, name, name_he, code, photo, care)
-         values ($1,$2,$3,$4,$5,$6,$7,$8)
+        `insert into catalog_subcategories (id, position, category_id, name, name_he, code, photo)
+         values ($1,$2,$3,$4,$5,$6,$7)
          on conflict (id) do update set
            position = excluded.position,
            category_id = excluded.category_id,
            name = excluded.name,
            name_he = excluded.name_he,
            code = excluded.code,
-           photo = excluded.photo,
-           care = excluded.care`,
-        [item.id, position, item.categoryId, item.name, item.nameHe, item.code, item.photo ?? null, item.care ? JSON.stringify(item.care) : null],
+           photo = excluded.photo`,
+        [item.id, position, item.categoryId, item.name, item.nameHe, item.code, item.photo ?? null],
       )
     }
     const keptSubs = catalog.subcategories.filter((item) => knownCategories.has(item.categoryId)).map((item) => item.id)
@@ -940,6 +968,39 @@ export function createSupabaseStore(): PlantxStore {
           [item.id, subcategoryId],
         )
       }
+    }
+
+    // Care tasks, then their rules. Deleting a task deletes its rules and every task row of that kind, so a
+    // catalog without care data (never sent by the service) leaves the stored tasks alone.
+    if (!Array.isArray(catalog.careTasks)) return
+    const taskIds = catalog.careTasks.map((task) => task.id)
+    for (const [position, task] of catalog.careTasks.entries()) {
+      await client.query(
+        `insert into care_tasks (id, position, name, name_he, icon, audience, every_days, winter_every_days, months, built_in)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         on conflict (id) do update set
+           position = excluded.position,
+           name = excluded.name,
+           name_he = excluded.name_he,
+           icon = excluded.icon,
+           audience = excluded.audience,
+           every_days = excluded.every_days,
+           winter_every_days = excluded.winter_every_days,
+           months = excluded.months,
+           built_in = excluded.built_in`,
+        [task.id, position, task.name, task.nameHe, task.icon, task.audience, ...intervalParams(task.interval), task.builtIn === true],
+      )
+    }
+    await client.query('delete from care_tasks where not (id = any($1::text[]))', [taskIds])
+    await client.query('delete from care_rules')
+    for (const rule of catalog.careRules) {
+      if (!taskIds.includes(rule.taskId) || !knownCategories.has(rule.categoryId)) continue
+      if (rule.subcategoryId && !liveSubs.has(rule.subcategoryId)) continue
+      await client.query(
+        `insert into care_rules (id, task_id, category_id, subcategory_id, mode, every_days, winter_every_days, months, source)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [rule.id, rule.taskId, rule.categoryId, rule.subcategoryId ?? null, rule.mode, ...intervalParams(rule.interval), rule.source],
+      )
     }
   }
 
@@ -1214,10 +1275,23 @@ function text(row: SqlRow, key: string) {
   return value == null ? '' : String(value)
 }
 
-/** A `care` jsonb column: the parsed plan, or undefined when unset. */
-function careOf(row: SqlRow): CarePlan | undefined {
+/** A plant's `care` jsonb column: the owner's own care, or undefined when unset. */
+function careOf(row: SqlRow): PlantCare | undefined {
   const value = row.care
-  return value && typeof value === 'object' ? (value as CarePlan) : undefined
+  return value && typeof value === 'object' ? (value as PlantCare) : undefined
+}
+
+/** `every_days`, `winter_every_days`, `months` columns as an interval, or undefined when there is none. */
+function intervalOf(row: SqlRow): CareRule | undefined {
+  if (row.every_days == null) return undefined
+  const rule: CareRule = { everyDays: Number(row.every_days) }
+  if (row.winter_every_days != null) rule.winterEveryDays = Number(row.winter_every_days)
+  if (Array.isArray(row.months) && row.months.length > 0) rule.months = (row.months as unknown[]).map(Number)
+  return rule
+}
+
+function intervalParams(rule: CareRule | undefined) {
+  return [rule?.everyDays ?? null, rule?.winterEveryDays ?? null, rule?.months?.length ? rule.months : null]
 }
 
 function optional(row: SqlRow, key: string) {

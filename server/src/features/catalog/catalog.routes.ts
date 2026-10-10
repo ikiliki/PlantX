@@ -6,6 +6,7 @@ import { assertPhoto } from '../../lib/images.ts'
 import { rateLimit } from '../../lib/rateLimit.ts'
 import { catalogService } from './catalog.service.ts'
 import { catalogSuggestionService } from './catalogSuggestion.service.ts'
+import { todoService } from '../todo/todo.service.ts'
 
 export const catalogRoutes = new Hono()
 
@@ -47,10 +48,21 @@ catalogRoutes.post('/suggestions/:id/accept', async (c) => {
   return c.json({ ok: true })
 })
 
+/** Care plans → Suggest with AI: Gemini proposes one category's care rules (admin only, never automatic). */
+catalogRoutes.post('/care/suggest/:categoryId', rateLimit({ name: 'care-suggest', max: 30, windowSeconds: 3600 }), async (c) => {
+  await requireAdmin(c)
+  const catalog = await catalogService.suggestCare(c.req.param('categoryId'))
+  // Plants follow the new care: due days move, tasks that no longer apply drop, new ones open.
+  await todoService.ensureCareTodos({ move: true })
+  return c.json({ catalog })
+})
+
 /** Accepts `{ catalog }` or a raw catalog object. */
 catalogRoutes.put('/', async (c) => {
   await requireAdmin(c)
   const body = (await c.req.json()) as Catalog | { catalog: Catalog }
   const catalog = 'catalog' in body && body.catalog ? body.catalog : (body as Catalog)
-  return c.json({ catalog: await catalogService.save(catalog) })
+  const saved = await catalogService.save(catalog)
+  await todoService.ensureCareTodos({ move: true })
+  return c.json({ catalog: saved })
 })

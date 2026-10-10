@@ -2,38 +2,45 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
-import type { CarePlan, CareRule, Plant, Todo, TodoSubcategory } from '../../../../mock/types'
+import type { CareRule, Plant, PlantCare, Todo, TodoSubcategory } from '../../../../mock/types'
 import { EditPencil, InlineEdit } from '../../../greenhouse/components/InlineEdit/InlineEdit'
-import { CARE_INTERVAL_CHOICES, careFor, careResting } from '../../carePlan'
-import { careKindName } from '../../careKinds'
+import { CARE_INTERVAL_CHOICES, careFor, careResting, type EffectiveCare } from '../../carePlan'
+import { useCareTasks } from '../../careKinds'
 import { addDays, isFirstWaterTodo, isOpenTodo, todayIso } from '../../todoSchedule'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
 import {
+  AddChip,
+  AddRow,
   Block,
   BlockHead,
   Copy,
   DoneRow,
   Due,
   Empty,
-  HeadNote,
   Kind,
+  Legend,
+  LegendDot,
   List,
   PlanRow,
   Root,
   Week,
+  WeekEnds,
   Weeks,
 } from './PassportTodo.styles'
 
 const WEEKS = 12
+
+type WeekState = 'all' | 'some' | 'missed' | 'none'
 
 function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000)
 }
 
 /**
- * The passport Tasks tab: the plant's care plan (one row per kind: how often, last done, next due), the
- * last twelve weeks of care, and the care history. The owner changes a kind's interval, pauses it, or goes
- * back to the catalog's rule with the pencil. Only the grower sees it.
+ * The passport Tasks tab (the grower's own): the care plan, one row per task with how often, last done and
+ * next due. The pencil offers the catalog's suggestion first (marked default; AI's when AI suggested it), other
+ * intervals, and pause; a task with no interval anywhere says so and gets a "Set schedule" task. Optional tasks
+ * can be added. Then the last twelve weeks, each green / yellow / red / grey, and the care history.
  */
 export function PassportTodo({
   plant,
@@ -46,105 +53,159 @@ export function PassportTodo({
 }) {
   const { t, locale } = useI18n()
   const { db, editPlant } = useStore()
-  const [editing, setEditing] = useState<TodoSubcategory | null>(null)
+  const care = useCareTasks()
+  const [editing, setEditing] = useState<string | null>(null)
   const today = todayIso()
   const plantTodos = todos.filter((todo) => todo.plantId === plant.id && todo.category === 'plant')
   const plan = careFor(plant, db.catalog)
-  const catalogPlan = careFor({ ...plant, care: undefined }, db.catalog)
-  const ownPlan = Boolean(plant.care && Object.keys(plant.care).length > 0)
 
   const dateFormat = new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-GB', { day: 'numeric', month: 'short' })
   const monthFormat = new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-GB', { month: 'short' })
   const shortDate = (iso: string) => dateFormat.format(new Date(`${iso}T12:00:00Z`))
   const monthName = (month: number) => monthFormat.format(new Date(Date.UTC(2026, month - 1, 15)))
 
-  const cadence = (rule: CareRule) => {
-    const every = rule.winterEveryDays
+  const every = (rule: CareRule) => {
+    const base = rule.winterEveryDays
       ? t.passport.careEveryWinter.replace('{n}', String(rule.everyDays)).replace('{w}', String(rule.winterEveryDays))
       : t.passport.careEvery.replace('{n}', String(rule.everyDays))
     const months = rule.months
-    if (!months || months.length === 0) return every
-    const season = `${monthName(months[0])}–${monthName(months[months.length - 1])}`
-    if (!careResting(rule, today)) return `${every} · ${season}`
-    const next = months.find((month) => month > Number(today.slice(5, 7))) ?? months[0]
-    return `${every} · ${t.passport.careResting.replace('{month}', monthName(next))}`
+    return months && months.length > 0 ? `${base} · ${monthName(months[0])}–${monthName(months[months.length - 1])}` : base
   }
+  const cadence = (rule: CareRule) => {
+    if (!careResting(rule, today)) return every(rule)
+    const months = rule.months ?? []
+    const next = months.find((month) => month > Number(today.slice(5, 7))) ?? months[0]
+    return `${t.passport.careEvery.replace('{n}', String(rule.everyDays))} · ${t.passport.careResting.replace('{month}', monthName(next))}`
+  }
+  const suggestionLabel = (item: EffectiveCare) =>
+    item.suggested
+      ? `${(item.suggestedFrom?.ai ? t.passport.careSuggestedAi : t.passport.careSuggested).replace('{rule}', every(item.suggested))} ${t.passport.careDefaultTag}`
+      : ''
 
-  const lastDone = (kind: TodoSubcategory) =>
+  const lastDone = (kind: string) =>
     plantTodos
       .filter((todo) => todo.subcategory === kind && todo.completedOn != null)
       .map((todo) => todo.completedOn as string)
       .sort()
       .pop()
 
-  const save = async (kind: TodoSubcategory, choice: string) => {
-    const next: CarePlan = { ...(plant.care ?? {}) }
-    if (choice === 'catalog') delete next[kind]
-    else if (choice === 'off') next[kind] = null
+  const saveCare = async (next: PlantCare) => editPlant(plant.id, { care: next })
+
+  const save = async (item: EffectiveCare, choice: string) => {
+    const next: PlantCare = { ...(plant.care ?? {}) }
+    const id = item.task.id
+    const added = Boolean(next[id]?.added)
+    if (choice === 'suggested') {
+      if (added) next[id] = { added: true }
+      else delete next[id]
+    } else if (choice === 'off') next[id] = { off: true }
+    else if (choice === 'remove') delete next[id]
     else {
-      const months = catalogPlan.find((item) => item.kind === kind)?.rule?.months
-      next[kind] = { everyDays: Number(choice), ...(months ? { months } : {}) }
+      const months = item.suggested?.months
+      next[id] = { ...(added ? { added: true } : {}), interval: { everyDays: Number(choice), ...(months ? { months } : {}) } }
     }
-    const ok = await editPlant(plant.id, { care: next })
+    const ok = await saveCare(next)
     if (ok) setEditing(null)
     return ok
   }
 
-  // Twelve weeks back from today: which kind was done in each, and how much was on time.
-  const since = addDays(today, -WEEKS * 7 + 1)
-  const recent = plantTodos.filter((todo) => todo.completedOn != null && todo.completedOn >= since)
-  const weeks: (TodoSubcategory | undefined)[] = Array.from({ length: WEEKS }, () => undefined)
-  for (const todo of recent) {
-    const cell = WEEKS - 1 - Math.floor(daysBetween(todo.completedOn as string, today) / 7)
-    if (cell >= 0 && cell < WEEKS) weeks[cell] ??= todo.subcategory
-  }
-  const onTime = recent.filter((todo) => todo.dueOn == null || daysBetween(todo.dueOn, todo.completedOn as string) <= 1)
+  // Twelve weeks, oldest first: what was due in each and how much of it got done. Something due today and
+  // not done yet is still on time, so it does not count until tomorrow.
+  const weeks = Array.from({ length: WEEKS }, (_, index) => {
+    const end = addDays(today, -(WEEKS - 1 - index) * 7)
+    const start = addDays(end, -6)
+    const due = plantTodos.filter(
+      (todo) =>
+        todo.dueOn != null &&
+        todo.dueOn >= start &&
+        todo.dueOn <= end &&
+        (todo.completedOn != null || todo.dueOn < today),
+    )
+    const done = due.filter((todo) => todo.completedOn != null).length
+    const state: WeekState = due.length === 0 ? 'none' : done === due.length ? 'all' : done > 0 ? 'some' : 'missed'
+    const line =
+      due.length === 0
+        ? t.passport.careWeekEmpty.replace('{day}', shortDate(start))
+        : t.passport.careWeekLine
+            .replace('{day}', shortDate(start))
+            .replace('{done}', String(done))
+            .replace('{due}', String(due.length))
+    return { state, line }
+  })
 
   const history = plantTodos
     .filter((todo) => todo.completedOn != null)
     .sort((a, b) => (b.completedOn ?? '').localeCompare(a.completedOn ?? ''))
 
+  const shown = plan.filter((item) => item.active || item.own)
+  const offered = plan.filter((item) => item.offered)
+
   return (
     <Root>
       <Block>
-        <BlockHead>
-          <h3>{t.passport.carePlan}</h3>
-          <HeadNote>{ownPlan ? t.passport.careYours : t.passport.careFromCatalog}</HeadNote>
-        </BlockHead>
+        <h3>{t.passport.carePlan}</h3>
         <List>
-          {plan.map(({ kind, rule }) => {
-            const name = careKindName(kind, t)
+          {shown.map((item) => {
+            const kind = item.task.id
+            const name = care.name(kind)
+            const paused = !item.active
             const open = plantTodos.find((todo) => todo.subcategory === kind && isOpenTodo(todo))
             const last = lastDone(kind)
             const late = open?.dueOn ? daysBetween(open.dueOn, today) : 0
-            const due = !open
+            const firstWater = open ? isFirstWaterTodo(open, plantTodos) : false
+            const needsSchedule = !paused && !item.interval
+            const due = paused
               ? null
-              : isFirstWaterTodo(open, plantTodos)
-                ? t.passport.todoFirstWater
-                : late > 0
-                  ? t.todo.statusOverdue.replace('{n}', String(late))
-                  : late === 0
-                    ? t.todo.statusToday
-                    : t.passport.careNext.replace('{day}', shortDate(open.dueOn as string))
-            const own = plant.care && kind in plant.care ? plant.care[kind] : undefined
-            const current = own === undefined ? 'catalog' : own === null ? 'off' : String(own.everyDays)
-            const catalogRule = catalogPlan.find((item) => item.kind === kind)?.rule
+              : needsSchedule
+                ? t.todo.actionSetSchedule
+                : !open
+                  ? null
+                  : firstWater
+                    ? t.passport.todoFirstWater
+                    : late > 0
+                      ? t.todo.statusOverdue.replace('{n}', String(late))
+                      : late === 0
+                        ? t.todo.statusToday
+                        : t.passport.careNext.replace('{day}', shortDate(open.dueOn as string))
+            const own = plant.care?.[kind]
+            const current = own?.off ? 'off' : own?.interval ? String(own.interval.everyDays) : 'suggested'
+            const options = [
+              ...(item.suggested ? [{ id: 'suggested', label: suggestionLabel(item) }] : []),
+              // Intervals near the suggestion only (a third to three times it): no "every 730 days" for watering.
+              ...CARE_INTERVAL_CHOICES.filter((days) => {
+                const base = item.suggested?.everyDays ?? 14
+                return days >= base / 3 && days <= base * 3 && (days !== item.suggested?.everyDays || item.suggested.months)
+              }).map(
+                (days) => ({ id: String(days), label: t.passport.careEvery.replace('{n}', String(days)) }),
+              ),
+              { id: 'off', label: t.passport.carePause },
+              ...(own?.added ? [{ id: 'remove', label: t.passport.careRemove }] : []),
+            ]
             return (
-              <PlanRow key={kind} $tone={kind} $off={!rule} $mark={careMark === kind} data-care-kind={kind}>
+              <PlanRow key={kind} $tone={item.task.icon} $off={paused} $mark={careMark === kind} data-care-kind={kind}>
                 <Kind>
                   <TodoKindIcon kind={kind} size={18} />
                 </Kind>
                 <Copy>
                   <strong>{name}</strong>
                   <span>
-                    {rule ? cadence(rule) : t.passport.careOff}
-                    {rule ? ` · ${last ? t.passport.careLast.replace('{day}', shortDate(last)) : t.passport.careNever}` : ''}
+                    {paused
+                      ? t.passport.carePaused
+                      : item.interval
+                        ? `${cadence(item.interval)} · ${last ? t.passport.careLast.replace('{day}', shortDate(last)) : t.passport.careNever}`
+                        : t.passport.careNoSchedule}
                   </span>
                 </Copy>
-                {due && open ? (
-                  <Due as={Link} to={`/tasks/${open.id}`} $tone={kind} $late={late > 0}>
-                    {due}
-                  </Due>
+                {due ? (
+                  needsSchedule ? (
+                    <Due as="button" type="button" $tone={item.task.icon} $late onClick={() => setEditing(kind)}>
+                      {due}
+                    </Due>
+                  ) : (
+                    <Due as={Link} to={open ? `/tasks/${open.id}` : '/tasks'} $tone={item.task.icon} $late={late > 0}>
+                      {due}
+                    </Due>
+                  )
                 ) : (
                   <span />
                 )}
@@ -154,18 +215,8 @@ export function PassportTodo({
                     label={name}
                     kind="choice"
                     value={current}
-                    options={[
-                      {
-                        id: 'catalog',
-                        label: catalogRule ? `${t.passport.careUseCatalog} · ${cadence(catalogRule)}` : `${t.passport.careUseCatalog} · ${t.passport.careOff}`,
-                      },
-                      ...CARE_INTERVAL_CHOICES[kind].map((days) => ({
-                        id: String(days),
-                        label: t.passport.careEvery.replace('{n}', String(days)),
-                      })),
-                      { id: 'off', label: t.passport.carePause },
-                    ]}
-                    onSave={(choice) => save(kind, choice)}
+                    options={options}
+                    onSave={(choice) => save(item, choice)}
                     onCancel={() => setEditing(null)}
                   />
                 ) : null}
@@ -173,22 +224,50 @@ export function PassportTodo({
             )
           })}
         </List>
+        {offered.length > 0 ? (
+          <AddRow>
+            <span>{t.passport.careAdd}</span>
+            {offered.map((item) => (
+              <AddChip
+                key={item.task.id}
+                type="button"
+                data-care-add={item.task.id}
+                onClick={() => void saveCare({ ...(plant.care ?? {}), [item.task.id]: { added: true } })}
+              >
+                <TodoKindIcon kind={item.task.id} size={14} />+ {care.name(item.task.id)}
+              </AddChip>
+            ))}
+          </AddRow>
+        ) : null}
       </Block>
 
       <Block>
         <BlockHead>
-          <h3>{t.passport.careWeeks}</h3>
-          {recent.length > 0 ? (
-            <HeadNote>
-              {t.passport.careOnTime.replace('{n}', String(onTime.length)).replace('{total}', String(recent.length))}
-            </HeadNote>
-          ) : null}
+          <h3>{t.passport.careWeeksTitle}</h3>
         </BlockHead>
-        <Weeks aria-hidden data-care-weeks>
-          {weeks.map((kind, index) => (
-            <Week key={index} $tone={kind} />
+        <Weeks data-care-weeks>
+          {weeks.map((week, index) => (
+            <Week key={index} $state={week.state} title={week.line} aria-label={week.line} />
           ))}
         </Weeks>
+        <WeekEnds aria-hidden>
+          <span>{t.passport.careWeeksAgo}</span>
+          <span>{t.passport.careThisWeek}</span>
+        </WeekEnds>
+        <Legend>
+          <span>
+            <LegendDot $state="all" /> {t.passport.careWeekAll}
+          </span>
+          <span>
+            <LegendDot $state="some" /> {t.passport.careWeekSome}
+          </span>
+          <span>
+            <LegendDot $state="missed" /> {t.passport.careWeekMissed}
+          </span>
+          <span>
+            <LegendDot $state="none" /> {t.passport.careWeekNone}
+          </span>
+        </Legend>
       </Block>
 
       <Block>
@@ -198,12 +277,16 @@ export function PassportTodo({
         ) : (
           <List>
             {history.map((todo) => (
-              <DoneRow key={todo.id} $tone={todo.subcategory} $mark={careMark === todo.subcategory && todo === history[0]}>
+              <DoneRow
+                key={todo.id}
+                $tone={care.icon(todo.subcategory)}
+                $mark={careMark === todo.subcategory && todo === history[0]}
+              >
                 <Kind>
                   <TodoKindIcon kind={todo.subcategory} size={18} />
                 </Kind>
                 <Copy>
-                  <strong>{careKindName(todo.subcategory, t)}</strong>
+                  <strong>{care.name(todo.subcategory)}</strong>
                   <span>{t.passport.todoDone.replace('{day}', shortDate(todo.completedOn as string))}</span>
                 </Copy>
               </DoneRow>

@@ -4,7 +4,7 @@ import { Errors } from '../../lib/errors.ts'
 import { getStore } from '../../db/index.ts'
 import { activityService } from '../activity/activity.service.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
-import { CARE_HISTORY, careFillFrom } from '../../../../src/features/todo/carePlan.ts'
+import { careFillFrom, careHistory } from '../../../../src/features/todo/carePlan.ts'
 import { syncCareTodos } from '../../../../src/features/todo/todoSchedule.ts'
 import type { Plant } from '../../../../src/mock/types.ts'
 import type { Todo } from './todo.types.ts'
@@ -112,7 +112,13 @@ export const todoService = {
 
     todo.completedOn = at
     if (todo.dueOn == null) todo.dueOn = at
-    plant.history = [{ at, ...CARE_HISTORY[todo.subcategory] }, ...plant.history]
+    const catalog = await catalogService.get()
+    const task = catalog.careTasks.find((item) => item.id === todo.subcategory) ?? {
+      id: todo.subcategory,
+      name: todo.subcategory,
+      nameHe: todo.subcategory,
+    }
+    plant.history = [{ at, ...careHistory(task) }, ...plant.history]
 
     const activityInput: Parameters<typeof activityService.record>[0] | null =
       todo.subcategory === 'water'
@@ -134,7 +140,6 @@ export const todoService = {
           : null
 
     // The finished task closes first, then the plan opens the next one. todos_open_unique allows one open per kind.
-    const catalog = await catalogService.get()
     const next = syncCareTodos(rows, plant, catalog)
     await store.todos.remove(next.removed)
     await save(next.todos, before)
@@ -149,21 +154,24 @@ export const todoService = {
     }
   },
 
-  /** Every unsold plant has the open tasks its care plan asks for (run when the server starts). */
-  async ensureCareTodos() {
+  /**
+   * Every unsold plant has the open tasks its care plan asks for: at start (`move` off: only missing tasks),
+   * and after the admin changes care in the catalog (`move` on: due days follow the new intervals).
+   */
+  async ensureCareTodos({ move = false }: { move?: boolean } = {}) {
     const store = getStore()
     const [plants, rows, catalog] = await Promise.all([store.plants.list(), store.todos.list(), catalogService.get()])
     const before = snapshot(rows)
     let current = rows
     const removed: string[] = []
     for (const plant of plants) {
-      const next = syncCareTodos(current, plant, catalog)
+      const next = syncCareTodos(current, plant, catalog, { move })
       current = next.todos
       removed.push(...next.removed)
     }
     const added = current.length - rows.length + removed.length
     await store.todos.remove(removed)
-    if (added > 0) await save(current, before)
+    await save(current, before)
     return { added }
   },
 }

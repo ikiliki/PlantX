@@ -3,8 +3,7 @@ import { Button } from '../../../../components/Button/Button'
 import { Field, FormGrid, FormRow, Input } from '../../../../components/Form/Form'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import type { CarePlan, CatalogSubcategory } from '../../../../mock/types'
-import { CarePlanFields } from '../CarePlanFields/CarePlanFields'
+import type { CatalogSubcategory } from '../../../../mock/types'
 import { readPhotoFile } from '../../../../utils/readPhoto'
 import {
   Backdrop,
@@ -24,21 +23,17 @@ export type SubcategoryDraft = {
   nameHe: string
   code: string
   photo?: string
-  care?: CarePlan
 }
 
 export function SubcategoryEditorDialog({
   categoryId,
   initial,
-  inheritedCare,
   onConfirm,
   onDelete,
   onClose,
 }: {
   categoryId: string
   initial?: CatalogSubcategory
-  /** The category's care plan: what Default means for this variety. */
-  inheritedCare?: CarePlan
   onConfirm: (draft: SubcategoryDraft) => void
   onDelete?: () => void
   onClose: () => void
@@ -49,7 +44,6 @@ export function SubcategoryEditorDialog({
   const [nameHe, setNameHe] = useState(initial?.nameHe ?? '')
   const [code, setCode] = useState(initial?.code ?? '')
   const [photo, setPhoto] = useState(initial?.photo ?? '')
-  const [care, setCare] = useState<CarePlan | undefined>(initial?.care)
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -60,7 +54,6 @@ export function SubcategoryEditorDialog({
       nameHe,
       code,
       photo: photo || undefined,
-      care,
     })
   }
 
@@ -105,10 +98,6 @@ export function SubcategoryEditorDialog({
                 <Input value={code} onChange={(event) => setCode(event.target.value)} required />
               </Field>
             </FormRow>
-            <Field as="div">
-              {t.admin.careHeading}
-              <CarePlanFields value={care} inherited={inheritedCare} onChange={setCare} />
-            </Field>
             <Footer>
               {initial && onDelete ? (
                 <Button type="button" variant="danger" size="sm" onClick={onDelete}>

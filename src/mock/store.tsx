@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { deletedActivityText, editedActivityText } from '../features/greenhouse/plantActivity'
-import { createCatalog } from './catalog'
+import { createCatalog, emptyCatalog } from './catalog'
 import { saveCatalogFile } from './catalogFile'
 import { areaById, fieldsFromPlace, ownerGreenhousePlace, resolveArea, UNKNOWN_AREA } from './locations'
 import {
@@ -74,6 +74,7 @@ import {
   patchPlant,
   deletePlantRequest,
   type PlantPatch,
+  postCareSuggest,
   postTodoComplete,
   putReaction,
   postRejectPending,
@@ -94,7 +95,8 @@ import { cleanNickname } from '../features/profile/avatarIcons'
 import { LEGAL_VERSION } from '../features/legal/legalVersion'
 import { MOCK_OPERATOR_ID } from '../theme/operator'
 import { isFirstWaterTodo, openTodo, careFillWindow, syncCareTodos, todayIso } from '../features/todo/todoSchedule'
-import { CARE_HISTORY, cleanCarePlan } from '../features/todo/carePlan'
+import { careHistory, cleanPlantCare, mergeAiRules } from '../features/todo/carePlan'
+import { careSuggestionsFor } from '../features/todo/careSuggestions'
 
 const STORAGE_KEY = 'plantx-mock-db-v9'
 
@@ -120,7 +122,7 @@ function emptyDb(): MockDb {
     pendingUsers: [],
     pendingTransactions: [],
     marketClasses: [],
-    catalog: { categories: [], subcategories: [], properties: [] },
+    catalog: emptyCatalog(),
     currentUserId: null,
   }
 }
@@ -278,6 +280,8 @@ interface StoreApi {
   addGuestPlant: (input: Omit<GuestPlant, 'id' | 'createdAt'>) => string
   /** Merge one activity the server already saved (an Add Plant scan), or a local one in UI-mock mode. */
   noteActivity: (update: FeedUpdate) => void
+  /** Care plans → Suggest with AI: replaces one category's AI rules (mock mode uses the written suggestions). */
+  suggestCare: (categoryId: string) => Promise<boolean>
   commitCatalog: (
     fn: (ctx: { catalog: Catalog; species: Species[] }) => {
       catalog: Catalog
@@ -378,13 +382,12 @@ export function StoreProvider({
           verifiedGreenhouseIds: d.verifiedGreenhouseIds ?? null,
         }
       }
-      const emptyCatalog = { categories: [], subcategories: [], properties: [] }
       return {
         ...d,
         system: normalizeSystem(live.system),
         users: listedUsers,
         plants: live.plants ? plants : sliceReady.current.plants ? d.plants : [],
-        catalog: live.catalog ?? (sliceReady.current.catalog ? d.catalog : emptyCatalog),
+        catalog: live.catalog ?? (sliceReady.current.catalog ? d.catalog : emptyCatalog()),
         updates: live.updates ? updates : sliceReady.current.updates ? d.updates : [],
         currentUserId: live.currentUserId,
         flags: personaFlags(live.currentUserId),
@@ -676,7 +679,7 @@ export function StoreProvider({
         const current = db.plants.find((item) => item.id === plantId)
         if (!current) return false
         const next: Plant = { ...current, ...patch }
-        if (patch.care !== undefined) next.care = cleanCarePlan(patch.care)
+        if (patch.care !== undefined) next.care = cleanPlantCare(patch.care, db.catalog.careTasks.map((task) => task.id))
         if (patch.sizeBand) next.sizeGrade = patch.sizeBand
         if (patch.stage) next.rooting = patch.stage === 'CUT' ? 'unrooted' : patch.stage === 'ROOTED' ? 'rooted' : 'established'
         const changed = Object.keys(patch).filter((key) => key !== 'private' && key !== 'titleHe' && key !== 'descriptionHe')
@@ -1210,7 +1213,8 @@ export function StoreProvider({
         // Outside the update: the store has no i18n, the toast builds the text.
         const care = todo.subcategory
         queueMicrotask(() => notifyCareDone(todo.id, care, CARE_XP))
-        plant.history = [{ at, ...CARE_HISTORY[care] }, ...plant.history]
+        const task = d.catalog.careTasks.find((item) => item.id === care) ?? { id: care, name: care, nameHe: care }
+        plant.history = [{ at, ...careHistory(task) }, ...plant.history]
 
         // Water and photo are feed posts; every kind counts for XP through its finished task.
         if (care === 'water' || care === 'photo') {
@@ -1345,6 +1349,24 @@ export function StoreProvider({
         d.updates = [next, ...(d.updates ?? []).filter((item) => item.id !== next.id)]
         return d
       }),
+    suggestCare: async (categoryId) => {
+      if (uiMocks) {
+        update((d) => {
+          d.catalog.careRules = mergeAiRules(d.catalog.careRules, categoryId, careSuggestionsFor(categoryId))
+          for (const plant of d.plants) d.todos = syncCareTodos(d.todos ?? [], plant, d.catalog, { move: true }).todos
+          return d
+        })
+        return true
+      }
+      const outcome = await postCareSuggest(categoryId)
+      if (!outcome.ok) return false
+      update((d) => {
+        d.catalog = outcome.data.catalog
+        return d
+      })
+      void reloadSlice('todos')
+      return true
+    },
     commitCatalog: (fn) => {
       update((d) => {
         d.catalog ??= createCatalog()
@@ -1354,7 +1376,12 @@ export function StoreProvider({
         })
         d.catalog = result.catalog
         if (result.species) d.species = result.species
-        void saveCatalogFile(d.catalog)
+        // Plants follow the catalog's care, like the server does after a save.
+        for (const plant of d.plants) d.todos = syncCareTodos(d.todos ?? [], plant, d.catalog, { move: true }).todos
+        const saved = d.catalog
+        void saveCatalogFile(saved).then((ok) => {
+          if (ok && !uiMocks) void reloadSlice('todos')
+        })
         return d
       })
     },

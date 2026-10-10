@@ -15,7 +15,7 @@ import { logger } from '../../lib/logger.ts'
 import { activityService } from '../activity/activity.service.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
 import { todoService } from '../todo/todo.service.ts'
-import { cleanCarePlan } from '../../../../src/features/todo/carePlan.ts'
+import { cleanPlantCare } from '../../../../src/features/todo/carePlan.ts'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -145,7 +145,7 @@ export const greenhouseService = {
     const row: Plant = {
       ...withLocation({
         ...rest,
-        care: cleanCarePlan(rest.care),
+        care: cleanPlantCare(rest.care, catalog.careTasks.map((task) => task.id)),
         photos,
         ownerId,
         status: 'owned',
@@ -223,9 +223,9 @@ export const greenhouseService = {
       if (photos.length > MAX_PLANT_PHOTOS) throw Errors.invalid(`A plant has at most ${MAX_PLANT_PHOTOS} photos`)
       set('photos', photos)
     }
-    // The owner's care plan for this plant: a rule per kind, null to pause one, {} to follow the catalog again.
+    // The owner's care for this plant, per task: an interval, off, or added; {} follows the catalog again.
     if (patch.care !== undefined) {
-      const care = cleanCarePlan(patch.care)
+      const care = cleanPlantCare(patch.care, (await catalogService.get()).careTasks.map((task) => task.id))
       if (JSON.stringify(care ?? null) !== JSON.stringify(plant.care ?? null)) {
         next.care = care
         changed.push('care')

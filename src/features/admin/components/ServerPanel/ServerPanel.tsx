@@ -23,6 +23,7 @@ import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { ApiDown } from '../ApiDown/ApiDown'
 import { IssueReports } from '../IssueReports/IssueReports'
 import { EnvMissing } from '../EnvMissing/EnvMissing'
+import { CarePlans } from '../CarePlans/CarePlans'
 import { CatalogTree, CatalogTreeDialog } from '../CatalogTree/CatalogTree'
 import {
   Backdrop,
@@ -477,6 +478,7 @@ export function ServerPanel() {
   const plantsOpen = Boolean(openSections.plants)
   const activitiesOpen = Boolean(openSections.activities)
   const catalogOpen = Boolean(openSections.catalog)
+  const careOpen = Boolean(openSections.care)
   const transactionsOpen = Boolean(openSections.transactions)
   const usersFetching = useSectionFetch(usersOpen, ['users'])
   const loadScanQuotas = useCallback(() => {
@@ -491,6 +493,7 @@ export function ServerPanel() {
   const plantsFetching = useSectionFetch(plantsOpen, ['plants'])
   const activitiesFetching = useSectionFetch(activitiesOpen, ['plants', 'updates'])
   const catalogFetching = useSectionFetch(catalogOpen, ['catalog'])
+  const careFetching = useSectionFetch(careOpen, ['catalog', 'plants', 'todos'])
   const transactionsFetching = useSectionFetch(transactionsOpen, ['transactions'])
 
   const toggleSection = (id: string, fetching = false) => {
@@ -1066,6 +1069,23 @@ export function ServerPanel() {
           </HeadMeta>
         </SectionHead>
         {catalogOpen && sliceBody('catalog', catalogFetching, <CatalogTree />)}
+      </Section>
+
+      <Section $demo={mock} data-care-plans>
+        <SectionHead
+          type="button"
+          $open={careOpen}
+          disabled={careFetching}
+          aria-expanded={careOpen}
+          aria-busy={careFetching}
+          onClick={() => toggleSection('care', careFetching)}
+        >
+          <h2>{t.admin.careTitle}</h2>
+          <HeadMeta>
+            <span>{db.catalog.careTasks.length}</span>
+          </HeadMeta>
+        </SectionHead>
+        {careOpen && sliceBody('catalog', careFetching, <CarePlans />)}
       </Section>
 
       {categoryPopupId && (

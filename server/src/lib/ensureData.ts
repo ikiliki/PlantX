@@ -2,6 +2,8 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Catalog, CatalogCategory, CatalogSubcategory, Plant, User } from '../../../src/mock/types.ts'
+import { BUILT_IN_TASKS } from '../../../src/features/todo/carePlan.ts'
+import { allCareSuggestions } from '../../../src/features/todo/careSuggestions.ts'
 import { DEFAULT_SYSTEM, normalizeSystem } from '../../../src/theme/release.ts'
 import { explainDbError, getStore } from '../db/index.ts'
 import type { PlantxStore } from '../db/store.ts'
@@ -76,6 +78,8 @@ async function seedEmpty(store: PlantxStore) {
     categories: [EXAMPLE_CATEGORY],
     subcategories: [EXAMPLE_SUBCATEGORY],
     properties: [],
+    careTasks: BUILT_IN_TASKS.map((task) => ({ ...task })),
+    careRules: [],
   })
   await store.plants.saveAll([])
   await store.activities.saveAll([])
@@ -92,7 +96,13 @@ async function seedDemo(store: PlantxStore) {
   }
   await store.system.save(normalizeSystem(readFixture('system.json')))
   await store.users.saveAll(readFixture<User[]>('users.json'))
-  await store.catalog.save(readFixture<Catalog>('catalog.json'))
+  // The fixture predates care plans: start from the built-in tasks and the AI suggestions.
+  const fixture = readFixture<Catalog>('catalog.json')
+  await store.catalog.save({
+    ...fixture,
+    careTasks: fixture.careTasks ?? BUILT_IN_TASKS.map((task) => ({ ...task })),
+    careRules: fixture.careRules ?? allCareSuggestions(fixture.categories.map((item) => item.id)),
+  })
   await store.plants.saveAll(readFixture<Plant[]>('plants.json'))
   await store.activities.saveAll(readFixture<Activity[]>('activities.json'))
   await store.todos.saveAll([])

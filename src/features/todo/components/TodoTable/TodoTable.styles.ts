@@ -1,18 +1,18 @@
 import styled, { css } from 'styled-components'
 import { pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
-import type { TodoSubcategory } from '../../../../mock/types'
+import type { CareIcon } from '../../../../mock/types'
 import { careColor } from '../../careKinds'
 
-type Tone = { $tone: TodoSubcategory }
+type Tone = { $tone: CareIcon }
 
 /** Water reads blue, a photo check-in peach: the same tones as the feed and the calendar. Newer kinds use their care colour. */
-const FIXED: Partial<Record<TodoSubcategory, { wash: string; edge: string; ink: string }>> = {
+const FIXED: Partial<Record<CareIcon, { wash: string; edge: string; ink: string }>> = {
   water: { wash: '#e8f3fa', edge: '#8ebcda', ink: '#2A628A' },
   photo: { wash: '#fff1e4', edge: '#e4c29a', ink: '#9A6230' },
 }
 
-function toneOf(kind: TodoSubcategory) {
+function toneOf(kind: CareIcon) {
   return (
     FIXED[kind] ?? {
       wash: `color-mix(in srgb, ${careColor(kind)} 12%, var(--c-creamCard))`,

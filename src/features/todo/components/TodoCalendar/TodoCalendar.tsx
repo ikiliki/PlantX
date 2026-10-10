@@ -6,10 +6,10 @@ import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { AddPlantCard } from '../../../greenhouse/components/AddPlantCard/AddPlantCard'
 import { PassportDialog } from '../../../greenhouse/components/PassportDialog/PassportDialog'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import type { Plant, Todo, TodoSubcategory } from '../../../../mock/types'
+import type { CareIcon, Plant, Todo, TodoSubcategory } from '../../../../mock/types'
 import { canFillTodo, inCareFillWindow, isFirstWaterTodo, isOpenTodo, todayIso } from '../../todoSchedule'
-import { CARE_FILL_DAYS, CARE_KINDS } from '../../carePlan'
-import { careAction, careKindName } from '../../careKinds'
+import { careFillDays } from '../../carePlan'
+import { useCareTasks } from '../../careKinds'
 import { TodoCareCard } from '../TodoCareCard/TodoCareCard'
 import { TodoDayPicker } from '../TodoDayPicker/TodoDayPicker'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
@@ -47,7 +47,6 @@ import {
 } from './TodoCalendar.styles'
 
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]
-const ALL_KINDS = CARE_KINDS
 const HOLD_OPEN_MS = 400
 
 function monthMatrix(year: number, month: number) {
@@ -65,19 +64,20 @@ function isoDay(year: number, month: number, day: number) {
   return new Date(Date.UTC(year, month, day)).toISOString().slice(0, 10)
 }
 
-function dayTone(items: Todo[]): TodoSubcategory | 'mixed' | undefined {
+function dayTone(items: Todo[], iconOf: (kind: string) => CareIcon): CareIcon | 'mixed' | undefined {
   if (items.length === 0) return undefined
-  const kinds = new Set(items.map((todo) => todo.subcategory))
-  return kinds.size > 1 ? 'mixed' : items[0].subcategory
+  const icons = new Set(items.map((todo) => iconOf(todo.subcategory)))
+  return icons.size > 1 ? 'mixed' : iconOf(items[0].subcategory)
 }
 
 function DayMarks({ items, plants }: { items: Todo[]; plants: Plant[] }) {
+  const care = useCareTasks()
   return (
     <>
       {items.map((todo) => {
         const plant = plants.find((item) => item.id === todo.plantId)
         return (
-          <PlantBtn key={todo.id} $tone={todo.subcategory} aria-hidden>
+          <PlantBtn key={todo.id} $tone={care.icon(todo.subcategory)} aria-hidden>
             <PlantImage src={plant?.photos[0]} alt="" />
             <PlantKind>
               <TodoKindIcon kind={todo.subcategory} size={10} />
@@ -118,13 +118,14 @@ export function TodoCalendar({
   onPickFirstWater: (todo: Todo, day: string) => void
 }) {
   const { t, tr, locale } = useI18n()
+  const care = useCareTasks()
   const mobile = useMediaQuery('(max-width: 899px)')
   const open = todos.filter(isOpenTodo)
   const living = plants.filter((plant) => plant.status === 'owned' || plant.status === 'listed')
   const kinds = useMemo(() => {
     const present = new Set(open.map((todo) => todo.subcategory))
-    return ALL_KINDS.filter((kind) => present.has(kind))
-  }, [open])
+    return care.tasks.map((task) => task.id).filter((kind) => present.has(kind))
+  }, [open, care.tasks])
 
   const [plantFilter, setPlantFilter] = useState<string | 'all'>('all')
   const [kindFilter, setKindFilter] = useState<TodoSubcategory | 'all'>('all')
@@ -310,7 +311,7 @@ export function TodoCalendar({
 
   const kindOptions = [
     { id: 'all' as const, label: t.todo.filterAllKinds },
-    ...kinds.map((kind) => ({ id: kind, label: careAction(kind, t), iconNode: <TodoKindIcon kind={kind} size={14} /> })),
+    ...kinds.map((kind) => ({ id: kind, label: care.name(kind), iconNode: <TodoKindIcon kind={kind} size={14} /> })),
   ]
 
   const toolbar =
@@ -402,7 +403,7 @@ export function TodoCalendar({
             const key = isoDay(year, month, day)
             const items = byDay.get(key) ?? []
             const done = doneByDay.get(key) ?? []
-            const tone = dayTone(items)
+            const tone = dayTone(items, care.icon)
             const selected = selectedDays.includes(key)
             const many = items.length > 1
             const expanded = openDay === key
@@ -452,7 +453,7 @@ export function TodoCalendar({
                 <DayNum>{day}</DayNum>
                 {done.length > 0 ? (
                   <DoneMark
-                    $kind={done[0].subcategory}
+                    $kind={care.icon(done[0].subcategory)}
                     title={t.todo.doneOnDay.replace('{n}', String(done.length))}
                   >
                     ✓
@@ -461,7 +462,7 @@ export function TodoCalendar({
                 {items.length > 0 ? (
                   <Icons data-peek="">
                     <PlantBtn
-                      $tone={items[0].subcategory}
+                      $tone={care.icon(items[0].subcategory)}
                       $stacked={many}
                       aria-hidden
                     >
@@ -482,7 +483,7 @@ export function TodoCalendar({
                   </Lift>
                 ) : null}
                 {drop?.day === key ? (
-                  <DropIcon key={drop.key} $kind={drop.kind}>
+                  <DropIcon key={drop.key} $kind={care.icon(drop.kind)}>
                     <TodoKindIcon kind={drop.kind} size={28} mark />
                   </DropIcon>
                 ) : null}
@@ -504,7 +505,7 @@ export function TodoCalendar({
           <EmptyDay>{mobile ? t.todo.emptyTasks : t.todo.emptyDay}</EmptyDay>
         ) : (
           <DayGroups>
-            {ALL_KINDS.map((kind) => {
+            {care.tasks.map(({ id: kind }) => {
               const group = shownTodos.filter((todo) => todo.subcategory === kind)
               if (group.length === 0) return null
               // Done all: every task of this kind that can be ticked off now (a first watering still needs its day).
@@ -513,7 +514,7 @@ export function TodoCalendar({
                 <KindGroup key={kind} data-care-group={kind}>
                   <KindHead>
                     <TodoKindIcon kind={kind} size={16} />
-                    {careKindName(kind, t)}
+                    {care.name(kind)}
                     <span>({group.length})</span>
                     {ready.length > 1 ? (
                       <Button size="sm" variant="ghost" type="button" onClick={() => ready.forEach((todo) => onComplete(todo))}>
@@ -570,7 +571,7 @@ export function TodoCalendar({
                 ? t.todo.fillWindowPhoto
                 : fill.subcategory === 'water'
                   ? t.todo.fillWindowWater
-                  : t.todo.fillWindowOther.replace('{n}', String(CARE_FILL_DAYS[fill.subcategory]))
+                  : t.todo.fillWindowOther.replace('{n}', String(careFillDays(fill.subcategory)))
               : t.todo.fillNotDue.replace('{day}', fill.dueOn ?? '—')
           }
           allow={(day) => canFillTodo(fill, todos) && inCareFillWindow(day, fill.subcategory, today)}

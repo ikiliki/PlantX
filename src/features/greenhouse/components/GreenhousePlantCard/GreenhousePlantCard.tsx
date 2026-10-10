@@ -9,10 +9,11 @@ import type { Plant, Todo, TodoSubcategory } from '../../../../mock/types'
 import {
   dueTodos,
   isFirstWaterTodo,
+  isSetTodo,
   upcomingTodos,
 } from '../../../todo/todoSchedule'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
-import { careAction } from '../../../todo/careKinds'
+import { useCareTasks } from '../../../todo/careKinds'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import { Icon } from '../../../../components/Icon/Icon'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
@@ -105,6 +106,7 @@ export function GreenhousePlantCard({
 }) {
   const { db } = useStore()
   const { t, tr, locale } = useI18n()
+  const care = useCareTasks()
   const marketOpen = isPlacementReady(db.system, 'market.board')
   const cardOn = isPlacementEnabled(db.system, 'greenhouse.card')
   if (!cardOn) return null
@@ -192,10 +194,14 @@ export function GreenhousePlantCard({
           <CareActions>
             {needed.map((todo) => {
               const first = isFirstWaterTodo(todo, todos)
-              const label = first ? t.todo.actionSetWaterDate : careAction(todo.subcategory, t)
+              const label = first
+                ? t.todo.actionSetWaterDate
+                : isSetTodo(todo, todos)
+                  ? t.todo.actionSetSchedule
+                  : care.name(todo.subcategory)
               const when = formatCareDay(todo.dueOn, locale)
               return (
-                <CareAction key={todo.id} $tone={todo.subcategory}>
+                <CareAction key={todo.id} $tone={care.icon(todo.subcategory)}>
                   <TodoKindIcon kind={todo.subcategory} size={14} />
                   <span>
                     {label}

@@ -1,10 +1,10 @@
 import styled, { css } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
-import type { TodoSubcategory } from '../../../../mock/types'
+import type { CareIcon } from '../../../../mock/types'
 import { careColor } from '../../careKinds'
 
-const cardFace = css<{ $tone: TodoSubcategory }>`
+const cardFace = css<{ $tone: CareIcon }>`
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px;
@@ -19,12 +19,12 @@ const cardFace = css<{ $tone: TodoSubcategory }>`
   text-align: start;
 `
 
-export const Card = styled.div<{ $tone: TodoSubcategory }>`
+export const Card = styled.div<{ $tone: CareIcon }>`
   ${cardFace}
 `
 
 /** Phone task: the whole card opens the day sheet. */
-export const CardHit = styled.button<{ $tone: TodoSubcategory }>`
+export const CardHit = styled.button<{ $tone: CareIcon }>`
   ${cardFace}
   ${pressable}
   appearance: none;
@@ -47,7 +47,7 @@ export const Photo = styled.div`
   }
 `
 
-export const Tone = styled.span<{ $tone: TodoSubcategory }>`
+export const Tone = styled.span<{ $tone: CareIcon }>`
   position: absolute;
   inset-inline: 4px;
   bottom: 4px;
@@ -121,7 +121,7 @@ export const Meta = styled.p`
   line-height: 1.35;
 `
 
-export const Action = styled.button<{ $tone: TodoSubcategory | 'quiet' }>`
+export const Action = styled.button<{ $tone: CareIcon | 'quiet' }>`
   ${pressable}
   appearance: none;
   display: inline-flex;

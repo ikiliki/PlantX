@@ -380,6 +380,13 @@ export function acceptCatalogSuggestion(id: string) {
   })
 }
 
+/** Care plans → Suggest with AI for one category (admin). */
+export function postCareSuggest(categoryId: string) {
+  return requestOutcome<{ catalog: import('./types').Catalog }>(`/api/catalog/care/suggest/${encodeURIComponent(categoryId)}`, {
+    method: 'POST',
+  })
+}
+
 export function putCatalog(catalog: import('./types').Catalog) {
   return request<{ catalog: import('./types').Catalog }>('/api/catalog', {
     method: 'PUT',
