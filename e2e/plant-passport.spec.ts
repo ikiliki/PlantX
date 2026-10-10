@@ -97,7 +97,7 @@ test.describe('plant passport', () => {
     await expect(passport.getByText('E2E history entry')).toHaveCount(0)
   })
 
-  test("the API gives no other grower's plant activity", async ({ page }) => {
+  test("the API gives no other grower's plant activity, but does give its tasks", async ({ page }) => {
     await signIn(page, MEMBER)
     const { plants } = (await (await page.request.get('/api/plants')).json()) as {
       plants: { id: string; ownerId: string }[]
@@ -108,5 +108,9 @@ test.describe('plant passport', () => {
     expect(((await byQuery.json()) as { activities: unknown[] }).activities).toEqual([])
     const byPlant = await page.request.get(`/api/plants/${theirs!.id}/activities`)
     expect(((await byPlant.json()) as { activities: unknown[] }).activities).toEqual([])
+    // Tasks are shared read-only: any member who may see the plant gets its schedule.
+    const tasks = await page.request.get(`/api/todos/plant/${theirs!.id}`)
+    expect(tasks.ok()).toBeTruthy()
+    expect(Array.isArray(((await tasks.json()) as { todos: unknown }).todos)).toBe(true)
   })
 })

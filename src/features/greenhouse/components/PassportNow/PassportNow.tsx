@@ -10,9 +10,9 @@ function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000)
 }
 
-/** The strip under a passport's name: care just done, the activity it was opened from, or the owner's next care. */
+/** The strip under a passport's name: care just done, or the owner's next care. */
 export function PassportNow({ now }: { now: PassportNowState }) {
-  const { t, tr } = useI18n()
+  const { t } = useI18n()
 
   if (now.kind === 'done') {
     const line = (now.care === 'photo' ? t.http.donePhoto : t.http.doneWater).replace('{xp}', String(CARE_XP))
@@ -24,17 +24,6 @@ export function PassportNow({ now }: { now: PassportNowState }) {
         <Body>
           <Label>{t.passport.nowDone}</Label>
           <Line>{line}</Line>
-        </Body>
-      </Root>
-    )
-  }
-
-  if (now.kind === 'moment') {
-    return (
-      <Root $tone="moment" data-passport-now="moment">
-        <Body>
-          <Label>{t.passport.nowFrom}</Label>
-          <Line>{tr(now.update.body, now.update.bodyHe)}</Line>
         </Body>
       </Root>
     )

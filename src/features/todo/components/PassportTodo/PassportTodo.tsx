@@ -13,10 +13,13 @@ export function PassportTodo({
   plant,
   todos,
   careMark,
+  readOnly = false,
 }: {
   plant: Plant
   todos: Todo[]
   careMark?: TodoSubcategory
+  /** Another grower's plant: the schedule shows, but a planned task does not open the Tasks page. */
+  readOnly?: boolean
 }) {
   const { t } = useI18n()
   const plantTodos = todos.filter((todo) => todo.plantId === plant.id && todo.category === 'plant')
@@ -41,10 +44,11 @@ export function PassportTodo({
               const when = first
                 ? t.passport.todoFirstWater
                 : t.passport.todoDue.replace('{day}', todo.dueOn ?? '—')
-              // A planned task opens it on the Tasks page (that plant, its day).
+              // Your planned task opens it on the Tasks page (that plant, its day); another grower's is just shown.
+              const link = readOnly ? { as: 'div' as const } : { as: Link, to: `/tasks/${todo.id}` }
               return (
                 <li key={todo.id}>
-                  <Row as={Link} to={`/tasks/${todo.id}`} $tone={todo.subcategory} $mark={marked}>
+                  <Row {...link} $tone={todo.subcategory} $mark={marked}>
                     <Kind>
                       <TodoKindIcon kind={todo.subcategory} size={18} />
                     </Kind>
@@ -52,7 +56,7 @@ export function PassportTodo({
                       <strong>{kindLabel(todo.subcategory, t.todo)}</strong>
                       <span>{when}</span>
                     </Copy>
-                    <Go aria-hidden>›</Go>
+                    {readOnly ? null : <Go aria-hidden>›</Go>}
                   </Row>
                 </li>
               )

@@ -36,6 +36,7 @@ import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
 import { PassportNow } from '../PassportNow/PassportNow'
 import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo'
+import { usePlantTodos } from '../../../todo/usePlantTodos'
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
@@ -154,6 +155,9 @@ export function PlantPassport({
   const { openAuth } = useAuth()
   const { t, tr, formatMoney, locale } = useI18n()
   const plant = db.plants.find((item) => item.id === plantId)
+  const viewerId = signedIn && currentUser ? currentUser.id : db.visitorId
+  // Tasks show for every grower: yours live from the store, another grower's read-only from the server.
+  const plantTodos = usePlantTodos({ id: plantId }, plant?.ownerId === viewerId)
   const startTab: PassportTab = initialTab ?? (careMark ? 'care' : 'story')
   const [tab, setTab] = useState<PassportTab>(startTab)
   const [customsOpen, setCustomsOpen] = useState(false)
@@ -195,8 +199,7 @@ export function PlantPassport({
   const species = db.species.find((item) => item.id === plant.speciesId)
   const owner = db.users.find((item) => item.id === plant.ownerId)
   const marketClass = db.marketClasses.find((item) => item.id === plant.marketClassId)
-  const ownerId = signedIn && currentUser ? currentUser.id : db.visitorId
-  const isOwner = plant.ownerId === ownerId
+  const isOwner = plant.ownerId === viewerId
   const isAdmin = signedIn && currentUser?.role === 'admin'
   // Inline edit (#70): the owner and the admin edit a value where it is shown, one field at a time. The
   // passport popup is embedded too, so only the inert admin previews (embedded, not a dialog) stay read-only.
@@ -299,11 +302,9 @@ export function PlantPassport({
   const now = passportNow({
     plant,
     todos: db.todos ?? [],
-    updates: db.updates ?? [],
     isOwner,
     careOn: todoOn,
     careMark,
-    activityKey,
   })
 
   const onBuy = () => {
@@ -734,8 +735,9 @@ export function PlantPassport({
             <FeatureGate placement="passport.todo" title={t.passport.todoTab}>
               <PassportTodo
                 plant={plant}
-                todos={(db.todos ?? []).filter((todo) => todo.plantId === plant.id)}
+                todos={plantTodos}
                 careMark={careMark}
+                readOnly={!isOwner}
               />
             </FeatureGate>
           )}

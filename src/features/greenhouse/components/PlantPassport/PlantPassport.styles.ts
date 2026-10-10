@@ -59,7 +59,7 @@ export const Board = styled.article<{ $embedded?: boolean; $dialog?: boolean }>`
     overscroll-behavior: contain;
     scroll-behavior: auto;
     background:
-      linear-gradient(165deg, color-mix(in srgb, var(--c-growth) 50%, transparent), color-mix(in srgb, var(--c-creamCard) 18%, transparent) 42%, color-mix(in srgb, var(--c-creamCard) 96%, transparent) 100%),
+      linear-gradient(165deg, color-mix(in srgb, var(--c-growth) 50%, transparent), transparent 42%),
       #f3f6ec;
   }
 `

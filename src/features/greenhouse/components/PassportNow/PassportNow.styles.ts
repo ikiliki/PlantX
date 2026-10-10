@@ -2,19 +2,17 @@ import styled, { css } from 'styled-components'
 import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
-type Tone = 'water' | 'photo' | 'moment' | 'calm'
+type Tone = 'water' | 'photo' | 'calm'
 
 const tint: Record<Tone, string> = {
   water: 'color-mix(in srgb, var(--c-water) 14%, var(--c-creamCard))',
   photo: 'color-mix(in srgb, var(--c-metal) 14%, var(--c-creamCard))',
-  moment: 'color-mix(in srgb, var(--c-growth) 18%, var(--c-creamCard))',
   calm: 'color-mix(in srgb, var(--c-creamCard) 70%, transparent)',
 }
 
 const edge: Record<Tone, string> = {
   water: 'color-mix(in srgb, var(--c-water) 40%, transparent)',
   photo: 'color-mix(in srgb, var(--c-metal) 40%, transparent)',
-  moment: 'color-mix(in srgb, var(--c-growth) 45%, transparent)',
   calm: 'color-mix(in srgb, var(--c-forest) 10%, transparent)',
 }
 

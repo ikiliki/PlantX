@@ -43,21 +43,4 @@ export const FirstWatering = () => <PassportNow now={{ kind: 'next', todo: todo(
 
 export const PhotoDone = () => <PassportNow now={{ kind: 'done', care: 'photo' }} />
 
-export const FromActivity = () => (
-  <PassportNow
-    now={{
-      kind: 'moment',
-      update: {
-        id: 'up-story',
-        kind: 'grade',
-        userId: 'u-maya',
-        plantId: 'pl-story',
-        body: 'Graded A by the community',
-        bodyHe: 'קיבל ציון A מהקהילה',
-        createdAt: '2026-10-09T10:00:00.000Z',
-      },
-    }}
-  />
-)
-
 export const NothingPlanned = () => <PassportNow now={{ kind: 'clear' }} />
