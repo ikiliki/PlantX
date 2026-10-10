@@ -96,8 +96,9 @@ test.describe('care plan', () => {
 
     await passport.getByRole('button', { name: 'Edit Water' }).click()
     const editor = page.getByRole('dialog', { name: 'Edit Water' })
-    // The catalog's suggestion comes first, marked as the default.
-    await expect(editor.getByText(/^Suggested.*Every 7 days.*(default)$/)).toBeVisible()
+    // The catalog's suggestion comes first: just its rule, with the small mark (✦ AI or Default) like Add Plant.
+    await expect(editor.locator('button', { hasText: /^Every 7 days/ }).filter({ hasText: /Default|✦ AI/ }).first()).toBeVisible()
+    await expect(editor.getByText(/Suggested by AI/)).toHaveCount(0)
     await editor.getByText('Every 3 days', { exact: true }).click()
     await editor.getByRole('button', { name: 'Save' }).click()
     await expect.poll(() => patched).not.toBeNull()

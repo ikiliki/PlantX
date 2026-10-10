@@ -36,6 +36,8 @@ export function InlineEdit({
   onSave,
   onCancel,
   actions = [],
+  suggestedId,
+  suggestedLabel,
 }: {
   label: string
   kind: InlineEditKind
@@ -48,6 +50,9 @@ export function InlineEdit({
   onCancel: () => void
   /** Extra footer buttons beside Cancel and Save (e.g. Pause); each saves its own id right away. */
   actions?: { id: string; label: string; variant?: 'ghost' | 'danger' }[]
+  /** A choice option that gets the small suggested mark (e.g. "✦ AI"), like the Add Plant wizard. */
+  suggestedId?: string
+  suggestedLabel?: string
 }) {
   const { t } = useI18n()
   const [draft, setDraft] = useState(value)
@@ -132,7 +137,14 @@ export function InlineEdit({
         }}
       >
         {kind === 'choice' ? (
-          <ChoiceChips label={label} options={options} value={draft} onChange={edit} />
+          <ChoiceChips
+            label={label}
+            options={options}
+            value={draft}
+            onChange={edit}
+            suggestedId={suggestedId}
+            suggestedLabel={suggestedLabel}
+          />
         ) : kind === 'textarea' ? (
           <TextArea
             ref={fieldRef}

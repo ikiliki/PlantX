@@ -69,10 +69,8 @@ export function PassportTodo({
     const next = months.find((month) => month > Number(today.slice(5, 7))) ?? months[0]
     return `${t.passport.careEvery.replace('{n}', String(rule.everyDays))} · ${t.passport.careResting.replace('{month}', monthName(next))}`
   }
-  const suggestionLabel = (item: EffectiveCare) =>
-    item.suggested
-      ? `${(item.suggestedFrom?.ai ? t.passport.careSuggestedAi : t.passport.careSuggested).replace('{rule}', every(item.suggested))} ${t.passport.careDefaultTag}`
-      : ''
+  // The suggestion reads as its rule; a small mark says where it came from (✦ AI, or Default), like Add Plant.
+  const suggestionMark = (item: EffectiveCare) => (item.suggestedFrom?.ai ? t.passport.careAiMark : t.passport.careDefaultMark)
 
   const lastDone = (kind: string) =>
     plantTodos
@@ -143,7 +141,7 @@ export function PassportTodo({
             const own = plant.care?.[kind]
             const current = own?.off ? 'off' : own?.interval ? String(own.interval.everyDays) : 'suggested'
             const options = [
-              ...(item.suggested ? [{ id: 'suggested', label: suggestionLabel(item) }] : []),
+              ...(item.suggested ? [{ id: 'suggested', label: every(item.suggested) }] : []),
               // Intervals near the suggestion only (a third to three times it): no "every 730 days" for watering.
               ...CARE_INTERVAL_CHOICES.filter((days) => {
                 const base = item.suggested?.everyDays ?? 14
@@ -193,6 +191,8 @@ export function PassportTodo({
                     value={current}
                     options={options}
                     actions={actions}
+                    suggestedId={item.suggested ? 'suggested' : undefined}
+                    suggestedLabel={suggestionMark(item)}
                     onSave={(choice) => save(item, choice)}
                     onCancel={() => setEditing(null)}
                   />
