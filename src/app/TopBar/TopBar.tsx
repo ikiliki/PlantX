@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
+import { useDevice } from '../../lib/useDevice'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { Avatar } from '../../components/Avatar/Avatar'
 import { Icon } from '../../components/Icon/Icon'
@@ -31,6 +32,7 @@ import {
 export function TopBar() {
   const { t, locale } = useI18n()
   const { currentUser, db, signedIn } = useStore()
+  const device = useDevice()
   const tasks = useTaskTabCount()
   const loc = useLocation()
   const navigate = useNavigate()
@@ -58,7 +60,7 @@ export function TopBar() {
     wiki: 'wiki.board',
   }
   const show = (pageId: PageId) => {
-    if (!isPageNavigable(db.system, pageId)) return false
+    if (!isPageNavigable(db.system, pageId, device)) return false
     const board = pageBoard[pageId]
     return !board || isPlacementEnabled(db.system, board)
   }

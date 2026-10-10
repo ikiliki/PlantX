@@ -12,7 +12,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import type { FeedUpdate, FeedUpdateKind, ModerationItem, Plant, ScanQuota, User } from '../../../../mock/types'
 import { formatApiFailure } from '../../../../lib/apiFailure'
 import { fetchAdminScanQuotas, type ServerSlice } from '../../../../mock/liveApi'
-import { useStore, type LiveStatus } from '../../../../mock/store'
+import { useStore } from '../../../../mock/store'
 import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
 import { IdentifyBadge } from '../../../greenhouse/components/IdentifyBadge/IdentifyBadge'
@@ -34,9 +34,7 @@ import {
   Dialog,
   DialogActions,
   DialogTitle,
-  DocsLink,
   Panel,
-  Pill,
   PreviewCard,
   PreviewDetails,
   PreviewIdentity,
@@ -50,12 +48,8 @@ import {
   HeadMeta,
   DemoRibbon,
   FilterBar,
-  Reason,
   RelationLink,
   UserHover,
-  StatusActions,
-  StatusCard,
-  StatusCopy,
   UserFilter,
   UserSelect,
 } from './ServerPanel.styles'
@@ -88,18 +82,6 @@ const ACTIVITY_KIND_KEY = {
 
 function activityKindLabel(kind: FeedUpdateKind, feed: ReturnType<typeof useI18n>['t']['feed']) {
   return feed[ACTIVITY_KIND_KEY[kind]]
-}
-
-function statusTone(status: LiveStatus): 'up' | 'down' | 'loading' {
-  if (status === 'up') return 'up'
-  if (status === 'down') return 'down'
-  return 'loading'
-}
-
-function statusLabel(status: LiveStatus, t: ReturnType<typeof useI18n>['t']) {
-  if (status === 'up') return t.admin.serverUp
-  if (status === 'down') return t.admin.serverDown
-  return t.admin.serverLoading
 }
 
 function UserNameLink({ user, onOpen }: { user: User; onOpen: (userId: string) => void }) {
@@ -451,8 +433,6 @@ export function ServerPanel() {
     liveFailure,
     sliceFailures,
     plantxEnv,
-    plantxEnvLabel,
-    retryLive,
     liveMeta,
     resolveModeration,
   } = useStore()
@@ -593,41 +573,8 @@ export function ServerPanel() {
 
   return (
     <Panel>
-      <StatusCard>
-        <StatusCopy>
-          <Pill $tone={statusTone(liveStatus)}>{statusLabel(liveStatus, t)}</Pill>
-          <p>
-            <strong>{plantxEnvLabel}</strong>
-            {plantxEnv === 'mock'
-              ? ` · ${t.admin.serverLocalBody}`
-              : liveStatus === 'up'
-                ? ` · ${t.admin.serverUpBody}`
-                : liveStatus === 'loading'
-                  ? ` · ${t.admin.serverLoadingBody}`
-                  : null}
-          </p>
-          {plantxEnv !== 'mock' && liveStatus === 'down' && (
-            <Reason>{formatApiFailure(liveFailure, t.admin)}</Reason>
-          )}
-        </StatusCopy>
-        <StatusActions>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => void retryLive()}
-            disabled={plantxEnv === 'mock' || liveStatus === 'loading'}
-          >
-            {t.common.retry}
-          </Button>
-          {plantxEnv !== 'mock' && (
-            <DocsLink href="/api/docs" target="_blank" rel="noreferrer">
-              {t.admin.serverDocs}
-            </DocsLink>
-          )}
-        </StatusActions>
-      </StatusCard>
       <EnvMissing />
-      {/* Health and the funnel sit right under the live status (moved from System). */}
+      {/* System health covers the API status (the old Live / Retry / API docs card is gone). */}
       <SystemHealthCard />
       <FunnelCard />
 

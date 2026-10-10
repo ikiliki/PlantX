@@ -1,4 +1,8 @@
--- A component flag can be on for phones, desktops, or both (Admin → System).
+-- A page or component flag can be on for phones, desktops, or both (Admin → System).
+alter table system_pages
+  add column phone boolean not null default true,
+  add column desktop boolean not null default true;
+
 alter table system_placements
   add column phone boolean not null default true,
   add column desktop boolean not null default true;

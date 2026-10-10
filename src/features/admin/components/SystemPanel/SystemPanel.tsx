@@ -5,6 +5,8 @@ import { Switch } from '../../../../components/Switch/Switch'
 import type { ServerSlice } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
 import { useSectionFetch } from '../../../../mock/useServerSlices'
+import { useDevice } from '../../../../lib/useDevice'
+import { Segmented } from '../../../../components/Segmented/Segmented'
 import {
   PAGE_FEATURE,
   PAGE_IDS,
@@ -25,8 +27,6 @@ import {
   Block,
   Chevron,
   ComponentStack,
-  DeviceChip,
-  DeviceChips,
   Controls,
   Count,
   Group,
@@ -55,6 +55,22 @@ import {
 } from './SystemPanel.styles'
 
 const DEVICES: DeviceId[] = ['phone', 'desktop']
+
+/** Which device the preview under a component renders as. */
+function PreviewDevice({ value, onChange }: { value: DeviceId; onChange: (device: DeviceId) => void }) {
+  const { t } = useI18n()
+  return (
+    <Segmented
+      ariaLabel={t.admin.systemDevices}
+      value={value}
+      onChange={onChange}
+      options={[
+        { id: 'phone', label: t.admin.systemPhone },
+        { id: 'desktop', label: t.admin.systemDesktop },
+      ]}
+    />
+  )
+}
 const PAGE_STATUSES: PageStatus[] = ['live', 'maintenance']
 const RELEASE_MODES: ReleaseMode[] = ['ready', 'comingSoon', 'maintenance']
 const FEATURE_ORDER: FeatureId[] = ['news', 'market', 'greenhouse', 'todo', 'rank', 'wiki']
@@ -133,9 +149,16 @@ function featureStatusLabel(status: ReleaseMode, t: ReturnType<typeof useI18n>['
 
 export function SystemPanel() {
   const { t } = useI18n()
-  const { db, systemPending, setAppLaunched, setPageStatus, setFeatureEnabled, setFeatureStatus, setPlacementEnabled, setPlacementDevice } =
+  const { db, systemPending, setAppLaunched, setPageStatus, setPageDevice, setFeatureEnabled, setFeatureStatus, setPlacementDevice } =
     useStore()
   const locked = systemPending !== null
+  // A component is shown on a device when it is on and that device is on.
+  const shownOn = (id: PlacementId, device: DeviceId) => db.system.placements[id].enabled && db.system.placements[id][device]
+  // Previews start on this device; each can switch to the other, at that device's width.
+  const here = useDevice()
+  const [previews, setPreviews] = useState<Record<string, DeviceId>>({})
+  const previewOn = (id: string) => previews[id] ?? here
+  const setPreview = (id: string, device: DeviceId) => setPreviews((current) => ({ ...current, [id]: device }))
   const [appOpen, setAppOpen] = useState(true)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [pagesOpen, setPagesOpen] = useState(false)
@@ -236,6 +259,25 @@ export function SystemPanel() {
                         </NameCell>
                         <Chevron aria-hidden $open={open} />
                       </PageToggle>
+                      <Controls>
+                      {db.system.pages[pageId] === 'live'
+                        ? DEVICES.map((device) => {
+                            const on = db.system.pageDevices[pageId][device]
+                            const deviceName = device === 'phone' ? t.admin.systemPhone : t.admin.systemDesktop
+                            return (
+                              <Switch
+                                key={device}
+                                disabled={locked}
+                                busy={systemPending === `page:${pageId}:${device}`}
+                                busyLabel={t.common.loading}
+                                checked={on}
+                                ariaLabel={`${label} · ${deviceName} ${on ? t.admin.systemShown : t.admin.systemHidden}`}
+                                onChange={(next) => setPageDevice(pageId, device, next)}
+                                label={deviceName}
+                              />
+                            )
+                          })
+                        : null}
                       <Select
                         aria-label={`${label} ${t.admin.systemStatus}`}
                         aria-busy={systemPending === `page:${pageId}`}
@@ -249,6 +291,7 @@ export function SystemPanel() {
                           </option>
                         ))}
                       </Select>
+                      </Controls>
                     </PageHead>
                     {open &&
                       (fetching ? (
@@ -256,7 +299,8 @@ export function SystemPanel() {
                       ) : (
                         <PreviewWell>
                           <PreviewLabel>{t.admin.systemPreview}</PreviewLabel>
-                          <PagePreview pageId={pageId} />
+                          <PreviewDevice value={previewOn(`page:${pageId}`)} onChange={(device) => setPreview(`page:${pageId}`, device)} />
+                          <PagePreview pageId={pageId} device={previewOn(`page:${pageId}`)} />
                         </PreviewWell>
                       ))}
                   </Group>
@@ -359,7 +403,6 @@ export function SystemPanel() {
                               {openable.length > 0 && (
                                 <ComponentStack>
                                   {openable.map((item) => {
-                                    const shown = db.system.placements[item.id].enabled
                                     const name = t.admin.placement[item.id]
                                     return (
                                       <Item key={item.id}>
@@ -369,43 +412,33 @@ export function SystemPanel() {
                                             <MountPath pageId={item.pageId} id={item.id} />
                                           </NameCell>
                                           <Controls>
-                                            {feature.enabled && shown ? (
-                                              <DeviceChips role="group" aria-label={t.admin.systemDevices}>
-                                                {DEVICES.map((device) => {
-                                                  const on = db.system.placements[item.id][device]
-                                                  return (
-                                                    <DeviceChip
-                                                      key={device}
-                                                      type="button"
-                                                      aria-pressed={on}
-                                                      aria-busy={systemPending === `placement:${item.id}:${device}`}
-                                                      disabled={locked}
-                                                      onClick={() => setPlacementDevice(item.id as PlacementId, device, !on)}
-                                                    >
-                                                      {device === 'phone' ? t.admin.systemPhone : t.admin.systemDesktop}
-                                                    </DeviceChip>
-                                                  )
-                                                })}
-                                              </DeviceChips>
-                                            ) : null}
                                             {!feature.enabled ? (
                                               <Ok>{t.admin.systemDisabled}</Ok>
                                             ) : (
-                                              <Switch
-                                                disabled={locked}
-                                                busy={systemPending === `placement:${item.id}`}
-                                                busyLabel={t.common.loading}
-                                                checked={shown}
-                                                ariaLabel={`${name} ${shown ? t.admin.systemShown : t.admin.systemHidden}`}
-                                                onChange={(next) => setPlacementEnabled(item.id as PlacementId, next)}
-                                                label={shown ? t.admin.systemShown : t.admin.systemHidden}
-                                              />
+                                              // Each device is its own show switch; off on both hides the component.
+                                              DEVICES.map((device) => {
+                                                const on = shownOn(item.id as PlacementId, device)
+                                                const deviceName = device === 'phone' ? t.admin.systemPhone : t.admin.systemDesktop
+                                                return (
+                                                  <Switch
+                                                    key={device}
+                                                    disabled={locked}
+                                                    busy={systemPending === `placement:${item.id}:${device}`}
+                                                    busyLabel={t.common.loading}
+                                                    checked={on}
+                                                    ariaLabel={`${name} · ${deviceName} ${on ? t.admin.systemShown : t.admin.systemHidden}`}
+                                                    onChange={(next) => setPlacementDevice(item.id as PlacementId, device, next)}
+                                                    label={deviceName}
+                                                  />
+                                                )
+                                              })
                                             )}
                                           </Controls>
                                         </ItemHead>
                                         <PreviewWell>
                                           <PreviewLabel>{t.admin.systemPreview}</PreviewLabel>
-                                          <PlacementPreview id={item.id} />
+                                          <PreviewDevice value={previewOn(item.id)} onChange={(device) => setPreview(item.id, device)} />
+                                          <PlacementPreview id={item.id} device={previewOn(item.id)} />
                                         </PreviewWell>
                                       </Item>
                                     )
@@ -437,7 +470,8 @@ export function SystemPanel() {
                                           </ItemHead>
                                           <PreviewWell>
                                             <PreviewLabel>{t.admin.systemPreview}</PreviewLabel>
-                                            <PlacementPreview id={item.id} />
+                                            <PreviewDevice value={previewOn(item.id)} onChange={(device) => setPreview(item.id, device)} />
+                                          <PlacementPreview id={item.id} device={previewOn(item.id)} />
                                           </PreviewWell>
                                         </Item>
                                       ))}

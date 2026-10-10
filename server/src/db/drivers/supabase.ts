@@ -1011,7 +1011,11 @@ export function createSupabaseStore(): PlantxStore {
     const features = await rows(client, 'select * from system_features')
     const placements = await rows(client, 'select * from system_placements')
     const pageMap = {} as SystemConfig['pages']
-    for (const row of pages) pageMap[text(row, 'page_id') as PageId] = text(row, 'status') as SystemConfig['pages'][PageId]
+    const pageDeviceMap = {} as SystemConfig['pageDevices']
+    for (const row of pages) {
+      pageMap[text(row, 'page_id') as PageId] = text(row, 'status') as SystemConfig['pages'][PageId]
+      pageDeviceMap[text(row, 'page_id') as PageId] = { phone: Boolean(row.phone), desktop: Boolean(row.desktop) }
+    }
     const featureMap = {} as SystemConfig['features']
     for (const row of features) {
       featureMap[text(row, 'feature_id') as FeatureId] = {
@@ -1030,6 +1034,7 @@ export function createSupabaseStore(): PlantxStore {
     return {
       launched: Boolean(config[0].launched),
       pages: pageMap,
+      pageDevices: pageDeviceMap,
       features: featureMap,
       placements: placementMap,
     }
@@ -1045,7 +1050,13 @@ export function createSupabaseStore(): PlantxStore {
     await client.query('delete from system_features')
     await client.query('delete from system_placements')
     for (const [pageId, status] of Object.entries(system.pages)) {
-      await client.query('insert into system_pages (page_id, status) values ($1, $2)', [pageId, status])
+      const devices = system.pageDevices[pageId as PageId]
+      await client.query('insert into system_pages (page_id, status, phone, desktop) values ($1, $2, $3, $4)', [
+        pageId,
+        status,
+        devices.phone,
+        devices.desktop,
+      ])
     }
     for (const [featureId, feature] of Object.entries(system.features)) {
       await client.query(

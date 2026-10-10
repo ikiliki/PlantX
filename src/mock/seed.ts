@@ -30,6 +30,7 @@ export function createSeed(): MockDb {
     system: {
       launched: DEFAULT_SYSTEM.launched,
       pages: { ...DEFAULT_SYSTEM.pages },
+      pageDevices: { ...DEFAULT_SYSTEM.pageDevices },
       features: { ...DEFAULT_SYSTEM.features },
       placements: { ...DEFAULT_SYSTEM.placements },
     },

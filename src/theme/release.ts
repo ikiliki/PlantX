@@ -23,6 +23,12 @@ export interface PlacementConfig {
 /** Phone is under 900px of the window, desktop is 900px and up. */
 export type DeviceId = 'phone' | 'desktop'
 
+/** On or off per device. */
+export interface DeviceSwitches {
+  phone: boolean
+  desktop: boolean
+}
+
 /** A component is shown or hidden, and per device. Its status comes from the feature. */
 export interface ComponentConfig {
   enabled: boolean
@@ -81,6 +87,8 @@ export interface SystemConfig {
   /** Visitors see the app when this is on. Admin still sees it when it is off. */
   launched: boolean
   pages: Record<PageId, PageStatus>
+  /** A live page can still be off on phones or on desktops (it then holds like maintenance there). */
+  pageDevices: Record<PageId, DeviceSwitches>
   features: Record<FeatureId, PlacementConfig>
   placements: Record<PlacementId, ComponentConfig>
 }
@@ -107,6 +115,7 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     rank: 'maintenance',
     wiki: 'live',
   },
+  pageDevices: Object.fromEntries(PAGE_IDS.map((id) => [id, { phone: true, desktop: true }])) as Record<PageId, DeviceSwitches>,
   features: {
     news: { enabled: true, status: 'ready' },
     market: { enabled: false, status: 'comingSoon' },
@@ -148,6 +157,7 @@ export function normalizeSystem(
   raw: {
     launched?: unknown
     pages?: Partial<Record<PageId, PageStatus>>
+    pageDevices?: Partial<Record<string, unknown>>
     features?: Partial<Record<FeatureId, unknown>>
     placements?: Partial<Record<string, unknown>>
   } | undefined,
@@ -162,6 +172,14 @@ export function normalizeSystem(
       if (value === 'live' || value === 'maintenance') pages[id] = value
     }
   }
+  const pageDevices = { ...DEFAULT_SYSTEM.pageDevices }
+  for (const id of PAGE_IDS) {
+    const saved = raw?.pageDevices?.[id] as Partial<Record<DeviceId, unknown>> | undefined
+    pageDevices[id] = {
+      phone: typeof saved?.phone === 'boolean' ? saved.phone : true,
+      desktop: typeof saved?.desktop === 'boolean' ? saved.desktop : true,
+    }
+  }
   for (const id of FEATURE_IDS) {
     features[id] = readPlacement(raw?.features?.[id], DEFAULT_SYSTEM.features[id])
   }
@@ -169,7 +187,7 @@ export function normalizeSystem(
     const saved = raw?.placements?.[item.id]
     placements[item.id] = readComponent(saved, DEFAULT_SYSTEM.placements[item.id])
   }
-  return { launched, pages, features, placements }
+  return { launched, pages, pageDevices, features, placements }
 }
 
 /**
@@ -214,7 +232,12 @@ export function isFeatureReady(system: SystemConfig, id: FeatureId): boolean {
   return Boolean(feature?.enabled && feature.status === 'ready')
 }
 
-/** Nav shows the page when the page is live. Component status gates that component, not the link. */
-export function isPageNavigable(system: SystemConfig, pageId: PageId): boolean {
-  return system.pages[pageId] !== 'maintenance'
+/** Live on this device: live, and not switched off for the device (when one is given). */
+export function isPageLive(system: SystemConfig, pageId: PageId, device?: DeviceId): boolean {
+  return system.pages[pageId] === 'live' && (!device || system.pageDevices[pageId][device])
+}
+
+/** Nav shows the page when the page is live (on this device). Component status gates that component, not the link. */
+export function isPageNavigable(system: SystemConfig, pageId: PageId, device?: DeviceId): boolean {
+  return isPageLive(system, pageId, device)
 }

@@ -4,6 +4,7 @@ import { HoldStage } from '../HoldStage/HoldStage'
 import { Line, Room, Rooms, SignIn } from '../NotLaunched/NotLaunched.styles'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
+import { useDevice } from '../../lib/useDevice'
 import { isPageNavigable, PAGE_IDS, type PageId } from '../../theme/release'
 
 const ROOMS = ['news', 'greenhouse', 'market'] as const
@@ -39,6 +40,7 @@ export function HoldNotice({
 }) {
   const { t } = useI18n()
   const { db } = useStore()
+  const device = useDevice()
   const [room, setRoom] = useState<RoomId>('news')
   const launched = mode === 'not-launched'
 
@@ -61,7 +63,7 @@ export function HoldNotice({
     market: t.nav.market,
     rank: t.nav.rank,
   }
-  const openPages = pageId ? PAGE_IDS.filter((id) => id !== pageId && isPageNavigable(db.system, id)) : []
+  const openPages = pageId ? PAGE_IDS.filter((id) => id !== pageId && isPageNavigable(db.system, id, device)) : []
 
   const title = launched
     ? t.release.notLaunchedTitle

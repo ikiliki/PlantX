@@ -1,4 +1,5 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
+import { DeviceView } from '../../../../lib/useDevice'
 import { HomeToday } from '../../../discover/components/HomeToday/HomeToday'
 import { MarketRail } from '../../../feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../../feed/components/RankRail/RankRail'
@@ -19,8 +20,8 @@ import { RankPage } from '../../../../pages/RankPage/RankPage'
 import { TodoPage } from '../../../../pages/TodoPage/TodoPage'
 import { WikiPage } from '../../../../pages/WikiPage/WikiPage'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
-import { PLACEMENTS, placementRelease, type FeatureId, type PlacementId } from '../../../../theme/release'
-import { CardSlot, Frame, Off, Stage } from './PlacementPreview.styles'
+import { PLACEMENTS, placementRelease, type DeviceId, type FeatureId, type PlacementId } from '../../../../theme/release'
+import { CardSlot, DeviceFrame, DeviceWell, Frame, Off, Stage } from './PlacementPreview.styles'
 
 function ownerIdOf(signedIn: boolean, userId: string | undefined, visitorId: string) {
   return signedIn && userId ? userId : visitorId
@@ -150,11 +151,32 @@ function previewFor(id: PlacementId): ReactNode {
   }
 }
 
-/** Live render of a placement at its full height. */
-export function PlacementPreview({ id }: { id: PlacementId }) {
+const DESKTOP_WIDTH = 1280
+
+/** Renders its children as that device would: a phone-wide frame, or a desktop-wide one zoomed down to fit. */
+export function DevicePreview({ device, children }: { device: DeviceId; children: ReactNode }) {
+  const [well, setWell] = useState<HTMLDivElement | null>(null)
+  const [room, setRoom] = useState(DESKTOP_WIDTH)
+  useEffect(() => {
+    if (!well) return
+    const observer = new ResizeObserver(([entry]) => setRoom(entry.contentRect.width))
+    observer.observe(well)
+    return () => observer.disconnect()
+  }, [well])
+  return (
+    <DeviceWell ref={setWell}>
+      <DeviceFrame inert $device={device} $zoom={device === 'desktop' ? Math.min(1, room / DESKTOP_WIDTH) : 1}>
+        <DeviceView device={device}>{children}</DeviceView>
+      </DeviceFrame>
+    </DeviceWell>
+  )
+}
+
+/** Live render of a placement at its full height; with a device, at that device's width and flags. */
+export function PlacementPreview({ id, device }: { id: PlacementId; device?: DeviceId }) {
   const { t } = useI18n()
   const system = useStore().db.system
-  const placement = placementRelease(system, id)
+  const placement = placementRelease(system, id, device)
   const featureId = PLACEMENTS.find((item) => item.id === id)?.featureId
 
   if (!placement.enabled) {
@@ -167,6 +189,8 @@ export function PlacementPreview({ id }: { id: PlacementId }) {
       </Off>
     )
   }
+
+  if (device) return <DevicePreview device={device}>{previewFor(id)}</DevicePreview>
 
   return (
     <Frame inert>

@@ -10,6 +10,7 @@ import { useI18n } from '../../i18n/I18nProvider'
 import { useLongPress } from '../../lib/useLongPress'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useStore } from '../../mock/store'
+import { useDevice } from '../../lib/useDevice'
 import { isPageNavigable, isPlacementEnabled, type PageId, type PlacementId } from '../../theme/release'
 import { theme } from '../../theme/tokens'
 import { TopBar } from '../TopBar/TopBar'
@@ -35,6 +36,7 @@ function isOverlayPath(path: string) {
 export function AppShell() {
   const { t } = useI18n()
   const { db, currentUser } = useStore()
+  const device = useDevice()
   const tasks = useTaskTabCount()
   const loc = useLocation()
   // Not useNavigationType(): under <Routes location> it always says POP, and nothing would scroll to the top.
@@ -92,7 +94,7 @@ export function AppShell() {
       { to: '/market', label: t.nav.market, icon: 'market' as const, pageId: 'market' as const },
     ] satisfies { to: string; label: string; icon: IconName; pageId: PageId }[]
   ).filter((item) => {
-    if (!item.pageId || !isPageNavigable(db.system, item.pageId)) return false
+    if (!item.pageId || !isPageNavigable(db.system, item.pageId, device)) return false
     const board: Partial<Record<PageId, PlacementId>> = {
       feed: 'feed.board',
       greenhouse: 'greenhouse.board',

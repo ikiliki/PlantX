@@ -204,6 +204,7 @@ interface StoreApi {
   systemPending: string | null
   setAppLaunched: (launched: boolean) => void
   setPageStatus: (pageId: PageId, status: PageStatus) => void
+  setPageDevice: (pageId: PageId, device: DeviceId, on: boolean) => void
   setFeatureEnabled: (featureId: FeatureId, enabled: boolean) => void
   setFeatureStatus: (featureId: FeatureId, status: ReleaseMode) => void
   setPlacementEnabled: (placement: PlacementId, enabled: boolean) => void
@@ -831,6 +832,12 @@ export function StoreProvider({
     setPageStatus: (pageId, status) => {
       void saveSystem(`page:${pageId}`, { ...db.system, pages: { ...db.system.pages, [pageId]: status } })
     },
+    setPageDevice: (pageId, device, on) => {
+      void saveSystem(`page:${pageId}:${device}`, {
+        ...db.system,
+        pageDevices: { ...db.system.pageDevices, [pageId]: { ...db.system.pageDevices[pageId], [device]: on } },
+      })
+    },
     setFeatureEnabled: (featureId, enabled) => {
       void saveSystem(`feature:${featureId}`, {
         ...db.system,
@@ -858,9 +865,16 @@ export function StoreProvider({
       })
     },
     setPlacementDevice: (placement, device, on) => {
+      // Phone and desktop are the show switches: the component is on while either device is.
+      const current = db.system.placements[placement]
+      const next = {
+        phone: current.enabled && current.phone,
+        desktop: current.enabled && current.desktop,
+        [device]: on,
+      } as { phone: boolean; desktop: boolean }
       void saveSystem(`placement:${placement}:${device}`, {
         ...db.system,
-        placements: { ...db.system.placements, [placement]: { ...db.system.placements[placement], [device]: on } },
+        placements: { ...db.system.placements, [placement]: { ...next, enabled: next.phone || next.desktop } },
       })
     },
     loginAs: (userId) => {
