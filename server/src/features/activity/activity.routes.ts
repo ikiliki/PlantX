@@ -5,7 +5,6 @@ import { signedIn, type SignedInEnv } from '../../lib/session.ts'
 import { greenhouseService } from '../greenhouse/greenhouse.service.ts'
 import { activityService, visibleTo } from './activity.service.ts'
 import type { Activity, ActivityInput, ActivityKind } from './activity.types.ts'
-import { canSeePlantStory } from '../../../../src/features/greenhouse/plantStory.ts'
 
 /**
  * Activity HTTP surface, members only.
@@ -30,11 +29,6 @@ function readLimit(raw: string | undefined) {
 
 activityRoutes.get('/', async (c) => {
   const plantId = c.req.query('plantId') || undefined
-  // One plant's activity is its story: private to its grower (and admins) for now. The feed stays as it is.
-  if (plantId) {
-    const plant = (await greenhouseService.list()).find((item) => item.id === plantId)
-    if (!plant || !canSeePlantStory(plant, c.get('user'))) return c.json({ activities: [] })
-  }
   const activities = await activityService.list({
     plantId,
     userId: c.req.query('userId') || undefined,

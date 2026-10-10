@@ -17,7 +17,8 @@ import { useOpenMarketListing } from '../../features/market/useOpenMarketListing
 import { useI18n } from '../../i18n/I18nProvider'
 import { userPlace } from '../../mock/locations'
 import { useStore } from '../../mock/store'
-import { useServerSlices } from '../../mock/useServerSlices'
+import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
+import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { PageGate } from '../../components/PageGate/PageGate'
 import type { ComponentView } from '../../theme/view'
 import { MarketPending } from '../../features/market/components/MarketPending/MarketPending'
@@ -28,7 +29,9 @@ import { BlurTape, Board, CategoriesLink, ResultsHead } from './MarketPage.style
 const WIDGET_LISTINGS = 4
 
 function MarketReady({ view }: { view: ComponentView }) {
-  const { db, currentUser } = useStore()
+  const { db, currentUser, signedIn } = useStore()
+  // Listings need their plants and sellers: a loader until they arrive, never "nothing listed" too early.
+  const listingsWaiting = useSectionFetch(signedIn, ['plants', 'users'])
   const { t, locale } = useI18n()
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -80,7 +83,9 @@ function MarketReady({ view }: { view: ComponentView }) {
         <BlurTape>
           <MarketTicker />
         </BlurTape>
-        {visible.length === 0 ? (
+        {listingsWaiting ? (
+          <LoaderShell busy compact />
+        ) : visible.length === 0 ? (
           <EmptyState icon="market" title={t.market.empty} />
         ) : (
           <ListingTable listings={visible} onOpen={openListing} />
@@ -128,7 +133,9 @@ function MarketReady({ view }: { view: ComponentView }) {
               onPage={paged.setPage}
             />
           </ResultsHead>
-          {visible.length === 0 ? (
+          {listingsWaiting ? (
+            <LoaderShell busy />
+          ) : visible.length === 0 ? (
             <EmptyState icon="market" title={t.market.empty} />
           ) : (
             <ListingTable listings={visible} onOpen={openListing} />

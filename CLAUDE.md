@@ -51,6 +51,7 @@ Hard rules:
 - Component folder = `<Name>.tsx` + `<Name>.styles.ts` + `<Name>.stories.tsx`. Shared UI in `src/components/`, feature UI in `src/features/<f>/components/`, pages in `src/pages/<Name>Page/`.
 - Every route handles guests (`SURFACE_GUEST`: browse / prompt / hidden).
 - Gate with `PageGate` / `FeatureGate`; never render a blank page.
+- Never decide before the data is in: until every slice a view reads has loaded (`useSectionFetch` over all of them, e.g. posts + plants + users for a feed card), show that view's skeleton or `LoaderShell` — never an empty state, a first-run card ("Add your first plant"), "not found", or a half-built row.
 - Layout: container queries, `min()` / `minmax(0, 1fr)`; never `transform: scale()` on a page. Check Hebrew RTL.
 - Never send API keys or provider names to the browser. Never run live identify in automated checks.
 - Keep business logic in services/feature logic, not in page components.

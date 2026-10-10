@@ -7,6 +7,8 @@ import { Button } from '../../../../components/Button/Button'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
 import { HealthChip } from '../../../../components/HealthChip/HealthChip'
 import { Icon } from '../../../../components/Icon/Icon'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { useAuth } from '../../../auth/AuthProvider'
 import {
   CORE_PROPERTY_IDS,
@@ -29,7 +31,6 @@ import type { SizeBand, StageBand, TodoSubcategory } from '../../../../mock/type
 import { canSeeActivity } from '../../../feed/activityXp'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
 import { passportNow } from '../../passportNow'
-import { canSeePlantStory } from '../../plantStory'
 import { CatalogMark } from '../CatalogMark/CatalogMark'
 import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
@@ -76,7 +77,6 @@ import {
   ShowMore,
   CategoryName,
   StatNote,
-  StoryNote,
   SubName,
   Tab,
   TaxonomyItem,
@@ -155,6 +155,8 @@ export function PlantPassport({
   const { t, tr, formatMoney, locale } = useI18n()
   const plant = db.plants.find((item) => item.id === plantId)
   const viewerId = signedIn && currentUser ? currentUser.id : db.visitorId
+  // A plant not in the store yet may still be loading: show the passport's shell, not "not found".
+  const plantsWaiting = useSectionFetch(!plant, ['plants'])
   const startTab: PassportTab = initialTab ?? (careMark ? 'care' : 'story')
   const [tab, setTab] = useState<PassportTab>(startTab)
   const [customsOpen, setCustomsOpen] = useState(false)
@@ -184,7 +186,22 @@ export function PlantPassport({
     return (
       <Frame>
         <Board $embedded={embedded} $dialog={dialog}>
-          <Missing id="plant-passport-title">{t.passport.notFound}</Missing>
+          {plantsWaiting ? (
+            <>
+              <Aside $embedded={embedded} $dialog={dialog} aria-busy data-passport-loading>
+                <SkeletonBar width="70%" height={28} />
+                <SkeletonBar width="45%" />
+                <SkeletonBar height={64} />
+                <SkeletonBar height={64} />
+                <SkeletonBar height={64} />
+              </Aside>
+              <Main $embedded={embedded} $dialog={dialog}>
+                <SkeletonBar height={260} />
+              </Main>
+            </>
+          ) : (
+            <Missing id="plant-passport-title">{t.passport.notFound}</Missing>
+          )}
         </Board>
       </Frame>
     )
@@ -337,15 +354,9 @@ export function PlantPassport({
   const titleHead = titleCut > 0 ? shownTitle.slice(0, titleCut + 1) : ''
   const titleLast = titleCut > 0 ? shownTitle.slice(titleCut + 1) : shownTitle
 
-  // Story: activity (or the stored history) and community grades in one timeline, newest first.
-  // The activity part is private to the grower (and admins) for now; others see the grades and a note why.
-  const storyOpen = canSeePlantStory(plant, signedIn ? currentUser : null)
-  const storyNote = !storyOpen
-    ? t.passport.storyPrivateOther.replace('{name}', ownerName || t.passport.owner)
-    : isOwner
-      ? t.passport.storyPrivateOwner
-      : t.passport.storyPrivateAdmin
-  const fromActivity = (storyOpen ? (db.updates ?? []) : []).filter(
+  // Story (public): activity (or the stored history) and community grades in one timeline, newest first.
+  // Everyone sees the public kinds; edits and AI scans stay the owner's (and admins') — `canSeeActivity`.
+  const fromActivity = (db.updates ?? []).filter(
     (item) => item.plantId === plant.id && canSeeActivity(item, signedIn ? currentUser : null),
   )
   const checks = plant.identification?.photos
@@ -375,7 +386,7 @@ export function PlantPassport({
             ),
           }
         })
-      : (storyOpen ? plant.history : []).map((entry, index) => ({
+      : plant.history.map((entry, index) => ({
           key: `${plant.id}:${index}`,
           at: entry.at,
           body: <span>{tr(entry.label, entry.labelHe)}</span>,
@@ -709,15 +720,9 @@ export function PlantPassport({
         </TabBar>
 
         <Panel role="tabpanel" $embedded={embedded} $dialog={dialog}>
-          {activeTab === 'story' && (
-            <StoryNote data-passport-story-note={storyOpen ? 'grower' : 'private'}>
-              <Icon name="lock" size={14} />
-              <span>{storyNote}</span>
-            </StoryNote>
-          )}
           {activeTab === 'story' &&
             (storyRows.length === 0 ? (
-              storyOpen ? <Muted>{t.passport.noHistory}</Muted> : null
+              <Muted>{t.passport.noHistory}</Muted>
             ) : (
               <Timeline data-passport-story>
                 {storyRows.map((row) => (

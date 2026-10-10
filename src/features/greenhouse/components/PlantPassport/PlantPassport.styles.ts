@@ -655,23 +655,6 @@ export const Panel = styled.div<{ $embedded?: boolean; $dialog?: boolean }>`
   }
 `
 
-/** Who can see the story: a quiet locked line above the timeline. */
-export const StoryNote = styled.p`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 12px;
-  padding: 8px 12px;
-  border-radius: ${theme.radii.md};
-  background: color-mix(in srgb, var(--c-forest) 6%, transparent);
-  color: ${theme.colors.muted};
-  font-size: 13px;
-  line-height: 1.4;
-  svg {
-    flex: none;
-  }
-`
-
 export const Muted = styled.p`
   font-size: 14px;
   line-height: 1.45;

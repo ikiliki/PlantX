@@ -3,8 +3,8 @@ import { ADMIN, MEMBER, expect, expectPage, signIn, test } from './support'
 
 /**
  * Passport layout: one plant per passport (no quantity), tabs Story / Tasks / Settings with Story first,
- * and the class code under the name. A plant's activity and its Tasks tab are the grower's alone for now;
- * other growers see the story (grades) and the market. `/plants/:id` opens over the page that linked to it.
+ * and the class code under the name. The story is public; the Tasks tab is the grower's alone.
+ * `/plants/:id` opens over the page that linked to it.
  */
 const plant = {
   id: 'e2e-one-plant',
@@ -74,11 +74,7 @@ test.describe('plant passport', () => {
     await expect(tabs.getByRole('tab', { name: 'Activity' })).toHaveCount(0)
     await expect(tabs.getByRole('tab', { name: 'Settings' })).toBeVisible()
 
-    // The grower sees the activity, and is told it is theirs alone.
     await expect(passport.locator('[data-passport-story]')).toContainText(added.body)
-    await expect(passport.locator('[data-passport-story-note="grower"]')).toContainText(
-      "Only you can see this plant's activity for now.",
-    )
 
     // One plant: no quantity anywhere, and the class code is still on the passport.
     await expect(passport.getByText('Size', { exact: true }).first()).toBeVisible()
@@ -87,15 +83,14 @@ test.describe('plant passport', () => {
     await expect(passport.getByText(plant.code, { exact: true })).toBeVisible()
   })
 
-  test("another grower's passport keeps its activity private and says so", async ({ page }) => {
+  test("another grower sees the plant's story, but not its tasks", async ({ page }) => {
     await signIn(page, MEMBER)
     await servePlant(page)
     await expectPage(page, `/plants/${plant.id}`)
     const passport = page.getByRole('dialog').first()
     await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
-    await expect(passport.locator('[data-passport-story-note="private"]')).toContainText('is private to')
-    await expect(passport.getByText(added.body)).toHaveCount(0)
-    await expect(passport.getByText('E2E history entry')).toHaveCount(0)
+    // The story is public: another grower sees the plant's public activity.
+    await expect(passport.locator('[data-passport-story]')).toContainText(added.body)
     // Tasks are the grower's own: another grower gets Story (and Market), never Tasks or Settings.
     await expect(passport.getByRole('tab', { name: 'Story' })).toBeVisible()
     await expect(passport.getByRole('tab', { name: 'Tasks' })).toHaveCount(0)
@@ -114,19 +109,6 @@ test.describe('plant passport', () => {
     await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
     // Closing goes back to the feed, not the greenhouse.
     await page.keyboard.press('Escape')
-    await expect(page).toHaveURL(//feed$/)
-  })
-
-  test("the API gives no other grower's plant activity", async ({ page }) => {
-    await signIn(page, MEMBER)
-    const { plants } = (await (await page.request.get('/api/plants')).json()) as {
-      plants: { id: string; ownerId: string }[]
-    }
-    const theirs = plants.find((item) => item.ownerId !== MEMBER)
-    test.skip(!theirs, 'no other grower has a plant here')
-    const byQuery = await page.request.get(`/api/activities?plantId=${theirs!.id}`)
-    expect(((await byQuery.json()) as { activities: unknown[] }).activities).toEqual([])
-    const byPlant = await page.request.get(`/api/plants/${theirs!.id}/activities`)
-    expect(((await byPlant.json()) as { activities: unknown[] }).activities).toEqual([])
+    await expect(page).toHaveURL(/\/feed$/)
   })
 })

@@ -33,7 +33,8 @@ function FeedStream() {
   const [filter, setFilter] = useState<FeedFilter>('all')
   const mobile = useMediaQuery('(max-width: 899px)')
   const { refresh, refreshing } = useFeedRefresh()
-  const loading = useSectionFetch(signedIn, ['updates'])
+  // A post needs its plant (photo, name) and its grower: wait for all three, not only the posts.
+  const loading = useSectionFetch(signedIn, ['updates', 'plants', 'users'])
   const filtered = filter === 'all' ? items : items.filter((item) => item.update.kind === filter)
   const list = useInfiniteList(filtered, { signature: `${filter}:${filtered.map((item) => item.id).join('|')}` })
   const count = (kind: FeedFilter) => items.filter((item) => item.update.kind === kind).length

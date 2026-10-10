@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { Icon } from '../../../../components/Icon/Icon'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { RarityChip } from '../../../../components/RarityChip/RarityChip'
 import { useAuth } from '../../../auth/AuthProvider'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { factsForPlant } from '../../../../mock/plantFacts'
 import { useStore } from '../../../../mock/store'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import type { CommunityGradeLetter, GradeStackScenario, Plant } from '../../../../mock/types'
 import { FEW_GRADE_CARDS, SWIPE_THRESHOLD, selectGradeQueue, swipeLetter } from '../../communityGrade'
 import {
@@ -153,6 +155,8 @@ function CardFace({ plant, variant, interactive }: { plant: Plant; variant: Stac
 
 export function GradeStack({ grading, variant = 'tab' }: { grading: GradeQueue; variant?: StackVariant }) {
   const { signedIn } = useStore()
+  // Plants still loading: show the deck's shell, never "nothing to rank".
+  const plantsWaiting = useSectionFetch(signedIn, ['plants', 'users'])
   const { openAuth } = useAuth()
   const { t, tr } = useI18n()
   const { queue, last, grade, undo } = grading
@@ -262,6 +266,16 @@ export function GradeStack({ grading, variant = 'tab' }: { grading: GradeQueue; 
       <VisuallyHidden>{t.grade.undo}</VisuallyHidden>
     </UndoButton>
   )
+
+  if (!top && plantsWaiting) {
+    return (
+      <Frame>
+        <Deck $variant={variant} aria-busy data-grade-loading>
+          <SkeletonBar height={variant === 'widget' ? 300 : 420} />
+        </Deck>
+      </Frame>
+    )
+  }
 
   if (!top) {
     return (

@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { isFeatureEnabled } from '../../../../theme/release'
 import type { Todo } from '../../../../mock/types'
 import { publicGrowerName } from '../../../profile/avatarIcons'
-import { FeedUpdate } from '../../../feed/components/FeedUpdate/FeedUpdate'
+import { FeedUpdate, FeedUpdateSkeleton, SKELETON_FEED_KINDS } from '../../../feed/components/FeedUpdate/FeedUpdate'
 import { MarketRail } from '../../../feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../../feed/components/RankRail/RankRail'
 import { useHomeFeed } from '../../../feed/useHomeFeed'
@@ -28,6 +30,7 @@ import {
   Hello,
   More,
   PlantCard,
+  PlantCardShell,
   PlantName,
   PlantPhoto,
   Root,
@@ -56,6 +59,10 @@ export function HomeToday() {
   const { items } = useHomeFeed()
   const [careTodo, setCareTodo] = useState<Todo | undefined>()
   const [adding, setAdding] = useState(false)
+  // Nothing is decided before its data arrives: no "add your first plant" while the greenhouse is still
+  // loading, no half-built feed rows. Until then each section shows its own skeleton.
+  const plantsWaiting = useSectionFetch(Boolean(currentUser), ['plants', 'todos'])
+  const feedWaiting = useSectionFetch(Boolean(currentUser), ['updates', 'plants', 'users'])
 
   if (!currentUser) return null
 
@@ -81,12 +88,40 @@ export function HomeToday() {
       <Hello>
         <Greeting>{t.homeToday[greetingKey(new Date().getHours())].replace('{name}', name)}</Greeting>
         <Summary>
-          {summary ? `${summary} · ` : ''}
-          {t.homeToday.level.replace('{n}', String(level))}
+          {plantsWaiting ? (
+            <SkeletonBar width="55%" height={14} />
+          ) : (
+            <>
+              {summary ? `${summary} · ` : ''}
+              {t.homeToday.level.replace('{n}', String(level))}
+            </>
+          )}
         </Summary>
       </Hello>
 
-      {plants.length === 0 ? (
+      {plantsWaiting ? (
+        <>
+          <Section data-home-loading aria-busy>
+            <SkeletonBar height={56} />
+            <SkeletonBar height={56} />
+          </Section>
+          <Section>
+            <Head>
+              <HeadTitle>{t.homeToday.greenhouse}</HeadTitle>
+            </Head>
+            <Strip>
+              {[0, 1, 2].map((index) => (
+                <PlantCardShell key={index} aria-hidden>
+                  <PlantPhoto>
+                    <SkeletonBar height={140} />
+                  </PlantPhoto>
+                  <SkeletonBar width="70%" />
+                </PlantCardShell>
+              ))}
+            </Strip>
+          </Section>
+        </>
+      ) : plants.length === 0 ? (
         <First data-home-first>
           <FirstTitle>{t.homeToday.firstTitle}</FirstTitle>
           <FirstBody>{t.homeToday.firstBody}</FirstBody>
@@ -144,10 +179,16 @@ export function HomeToday() {
             <HeadTitle>{t.homeToday.feed}</HeadTitle>
             <HeadLink to="/feed">{t.homeToday.feedAll}</HeadLink>
           </Head>
-          {items.length === 0 ? <Calm>{t.feed.empty}</Calm> : null}
-          {items.slice(0, FEED_PREVIEW).map((item) => (
-            <FeedUpdate key={item.id} update={item.update} />
-          ))}
+          {feedWaiting ? (
+            SKELETON_FEED_KINDS.slice(0, FEED_PREVIEW).map((kind, index) => <FeedUpdateSkeleton key={index} kind={kind} />)
+          ) : (
+            <>
+              {items.length === 0 ? <Calm>{t.feed.empty}</Calm> : null}
+              {items.slice(0, FEED_PREVIEW).map((item) => (
+                <FeedUpdate key={item.id} update={item.update} />
+              ))}
+            </>
+          )}
         </Section>
       </FeatureGate>
 

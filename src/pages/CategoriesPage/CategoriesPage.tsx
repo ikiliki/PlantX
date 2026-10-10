@@ -16,11 +16,13 @@ import { TradeChart } from '../../features/market/components/TradeChart/TradeCha
 import { TradeTable } from '../../features/market/components/TradeTable/TradeTable'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useStore } from '../../mock/store'
-import { useServerSlices } from '../../mock/useServerSlices'
+import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
+import { LoaderShell } from '../../components/LoaderShell/LoaderShell'
 import { Back, Header, Page, Summary, SummaryItem, Toolbar } from './CategoriesPage.styles'
 
 function CategoriesReady() {
-  const { db } = useStore()
+  const { db, signedIn } = useStore()
+  const waiting = useSectionFetch(signedIn, ['plants', 'catalog'])
   const { t, locale, formatMoney } = useI18n()
   const [health, setHealth] = useState('all')
 
@@ -45,7 +47,9 @@ function CategoriesReady() {
         <p>{t.charts.categoriesSubtitle}</p>
       </Header>
 
-      {groups.length === 0 ? (
+      {waiting ? (
+        <LoaderShell busy />
+      ) : groups.length === 0 ? (
         <EmptyState icon="market" title={t.market.empty} />
       ) : (
         <>

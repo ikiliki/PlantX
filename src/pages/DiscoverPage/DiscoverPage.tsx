@@ -59,7 +59,8 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   const todos = ownerId ? db.todos.filter((todo) => todo.ownerId === ownerId) : []
   const plants = ownerId ? db.plants.filter((plant) => plant.ownerId === ownerId) : []
   const carePlant = careTodo ? plants.find((plant) => plant.id === careTodo.plantId) : undefined
-  const feedLoading = useSectionFetch(signedIn, ['updates'])
+  // Feed rows need their plant and grower too: skeletons until all three are in.
+  const feedLoading = useSectionFetch(signedIn, ['updates', 'plants', 'users'])
   const skeletonFeed = SKELETON_FEED_KINDS.map((kind, index) => <FeedUpdateSkeleton key={index} kind={kind} />)
   const openCare = (todo: Todo) => setCareTodo(todo)
 

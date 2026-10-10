@@ -109,6 +109,18 @@ export const PlantCard = styled(Link)`
   text-decoration: none;
 `
 
+/** The same card, not a link: a plant still loading. */
+export const PlantCardShell = styled.div`
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px;
+  scroll-snap-align: start;
+  background: ${theme.colors.creamCard};
+  border-radius: ${theme.radii.md};
+  box-shadow: ${theme.shadow.card};
+`
+
 export const PlantPhoto = styled.div`
   aspect-ratio: 1;
   max-width: 100%;
