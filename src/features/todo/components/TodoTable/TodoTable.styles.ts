@@ -1,13 +1,25 @@
 import styled, { css } from 'styled-components'
 import { pressable, riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
+import type { CareIcon } from '../../../../mock/types'
+import { careColor } from '../../careKinds'
 
-type Tone = { $tone: 'water' | 'photo' }
+type Tone = { $tone: CareIcon }
 
-/** Water reads blue, a photo check-in peach: the same tones as the feed and the calendar. */
-const TONE = {
+/** Water reads blue, a photo check-in peach: the same tones as the feed and the calendar. Newer kinds use their care colour. */
+const FIXED: Partial<Record<CareIcon, { wash: string; edge: string; ink: string }>> = {
   water: { wash: '#e8f3fa', edge: '#8ebcda', ink: '#2A628A' },
   photo: { wash: '#fff1e4', edge: '#e4c29a', ink: '#9A6230' },
+}
+
+function toneOf(kind: CareIcon) {
+  return (
+    FIXED[kind] ?? {
+      wash: `color-mix(in srgb, ${careColor(kind)} 12%, var(--c-creamCard))`,
+      edge: `color-mix(in srgb, ${careColor(kind)} 45%, transparent)`,
+      ink: careColor(kind),
+    }
+  )
 }
 
 export const Root = styled.section`
@@ -68,9 +80,9 @@ export const Row = styled.button<Tone>`
   width: 100%;
   min-width: 0;
   padding: 8px 10px 8px 8px;
-  border: 1px solid ${({ $tone }) => TONE[$tone].edge};
+  border: 1px solid ${({ $tone }) => toneOf($tone).edge};
   border-radius: ${theme.radii.md};
-  background: linear-gradient(100deg, ${({ $tone }) => TONE[$tone].wash}, ${theme.colors.creamCard} 75%);
+  background: linear-gradient(100deg, ${({ $tone }) => toneOf($tone).wash}, ${theme.colors.creamCard} 75%);
   color: ${theme.colors.ink};
   font: inherit;
   text-align: start;
@@ -78,7 +90,7 @@ export const Row = styled.button<Tone>`
   animation: ${riseIn} ${theme.motion.base} ${theme.motion.ease} both;
 
   &:hover {
-    border-color: ${({ $tone }) => TONE[$tone].ink};
+    border-color: ${({ $tone }) => toneOf($tone).ink};
   }
 
   &:focus-visible {
@@ -115,8 +127,8 @@ export const Badge = styled.span<Tone>`
   height: 22px;
   border-radius: 50%;
   background: ${theme.colors.creamCard};
-  color: ${({ $tone }) => TONE[$tone].ink};
-  box-shadow: 0 0 0 2px ${({ $tone }) => TONE[$tone].edge};
+  color: ${({ $tone }) => toneOf($tone).ink};
+  box-shadow: 0 0 0 2px ${({ $tone }) => toneOf($tone).edge};
 `
 
 export const Copy = styled.span`
@@ -148,7 +160,7 @@ export const Action = styled.span<Tone>`
   font-weight: 800;
   white-space: nowrap;
   ${({ $tone }) => css`
-    background: ${TONE[$tone].ink};
+    background: ${toneOf($tone).ink};
     color: ${theme.colors.creamCard};
   `}
 `

@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { guestCanLoad, type ServerSlice } from './liveApi'
 import { useStore } from './store'
 
-const RETRY_LIMIT = 2
+/** Quick retries with growing waits (0.6 s, 1.2 s, 2.4 s, 4.8 s), then a slow retry until the API answers. */
+const FAST_RETRIES = 4
 const RETRY_MS = 600
+const SLOW_RETRY_MS = 10_000
 
 /**
- * Load full rows for the slices this screen is showing. Returns the slices still in flight.
- * A guest only loads public slices; signing in changes the key, so the rest load then.
+ * Load full rows for the slices this screen is showing. Returns the slices still in flight (a failed one
+ * stays in flight while it is retried). A guest only loads public slices; signing in changes the key.
  */
 export function useServerSlices(parts: readonly ServerSlice[]) {
   const { loadSlice, liveWritable, liveStatus, signedIn } = useStore()
@@ -38,10 +40,13 @@ export function useServerSlices(parts: readonly ServerSlice[]) {
           return next
         })
       }
-      if (results.some((item) => !item.ok) && attempt < RETRY_LIMIT) {
+      if (results.some((item) => !item.ok)) {
+        // A dropped request (the API restarting, a flaky network) heals by itself: the screen keeps its
+        // skeleton and tries again, never showing "empty" for data it could not read.
+        const wait = attempt < FAST_RETRIES ? RETRY_MS * 2 ** attempt : SLOW_RETRY_MS
         retryTimer = window.setTimeout(() => {
           if (!cancel) setAttempt((value) => value + 1)
-        }, RETRY_MS)
+        }, wait)
       }
     })
     return () => {
@@ -55,14 +60,15 @@ export function useServerSlices(parts: readonly ServerSlice[]) {
 }
 
 /**
- * True while an open section is still waiting on its slices.
- * A failed slice is settled, so the section can close on the unavailable notice.
+ * True while an open section is still waiting on its slices. A slice that failed counts as waiting (it is
+ * being retried), so a member screen keeps its skeleton instead of deciding "empty" from missing data.
+ * `settle`: admin sections treat a failed slice as settled, so they can show their unavailable notice.
  * Mock mode is already local, so it never waits.
  */
-export function useSectionFetch(active: boolean, slices: readonly ServerSlice[]) {
+export function useSectionFetch(active: boolean, slices: readonly ServerSlice[], { settle = false }: { settle?: boolean } = {}) {
   const loading = useServerSlices(active ? slices : [])
   const { plantxEnv, liveStatus, sliceFailures } = useStore()
   if (!active || plantxEnv === 'mock' || liveStatus === 'down') return false
   if (liveStatus === 'loading') return true
-  return slices.some((slice) => loading.has(slice) && !sliceFailures[slice])
+  return slices.some((slice) => loading.has(slice) && (!settle || !sliceFailures[slice]))
 }

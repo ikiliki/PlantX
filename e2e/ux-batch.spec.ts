@@ -130,7 +130,6 @@ test.describe('admin', () => {
       description: '',
       descriptionHe: '',
       photos: ['/class-photos/pot-gold-a-l-mat.jpg'],
-      quantity: 1,
       sizeGrade: 'M',
       sizeBand: 'M',
       quality: '',

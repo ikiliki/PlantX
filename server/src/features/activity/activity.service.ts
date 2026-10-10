@@ -5,7 +5,7 @@ import { Errors } from '../../lib/errors.ts'
 import { notifyActivity } from '../../lib/events.ts'
 import { logger } from '../../lib/logger.ts'
 import { loadVisibility, visibleActivities } from '../../lib/visibility.ts'
-import type { User } from '../../../../src/mock/types.ts'
+import type { ActivitySocialCounts, User } from '../../../../src/mock/types.ts'
 import type { Activity, ActivityInput, ActivityQuery } from './activity.types.ts'
 
 function newestFirst(a: Activity, b: Activity) {
@@ -40,7 +40,7 @@ async function withSocial(activities: Activity[], viewerId: string | null): Prom
     )
     .catch((err) => {
       logger.warn('activity social counts unavailable', {}, err)
-      return new Map<string, { reactions: number; reacted: boolean; comments: number }>()
+      return new Map<string, ActivitySocialCounts>()
     })
   return activities.map((activity) => ({ ...activity, ...(counts.get(activity.id) ?? {}) }))
 }

@@ -23,7 +23,7 @@ export function EditPencil({ label, onClick }: { label: string; onClick: () => v
 
 /**
  * Edits one passport value in a small popup (#70), so the passport behind it never reflows: "Edit <field>",
- * the field, Cancel and Save in the footer. Nothing saves on change. One fixed status line under the field
+ * the field, Cancel and Save in the footer (plus any `actions` that apply at once). Nothing saves on change. One fixed status line under the field
  * holds the character count or a refused save's error, so the popup keeps its size.
  */
 export function InlineEdit({
@@ -35,6 +35,9 @@ export function InlineEdit({
   maxLength,
   onSave,
   onCancel,
+  actions = [],
+  suggestedId,
+  suggestedLabel,
 }: {
   label: string
   kind: InlineEditKind
@@ -45,6 +48,11 @@ export function InlineEdit({
   /** Resolves true when the server saved it; the caller closes the popup then. */
   onSave: (next: string) => Promise<boolean>
   onCancel: () => void
+  /** Extra footer buttons beside Cancel and Save (e.g. Pause); each saves its own id right away. */
+  actions?: { id: string; label: string; variant?: 'ghost' | 'danger' }[]
+  /** A choice option that gets the small suggested mark (e.g. "✦ AI"), like the Add Plant wizard. */
+  suggestedId?: string
+  suggestedLabel?: string
 }) {
   const { t } = useI18n()
   const [draft, setDraft] = useState(value)
@@ -72,6 +80,15 @@ export function InlineEdit({
     if (!ok) setFailed(true)
   }
 
+  const act = async (id: string) => {
+    if (busy) return
+    setBusy(true)
+    setFailed(false)
+    const ok = await onSave(id)
+    setBusy(false)
+    if (!ok) setFailed(true)
+  }
+
   const edit = (next: string) => {
     setFailed(false)
     setDraft(next)
@@ -86,6 +103,18 @@ export function InlineEdit({
       }}
       footer={
         <>
+          {actions.map((action) => (
+            <Button
+              key={action.id}
+              type="button"
+              variant={action.variant ?? 'ghost'}
+              onClick={() => void act(action.id)}
+              disabled={busy}
+              data-inline-action={action.id}
+            >
+              {action.label}
+            </Button>
+          ))}
           <Button type="button" variant="ghost" onClick={onCancel} disabled={busy}>
             {t.common.cancel}
           </Button>
@@ -108,7 +137,14 @@ export function InlineEdit({
         }}
       >
         {kind === 'choice' ? (
-          <ChoiceChips label={label} options={options} value={draft} onChange={edit} />
+          <ChoiceChips
+            label={label}
+            options={options}
+            value={draft}
+            onChange={edit}
+            suggestedId={suggestedId}
+            suggestedLabel={suggestedLabel}
+          />
         ) : kind === 'textarea' ? (
           <TextArea
             ref={fieldRef}

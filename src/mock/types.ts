@@ -201,7 +201,6 @@ export interface Plant extends VisibilityMeta {
   description?: string
   descriptionHe?: string
   photos: string[]
-  quantity: number
   sizeGrade: string
   sizeBand?: SizeBand
   /** Empty until health is chosen. */
@@ -234,6 +233,8 @@ export interface Plant extends VisibilityMeta {
   identification?: PlantIdentification
   createdAt: string
   history: { at: string; label: string; labelHe: string }[]
+  /** The owner's own care for this plant, over the catalog's: per care task, an interval, off, or added (an optional task). */
+  care?: PlantCare
   comps?: { price: number; date: string; note: string; noteHe: string }[]
 }
 
@@ -448,6 +449,8 @@ export interface FeedUpdate {
   reactions?: number
   reacted?: boolean
   comments?: number
+  /** The two newest comments, oldest first (the preview under a post). */
+  latestComments?: ActivityComment[]
 }
 
 /** Greenhouse activities → Social: a 🌿 or a comment another grower left on one of your posts. */
@@ -493,11 +496,61 @@ export interface ActivityComment {
   createdAt: string
 }
 
+/** Per viewer, added to each activity on the way out: 🌿 count, whether the viewer reacted, comments. */
+export interface ActivitySocialCounts {
+  reactions: number
+  reacted: boolean
+  comments: number
+  /** The two newest visible comments, oldest first: the preview under a post. */
+  latestComments: ActivityComment[]
+}
+
 /** Top-level todo bucket. Later: market. */
 export type TodoCategory = 'plant'
 
-/** Action under the category. Later under market: verify. */
-export type TodoSubcategory = 'water' | 'photo'
+/** Action under the category: a care task id (`CareTask.id`). Water and photo are built in. Later under market: verify. */
+export type TodoSubcategory = string
+
+/**
+ * How often one kind of care repeats. `winterEveryDays` replaces `everyDays` from November to February;
+ * `months` (1–12) keeps it to a season (feeding in spring and summer).
+ */
+export type CareRule = { everyDays: number; winterEveryDays?: number; months?: number[] }
+
+/** The icons a care task can use (built-in kinds plus a few for tasks the admin adds). */
+export type CareIcon = 'water' | 'photo' | 'feed' | 'repot' | 'rotate' | 'mist' | 'prune' | 'clean' | 'pest' | 'sun'
+
+/** Who gets a care task: every plant, only the categories / varieties it is linked to, or owners who add it. */
+export type CareAudience = 'all' | 'linked' | 'optional'
+
+/** One care task the admin manages ('general task'). Water and photo are built in and cannot be deleted. */
+export type CareTask = {
+  id: string
+  name: string
+  nameHe: string
+  icon: CareIcon
+  audience: CareAudience
+  /** The default interval; none means owners are asked to set it. */
+  interval?: CareRule
+  builtIn?: boolean
+}
+
+/**
+ * A category's (or one variety's) rule for a care task: must, optional (owners may add it) or off, and its
+ * interval. `source` says whether AI suggested it or the admin set it.
+ */
+export type CareTaskRule = {
+  id: string
+  taskId: string
+  categoryId: string
+  subcategoryId?: string
+  mode: 'must' | 'optional' | 'off'
+  interval?: CareRule
+  source: 'ai' | 'admin'
+}
+
+/** The owner's own care for one plant, per task id: their interval, off (paused), or added (an optional task they took on). */
+export type PlantCare = Record<string, { interval?: CareRule; off?: boolean; added?: boolean }>
 
 export interface Todo {
   id: string
@@ -562,6 +615,9 @@ export type Catalog = {
   categories: CatalogCategory[]
   subcategories: CatalogSubcategory[]
   properties: CatalogProperty[]
+  /** Care tasks the admin manages, and their per category / variety rules. */
+  careTasks: CareTask[]
+  careRules: CareTaskRule[]
 }
 
 /** Class fields a person confirms before saving. Photo identify can fill this shape. */

@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { Button } from '../../../../components/Button/Button'
 import { FilterChips } from '../../../../components/FilterChips/FilterChips'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { AddPlantCard } from '../../../greenhouse/components/AddPlantCard/AddPlantCard'
 import { PassportDialog } from '../../../greenhouse/components/PassportDialog/PassportDialog'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import type { Plant, Todo, TodoSubcategory } from '../../../../mock/types'
-import { canFillTodo, inCareFillWindow, isOpenTodo, todayIso } from '../../todoSchedule'
+import type { CareIcon, Plant, Todo, TodoSubcategory } from '../../../../mock/types'
+import { canFillTodo, inCareFillWindow, isFirstWaterTodo, isOpenTodo, todayIso } from '../../todoSchedule'
+import { careFillDays } from '../../carePlan'
+import { useCareTasks } from '../../careKinds'
 import { TodoCareCard } from '../TodoCareCard/TodoCareCard'
 import { TodoDayPicker } from '../TodoDayPicker/TodoDayPicker'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
@@ -14,14 +17,16 @@ import {
   Board,
   Cell,
   Day,
-  KindRow,
-  DaysChip,
   DayList,
   DayNum,
   DoneMark,
   Split,
+  DayGroups,
   DayPanel,
+  KindGroup,
+  KindHead,
   DayPanelHead,
+  HeadPicker,
   DropIcon,
   EmptyDay,
   FilterSelect,
@@ -41,7 +46,6 @@ import {
 } from './TodoCalendar.styles'
 
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]
-const ALL_KINDS: TodoSubcategory[] = ['water', 'photo']
 const HOLD_OPEN_MS = 400
 
 function monthMatrix(year: number, month: number) {
@@ -59,26 +63,20 @@ function isoDay(year: number, month: number, day: number) {
   return new Date(Date.UTC(year, month, day)).toISOString().slice(0, 10)
 }
 
-function dayTone(items: Todo[]): 'water' | 'photo' | 'mixed' | undefined {
+function dayTone(items: Todo[], iconOf: (kind: string) => CareIcon): CareIcon | 'mixed' | undefined {
   if (items.length === 0) return undefined
-  const water = items.some((todo) => todo.subcategory === 'water')
-  const photo = items.some((todo) => todo.subcategory === 'photo')
-  if (water && photo) return 'mixed'
-  if (photo) return 'photo'
-  return 'water'
-}
-
-function kindLabel(kind: TodoSubcategory, t: { actionWater: string; actionPhoto: string }) {
-  return kind === 'photo' ? t.actionPhoto : t.actionWater
+  const icons = new Set(items.map((todo) => iconOf(todo.subcategory)))
+  return icons.size > 1 ? 'mixed' : iconOf(items[0].subcategory)
 }
 
 function DayMarks({ items, plants }: { items: Todo[]; plants: Plant[] }) {
+  const care = useCareTasks()
   return (
     <>
       {items.map((todo) => {
         const plant = plants.find((item) => item.id === todo.plantId)
         return (
-          <PlantBtn key={todo.id} $tone={todo.subcategory === 'photo' ? 'photo' : 'water'} aria-hidden>
+          <PlantBtn key={todo.id} $tone={care.icon(todo.subcategory)} aria-hidden>
             <PlantImage src={plant?.photos[0]} alt="" />
             <PlantKind>
               <TodoKindIcon kind={todo.subcategory} size={10} />
@@ -119,13 +117,14 @@ export function TodoCalendar({
   onPickFirstWater: (todo: Todo, day: string) => void
 }) {
   const { t, tr, locale } = useI18n()
+  const care = useCareTasks()
   const mobile = useMediaQuery('(max-width: 899px)')
   const open = todos.filter(isOpenTodo)
   const living = plants.filter((plant) => plant.status === 'owned' || plant.status === 'listed')
   const kinds = useMemo(() => {
     const present = new Set(open.map((todo) => todo.subcategory))
-    return ALL_KINDS.filter((kind) => present.has(kind))
-  }, [open])
+    return care.tasks.map((task) => task.id).filter((kind) => present.has(kind))
+  }, [open, care.tasks])
 
   const [plantFilter, setPlantFilter] = useState<string | 'all'>('all')
   const [kindFilter, setKindFilter] = useState<TodoSubcategory | 'all'>('all')
@@ -291,7 +290,8 @@ export function TodoCalendar({
     const finish = () => {
       if (completedOn) onPickFirstWater(todo, completedOn)
       else onComplete(todo)
-      if (todo.subcategory !== 'water') setPassport({ plantId: todo.plantId, careMark: todo.subcategory })
+      // A fresh photo shows on the passport; other care just ticks off.
+      if (todo.subcategory === 'photo') setPassport({ plantId: todo.plantId, careMark: todo.subcategory })
     }
 
     if (mobile) {
@@ -310,48 +310,37 @@ export function TodoCalendar({
 
   const kindOptions = [
     { id: 'all' as const, label: t.todo.filterAllKinds },
-    ...kinds.map((kind) => ({ id: kind, label: kindLabel(kind, t.todo), iconNode: <TodoKindIcon kind={kind} size={14} /> })),
+    ...kinds.map((kind) => ({ id: kind, label: care.name(kind), iconNode: <TodoKindIcon kind={kind} size={14} /> })),
   ]
 
-  const toolbar =
-    !firstPlant && showFilters ? (
-      <Toolbar>
-        {mobile ? (
-          <KindRow role="radiogroup" aria-label={t.todo.filterKinds}>
-            {kindOptions.map((option) => (
-              <DaysChip
-                key={option.id}
-                type="button"
-                role="radio"
-                $on={kindFilter === option.id}
-                aria-checked={kindFilter === option.id}
-                onClick={() => setKindFilter(option.id)}
-              >
-                {'iconNode' in option ? option.iconNode : null}
-                {option.label}
-              </DaysChip>
-            ))}
-          </KindRow>
-        ) : (
-          <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
-        )}
-        <FilterSelect
-          aria-label={t.todo.filterPlants}
-          value={plantFilter}
-          onChange={(event) => {
-            const value = event.target.value
-            setPlantFilter(value === 'all' ? 'all' : value)
-          }}
-        >
-          <option value="all">{t.todo.filterAllPlants}</option>
-          {living.map((plant) => (
-            <option key={plant.id} value={plant.id}>
-              {tr(plant.title, plant.titleHe)}
-            </option>
-          ))}
-        </FilterSelect>
-      </Toolbar>
-    ) : null
+  const plantSelect = (
+    <FilterSelect
+      aria-label={t.todo.filterPlants}
+      value={plantFilter}
+      onChange={(event) => {
+        const value = event.target.value
+        setPlantFilter(value === 'all' ? 'all' : value)
+      }}
+    >
+      <option value="all">{t.todo.filterAllPlants}</option>
+      {living.map((plant) => (
+        <option key={plant.id} value={plant.id}>
+          {tr(plant.title, plant.titleHe)}
+        </option>
+      ))}
+    </FilterSelect>
+  )
+  const kindChips = <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
+  const filtersOn = !firstPlant && showFilters
+
+  // Wide: chips and the plant picker on one toolbar. Phone: the picker sits small beside the Tasks title and the
+  // chips are one sideways row under it (same FilterChips as wide), never wrapping into a block.
+  const toolbar = filtersOn ? (
+    <Toolbar>
+      {kindChips}
+      {plantSelect}
+    </Toolbar>
+  ) : null
 
   const fullDate = (y: number, m: number, d: number) =>
     new Date(Date.UTC(y, m, d, 12)).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
@@ -402,7 +391,7 @@ export function TodoCalendar({
             const key = isoDay(year, month, day)
             const items = byDay.get(key) ?? []
             const done = doneByDay.get(key) ?? []
-            const tone = dayTone(items)
+            const tone = dayTone(items, care.icon)
             const selected = selectedDays.includes(key)
             const many = items.length > 1
             const expanded = openDay === key
@@ -452,7 +441,7 @@ export function TodoCalendar({
                 <DayNum>{day}</DayNum>
                 {done.length > 0 ? (
                   <DoneMark
-                    $kind={done[0].subcategory === 'photo' ? 'photo' : 'water'}
+                    $kind={care.icon(done[0].subcategory)}
                     title={t.todo.doneOnDay.replace('{n}', String(done.length))}
                   >
                     ✓
@@ -461,7 +450,7 @@ export function TodoCalendar({
                 {items.length > 0 ? (
                   <Icons data-peek="">
                     <PlantBtn
-                      $tone={items[0].subcategory === 'photo' ? 'photo' : 'water'}
+                      $tone={care.icon(items[0].subcategory)}
                       $stacked={many}
                       aria-hidden
                     >
@@ -482,7 +471,7 @@ export function TodoCalendar({
                   </Lift>
                 ) : null}
                 {drop?.day === key ? (
-                  <DropIcon key={drop.key} $kind={drop.kind === 'photo' ? 'photo' : 'water'}>
+                  <DropIcon key={drop.key} $kind={care.icon(drop.kind)}>
                     <TodoKindIcon kind={drop.kind} size={28} mark />
                   </DropIcon>
                 ) : null}
@@ -497,38 +486,60 @@ export function TodoCalendar({
       <DayPanel>
         <DayPanelHead>
           <h3>{mobile ? t.todo.title : t.todo.dayTitle}</h3>
-          {mobile ? null : <p>{selectedLabel}</p>}
+          {mobile ? (filtersOn ? <HeadPicker>{plantSelect}</HeadPicker> : null) : <p>{selectedLabel}</p>}
         </DayPanelHead>
-        {mobile ? toolbar : null}
+        {mobile && filtersOn ? kindChips : null}
         {shownTodos.length === 0 ? (
           <EmptyDay>{mobile ? t.todo.emptyTasks : t.todo.emptyDay}</EmptyDay>
         ) : (
-          <DayList>
-            {shownTodos.map((todo) => {
-              const plant = plants.find((item) => item.id === todo.plantId)
-              if (!plant) return null
+          <DayGroups>
+            {care.tasks.map(({ id: kind }) => {
+              const group = shownTodos.filter((todo) => todo.subcategory === kind)
+              if (group.length === 0) return null
+              // Done all: every task of this kind that can be ticked off now (a first watering still needs its day).
+              const ready = group.filter((todo) => canFillTodo(todo, todos) && !isFirstWaterTodo(todo, todos))
               return (
-                <TodoCareCard
-                  key={todo.id}
-                  todo={todo}
-                  plant={plant}
-                  todos={todos}
-                  onComplete={(row) => runComplete(row)}
-                  onPickFirstWater={(row, picked) => runComplete(row, picked)}
-                  onOpen={
-                    mobile
-                      ? () => {
-                          const date = new Date(`${today}T12:00:00.000Z`)
-                          setFillYear(date.getUTCFullYear())
-                          setFillMonth(date.getUTCMonth())
-                          setFill(todo)
-                        }
-                      : undefined
-                  }
-                />
+                <KindGroup key={kind} data-care-group={kind}>
+                  <KindHead>
+                    <TodoKindIcon kind={kind} size={16} />
+                    {care.name(kind)}
+                    <span>({group.length})</span>
+                    {ready.length > 1 ? (
+                      <Button size="sm" variant="ghost" type="button" onClick={() => ready.forEach((todo) => onComplete(todo))}>
+                        {t.todo.doneAll.replace('{n}', String(ready.length))}
+                      </Button>
+                    ) : null}
+                  </KindHead>
+                    <DayList>
+                      {group.map((todo) => {
+                        const plant = plants.find((item) => item.id === todo.plantId)
+                        if (!plant) return null
+                        return (
+                          <TodoCareCard
+                            key={todo.id}
+                            todo={todo}
+                            plant={plant}
+                            todos={todos}
+                            onComplete={(row) => runComplete(row)}
+                            onPickFirstWater={(row, picked) => runComplete(row, picked)}
+                            onOpen={
+                              mobile
+                                ? () => {
+                                    const date = new Date(`${today}T12:00:00.000Z`)
+                                    setFillYear(date.getUTCFullYear())
+                                    setFillMonth(date.getUTCMonth())
+                                    setFill(todo)
+                                  }
+                                : undefined
+                            }
+                          />
+                        )
+                      })}
+                    </DayList>
+                </KindGroup>
               )
             })}
-          </DayList>
+          </DayGroups>
         )}
       </DayPanel>
       )}
@@ -546,7 +557,9 @@ export function TodoCalendar({
             canFillTodo(fill, todos)
               ? fill.subcategory === 'photo'
                 ? t.todo.fillWindowPhoto
-                : t.todo.fillWindowWater
+                : fill.subcategory === 'water'
+                  ? t.todo.fillWindowWater
+                  : t.todo.fillWindowOther.replace('{n}', String(careFillDays(fill.subcategory)))
               : t.todo.fillNotDue.replace('{day}', fill.dueOn ?? '—')
           }
           allow={(day) => canFillTodo(fill, todos) && inCareFillWindow(day, fill.subcategory, today)}
@@ -569,7 +582,7 @@ export function TodoCalendar({
         <PassportDialog
           plantId={passport.plantId}
           careMark={passport.careMark}
-          tab="todo"
+          tab="care"
           onClose={() => setPassport(undefined)}
         />
       ) : null}

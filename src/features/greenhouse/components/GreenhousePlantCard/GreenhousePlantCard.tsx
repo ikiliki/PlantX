@@ -1,20 +1,20 @@
-import { OTHER_CATEGORY_ID } from '../../plantClass'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isPlacementEnabled, isPlacementReady } from '../../../../theme/release'
 import { isPhotoStale, isWaterDue } from '../../plantCare'
-import type { Plant, Todo } from '../../../../mock/types'
+import type { Plant, Todo, TodoSubcategory } from '../../../../mock/types'
 import {
   dueTodos,
   isFirstWaterTodo,
+  isSetTodo,
   upcomingTodos,
 } from '../../../todo/todoSchedule'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
+import { useCareTasks } from '../../../todo/careKinds'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import { Icon } from '../../../../components/Icon/Icon'
-import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import {
   CareAction,
   CareActions,
@@ -23,12 +23,12 @@ import {
   CollectionGrid,
   Details,
   Name,
+  Need,
+  Needs,
   NameRow,
-  PassportMark,
   Photo,
   PhotoCount,
   PrivateMark,
-  PhotoTags,
   PhotoLink,
   Root,
   StatusMark,
@@ -85,7 +85,7 @@ export function GreenhousePlantCardSkeleton({ blurred = false }: { blurred?: boo
 export function GreenhousePlantCard({
   plant,
   fresh,
-  careKind,
+  careKinds,
   careScope = 'due',
   onCare,
   preview,
@@ -93,8 +93,8 @@ export function GreenhousePlantCard({
   plant: Plant
   /** Just added: the card glows once. */
   fresh?: boolean
-  /** Needs care / Upcoming section: show only this action under the name. */
-  careKind?: 'water' | 'photo'
+  /** Needs care / Upcoming section: show only these kinds of care under the name. */
+  careKinds?: TodoSubcategory[]
   /** `due` = Needs care; `upcoming` = scheduled later. */
   careScope?: 'due' | 'upcoming'
   /** Care filter: open the day popup for this todo instead of navigating. */
@@ -104,18 +104,20 @@ export function GreenhousePlantCard({
 }) {
   const { db } = useStore()
   const { t, tr, locale } = useI18n()
+  const care = useCareTasks()
   const marketOpen = isPlacementReady(db.system, 'market.board')
   const cardOn = isPlacementEnabled(db.system, 'greenhouse.card')
   if (!cardOn) return null
 
   const todos = db.todos.filter((todo) => todo.plantId === plant.id)
   const carePool = careScope === 'upcoming' ? upcomingTodos(todos) : dueTodos(todos)
-  const needed = careKind ? carePool.filter((todo) => todo.subcategory === careKind) : []
+  const needed = careKinds ? carePool.filter((todo) => careKinds.includes(todo.subcategory)) : []
   const primary = needed[0]
   const status = statusFor(plant, marketOpen, todos, t)
-  const verified = Boolean(plant.verifiedAt)
+  // On the shelf the card says only what the plant needs now (due, overdue, first watering, set a schedule).
+  const dueNow = careKinds ? [] : dueTodos(todos)
   const photos = plant.photos.filter(Boolean)
-  const careMode = Boolean(careKind)
+  const careMode = Boolean(careKinds)
   const dayLabel = primary ? formatCareDay(primary.dueOn, locale) : null
 
   const openCare = () => {
@@ -127,7 +129,7 @@ export function GreenhousePlantCard({
     <Root
       $fresh={fresh}
       $care={careMode}
-      $living={status.tone === 'calm'}
+      $living={careMode && status.tone === 'calm'}
       onClick={careMode ? openCare : undefined}
       onKeyDown={
         careMode
@@ -153,29 +155,16 @@ export function GreenhousePlantCard({
           ) : null}
         </Photo>
       ) : (
+        // The shelf card is the Home card: the photo and the name, nothing on the photo.
         <PhotoLink to={`/plants/${plant.id}`} aria-haspopup="dialog">
-          <Photo $stale={isPhotoStale(plant, todos)}>
+          <Photo $stale={false}>
             <PlantImage src={photos[0]} alt="" />
-            <StatusMark $tone={status.tone}>{status.label}</StatusMark>
-            {/* Who identified it sits on the photo, like the passport's AI stamp: AI, Edited, or Manual. */}
-            <PhotoTags $count={photos.length > 1}>
-              <IdentifyBadge
-                identification={plant.identification}
-                notInCatalog={plant.speciesId === OTHER_CATEGORY_ID}
-                compact
-              />
-            </PhotoTags>
-            {photos.length > 1 ? (
-              <PhotoCount title={t.addPlant.photosCount.replace('{n}', String(photos.length))}>
-                <span aria-hidden>▣</span> +{photos.length - 1}
-              </PhotoCount>
-            ) : null}
           </Photo>
         </PhotoLink>
       )}
       <Details $care={careMode} $preview={preview}>
         <NameRow>
-          <PlantCatalogMark plant={plant} size={24} />
+          {careMode || preview ? <PlantCatalogMark plant={plant} size={24} /> : null}
           {careMode || preview ? (
             <CareName>{tr(plant.title, plant.titleHe)}</CareName>
           ) : (
@@ -191,15 +180,14 @@ export function GreenhousePlantCard({
           <CareActions>
             {needed.map((todo) => {
               const first = isFirstWaterTodo(todo, todos)
-              const label =
-                todo.subcategory === 'photo'
-                  ? t.todo.actionPhoto
-                  : first
-                    ? t.todo.actionSetWaterDate
-                    : t.todo.actionWater
+              const label = first
+                ? t.todo.actionSetWaterDate
+                : isSetTodo(todo, todos)
+                  ? t.todo.actionSetSchedule
+                  : care.name(todo.subcategory)
               const when = formatCareDay(todo.dueOn, locale)
               return (
-                <CareAction key={todo.id} $tone={todo.subcategory === 'photo' ? 'photo' : 'water'}>
+                <CareAction key={todo.id} $tone={care.icon(todo.subcategory)}>
                   <TodoKindIcon kind={todo.subcategory} size={14} />
                   <span>
                     {label}
@@ -209,13 +197,20 @@ export function GreenhousePlantCard({
               )
             })}
           </CareActions>
-        ) : (
-          verified ? (
-            <Tags>
-              <PassportMark>✓ {t.greenhouse.passportOk}</PassportMark>
-            </Tags>
-          ) : null
-        )}
+        ) : dueNow.length > 0 ? (
+          <Needs data-plant-needs>
+            {dueNow.map((todo) => (
+              <Need key={todo.id} $tone={care.icon(todo.subcategory)}>
+                <TodoKindIcon kind={todo.subcategory} size={12} />
+                {isFirstWaterTodo(todo, todos)
+                  ? t.todo.statusFirstWater
+                  : isSetTodo(todo, todos)
+                    ? t.todo.actionSetSchedule
+                    : care.name(todo.subcategory)}
+              </Need>
+            ))}
+          </Needs>
+        ) : null}
       </Details>
     </Root>
   )

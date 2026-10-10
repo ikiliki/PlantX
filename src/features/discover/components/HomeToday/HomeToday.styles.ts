@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
 export const Root = styled.div`
@@ -31,15 +31,57 @@ export const Summary = styled.p`
   color: ${theme.colors.muted};
 `
 
-export const Section = styled.section`
+export const Section = styled.section<{ $last?: boolean; $wideOnly?: boolean }>`
   display: grid;
   gap: ${theme.space.sm};
   min-width: 0;
+
+  @container (max-width: 899px) {
+    ${({ $last }) => ($last ? 'order: 1;' : '')}
+    ${({ $wideOnly }) => ($wideOnly ? 'display: none;' : '')}
+  }
+`
+
+/**
+ * Home's two columns on a wide screen: the day (greeting, care, your greenhouse, top greenhouses, Social)
+ * and a side column (market, rank, catalog). On a phone both columns dissolve into one list.
+ */
+export const Columns = styled.div`
+  display: grid;
+  gap: ${theme.space.lg};
+  min-width: 0;
+
+  @container (min-width: 900px) {
+    grid-template-columns: minmax(0, 1fr) min(360px, 34%);
+    align-items: start;
+  }
+`
+
+export const MainCol = styled.div`
+  display: contents;
+
+  @container (min-width: 900px) {
+    display: grid;
+    gap: ${theme.space.lg};
+    min-width: 0;
+  }
+`
+
+export const SideCol = styled.div`
+  display: contents;
+
+  @container (min-width: 900px) {
+    display: grid;
+    gap: ${theme.space.lg};
+    min-width: 0;
+    position: sticky;
+    top: 88px;
+  }
 `
 
 export const Head = styled.div`
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: ${theme.space.md};
 `
@@ -52,31 +94,59 @@ export const HeadTitle = styled.h2`
   color: ${theme.colors.ink};
 `
 
-const arrow = `
+/**
+ * One heading style for every Home section: the heading is the way into its full page — the title, an
+ * optional count, and a chevron. No separate "All …" buttons.
+ */
+export const HeadLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 8px;
+  min-height: 40px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: ${theme.radii.md};
+
   &::after {
-    content: ' →';
+    content: '›';
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    color: ${theme.colors.moss};
+    transition: transform ${theme.motion.fast} ${theme.motion.ease};
   }
   [dir='rtl'] &::after {
-    content: ' ←';
+    content: '‹';
+  }
+  &:hover::after {
+    transform: translateX(3px);
+  }
+  [dir='rtl'] &:hover::after {
+    transform: translateX(-3px);
+  }
+  &:hover h2 {
+    color: ${theme.colors.forest};
+  }
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.forest};
+    outline-offset: 2px;
   }
 `
 
-export const HeadLink = styled(Link)`
-  font-size: ${theme.text.sm};
-  font-weight: 700;
+/** How many are behind the heading (tasks due, your plants). */
+export const HeadCount = styled.span`
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.chipGreen};
   color: ${theme.colors.forest};
-  white-space: nowrap;
-  text-decoration: none;
-  ${arrow}
-`
-
-export const More = styled(Link)`
-  justify-self: end;
-  font-size: ${theme.text.sm};
-  font-weight: 700;
-  color: ${theme.colors.forest};
-  text-decoration: none;
-  ${arrow}
+  font-size: 12px;
+  font-weight: 800;
 `
 
 /** One sideways row; the page itself never scrolls sideways. */
@@ -107,6 +177,18 @@ export const PlantCard = styled(Link)`
   box-shadow: ${theme.shadow.card};
   color: inherit;
   text-decoration: none;
+`
+
+/** The same card, not a link: a plant still loading. */
+export const PlantCardShell = styled.div`
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px;
+  scroll-snap-align: start;
+  background: ${theme.colors.creamCard};
+  border-radius: ${theme.radii.md};
+  box-shadow: ${theme.shadow.card};
 `
 
 export const PlantPhoto = styled.div`

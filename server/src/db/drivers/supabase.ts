@@ -1,7 +1,11 @@
 import pg from 'pg'
 import { generateNickname } from '../../../../src/features/profile/avatarIcons.ts'
 import type {
+  CareRule,
+  CareTask,
+  CareTaskRule,
   Catalog,
+  PlantCare,
   CatalogProperty,
   PhotoCheck,
   Plant,
@@ -170,6 +174,10 @@ export function createSupabaseStore(): PlantxStore {
       list: () => withTx(listTodos),
       saveAll: (items) => withTx((client) => saveTodos(client, items)),
       upsert: (items) => withTx((client) => saveTodos(client, items, 'rows')),
+      remove: async (ids) => {
+        if (ids.length === 0) return
+        await withTx((client) => client.query('delete from todos where id = any($1::text[])', [ids]))
+      },
     },
     catalog: {
       get: () => withTx(getCatalog),
@@ -537,15 +545,15 @@ export function createSupabaseStore(): PlantxStore {
       await client.query(
         `insert into plants (
           id, position, code, owner_id, species_id, market_class_id, variety, variety_he,
-          subcategory_id, title, title_he, description, description_he, quantity, size_grade,
+          subcategory_id, title, title_he, description, description_he, size_grade,
           size_band, quality, rooting, stage, pot_format, pot_format_he, pot_size_cm,
           stem_length_cm, leaf_count, location_zone, location_zone_he, lat, lng, parent_id,
           batch_id, propagated_at, verified_at, verified_by, status,
           published_at, rarity, growth_time_en, growth_time_he, growth_light, growth_light_he,
-          growth_water, growth_water_he, growth_note, growth_note_he, created_at, is_private
+          growth_water, growth_water_he, growth_note, growth_note_he, created_at, is_private, care
         ) values (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-          $21,$22,$23,$24,$25,$26,$27,$28,null,$29,$30,$31,$32,$33,$34,$35,$36,$37,
+          $21,$22,$23,$24,$25,$26,$27,null,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,
           $38,$39,$40,$41,$42,$43,$44,$45
         )
         on conflict (id) do update set
@@ -561,7 +569,6 @@ export function createSupabaseStore(): PlantxStore {
           title_he = excluded.title_he,
           description = excluded.description,
           description_he = excluded.description_he,
-          quantity = excluded.quantity,
           size_grade = excluded.size_grade,
           size_band = excluded.size_band,
           quality = excluded.quality,
@@ -592,7 +599,8 @@ export function createSupabaseStore(): PlantxStore {
           growth_note = excluded.growth_note,
           growth_note_he = excluded.growth_note_he,
           created_at = excluded.created_at,
-          is_private = excluded.is_private`,
+          is_private = excluded.is_private,
+          care = excluded.care`,
         plantParams(plant, position, subIds),
       )
     }
@@ -836,6 +844,8 @@ export function createSupabaseStore(): PlantxStore {
     )
     const categoryLinks = await rows(client, 'select * from catalog_property_categories')
     const subcategoryLinks = await rows(client, 'select * from catalog_property_subcategories')
+    const tasks = await rows(client, 'select * from care_tasks order by position, id')
+    const rules = await rows(client, 'select * from care_rules order by category_id, subcategory_id nulls first, task_id')
     return {
       categories: categories.map((row) => ({
         id: text(row, 'id'),
@@ -857,6 +867,33 @@ export function createSupabaseStore(): PlantxStore {
         return photo ? { ...item, photo } : item
       }),
       properties: properties.map((row) => propertyFrom(row, options, categoryLinks, subcategoryLinks)),
+      careTasks: tasks.map((row) => {
+        const interval = intervalOf(row)
+        const task: CareTask = {
+          id: text(row, 'id'),
+          name: text(row, 'name'),
+          nameHe: text(row, 'name_he'),
+          icon: text(row, 'icon') as CareTask['icon'],
+          audience: text(row, 'audience') as CareTask['audience'],
+        }
+        if (interval) task.interval = interval
+        if (row.built_in) task.builtIn = true
+        return task
+      }),
+      careRules: rules.map((row) => {
+        const interval = intervalOf(row)
+        const rule: CareTaskRule = {
+          id: text(row, 'id'),
+          taskId: text(row, 'task_id'),
+          categoryId: text(row, 'category_id'),
+          mode: text(row, 'mode') as CareTaskRule['mode'],
+          source: text(row, 'source') as CareTaskRule['source'],
+        }
+        const subcategoryId = optional(row, 'subcategory_id')
+        if (subcategoryId) rule.subcategoryId = subcategoryId
+        if (interval) rule.interval = interval
+        return rule
+      }),
     }
   }
 
@@ -932,6 +969,39 @@ export function createSupabaseStore(): PlantxStore {
         )
       }
     }
+
+    // Care tasks, then their rules. Deleting a task deletes its rules and every task row of that kind, so a
+    // catalog without care data (never sent by the service) leaves the stored tasks alone.
+    if (!Array.isArray(catalog.careTasks)) return
+    const taskIds = catalog.careTasks.map((task) => task.id)
+    for (const [position, task] of catalog.careTasks.entries()) {
+      await client.query(
+        `insert into care_tasks (id, position, name, name_he, icon, audience, every_days, winter_every_days, months, built_in)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         on conflict (id) do update set
+           position = excluded.position,
+           name = excluded.name,
+           name_he = excluded.name_he,
+           icon = excluded.icon,
+           audience = excluded.audience,
+           every_days = excluded.every_days,
+           winter_every_days = excluded.winter_every_days,
+           months = excluded.months,
+           built_in = excluded.built_in`,
+        [task.id, position, task.name, task.nameHe, task.icon, task.audience, ...intervalParams(task.interval), task.builtIn === true],
+      )
+    }
+    await client.query('delete from care_tasks where not (id = any($1::text[]))', [taskIds])
+    await client.query('delete from care_rules')
+    for (const rule of catalog.careRules) {
+      if (!taskIds.includes(rule.taskId) || !knownCategories.has(rule.categoryId)) continue
+      if (rule.subcategoryId && !liveSubs.has(rule.subcategoryId)) continue
+      await client.query(
+        `insert into care_rules (id, task_id, category_id, subcategory_id, mode, every_days, winter_every_days, months, source)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [rule.id, rule.taskId, rule.categoryId, rule.subcategoryId ?? null, rule.mode, ...intervalParams(rule.interval), rule.source],
+      )
+    }
   }
 
   async function getSystem(client: PoolClient): Promise<Partial<SystemConfig> | null> {
@@ -941,7 +1011,11 @@ export function createSupabaseStore(): PlantxStore {
     const features = await rows(client, 'select * from system_features')
     const placements = await rows(client, 'select * from system_placements')
     const pageMap = {} as SystemConfig['pages']
-    for (const row of pages) pageMap[text(row, 'page_id') as PageId] = text(row, 'status') as SystemConfig['pages'][PageId]
+    const pageDeviceMap = {} as SystemConfig['pageDevices']
+    for (const row of pages) {
+      pageMap[text(row, 'page_id') as PageId] = text(row, 'status') as SystemConfig['pages'][PageId]
+      pageDeviceMap[text(row, 'page_id') as PageId] = { phone: Boolean(row.phone), desktop: Boolean(row.desktop) }
+    }
     const featureMap = {} as SystemConfig['features']
     for (const row of features) {
       featureMap[text(row, 'feature_id') as FeatureId] = {
@@ -951,11 +1025,16 @@ export function createSupabaseStore(): PlantxStore {
     }
     const placementMap = {} as SystemConfig['placements']
     for (const row of placements) {
-      placementMap[text(row, 'placement_id') as PlacementId] = { enabled: Boolean(row.enabled) }
+      placementMap[text(row, 'placement_id') as PlacementId] = {
+        enabled: Boolean(row.enabled),
+        phone: Boolean(row.phone),
+        desktop: Boolean(row.desktop),
+      }
     }
     return {
       launched: Boolean(config[0].launched),
       pages: pageMap,
+      pageDevices: pageDeviceMap,
       features: featureMap,
       placements: placementMap,
     }
@@ -971,7 +1050,13 @@ export function createSupabaseStore(): PlantxStore {
     await client.query('delete from system_features')
     await client.query('delete from system_placements')
     for (const [pageId, status] of Object.entries(system.pages)) {
-      await client.query('insert into system_pages (page_id, status) values ($1, $2)', [pageId, status])
+      const devices = system.pageDevices[pageId as PageId]
+      await client.query('insert into system_pages (page_id, status, phone, desktop) values ($1, $2, $3, $4)', [
+        pageId,
+        status,
+        devices.phone,
+        devices.desktop,
+      ])
     }
     for (const [featureId, feature] of Object.entries(system.features)) {
       await client.query(
@@ -980,10 +1065,10 @@ export function createSupabaseStore(): PlantxStore {
       )
     }
     for (const [placementId, placement] of Object.entries(system.placements)) {
-      await client.query('insert into system_placements (placement_id, enabled) values ($1, $2)', [
-        placementId,
-        placement.enabled,
-      ])
+      await client.query(
+        'insert into system_placements (placement_id, enabled, phone, desktop) values ($1, $2, $3, $4)',
+        [placementId, placement.enabled, placement.phone, placement.desktop],
+      )
     }
   }
 }
@@ -1003,7 +1088,6 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.titleHe,
     plant.description ?? null,
     plant.descriptionHe ?? null,
-    plant.quantity,
     plant.sizeGrade,
     plant.sizeBand ?? null,
     plant.quality || null,
@@ -1035,6 +1119,7 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.conditions?.noteHe ?? null,
     plant.createdAt,
     plant.private === true,
+    plant.care ? JSON.stringify(plant.care) : null,
   ]
 }
 
@@ -1086,7 +1171,6 @@ function plantFrom(
     title: text(row, 'title'),
     titleHe: text(row, 'title_he'),
     photos: photos.filter((item) => text(item, 'plant_id') === id).map((item) => text(item, 'url')),
-    quantity: num(row, 'quantity'),
     sizeGrade: text(row, 'size_grade'),
     quality: text(row, 'quality') as Plant['quality'],
     rooting: text(row, 'rooting') as Plant['rooting'],
@@ -1114,6 +1198,7 @@ function plantFrom(
   assign(plant, 'stemLengthCm', optionalNum(row, 'stem_length_cm'))
   assign(plant, 'leafCount', optionalNum(row, 'leaf_count'))
   assign(plant, 'parentId', optional(row, 'parent_id'))
+  assign(plant, 'care', careOf(row))
   assign(plant, 'batchId', optional(row, 'batch_id'))
   assign(plant, 'propagatedAt', optional(row, 'propagated_at'))
   assign(plant, 'verifiedAt', optional(row, 'verified_at'))
@@ -1203,6 +1288,25 @@ function labels(rows: SqlRow[], userId: string, locale: string) {
 function text(row: SqlRow, key: string) {
   const value = row[key]
   return value == null ? '' : String(value)
+}
+
+/** A plant's `care` jsonb column: the owner's own care, or undefined when unset. */
+function careOf(row: SqlRow): PlantCare | undefined {
+  const value = row.care
+  return value && typeof value === 'object' ? (value as PlantCare) : undefined
+}
+
+/** `every_days`, `winter_every_days`, `months` columns as an interval, or undefined when there is none. */
+function intervalOf(row: SqlRow): CareRule | undefined {
+  if (row.every_days == null) return undefined
+  const rule: CareRule = { everyDays: Number(row.every_days) }
+  if (row.winter_every_days != null) rule.winterEveryDays = Number(row.winter_every_days)
+  if (Array.isArray(row.months) && row.months.length > 0) rule.months = (row.months as unknown[]).map(Number)
+  return rule
+}
+
+function intervalParams(rule: CareRule | undefined) {
+  return [rule?.everyDays ?? null, rule?.winterEveryDays ?? null, rule?.months?.length ? rule.months : null]
 }
 
 function optional(row: SqlRow, key: string) {

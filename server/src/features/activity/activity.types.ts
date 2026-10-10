@@ -1,4 +1,4 @@
-import type { FeedUpdateKind, VisibilityMeta } from '../../../../src/mock/types.ts'
+import type { ActivityComment, FeedUpdateKind, VisibilityMeta } from '../../../../src/mock/types.ts'
 
 /** One greenhouse (or market) action that shows in the news feed and on a plant. */
 export type ActivityKind = FeedUpdateKind
@@ -17,6 +17,7 @@ export interface Activity extends VisibilityMeta {
   reactions?: number
   reacted?: boolean
   comments?: number
+  latestComments?: ActivityComment[]
 }
 
 export type ActivityInput = Omit<Activity, 'id' | 'createdAt'> & {

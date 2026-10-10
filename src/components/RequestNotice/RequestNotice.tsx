@@ -11,6 +11,7 @@ import {
   type HttpNotice,
 } from '../../lib/httpNotice'
 import { useStore } from '../../mock/store'
+import { useCareTasks } from '../../features/todo/careKinds'
 import {
   Actions,
   Card,
@@ -44,6 +45,7 @@ export function RequestNoticeStack({
   composing?: boolean
 }) {
   const { t } = useI18n()
+  const care = useCareTasks()
   const fieldId = useId()
   const [openId, setOpenId] = useState<number | null>(composing ? (items[0]?.id ?? null) : null)
   const [note, setNote] = useState('')
@@ -114,12 +116,9 @@ export function RequestNoticeStack({
               <Orb aria-hidden $tone="done" />
               <Copy>
                 <Title>
-                  {(item.care === 'photo'
-                    ? t.http.donePhoto
-                    : item.care === 'plant'
-                      ? t.http.donePlant
-                      : t.http.doneWater
-                  ).replace('{xp}', String(item.xp))}
+                  {item.care === 'plant'
+                    ? t.http.donePlant.replace('{xp}', String(item.xp))
+                    : care.doneLine(item.care, item.xp)}
                 </Title>
               </Copy>
               <Close type="button" aria-label={t.http.dismiss} onClick={() => onDismiss(item.id)}>

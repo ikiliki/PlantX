@@ -19,14 +19,14 @@ import { useI18n } from '../../i18n/I18nProvider'
 import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { useStore } from '../../mock/store'
 import { forAudience } from '../../theme/audience'
-import { isFeatureEnabled } from '../../theme/release'
+import { isFeatureEnabled, isPlacementEnabled } from '../../theme/release'
 import type { ComponentView } from '../../theme/view'
 import type { Todo } from '../../mock/types'
 import { useState } from 'react'
 import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh'
 import { RefreshButton } from '../../components/RefreshButton/RefreshButton'
 import { ScrollTopButton } from '../../components/ScrollTopButton/ScrollTopButton'
-import { useMediaQuery } from '../../lib/useMediaQuery'
+import { useDevice } from '../../lib/useDevice'
 import { Empty, Feed, FeedStatus, FeedTools, Layout, Rail, RailLure, Shell, Widget } from './DiscoverPage.styles'
 
 const WIDGET_ITEMS = 2
@@ -39,7 +39,10 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   const [careTodo, setCareTodo] = useState<Todo | undefined>()
   const empty = t.feed.empty
   // Refresh is a pull on the phone shell; wider, a status row at the top of the feed says how fresh it is.
-  const mobile = useMediaQuery('(max-width: 899px)')
+  const device = useDevice()
+  const mobile = device === 'phone'
+  // The daily Home is a component flag per device (Admin → System, home.today); off gives the columns below.
+  const today = signedIn && isPlacementEnabled(db.system, 'home.today', device)
   const { refresh, refreshing, updatedAt, justRefreshed } = useFeedRefresh()
   const minutes = useMinutesSince(updatedAt)
   const freshness = justRefreshed
@@ -59,7 +62,8 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   const todos = ownerId ? db.todos.filter((todo) => todo.ownerId === ownerId) : []
   const plants = ownerId ? db.plants.filter((plant) => plant.ownerId === ownerId) : []
   const carePlant = careTodo ? plants.find((plant) => plant.id === careTodo.plantId) : undefined
-  const feedLoading = useSectionFetch(signedIn, ['updates'])
+  // Feed rows need their plant and grower too: skeletons until all three are in.
+  const feedLoading = useSectionFetch(signedIn, ['updates', 'plants', 'users'])
   const skeletonFeed = SKELETON_FEED_KINDS.map((kind, index) => <FeedUpdateSkeleton key={index} kind={kind} />)
   const openCare = (todo: Todo) => setCareTodo(todo)
 
@@ -126,9 +130,8 @@ function DiscoverFeed({ view, paged }: { view: ComponentView; paged: boolean }) 
   // A guest gets a short explainer of what PlantX does, not a blurred feed behind a log-in card.
   const guestFeed = <GuestHomeIntro />
 
-  // A signed-in grower's phone gets the daily Home: today's care, their plants, then short rows.
-  // The full feed has its own dock tab (/feed).
-  if (mobile && signedIn) {
+  // The daily Home: today's care, their plants, top greenhouses, then short rows. The full feed is Social.
+  if (today) {
     return (
       <Shell>
         <HomeToday />

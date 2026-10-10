@@ -12,7 +12,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import type { FeedUpdate, FeedUpdateKind, ModerationItem, Plant, ScanQuota, User } from '../../../../mock/types'
 import { formatApiFailure } from '../../../../lib/apiFailure'
 import { fetchAdminScanQuotas, type ServerSlice } from '../../../../mock/liveApi'
-import { useStore, type LiveStatus } from '../../../../mock/store'
+import { useStore } from '../../../../mock/store'
 import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { categoryBySpeciesId } from '../../../catalog/catalog'
 import { IdentifyBadge } from '../../../greenhouse/components/IdentifyBadge/IdentifyBadge'
@@ -21,8 +21,12 @@ import { PhotoChecks } from '../../../greenhouse/components/PhotoChecks/PhotoChe
 import { ActivityKindMark, ActivityMoment } from '../../../feed/components/ActivityMoment/ActivityMoment'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { ApiDown } from '../ApiDown/ApiDown'
-import { IssueReports } from '../IssueReports/IssueReports'
+import { SystemHealthCard } from '../SystemHealth/SystemHealth'
+import { FunnelCard } from '../FunnelCard/FunnelCard'
+import { ReactionTable } from '../ReactionTable/ReactionTable'
+import { CommentModeration } from '../CommentModeration/CommentModeration'
 import { EnvMissing } from '../EnvMissing/EnvMissing'
+import { CarePlans } from '../CarePlans/CarePlans'
 import { CatalogTree, CatalogTreeDialog } from '../CatalogTree/CatalogTree'
 import {
   Backdrop,
@@ -30,9 +34,7 @@ import {
   Dialog,
   DialogActions,
   DialogTitle,
-  DocsLink,
   Panel,
-  Pill,
   PreviewCard,
   PreviewDetails,
   PreviewIdentity,
@@ -46,12 +48,8 @@ import {
   HeadMeta,
   DemoRibbon,
   FilterBar,
-  Reason,
   RelationLink,
   UserHover,
-  StatusActions,
-  StatusCard,
-  StatusCopy,
   UserFilter,
   UserSelect,
 } from './ServerPanel.styles'
@@ -84,18 +82,6 @@ const ACTIVITY_KIND_KEY = {
 
 function activityKindLabel(kind: FeedUpdateKind, feed: ReturnType<typeof useI18n>['t']['feed']) {
   return feed[ACTIVITY_KIND_KEY[kind]]
-}
-
-function statusTone(status: LiveStatus): 'up' | 'down' | 'loading' {
-  if (status === 'up') return 'up'
-  if (status === 'down') return 'down'
-  return 'loading'
-}
-
-function statusLabel(status: LiveStatus, t: ReturnType<typeof useI18n>['t']) {
-  if (status === 'up') return t.admin.serverUp
-  if (status === 'down') return t.admin.serverDown
-  return t.admin.serverLoading
 }
 
 function UserNameLink({ user, onOpen }: { user: User; onOpen: (userId: string) => void }) {
@@ -305,10 +291,6 @@ function PlantPreview({
             <dt>{t.admin.serverColSize}</dt>
             <dd>{row.sizeBand ?? row.sizeGrade}</dd>
           </div>
-          <div>
-            <dt>{t.admin.serverColQty}</dt>
-            <dd>{row.quantity}</dd>
-          </div>
         </PreviewStats>
       </PreviewCard>
       <PreviewDetails>
@@ -451,8 +433,6 @@ export function ServerPanel() {
     liveFailure,
     sliceFailures,
     plantxEnv,
-    plantxEnvLabel,
-    retryLive,
     liveMeta,
     resolveModeration,
   } = useStore()
@@ -481,8 +461,9 @@ export function ServerPanel() {
   const plantsOpen = Boolean(openSections.plants)
   const activitiesOpen = Boolean(openSections.activities)
   const catalogOpen = Boolean(openSections.catalog)
+  const careOpen = Boolean(openSections.care)
   const transactionsOpen = Boolean(openSections.transactions)
-  const usersFetching = useSectionFetch(usersOpen, ['users'])
+  const usersFetching = useSectionFetch(usersOpen, ['users'], { settle: true })
   const loadScanQuotas = useCallback(() => {
     if (plantxEnv === 'mock') return
     void fetchAdminScanQuotas().then((outcome) => {
@@ -492,10 +473,11 @@ export function ServerPanel() {
   useEffect(() => {
     if (usersOpen) loadScanQuotas()
   }, [usersOpen, loadScanQuotas])
-  const plantsFetching = useSectionFetch(plantsOpen, ['plants'])
-  const activitiesFetching = useSectionFetch(activitiesOpen, ['plants', 'updates'])
-  const catalogFetching = useSectionFetch(catalogOpen, ['catalog'])
-  const transactionsFetching = useSectionFetch(transactionsOpen, ['transactions'])
+  const plantsFetching = useSectionFetch(plantsOpen, ['plants'], { settle: true })
+  const activitiesFetching = useSectionFetch(activitiesOpen, ['plants', 'updates'], { settle: true })
+  const catalogFetching = useSectionFetch(catalogOpen, ['catalog'], { settle: true })
+  const careFetching = useSectionFetch(careOpen, ['catalog', 'plants', 'todos'], { settle: true })
+  const transactionsFetching = useSectionFetch(transactionsOpen, ['transactions'], { settle: true })
 
   const toggleSection = (id: string, fetching = false) => {
     if (fetching) return
@@ -591,41 +573,10 @@ export function ServerPanel() {
 
   return (
     <Panel>
-      <StatusCard>
-        <StatusCopy>
-          <Pill $tone={statusTone(liveStatus)}>{statusLabel(liveStatus, t)}</Pill>
-          <p>
-            <strong>{plantxEnvLabel}</strong>
-            {plantxEnv === 'mock'
-              ? ` · ${t.admin.serverLocalBody}`
-              : liveStatus === 'up'
-                ? ` · ${t.admin.serverUpBody}`
-                : liveStatus === 'loading'
-                  ? ` · ${t.admin.serverLoadingBody}`
-                  : null}
-          </p>
-          {plantxEnv !== 'mock' && liveStatus === 'down' && (
-            <Reason>{formatApiFailure(liveFailure, t.admin)}</Reason>
-          )}
-        </StatusCopy>
-        <StatusActions>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => void retryLive()}
-            disabled={plantxEnv === 'mock' || liveStatus === 'loading'}
-          >
-            {t.common.retry}
-          </Button>
-          {plantxEnv !== 'mock' && (
-            <DocsLink href="/api/docs" target="_blank" rel="noreferrer">
-              {t.admin.serverDocs}
-            </DocsLink>
-          )}
-        </StatusActions>
-      </StatusCard>
       <EnvMissing />
-      <IssueReports />
+      {/* System health covers the API status (the old Live / Retry / API docs card is gone). */}
+      <SystemHealthCard />
+      <FunnelCard />
 
       {mock && reports.length > 0 && (
       <Section $demo>
@@ -1070,6 +1021,47 @@ export function ServerPanel() {
           </HeadMeta>
         </SectionHead>
         {catalogOpen && sliceBody('catalog', catalogFetching, <CatalogTree />)}
+      </Section>
+
+      <Section $demo={mock} data-care-plans>
+        <SectionHead
+          type="button"
+          $open={careOpen}
+          disabled={careFetching}
+          aria-expanded={careOpen}
+          aria-busy={careFetching}
+          onClick={() => toggleSection('care', careFetching)}
+        >
+          <h2>{t.admin.careTitle}</h2>
+          <HeadMeta>
+            <span>{db.catalog.careTasks.length}</span>
+          </HeadMeta>
+        </SectionHead>
+        {careOpen && sliceBody('catalog', careFetching, <CarePlans />)}
+      </Section>
+
+      <Section $demo={mock} data-reactions>
+        <SectionHead
+          type="button"
+          $open={Boolean(openSections.reactions)}
+          aria-expanded={Boolean(openSections.reactions)}
+          onClick={() => toggleSection('reactions')}
+        >
+          <h2>{t.admin.reactionsTitle}</h2>
+        </SectionHead>
+        {openSections.reactions ? <ReactionTable bare /> : null}
+      </Section>
+
+      <Section $demo={mock} data-comments>
+        <SectionHead
+          type="button"
+          $open={Boolean(openSections.comments)}
+          aria-expanded={Boolean(openSections.comments)}
+          onClick={() => toggleSection('comments')}
+        >
+          <h2>{t.admin.commentsTitle}</h2>
+        </SectionHead>
+        {openSections.comments ? <CommentModeration readOnly bare /> : null}
       </Section>
 
       {categoryPopupId && (

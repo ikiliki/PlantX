@@ -1,0 +1,119 @@
+import type { Page } from '@playwright/test'
+import { ADMIN, MEMBER, expect, expectPage, signIn, test } from './support'
+
+/**
+ * Passport layout: one plant per passport (no quantity), tabs Tasks / Story / Settings for the grower (Tasks first and open),
+ * and the class code under the name. The story is public; the Tasks tab is the grower's alone.
+ * `/plants/:id` opens over the page that linked to it.
+ */
+const plant = {
+  id: 'e2e-one-plant',
+  code: 'POT-GOLD-M-EST',
+  ownerId: ADMIN,
+  speciesId: 'sp-pothos',
+  title: 'E2E single pothos',
+  titleHe: 'E2E single pothos',
+  photos: ['/class-photos/pot-gold-a-l-mat.jpg'],
+  sizeGrade: 'M',
+  sizeBand: 'M',
+  quality: '',
+  rooting: 'established',
+  stage: 'EST',
+  locationZone: 'Unknown',
+  locationZoneHe: 'לא ידוע',
+  lat: 31.4,
+  lng: 35.1,
+  status: 'owned',
+  createdAt: '2026-10-10',
+  history: [{ at: '2026-10-10', label: 'E2E history entry', labelHe: 'E2E history entry' }],
+}
+
+const added = {
+  id: 'e2e-one-plant-added',
+  kind: 'added',
+  userId: ADMIN,
+  plantId: plant.id,
+  body: `${plant.title} added`,
+  bodyHe: `${plant.title} added`,
+  createdAt: new Date().toISOString(),
+}
+
+/** The plant and its public "added" activity exist only in this test; nothing is written. */
+async function servePlant(page: Page) {
+  await page.route('**/api/plants', async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback()
+    const body = (await (await route.fetch()).json()) as { plants: unknown[] }
+    await route.fulfill({ json: { ...body, plants: [...body.plants, plant] } })
+  })
+  await page.route('**/api/activities', async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback()
+    const body = (await (await route.fetch()).json()) as { activities: unknown[] }
+    await route.fulfill({ json: { ...body, activities: [...body.activities, added] } })
+  })
+  await page.route(`**/api/plants/${plant.id}**`, async (route) => {
+    if (route.request().url().endsWith('/activities')) {
+      return route.fulfill({ json: { plantId: plant.id, activities: [added] } })
+    }
+    return route.fulfill({ json: { plant } })
+  })
+}
+
+test.describe('plant passport', () => {
+  test('the grower opens on Tasks, then Story; one plant, no quantity', async ({ page }) => {
+    await signIn(page, ADMIN)
+    await servePlant(page)
+    await expectPage(page, `/plants/${plant.id}`)
+    const passport = page.getByRole('dialog').first()
+    await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
+
+    // The grower sees their tasks first: Tasks leads and is open, Story next; the old Grading / Activity tabs are gone.
+    const tabs = passport.getByRole('tablist')
+    await expect(tabs.getByRole('tab').first()).toHaveText('Tasks')
+    await expect(tabs.getByRole('tab', { name: 'Tasks' })).toHaveAttribute('aria-selected', 'true')
+    await expect(tabs.getByRole('tab').nth(1)).toHaveText('Story')
+    await tabs.getByRole('tab', { name: 'Story' }).click()
+    await expect(tabs.getByRole('tab', { name: 'User rank' })).toHaveCount(0)
+    await expect(tabs.getByRole('tab', { name: 'Activity' })).toHaveCount(0)
+    await expect(tabs.getByRole('tab', { name: 'Settings' })).toBeVisible()
+
+    await expect(passport.locator('[data-passport-story]')).toContainText(added.body)
+    // Each story row carries its kind as a tinted badge, so it reads without the text.
+    await expect(passport.locator('[data-passport-story] [data-moment="added"]')).toContainText('New plant')
+
+    // One plant: no quantity anywhere, and the class code is still on the passport.
+    await expect(passport.getByText('Size', { exact: true }).first()).toBeVisible()
+    await expect(passport.getByText('Quantity', { exact: true })).toHaveCount(0)
+    await expect(passport.getByText(/×\d/)).toHaveCount(0)
+    await expect(passport.getByText(plant.code, { exact: true })).toBeVisible()
+  })
+
+  test("another grower sees the plant's story, but not its tasks", async ({ page }) => {
+    await signIn(page, MEMBER)
+    await servePlant(page)
+    await expectPage(page, `/plants/${plant.id}`)
+    const passport = page.getByRole('dialog').first()
+    await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
+    // The story is public: another grower sees the plant's public activity.
+    await expect(passport.locator('[data-passport-story]')).toContainText(added.body)
+    // Tasks are the grower's own: another grower opens on Story (then Market), never Tasks or Settings.
+    await expect(passport.getByRole('tab').first()).toHaveText('Story')
+    await expect(passport.getByRole('tab', { name: 'Story' })).toHaveAttribute('aria-selected', 'true')
+    await expect(passport.getByRole('tab', { name: 'Tasks' })).toHaveCount(0)
+    await expect(passport.getByRole('tab', { name: 'Settings' })).toHaveCount(0)
+  })
+
+  test('a feed post opens its passport over the feed', async ({ page }) => {
+    await signIn(page, MEMBER)
+    await servePlant(page)
+    await expectPage(page, '/feed')
+    const post = page.locator('article', { hasText: added.body }).first()
+    test.skip((await post.count()) === 0, 'the feed is off here')
+    await post.getByRole('link', { name: /Passport/ }).click()
+    await expect(page).toHaveURL(new RegExp(`/plants/${plant.id}`))
+    const passport = page.getByRole('dialog').first()
+    await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
+    // Closing goes back to the feed, not the greenhouse.
+    await page.keyboard.press('Escape')
+    await expect(page).toHaveURL(/\/social$/)
+  })
+})

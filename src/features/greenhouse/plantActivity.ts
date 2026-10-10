@@ -12,6 +12,7 @@ const FIELD_WORDS: Record<string, { en: string; he: string }> = {
   quality: { en: 'quality', he: 'איכות' },
   traits: { en: 'details', he: 'פרטים' },
   photos: { en: 'photos', he: 'תמונות' },
+  care: { en: 'care plan', he: 'תוכנית טיפול' },
 }
 
 /** One line per edit: "Edited Golden pothos: name, size" / "Golden pothos is now private". */

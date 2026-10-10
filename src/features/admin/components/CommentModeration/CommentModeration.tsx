@@ -3,6 +3,7 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { deleteComment, fetchAdminCommentsOutcome } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
 import type { AdminComment } from '../../../../mock/types'
+import { LoaderShell } from '../../../../components/LoaderShell/LoaderShell'
 import { AdminSection } from '../AdminSection/AdminSection'
 import { AdminTable } from '../AdminTable/AdminTable'
 import { Body, Note } from './CommentModeration.styles'
@@ -10,9 +11,9 @@ import { Body, Note } from './CommentModeration.styles'
 /**
  * Admin → Moderation → Comments: the newest Feed comments with their author and post. Remove takes a comment
  * out for everyone (soft delete) and writes it to the moderation log on that post. `readOnly` (Admin → Server):
- * the same table without Remove.
+ * the same table without Remove. `bare`: no card of its own, for a collapsible Server section.
  */
-export function CommentModeration({ readOnly = false }: { readOnly?: boolean }) {
+export function CommentModeration({ readOnly = false, bare = false }: { readOnly?: boolean; bare?: boolean }) {
   const { t, locale } = useI18n()
   const { plantxEnv } = useStore()
   const mock = plantxEnv === 'mock'
@@ -42,17 +43,20 @@ export function CommentModeration({ readOnly = false }: { readOnly?: boolean }) 
   const when = (iso: string) =>
     new Date(iso).toLocaleString(locale === 'he' ? 'he-IL' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
-  return (
-    <AdminSection title={t.admin.commentsTitle} lead={readOnly ? t.admin.commentsLeadServer : t.admin.commentsLead}>
+  const lead = readOnly ? t.admin.commentsLeadServer : t.admin.commentsLead
+  const body = (
+    <>
       {mock ? (
         <Note>{t.admin.commentsMock}</Note>
       ) : failed ? (
         <Note role="alert">{t.admin.commentsFailed}</Note>
+      ) : !comments ? (
+        <LoaderShell busy compact />
       ) : (
         <AdminTable
-          rows={comments ?? []}
+          rows={comments}
           rowId={(row) => row.id}
-          empty={comments ? t.admin.commentsEmpty : t.feedPage.commentsLoading}
+          empty={t.admin.commentsEmpty}
           columns={[
             { id: 'when', header: t.admin.commentsWhen, cell: (row) => when(row.createdAt), muted: true },
             { id: 'author', header: t.admin.commentsAuthor, cell: (row) => row.authorName || row.userId },
@@ -70,6 +74,19 @@ export function CommentModeration({ readOnly = false }: { readOnly?: boolean }) 
           ]}
         />
       )}
+    </>
+  )
+  if (bare) {
+    return (
+      <>
+        <Note>{lead}</Note>
+        {body}
+      </>
+    )
+  }
+  return (
+    <AdminSection title={t.admin.commentsTitle} lead={lead}>
+      {body}
     </AdminSection>
   )
 }

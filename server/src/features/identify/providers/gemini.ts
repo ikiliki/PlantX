@@ -521,3 +521,87 @@ export async function draftCatalogEntry(image: string, hint: CatalogDraftHint): 
 function usableImage(image: string) {
   return /^data:image\//i.test(image) && image.length <= 1_500_000
 }
+
+/** One care rule as Gemini suggests it for a category (or one of its varieties). */
+export type SuggestedCareRule = {
+  taskId: string
+  subcategoryId?: string
+  mode: 'must' | 'optional' | 'off'
+  everyDays?: number
+  winterEveryDays?: number
+  months?: number[]
+}
+
+/**
+ * Care intervals for one catalog category, from text only (no photo): Gemini fills a rule per known care
+ * task, and a variety rule only where a variety needs something different. The admin's "Suggest with AI"
+ * in Care plans; never called automatically. Null without a key or on a model error.
+ */
+export async function suggestCarePlan(input: {
+  category: string
+  scientificName?: string
+  varieties: { id: string; name: string }[]
+  tasks: { id: string; name: string; audience: string }[]
+}): Promise<SuggestedCareRule[] | null> {
+  const key = apiKey()
+  if (!key) return null
+  const schema = {
+    type: 'OBJECT',
+    properties: {
+      rules: {
+        type: 'ARRAY',
+        items: {
+          type: 'OBJECT',
+          properties: {
+            taskId: { type: 'STRING', enum: input.tasks.map((task) => task.id) },
+            subcategoryId: nullableEnum(input.varieties.map((item) => item.id), 'Only when this variety differs from the category'),
+            mode: { type: 'STRING', enum: ['must', 'optional', 'off'] },
+            everyDays: { type: 'INTEGER', nullable: true },
+            winterEveryDays: { type: 'INTEGER', nullable: true, description: 'November to February, when it differs' },
+            months: { type: 'ARRAY', nullable: true, items: { type: 'INTEGER' }, description: 'Active months 1-12 for seasonal care' },
+          },
+          required: ['taskId', 'mode'],
+        },
+      },
+    },
+    required: ['rules'],
+  }
+  const prompt = [
+    'You set indoor care intervals for a home-plant app in Israel (Mediterranean climate, indoor plants).',
+    `Plant category: ${input.category}${input.scientificName ? ` (${input.scientificName})` : ''}.`,
+    `Varieties: ${input.varieties.map((item) => `${item.id} = ${item.name}`).join('; ') || 'none'}.`,
+    `Care tasks: ${input.tasks.map((task) => `${task.id} = ${task.name}`).join('; ')}.`,
+    'Give one category rule (no subcategoryId) per task: mode must when every plant of this kind needs it, optional when some owners may want it, off when it does not apply.',
+    'everyDays is the usual interval; winterEveryDays only when winter differs; months only for seasonal care such as feeding.',
+    'Add a rule with subcategoryId only when that variety needs a different interval or mode than its category.',
+  ].join('\n')
+  const requestBody = JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: schema,
+      thinkingConfig: { thinkingLevel: THINKING_LEVEL },
+    },
+  })
+  for (const model of modelsToTry()) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
+    try {
+      const res = await fetchWithTimeout(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody })
+      if (!res.ok) {
+        if (RETRYABLE_STATUS.has(res.status)) continue
+        lastError = `Gemini HTTP ${res.status}`
+        return null
+      }
+      const body = (await res.json()) as GeminiBody
+      const text = body.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || ''
+      const parsed = text.trim() ? (JSON.parse(text) as { rules?: SuggestedCareRule[] }) : undefined
+      activeModel = model
+      lastUsedAt = new Date().toISOString()
+      return Array.isArray(parsed?.rules) ? parsed.rules : null
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : 'Gemini failed'
+      return null
+    }
+  }
+  return null
+}

@@ -93,9 +93,23 @@ const ripple = keyframes`
   100% { transform: scale(2.6); opacity: 0; }
 `
 
+/** The row corner: a drop falls into the ripples and fades. */
 const drip = keyframes`
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 7px; }
+  0% { translate: 0 -6px; opacity: 0; }
+  20% { opacity: 1; }
+  75% { translate: 0 12px; opacity: 1; }
+  100% { translate: 0 14px; opacity: 0; }
+`
+
+/** Badge glyphs move a little only, so they never leave their pill. */
+const bead = keyframes`
+  0%, 100% { translate: 0 -1px; }
+  50% { translate: 0 1.5px; }
+`
+
+const nudge = keyframes`
+  0%, 100% { translate: 0 0; rotate: -6deg; }
+  50% { translate: 0 -1.5px; rotate: 6deg; }
 `
 
 const sway = keyframes`
@@ -168,12 +182,13 @@ export const Drop = styled.span`
   position: absolute;
   inset-inline-end: 12px;
   top: 10px;
-  width: 10px;
-  height: 14px;
+  width: 11px;
+  height: 11px;
+  /* Sharp corner turned to the top: a drop, round end down. */
   border-radius: 50% 50% 50% 0;
   background: #3c6b8f;
-  transform: rotate(-45deg);
-  animation: ${drip} 1.6s ease-in-out infinite;
+  transform: rotate(135deg);
+  animation: ${drip} 2.4s ease-in infinite;
   ${still}
 `
 
@@ -309,12 +324,13 @@ export const Stamp = styled.span`
 
 const glyph: Record<FeedUpdateKind, ReturnType<typeof css>> = {
   water: css`
-    width: 8px;
-    height: 11px;
+    width: 9px;
+    height: 9px;
+    margin-top: 2px;
     border-radius: 50% 50% 50% 0;
     background: #3c6b8f;
-    transform: rotate(-45deg);
-    animation: ${drip} 1.6s ease-in-out infinite;
+    transform: rotate(135deg);
+    animation: ${bead} 1.6s ease-in-out infinite;
   `,
   added: css`
     width: 10px;
@@ -359,7 +375,7 @@ const glyph: Record<FeedUpdateKind, ReturnType<typeof css>> = {
     border-radius: 2px 6px 6px 2px;
     background: ${theme.colors.warmth};
     box-shadow: inset 4px 0 0 ${theme.colors.creamCard};
-    animation: ${bob} 1.8s ease-in-out infinite;
+    animation: ${nudge} 1.8s ease-in-out infinite;
   `,
   // No glyph: the "AI scan" label and the lavender card say it.
   scan: css`

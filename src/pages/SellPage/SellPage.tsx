@@ -88,7 +88,7 @@ export function SellPage({
   const [speciesId, setSpeciesId] = useState(preset?.speciesId ?? 'sp-pothos')
   const [title, setTitle] = useState(preset?.title ?? 'Rooted cuttings batch')
   const [titleHe, setTitleHe] = useState(preset?.titleHe ?? 'מנת ייחורים מושרשים')
-  const [qty, setQty] = useState(preset?.quantity ?? 25)
+  const [qty, setQty] = useState(preset ? 1 : 25)
   const [quality, setQuality] = useState<QualityGrade>(preset?.quality || 'B')
   const [rooting, setRooting] = useState<'rooted' | 'unrooted' | 'established'>(
     preset?.rooting ?? 'rooted',
@@ -178,7 +178,6 @@ export function SellPage({
       speciesId,
       title,
       titleHe,
-      quantity: qty,
       quality,
       rooting,
       parentId: parentId || undefined,

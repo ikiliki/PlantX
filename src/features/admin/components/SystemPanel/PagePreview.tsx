@@ -5,7 +5,8 @@ import { MarketPage } from '../../../../pages/MarketPage/MarketPage'
 import { RankPage } from '../../../../pages/RankPage/RankPage'
 import { TodoPage } from '../../../../pages/TodoPage/TodoPage'
 import { WikiPage } from '../../../../pages/WikiPage/WikiPage'
-import type { PageId } from '../../../../theme/release'
+import type { DeviceId, PageId } from '../../../../theme/release'
+import { DevicePreview } from './PlacementPreview'
 import { Page, Stage } from './PagePreview.styles'
 
 function pageBody(pageId: PageId) {
@@ -19,7 +20,8 @@ function pageBody(pageId: PageId) {
 }
 
 /** The real page, inside a window that scrolls on its own. */
-export function PagePreview({ pageId }: { pageId: PageId }) {
+export function PagePreview({ pageId, device }: { pageId: PageId; device?: DeviceId }) {
+  if (device) return <DevicePreview device={device}>{pageBody(pageId)}</DevicePreview>
   return (
     <Page tabIndex={0}>
       <Stage inert>{pageBody(pageId)}</Stage>

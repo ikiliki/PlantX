@@ -28,8 +28,9 @@ function readLimit(raw: string | undefined) {
 }
 
 activityRoutes.get('/', async (c) => {
+  const plantId = c.req.query('plantId') || undefined
   const activities = await activityService.list({
-    plantId: c.req.query('plantId') || undefined,
+    plantId,
     userId: c.req.query('userId') || undefined,
     limit: readLimit(c.req.query('limit')),
   })

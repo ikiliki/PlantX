@@ -188,7 +188,6 @@ export const configuredPlants: Plant[] = specs.map((spec) => {
     title: spec.title,
     titleHe: spec.titleHe,
     photos: [spec.photo],
-    quantity: spec.quantity,
     sizeGrade: spec.size ?? 'M',
     sizeBand: spec.size,
     quality: spec.quality,

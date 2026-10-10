@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
 import { HoldNotice } from '../HoldNotice/HoldNotice'
 import { useStore } from '../../mock/store'
-import type { PageId } from '../../theme/release'
+import { useDevice } from '../../lib/useDevice'
+import { isPageLive, type PageId } from '../../theme/release'
 
 /**
  * Gates a page route from Admin → System.
- * Under maintenance: the same full-screen hold as not-launched, covering the app header.
+ * Under maintenance, or switched off for this device (phone / desktop): the same full-screen hold as not-launched, covering the app header.
  */
 export function PageGate({
   pageId,
@@ -19,6 +20,7 @@ export function PageGate({
   body?: string
 }) {
   const { db } = useStore()
-  if (db.system.pages[pageId] === 'live') return <>{children}</>
+  const device = useDevice()
+  if (isPageLive(db.system, pageId, device)) return <>{children}</>
   return <HoldNotice mode="maintenance" pageId={pageId} cover />
 }

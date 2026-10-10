@@ -74,7 +74,6 @@ test.describe('owner', () => {
       title: 'E2E owner pothos',
       titleHe: 'E2E owner pothos',
       photos: ['/class-photos/pot-gold-a-l-mat.jpg'],
-      quantity: 1,
       sizeGrade: 'M',
       sizeBand: 'M',
       quality: '',

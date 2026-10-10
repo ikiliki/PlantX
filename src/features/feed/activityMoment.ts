@@ -20,9 +20,7 @@ export function activityKindLabel(
   return feed[KIND_KEY[kind]]
 }
 
-/** Added, grade, and passport open the plant passport. Every other kind opens the small tinted popup. */
-export function momentPassportTab(kind: FeedUpdateKind): 'grading' | 'activity' | null {
-  if (kind === 'added' || kind === 'grade') return 'grading'
-  if (kind === 'passport' || kind === 'edited') return 'activity'
-  return null
+/** Added, grade, passport and edited open the plant passport on its story. Every other kind opens the small tinted popup. */
+export function opensPassport(kind: FeedUpdateKind): boolean {
+  return kind === 'added' || kind === 'grade' || kind === 'passport' || kind === 'edited'
 }

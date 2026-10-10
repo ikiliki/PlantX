@@ -14,9 +14,11 @@ import { activityKindLabel } from '../../activityMoment'
 import { formatFeedTime } from '../../formatFeedTime'
 import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { ActivityMoment, MomentGlyph } from '../ActivityMoment/ActivityMoment'
+import { CommentPreview } from '../CommentPreview/CommentPreview'
 import { CommentSheet } from '../CommentSheet/CommentSheet'
 import { CommentThread } from '../CommentThread/CommentThread'
 import { ReactBar } from '../ReactBar/ReactBar'
+import { isPlacementEnabled } from '../../../../theme/release'
 import { XpChip } from '../XpChip/XpChip'
 import {
   Caption,
@@ -76,6 +78,7 @@ export function FeedPost({ update }: { update: FeedUpdate }) {
   const youMark = mine ? ` ${t.feed.youMark}` : ''
   const growerLabel = (clientEnv() === 'mock' ? t.demo.personaScenarios[personaScenarioId(update.userId)] : name) + youMark
   const verified = Boolean(user && (db.verifiedGreenhouseIds ?? []).includes(user.id))
+  const socialOn = isPlacementEnabled(db.system, 'feed.social')
 
   const openProfile = () => {
     navigate(
@@ -120,7 +123,12 @@ export function FeedPost({ update }: { update: FeedUpdate }) {
         </Foot>
         <Social>
           <ReactBar update={update} commentsOpen={commentsOpen} onComments={() => setCommentsOpen((value) => !value)} />
-          {commentsOpen && wide ? <CommentThread update={update} /> : null}
+          {/* The whole thread replaces the preview while open (wide); a phone opens it as a sheet. */}
+          {commentsOpen && wide ? (
+            <CommentThread update={update} />
+          ) : socialOn ? (
+            <CommentPreview update={update} onViewAll={() => setCommentsOpen(true)} />
+          ) : null}
         </Social>
       </Card>
       {open ? <ActivityMoment update={update} onClose={() => setOpen(false)} /> : null}

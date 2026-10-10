@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import {
   matchPath,
   Navigate,
@@ -84,6 +84,8 @@ export function AppRoutes() {
   const navigationType = useNavigationType()
   const backRef = useRef<Location | null>(null)
   const plantId = matchPath('/plants/:id', location.pathname)?.params.id
+  // `?tab=care` opens the passport on its Tasks tab (a "Set schedule" task links there).
+  const passportTab = plantId && new URLSearchParams(location.search).get('tab') === 'care' ? ('care' as const) : undefined
   const sellerId = matchPath('/sellers/:id', location.pathname)?.params.id
   const previewState = location.state as SellerState
   const sellerFull = Boolean(previewState?.sellerFull)
@@ -93,16 +95,6 @@ export function AppRoutes() {
   if (!overlay) backRef.current = location
   else backRef.current ??= staticLocation(sellerId ? '/market' : '/greenhouse')
   const background = backRef.current
-
-  const fromGreenhouse = background.pathname === '/greenhouse'
-
-  useEffect(() => {
-    if (!plantId || fromGreenhouse) return
-    navigate(
-      { pathname: background.pathname, search: background.search, hash: background.hash },
-      { replace: true, state: background.state },
-    )
-  }, [plantId, fromGreenhouse, background.pathname, background.search, background.hash, background.state, navigate])
 
   const closeOverlay = useCallback(() => {
     const back = backRef.current ?? staticLocation('/greenhouse')
@@ -126,7 +118,9 @@ export function AppRoutes() {
         <Route element={<ProductShell />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="home" element={<DiscoverPage />} />
-          <Route path="feed" element={<FeedPage />} />
+          {/* The feed is called Social; /feed stays as a redirect. */}
+          <Route path="social" element={<FeedPage />} />
+          <Route path="feed" element={<Navigate to="/social" replace />} />
           <Route path="dashboard" element={<Navigate to="/greenhouse" replace />} />
           <Route path="market" element={<MarketPage />} />
           <Route path="market/categories" element={<CategoriesPage />} />
@@ -158,7 +152,8 @@ export function AppRoutes() {
         </Route>
         <Route path="*" element={<Navigate to="/greenhouse" replace />} />
       </Routes>
-      {plantId && fromGreenhouse && <PassportDialog plantId={plantId} onClose={closeOverlay} routed />}
+      {/* A passport opens over whatever page linked to it (feed, home, rank, greenhouse); a direct visit sits on the greenhouse. */}
+      {plantId && <PassportDialog plantId={plantId} onClose={closeOverlay} routed tab={passportTab} />}
       {sellerId && !sellerFull && <SellerDialog userId={sellerId} onClose={closeOverlay} />}
       {profilePreview && !sellerId && (
         <SellerDialog

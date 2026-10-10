@@ -380,6 +380,13 @@ export function acceptCatalogSuggestion(id: string) {
   })
 }
 
+/** Care plans → Suggest with AI for one category (admin). */
+export function postCareSuggest(categoryId: string) {
+  return requestOutcome<{ catalog: import('./types').Catalog }>(`/api/catalog/care/suggest/${encodeURIComponent(categoryId)}`, {
+    method: 'POST',
+  })
+}
+
 export function putCatalog(catalog: import('./types').Catalog) {
   return request<{ catalog: import('./types').Catalog }>('/api/catalog', {
     method: 'PUT',
@@ -426,6 +433,14 @@ export function fetchMySocial() {
 }
 
 /** Admin → Server → Reactions. */
+/** Admin → Moderation → Reactions: remove one 🌿 (logged on that post). */
+export function deleteAdminReaction(activityId: string, userId: string) {
+  return requestOutcome<{ ok: true }>(
+    `/api/admin/reactions/${encodeURIComponent(activityId)}/${encodeURIComponent(userId)}`,
+    { method: 'DELETE' },
+  )
+}
+
 export function fetchAdminReactionsOutcome() {
   return requestOutcome<{ reactions: import('./types').AdminReaction[] }>('/api/admin/reactions')
 }
@@ -590,7 +605,17 @@ export function postAdminScans(
 export type PlantPatch = Partial<
   Pick<
     Plant,
-    'title' | 'titleHe' | 'description' | 'descriptionHe' | 'sizeBand' | 'stage' | 'quality' | 'traits' | 'photos' | 'private'
+    | 'title'
+    | 'titleHe'
+    | 'description'
+    | 'descriptionHe'
+    | 'sizeBand'
+    | 'stage'
+    | 'quality'
+    | 'traits'
+    | 'photos'
+    | 'private'
+    | 'care'
   >
 >
 

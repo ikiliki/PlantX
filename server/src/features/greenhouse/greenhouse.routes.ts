@@ -53,12 +53,13 @@ greenhouseRoutes.delete('/:id', async (c) => {
   return c.json({ plantId: plant.id, activity })
 })
 
-/** Plant card / passport: plant from greenhouse, timeline from activity. */
+/** Passport story: the plant's activity, public kinds for everyone, every kind for its owner and admins. */
 greenhouseRoutes.get('/:id/activities', async (c) => {
-  const plant = await visiblePlant(c.req.param('id'), c.get('user'))
+  const user = c.get('user')
+  const plant = await visiblePlant(c.req.param('id'), user)
   return c.json({
     plantId: plant.id,
-    activities: await visibleTo(await activityService.listForPlant(plant.id), c.get('user')),
+    activities: await visibleTo(await activityService.listForPlant(plant.id), user),
   })
 })
 

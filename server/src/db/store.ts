@@ -20,7 +20,7 @@ import type {
 import type { SystemConfig } from '../../../src/theme/release.ts'
 import type { IssueContext, IssueReport } from '../../../src/lib/issueReport.ts'
 import type { Activity } from '../features/activity/activity.types.ts'
-import type { ActivityComment, AdminComment, AdminReaction, GreenhouseSocialItem } from '../../../src/mock/types.ts'
+import type { ActivityComment, ActivitySocialCounts, AdminComment, AdminReaction, GreenhouseSocialItem } from '../../../src/mock/types.ts'
 import type { Todo } from '../features/todo/todo.types.ts'
 import type { PendingTransaction, PendingUser } from '../features/users/users.types.ts'
 
@@ -85,6 +85,8 @@ export interface PlantxStore {
     list(): Promise<Todo[]>
     saveAll(rows: Todo[]): Promise<void>
     upsert(rows: Todo[]): Promise<void>
+    /** Drop open tasks a paused kind of care no longer needs. */
+    remove(ids: string[]): Promise<void>
   }
   catalog: {
     get(): Promise<Catalog>
@@ -133,7 +135,7 @@ export interface PlantxStore {
   }
   /** 🌿 reactions and comments on activities (feed posts). */
   activitySocial: {
-    counts(activityIds: string[], viewerId: string | null): Promise<Map<string, { reactions: number; reacted: boolean; comments: number }>>
+    counts(activityIds: string[], viewerId: string | null): Promise<Map<string, ActivitySocialCounts>>
     react(activityId: string, userId: string): Promise<void>
     unreact(activityId: string, userId: string): Promise<void>
     /** Visible comments, oldest first. */

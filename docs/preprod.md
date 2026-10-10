@@ -83,6 +83,19 @@ and the login card shows Google only. Photo identify runs in **mock** mode on PP
 | `SUPABASE_URL` | `https://<pp ref>.supabase.co` (PlantX-PP → Project Settings → API). The API URL, **not** the database URL: anything else turns password sign-in off |
 | `SUPABASE_ANON_KEY` | PlantX-PP publishable (anon) key, no quotes. Server only, never a `VITE_` variable. A key from another project shows "Sign-in is misconfigured" |
 
+## Rotate the PP database password
+
+The PP database password lives in three places; change all three together, or previews or local scripts fail
+with "password authentication failed".
+
+1. PlantX-PP in Supabase → Project Settings → Database → reset the password, then copy the session pooler URL.
+2. `C:/Users/USER/plantx-preprod/.env.preprod`: `PREPROD_DATABASE_URL=<new url>` (local `dev:pp` and migration
+   scripts).
+3. Vercel → Environment Variables → Preview: `DATABASE_URL` and `PROD_DATABASE_URL` (the server reads
+   `DATABASE_URL` first). Saved variables reach new deployments only: redeploy the branch preview (or push).
+
+Check: `/api/live` on the preview answers with the system config (it reads the database); `/api/health` does not.
+
 ## Reset PP
 This wipes all data and every Supabase Auth login, then recreates the admin, the prod catalog (read only),
 empty testers and their logins:

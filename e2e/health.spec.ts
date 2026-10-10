@@ -85,7 +85,8 @@ test.describe('admin', () => {
     expect(health.database.ok).toBe(true)
     expect(Array.isArray(health.missing)).toBe(true)
 
-    await expectPage(page, '/admin/system')
+    // System health sits at the top of Admin → Server.
+    await expectPage(page, '/admin/server')
     const card = page.locator('[data-system-health]')
     await expect(card.getByRole('heading', { name: 'System health' })).toBeVisible()
     for (const row of ['api', 'db', 'migrations', 'identify', 'errors', 'alerts']) {

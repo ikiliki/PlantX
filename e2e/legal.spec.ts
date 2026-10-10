@@ -126,11 +126,11 @@ test.describe('admin', () => {
     await signIn(page, ADMIN)
   })
 
-  test('Admin → System shows the funnel', async ({ page }) => {
+  test('Admin → Server shows the funnel', async ({ page }) => {
     const res = await page.request.get('/api/events/funnel')
     expect(res.ok()).toBeTruthy()
     expect(Array.isArray(((await res.json()) as { days: unknown }).days)).toBe(true)
-    await expectPage(page, '/admin/system')
+    await expectPage(page, '/admin/server')
     await expect(page.locator('[data-funnel]')).toBeVisible()
   })
 

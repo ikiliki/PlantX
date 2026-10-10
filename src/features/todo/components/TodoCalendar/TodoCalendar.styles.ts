@@ -1,9 +1,15 @@
 import styled, { keyframes } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
+import type { CareIcon } from '../../../../mock/types'
+import { careColor, careTint } from '../../careKinds'
+
+type DayTone = CareIcon | 'mixed'
+
+/** A day's edge: its one kind's colour, or water's when several kinds share it. */
+const dayEdge = (tone: DayTone) => (tone === 'mixed' ? water : careColor(tone))
 
 const water = theme.colors.water
-const metal = theme.colors.metal
 
 export const Root = styled.section`
   container-type: inline-size;
@@ -200,7 +206,7 @@ export const Cell = styled.div`
 `
 
 export const Day = styled.div<{
-  $tone?: 'water' | 'photo' | 'mixed'
+  $tone?: DayTone
   $active?: boolean
   $selected?: boolean
 }>`
@@ -217,10 +223,7 @@ export const Day = styled.div<{
   border: 2px solid
     ${({ $tone, $active, $selected }) => {
       if ($selected) return theme.colors.forest
-      if ($active && $tone === 'photo') return metal
-      if ($active && ($tone === 'water' || $tone === 'mixed')) return water
-      if ($tone === 'photo') return metal
-      if ($tone === 'water' || $tone === 'mixed') return water
+      if ($tone) return dayEdge($tone)
       return theme.colors.border
     }};
   border-radius: ${theme.radii.md};
@@ -230,6 +233,7 @@ export const Day = styled.div<{
     if ($tone === 'photo') return 'linear-gradient(180deg, #ECEEF0 0%, #F7F7F8 100%)'
     if ($tone === 'mixed')
       return 'linear-gradient(135deg, #E8F1FB 0%, #E8F1FB 48%, #ECEEF0 52%, #ECEEF0 100%)'
+    if ($tone) return `linear-gradient(180deg, ${careTint($tone, 14)} 0%, var(--c-creamCard) 100%)`
     return theme.colors.creamCard
   }};
   color: inherit;
@@ -273,7 +277,7 @@ export const DayNum = styled.span`
 `
 
 /** Care done on this day: a small tick in the corner, tinted by kind. */
-export const DoneMark = styled.span<{ $kind: 'water' | 'photo' }>`
+export const DoneMark = styled.span<{ $kind: CareIcon }>`
   position: absolute;
   inset-block-start: 4px;
   inset-inline-end: 4px;
@@ -285,7 +289,7 @@ export const DoneMark = styled.span<{ $kind: 'water' | 'photo' }>`
   font-size: 10px;
   font-weight: 900;
   color: ${theme.colors.creamCard};
-  background: ${({ $kind }) => ($kind === 'photo' ? theme.colors.warn : theme.colors.info)};
+  background: ${({ $kind }) => ($kind === 'photo' ? theme.colors.warn : $kind === 'water' ? theme.colors.info : careColor($kind))};
 `
 
 export const Icons = styled.div`
@@ -325,7 +329,7 @@ const liftIn = keyframes`
 `
 
 export const Lift = styled.div<{
-  $tone?: 'water' | 'photo' | 'mixed'
+  $tone?: DayTone
   $selected?: boolean
 }>`
   display: none;
@@ -345,8 +349,7 @@ export const Lift = styled.div<{
   border: 2px solid
     ${({ $tone, $selected }) => {
       if ($selected) return theme.colors.forest
-      if ($tone === 'photo') return metal
-      if ($tone === 'water' || $tone === 'mixed') return water
+      if ($tone) return dayEdge($tone)
       return theme.colors.border
     }};
   border-radius: ${theme.radii.md};
@@ -355,6 +358,7 @@ export const Lift = styled.div<{
     if ($tone === 'water') return '#E8F1FB'
     if ($tone === 'photo') return '#ECEEF0'
     if ($tone === 'mixed') return '#E7EEF2'
+    if ($tone) return careTint($tone, 14)
     return theme.colors.creamCard
   }};
   box-shadow: ${theme.shadow.lift};
@@ -391,18 +395,18 @@ export const Stack = styled.div`
   }
 `
 
-export const PlantBtn = styled.span<{ $tone: 'water' | 'photo'; $open?: boolean; $stacked?: boolean }>`
+export const PlantBtn = styled.span<{ $tone: CareIcon; $open?: boolean; $stacked?: boolean }>`
   position: relative;
   display: block;
   flex: 0 0 auto;
   width: min(28px, 100%);
   aspect-ratio: 1;
-  border: 2px solid ${({ $tone, $open }) => ($open ? ($tone === 'water' ? water : metal) : theme.colors.creamCard)};
+  border: 2px solid ${({ $tone, $open }) => ($open ? careColor($tone) : theme.colors.creamCard)};
   border-radius: 999px;
   overflow: visible;
   background: ${theme.colors.cream};
   box-shadow: ${({ $tone, $stacked }) => {
-    const ring = $tone === 'water' ? water : metal
+    const ring = careColor($tone)
     if (!$stacked) return `0 0 0 1px ${ring}`
     return `0 0 0 1px ${ring}, 0 3px 0 0 ${theme.colors.creamCard}, 0 4px 0 0 ${ring}`
   }};
@@ -466,14 +470,14 @@ const dropIn = keyframes`
   }
 `
 
-export const DropIcon = styled.div<{ $kind: 'water' | 'photo' }>`
+export const DropIcon = styled.div<{ $kind: CareIcon }>`
   position: absolute;
   z-index: 5;
   left: 50%;
   top: 28%;
   pointer-events: none;
   animation: ${dropIn} 720ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
-  filter: drop-shadow(0 10px 16px ${({ $kind }) => ($kind === 'water' ? 'color-mix(in srgb, var(--c-aiBlue) 45%, transparent)' : 'rgba(139, 146, 154, 0.45)')});
+  filter: drop-shadow(0 10px 16px ${({ $kind }) => ($kind === 'water' ? 'color-mix(in srgb, var(--c-aiBlue) 45%, transparent)' : `color-mix(in srgb, ${careColor($kind)} 45%, transparent)`)});
 `
 
 export const DayPanel = styled.section`
@@ -497,10 +501,20 @@ export const DayPanel = styled.section`
   }
 `
 
+/** Phone: the plant picker, small, at the end of the Tasks title row. */
+export const HeadPicker = styled.div`
+  flex: 0 1 170px;
+  min-width: 0;
+
+  > select {
+    width: 100%;
+  }
+`
+
 export const DayPanelHead = styled.div`
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
 
@@ -523,6 +537,38 @@ export const DayList = styled.div`
   gap: 10px;
   grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
   min-width: 0;
+`
+
+export const DayGroups = styled.div`
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+`
+
+/** One kind of care in the day list: its icon, name and count, and Done all when several are ready. */
+export const KindGroup = styled.section`
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+`
+
+export const KindHead = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: ${theme.colors.ink};
+
+  > span {
+    color: ${theme.colors.muted};
+    font-weight: 700;
+  }
+
+  > button {
+    margin-inline-start: auto;
+  }
 `
 
 export const EmptyDay = styled.p`

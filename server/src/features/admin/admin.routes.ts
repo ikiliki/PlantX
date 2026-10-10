@@ -91,10 +91,19 @@ adminRoutes.get('/comments', async (c) => {
   return c.json({ comments: await feedSocialService.recent(100) })
 })
 
-/** Newest 🌿 reactions on Feed posts (read-only). */
+/** Newest 🌿 reactions on Feed posts. */
 adminRoutes.get('/reactions', async (c) => {
   await requireAdmin(c)
   return c.json({ reactions: await feedSocialService.recentReactions(200) })
+})
+
+/** Admin → Moderation → Reactions: remove one member's 🌿 from a post; logged on that post. */
+adminRoutes.delete('/reactions/:activityId/:userId', async (c) => {
+  const admin = await requireAdmin(c)
+  const activityId = c.req.param('activityId')
+  await feedSocialService.removeReaction(activityId, c.req.param('userId'))
+  await moderationService.logEdit('activity', activityId, activityId, admin, ['reaction removed'])
+  return c.json({ ok: true })
 })
 
 adminRoutes.get('/moderation/log', async (c) => {

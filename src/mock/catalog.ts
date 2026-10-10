@@ -3,6 +3,8 @@ import { classDictionary } from './classDictionary'
 import { defaultPlantPhoto } from './images'
 import { MARKET_AREAS } from './locations'
 import { STAGE_LABEL, varietyCode } from './marketNaming'
+import { BUILT_IN_TASKS } from '../features/todo/carePlan'
+import { allCareSuggestions } from '../features/todo/careSuggestions'
 import type {
   Catalog,
   CatalogCategory,
@@ -211,7 +213,10 @@ export function createCatalog(): Catalog {
     }
   }
 
-  return { categories, subcategories, properties }
+  // Care: the starting tasks and the AI suggestions for every category.
+  const careTasks = BUILT_IN_TASKS.map((task) => ({ ...task }))
+  const careRules = allCareSuggestions(categories.map((item) => item.id))
+  return { categories, subcategories, properties, careTasks, careRules }
 }
 
 const RETIRED_CATEGORY_IDS = new Set(['maple', 'philodendron', 'palm', 'olive'])
@@ -276,7 +281,12 @@ export function ensureCatalog(db: { catalog?: Catalog; plants?: Plant[] }) {
       (item) =>
         seedPropertyIds.has(item.id) || item.categoryIds.length > 0 || item.subcategoryIds.length > 0,
     )
-  db.catalog = { categories, subcategories, properties }
+  const careTasks = db.catalog?.careTasks?.length ? db.catalog.careTasks : seed.careTasks
+  const taskIds = new Set(careTasks.map((task) => task.id))
+  const careRules = (db.catalog?.careRules?.length ? db.catalog.careRules : seed.careRules).filter(
+    (rule) => taskIds.has(rule.taskId) && categoryIds.has(rule.categoryId) && (!rule.subcategoryId || subIds.has(rule.subcategoryId)),
+  )
+  db.catalog = { categories, subcategories, properties, careTasks, careRules }
   for (const plant of db.plants ?? []) hydratePlantCatalog(plant, db.catalog)
 }
 
@@ -297,7 +307,7 @@ export function hydratePlantCatalog(plant: Plant, catalog: Catalog) {
 }
 
 export function emptyCatalog(): Catalog {
-  return { categories: [], subcategories: [], properties: [] }
+  return { categories: [], subcategories: [], properties: [], careTasks: BUILT_IN_TASKS.map((task) => ({ ...task })), careRules: [] }
 }
 
 export function isHealth(value: string): value is QualityGrade {

@@ -1,3 +1,4 @@
+import type { TodoSubcategory } from '../mock/types'
 import { clientEnv } from '../theme/plantxEnv'
 import { sanitizeContext, type IssueContext, type IssueKind } from './issueReport'
 import { beginSave, isTrackedSave } from './pendingSaves'
@@ -12,7 +13,7 @@ export type HttpNotice =
   | { id: number; tone: 'info'; title: string; detail?: string }
 
 /** What earned the XP in a success note. */
-export type XpEvent = 'water' | 'photo' | 'plant'
+export type XpEvent = TodoSubcategory | 'plant'
 
 /** At most this many notices on screen; the newest stays. */
 const MAX_NOTICES = 2

@@ -13,6 +13,8 @@ import { FeedPost, FeedPostSkeleton } from '../../features/feed/components/FeedP
 import { FeedSuggestion, useSuggestionKinds } from '../../features/feed/components/FeedSuggestion/FeedSuggestion'
 import { useFeedRefresh } from '../../features/feed/useFeedRefresh'
 import { useHomeFeed } from '../../features/feed/useHomeFeed'
+import { useCareTasks } from '../../features/todo/careKinds'
+import { TodoKindIcon } from '../../features/todo/components/TodoKindIcon/TodoKindIcon'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useStore } from '../../mock/store'
@@ -20,7 +22,8 @@ import { useSectionFetch, useServerSlices } from '../../mock/useServerSlices'
 import { forAudience } from '../../theme/audience'
 import { Empty, Page, Tools } from './FeedPage.styles'
 
-type FeedFilter = 'all' | 'added' | 'photo' | 'water'
+/** All, New plants, or one care task's id (the same id as the post kind: water, photo, …). */
+type FeedFilter = string
 
 /** A suggestion card after every this-many posts. */
 const SUGGEST_EVERY = 4
@@ -30,13 +33,19 @@ function FeedStream() {
   const { signedIn } = useStore()
   const { items } = useHomeFeed()
   const kinds = useSuggestionKinds()
-  const [filter, setFilter] = useState<FeedFilter>('all')
+  const care = useCareTasks()
+  const [picked, setPicked] = useState<FeedFilter>('all')
   const mobile = useMediaQuery('(max-width: 899px)')
   const { refresh, refreshing } = useFeedRefresh()
-  const loading = useSectionFetch(signedIn, ['updates'])
+  // A post needs its plant (photo, name) and its grower: wait for all three, not only the posts.
+  const loading = useSectionFetch(signedIn, ['updates', 'plants', 'users'])
+  const count = (kind: FeedFilter) => items.filter((item) => item.update.kind === kind).length
+  // All, New plants, then one chip per care task that has posts (the catalog's names and icons), so a new
+  // task that posts gets its chip by itself and no chip ever filters to nothing.
+  const careChips = care.tasks.filter((task) => count(task.id) > 0)
+  const filter = picked === 'all' || picked === 'added' || careChips.some((task) => task.id === picked) ? picked : 'all'
   const filtered = filter === 'all' ? items : items.filter((item) => item.update.kind === filter)
   const list = useInfiniteList(filtered, { signature: `${filter}:${filtered.map((item) => item.id).join('|')}` })
-  const count = (kind: FeedFilter) => items.filter((item) => item.update.kind === kind).length
 
   return (
     <>
@@ -45,12 +54,16 @@ function FeedStream() {
         <FilterChips<FeedFilter>
           label={t.feedPage.filters}
           value={filter}
-          onChange={setFilter}
+          onChange={setPicked}
           options={[
             { id: 'all', label: t.feedPage.all, count: items.length },
             { id: 'added', label: t.feedPage.added, count: count('added') },
-            { id: 'photo', label: t.feedPage.photo, count: count('photo') },
-            { id: 'water', label: t.feedPage.water, count: count('water') },
+            ...careChips.map((task) => ({
+              id: task.id,
+              label: care.name(task.id),
+              iconNode: <TodoKindIcon kind={task.id} size={14} />,
+              count: count(task.id),
+            })),
           ]}
         />
         {mobile ? null : (

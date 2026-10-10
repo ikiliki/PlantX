@@ -101,6 +101,8 @@ export function deleteCategory(catalog: Catalog, categoryId: string): Catalog {
       ...item,
       categoryIds: item.categoryIds.filter((id) => id !== categoryId),
     })),
+    careTasks: catalog.careTasks,
+    careRules: catalog.careRules.filter((rule) => rule.categoryId !== categoryId),
   }
 }
 
@@ -154,6 +156,7 @@ export function deleteSubcategory(catalog: Catalog, subcategoryId: string): Cata
       ...item,
       subcategoryIds: item.subcategoryIds.filter((id) => id !== subcategoryId),
     })),
+    careRules: catalog.careRules.filter((rule) => rule.subcategoryId !== subcategoryId),
   }
 }
 

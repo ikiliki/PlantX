@@ -20,9 +20,20 @@ export interface PlacementConfig {
   status: ReleaseMode
 }
 
-/** A component is shown or hidden. Its status comes from the feature. */
+/** Phone is under 900px of the window, desktop is 900px and up. */
+export type DeviceId = 'phone' | 'desktop'
+
+/** On or off per device. */
+export interface DeviceSwitches {
+  phone: boolean
+  desktop: boolean
+}
+
+/** A component is shown or hidden, and per device. Its status comes from the feature. */
 export interface ComponentConfig {
   enabled: boolean
+  phone: boolean
+  desktop: boolean
 }
 
 /** Page: live, or under maintenance (stopped showing). */
@@ -37,6 +48,8 @@ export const PLACEMENTS = [
   { id: 'home.rank', pageId: 'home', featureId: 'rank', required: false },
   { id: 'home.wiki', pageId: 'home', featureId: 'wiki', required: false },
   { id: 'home.todo', pageId: 'home', featureId: 'todo', required: true },
+  /** The daily Home (greeting, care, greenhouse, top greenhouses, short rows); off gives the columns with the feed. */
+  { id: 'home.today', pageId: 'home', featureId: 'news', required: false },
   { id: 'market.board', pageId: 'market', featureId: 'market', required: true },
   { id: 'market.class', pageId: 'market', featureId: 'market', required: true },
   { id: 'market.categories', pageId: 'market', featureId: 'market', required: true },
@@ -74,6 +87,8 @@ export interface SystemConfig {
   /** Visitors see the app when this is on. Admin still sees it when it is off. */
   launched: boolean
   pages: Record<PageId, PageStatus>
+  /** A live page can still be off on phones or on desktops (it then holds like maintenance there). */
+  pageDevices: Record<PageId, DeviceSwitches>
   features: Record<FeatureId, PlacementConfig>
   placements: Record<PlacementId, ComponentConfig>
 }
@@ -100,6 +115,7 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     rank: 'maintenance',
     wiki: 'live',
   },
+  pageDevices: Object.fromEntries(PAGE_IDS.map((id) => [id, { phone: true, desktop: true }])) as Record<PageId, DeviceSwitches>,
   features: {
     news: { enabled: true, status: 'ready' },
     market: { enabled: false, status: 'comingSoon' },
@@ -108,30 +124,9 @@ export const DEFAULT_SYSTEM: SystemConfig = {
     rank: { enabled: false, status: 'comingSoon' },
     wiki: { enabled: true, status: 'ready' },
   },
-  placements: {
-    'home.feed': { enabled: true },
-    'feed.board': { enabled: true },
-    'feed.social': { enabled: true },
-    'home.market': { enabled: true },
-    'home.rank': { enabled: true },
-    'home.wiki': { enabled: true },
-    'home.todo': { enabled: true },
-    'market.board': { enabled: true },
-    'market.class': { enabled: true },
-    'market.categories': { enabled: true },
-    'market.category': { enabled: true },
-    'profile.market.stats': { enabled: true },
-    'profile.market.trust': { enabled: true },
-    'greenhouse.board': { enabled: true },
-    'greenhouse.card': { enabled: true },
-    'greenhouse.level': { enabled: true },
-    'todo.board': { enabled: true },
-    'passport.market': { enabled: true },
-    'passport.rank': { enabled: true },
-    'passport.todo': { enabled: true },
-    'rank.board': { enabled: true },
-    'wiki.board': { enabled: true },
-  },
+  placements: Object.fromEntries(
+    PLACEMENTS.map((item) => [item.id, { enabled: true, phone: true, desktop: item.id !== 'home.today' }]),
+  ) as Record<PlacementId, ComponentConfig>,
 }
 
 function isReleaseMode(value: unknown): value is ReleaseMode {
@@ -151,19 +146,18 @@ function readPlacement(value: unknown, fallback: PlacementConfig): PlacementConf
   return { enabled: fallback.enabled, status: fallback.status }
 }
 
-function readEnabled(value: unknown, fallback: boolean): boolean {
-  if (value === 'disabled') return false
-  if (isReleaseMode(value)) return true
-  if (value && typeof value === 'object' && typeof (value as { enabled?: unknown }).enabled === 'boolean') {
-    return (value as { enabled: boolean }).enabled
-  }
-  return fallback
+function readComponent(value: unknown, fallback: ComponentConfig): ComponentConfig {
+  if (!value || typeof value !== 'object') return { ...fallback }
+  const record = value as Partial<Record<keyof ComponentConfig, unknown>>
+  const flag = (key: keyof ComponentConfig) => (typeof record[key] === 'boolean' ? (record[key] as boolean) : fallback[key])
+  return { enabled: flag('enabled'), phone: flag('phone'), desktop: flag('desktop') }
 }
 
 export function normalizeSystem(
   raw: {
     launched?: unknown
     pages?: Partial<Record<PageId, PageStatus>>
+    pageDevices?: Partial<Record<string, unknown>>
     features?: Partial<Record<FeatureId, unknown>>
     placements?: Partial<Record<string, unknown>>
   } | undefined,
@@ -178,24 +172,36 @@ export function normalizeSystem(
       if (value === 'live' || value === 'maintenance') pages[id] = value
     }
   }
+  const pageDevices = { ...DEFAULT_SYSTEM.pageDevices }
+  for (const id of PAGE_IDS) {
+    const saved = raw?.pageDevices?.[id] as Partial<Record<DeviceId, unknown>> | undefined
+    pageDevices[id] = {
+      phone: typeof saved?.phone === 'boolean' ? saved.phone : true,
+      desktop: typeof saved?.desktop === 'boolean' ? saved.desktop : true,
+    }
+  }
   for (const id of FEATURE_IDS) {
     features[id] = readPlacement(raw?.features?.[id], DEFAULT_SYSTEM.features[id])
   }
   for (const item of PLACEMENTS) {
     const saved = raw?.placements?.[item.id]
-    placements[item.id] = { enabled: readEnabled(saved, DEFAULT_SYSTEM.placements[item.id].enabled) }
+    placements[item.id] = readComponent(saved, DEFAULT_SYSTEM.placements[item.id])
   }
-  return { launched, pages, features, placements }
+  return { launched, pages, pageDevices, features, placements }
 }
 
-/** Status lives on the feature. A shown component follows it. A hidden component stays off unless the feature itself is off, which locks every component. */
-export function placementRelease(system: SystemConfig, id: PlacementId): PlacementConfig {
+/**
+ * Status lives on the feature. A shown component follows it. A hidden component stays off unless the feature itself is off, which locks every component.
+ * With a device, a component switched off for that device is off there too (required ones included).
+ */
+export function placementRelease(system: SystemConfig, id: PlacementId, device?: DeviceId): PlacementConfig {
   const featureId = PLACEMENTS.find((item) => item.id === id)?.featureId
   const feature = featureId ? system.features[featureId] : undefined
   const status = feature?.status ?? 'comingSoon'
   if (!feature?.enabled) return { enabled: false, status }
   const item = PLACEMENTS.find((entry) => entry.id === id)
-  const enabled = item?.required ? true : system.placements[id].enabled
+  const config = system.placements[id]
+  const enabled = (item?.required ? true : config.enabled) && (!device || config[device])
   return { enabled, status }
 }
 
@@ -207,8 +213,8 @@ export function plainOn(pageId: PageId) {
   return PLAIN.filter((item) => item.pageId === pageId)
 }
 
-export function isPlacementEnabled(system: SystemConfig, id: PlacementId): boolean {
-  return placementRelease(system, id).enabled
+export function isPlacementEnabled(system: SystemConfig, id: PlacementId, device?: DeviceId): boolean {
+  return placementRelease(system, id, device).enabled
 }
 
 export function isPlacementReady(system: SystemConfig, id: PlacementId): boolean {
@@ -226,7 +232,12 @@ export function isFeatureReady(system: SystemConfig, id: FeatureId): boolean {
   return Boolean(feature?.enabled && feature.status === 'ready')
 }
 
-/** Nav shows the page when the page is live. Component status gates that component, not the link. */
-export function isPageNavigable(system: SystemConfig, pageId: PageId): boolean {
-  return system.pages[pageId] !== 'maintenance'
+/** Live on this device: live, and not switched off for the device (when one is given). */
+export function isPageLive(system: SystemConfig, pageId: PageId, device?: DeviceId): boolean {
+  return system.pages[pageId] === 'live' && (!device || system.pageDevices[pageId][device])
+}
+
+/** Nav shows the page when the page is live (on this device). Component status gates that component, not the link. */
+export function isPageNavigable(system: SystemConfig, pageId: PageId, device?: DeviceId): boolean {
+  return isPageLive(system, pageId, device)
 }

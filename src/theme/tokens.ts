@@ -48,6 +48,10 @@ const day = {
     water: '#3B8FD9',
     /** Neutral metal for photo-only marks. */
     metal: '#8B929A',
+    /** Care tones for feeding, repotting and turning a plant to the light. */
+    feed: '#4E8A2E',
+    repot: '#A8662A',
+    rotate: '#7A5FC0',
     /** Market direction tones. */
     up: '#2A6643',
     down: '#C2492B',
@@ -116,6 +120,9 @@ const night: typeof day = {
     aiBlue: '#8AB8F2',
     water: '#82BCF2',
     metal: '#A7AFB6',
+    feed: '#9ACB7C',
+    repot: '#E0A866',
+    rotate: '#B9A3E6',
     up: '#9EDB8A',
     down: '#F49A80',
     overlay: 'rgba(12, 18, 15, 0.55)',

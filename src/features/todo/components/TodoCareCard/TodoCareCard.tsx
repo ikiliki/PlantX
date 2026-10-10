@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import type { Plant, Todo } from '../../../../mock/types'
-import { canFillTodo, careFillWindow, isFirstWaterTodo, todayIso } from '../../todoSchedule'
+import { canFillTodo, careFillWindow, isFirstWaterTodo, isSetTodo, todayIso } from '../../todoSchedule'
+import { useCareTasks } from '../../careKinds'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
 import { Action, Body, Card, CardHit, DateActions, DateField, DateForm, Meta, Name, Photo, Tone } from './TodoCareCard.styles'
 
@@ -23,27 +25,19 @@ export function TodoCareCard({
   onOpen?: () => void
 }) {
   const { t, tr } = useI18n()
+  const care = useCareTasks()
   const first = isFirstWaterTodo(todo, todos)
   const fillable = canFillTodo(todo, todos)
   const [picking, setPicking] = useState(false)
   const [picked, setPicked] = useState(() => todayIso())
   const photo = plant.photos[0]
-  const tone = todo.subcategory === 'photo' ? 'photo' : 'water'
+  const tone = care.icon(todo.subcategory)
   const today = todayIso()
   const fillWindow = careFillWindow(todo.subcategory, today)
   const pickedOk = Boolean(picked) && picked <= today && picked >= fillWindow.min
-  const detail =
-    todo.subcategory === 'photo'
-      ? t.todo.detailPhoto
-      : first
-        ? t.todo.detailFirstWater
-        : t.todo.detailWater
-
-  const actionLabel = first
-    ? t.todo.actionSetWaterDate
-    : todo.subcategory === 'photo'
-      ? t.todo.actionPhoto
-      : t.todo.actionWater
+  const set = isSetTodo(todo, todos)
+  const detail = first ? t.todo.detailFirstWater : set ? t.todo.detailSetSchedule : care.detail(todo.subcategory)
+  const actionLabel = first ? t.todo.actionSetWaterDate : set ? t.todo.actionSetSchedule : care.name(todo.subcategory)
 
   const body = (
     <>
@@ -51,13 +45,18 @@ export function TodoCareCard({
         <PlantImage src={photo} alt="" />
         <Tone $tone={tone}>
           <TodoKindIcon kind={todo.subcategory} size={12} />
-          {todo.subcategory === 'photo' ? t.todo.actionPhoto : t.todo.actionWater}
+          {care.name(todo.subcategory)}
         </Tone>
       </Photo>
       <Body>
         <Name>{tr(plant.title, plant.titleHe)}</Name>
         <Meta>{detail}</Meta>
-        {onOpen && (first || fillable) ? (
+        {set ? (
+          <Action as="span" $tone={tone}>
+            <TodoKindIcon kind={todo.subcategory} size={14} />
+            {actionLabel}
+          </Action>
+        ) : onOpen && (first || fillable) ? (
           <Action as="span" $tone={tone}>
             <TodoKindIcon kind={todo.subcategory} size={14} />
             {actionLabel}
@@ -108,6 +107,15 @@ export function TodoCareCard({
       </Body>
     </>
   )
+
+  // Nothing to tick yet: the whole card opens the passport's Tasks tab, where the owner sets how often.
+  if (set) {
+    return (
+      <CardHit as={Link} to={`/plants/${plant.id}?tab=care`} $tone={tone} aria-label={tr(plant.title, plant.titleHe)}>
+        {body}
+      </CardHit>
+    )
+  }
 
   if (onOpen) {
     return (

@@ -1,7 +1,8 @@
 import type { Plant, Todo } from '../../../../mock/types'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { canFillTodo, dueTodos, isFirstWaterTodo, todayIso } from '../../todoSchedule'
+import { canFillTodo, dueTodos, isFirstWaterTodo, isSetTodo, todayIso } from '../../todoSchedule'
+import { useCareTasks } from '../../careKinds'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
 import { Action, Badge, Copy, Count, Head, Name, Root, Row, Rows, Status, Thumb, Title } from './TodoTable.styles'
 
@@ -18,26 +19,25 @@ export function TodoTable({
   plants,
   onOpen,
   limit = 4,
+  bare = false,
 }: {
   todos: Todo[]
   plants: Plant[]
   onOpen: (todo: Todo) => void
   limit?: number
+  /** Rows only: the page around it (Home) gives the heading. */
+  bare?: boolean
 }) {
   const { t, tr } = useI18n()
+  const care = useCareTasks()
   const today = todayIso()
   const fillable = dueTodos(todos).filter((todo) => canFillTodo(todo, todos))
   const due = fillable.slice(0, limit)
 
   if (plants.length === 0 || due.length === 0) return null
 
-  return (
-    <Root aria-label={t.todo.todayTitle}>
-      <Head>
-        <Title>{t.todo.todayTitle}</Title>
-        <Count>{fillable.length}</Count>
-      </Head>
-      <Rows>
+  const rows = (
+      <Rows aria-label={bare ? t.todo.todayTitle : undefined}>
         {due.map((todo, index) => {
           const plant = plants.find((item) => item.id === todo.plantId)
           const name = plant ? tr(plant.title, plant.titleHe) : todo.plantId
@@ -48,21 +48,22 @@ export function TodoTable({
             : late > 0
               ? t.todo.statusOverdue.replace('{n}', String(late))
               : t.todo.statusToday
-          const kindName = todo.subcategory === 'photo' ? t.todo.kindPhoto : t.todo.kindWater
-          const actionLabel =
-            todo.subcategory === 'photo' ? t.todo.actionPhoto : first ? t.todo.actionSetWaterDate : t.todo.actionWater
+          const kindName = care.name(todo.subcategory)
+          const set = isSetTodo(todo, todos)
+          const actionLabel = first ? t.todo.actionSetWaterDate : set ? t.todo.actionSetSchedule : kindName
+          const icon = care.icon(todo.subcategory)
           return (
             <li key={todo.id}>
               <Row
                 type="button"
-                $tone={todo.subcategory}
+                $tone={icon}
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => onOpen(todo)}
                 aria-label={`${name} · ${kindName} · ${status}`}
               >
                 <Thumb>
                   {plant?.photos[0] ? <PlantImage src={plant.photos[0]} alt="" /> : null}
-                  <Badge $tone={todo.subcategory} aria-hidden>
+                  <Badge $tone={icon} aria-hidden>
                     <TodoKindIcon kind={todo.subcategory} size={12} />
                   </Badge>
                 </Thumb>
@@ -72,7 +73,7 @@ export function TodoTable({
                     {kindName} · {status}
                   </Status>
                 </Copy>
-                <Action aria-hidden $tone={todo.subcategory}>
+                <Action aria-hidden $tone={icon}>
                   {actionLabel}
                 </Action>
               </Row>
@@ -80,6 +81,17 @@ export function TodoTable({
           )
         })}
       </Rows>
+  )
+
+  if (bare) return rows
+
+  return (
+    <Root aria-label={t.todo.todayTitle}>
+      <Head>
+        <Title>{t.todo.todayTitle}</Title>
+        <Count>{fillable.length}</Count>
+      </Head>
+      {rows}
     </Root>
   )
 }

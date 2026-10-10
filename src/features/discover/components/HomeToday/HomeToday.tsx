@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
+import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { isFeatureEnabled } from '../../../../theme/release'
 import type { Todo } from '../../../../mock/types'
 import { publicGrowerName } from '../../../profile/avatarIcons'
-import { FeedUpdate } from '../../../feed/components/FeedUpdate/FeedUpdate'
+import { FeedPost, FeedPostSkeleton } from '../../../feed/components/FeedPost/FeedPost'
 import { MarketRail } from '../../../feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../../feed/components/RankRail/RankRail'
+import { TopGreenhouses } from '../../../feed/components/TopGreenhouses/TopGreenhouses'
+import { WikiRail } from '../../../feed/components/WikiRail/WikiRail'
 import { useHomeFeed } from '../../../feed/useHomeFeed'
 import { AddPlantDialog } from '../../../greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { greenhouseLevel } from '../../../greenhouse/greenhouseLevel'
@@ -17,6 +21,9 @@ import { TodoTable } from '../../../todo/components/TodoTable/TodoTable'
 import { canFillTodo, dueTodos } from '../../../todo/todoSchedule'
 import {
   Calm,
+  Columns,
+  MainCol,
+  SideCol,
   First,
   FirstAction,
   FirstBody,
@@ -24,10 +31,11 @@ import {
   Greeting,
   Head,
   HeadLink,
+  HeadCount,
   HeadTitle,
   Hello,
-  More,
   PlantCard,
+  PlantCardShell,
   PlantName,
   PlantPhoto,
   Root,
@@ -47,8 +55,8 @@ function greetingKey(hour: number) {
 }
 
 /**
- * Home on a phone for a signed-in grower: a greeting with today's count, today's care, the grower's own
- * plants, then short market, rank and feed sections. Desktop keeps the three-column Home.
+ * Home for a signed-in grower at every width: a greeting with today's count, today's care, the grower's own
+ * plants, top greenhouses, then short market, rank and Social sections; two columns from 900px.
  */
 export function HomeToday() {
   const { t, tr, locale } = useI18n()
@@ -56,6 +64,10 @@ export function HomeToday() {
   const { items } = useHomeFeed()
   const [careTodo, setCareTodo] = useState<Todo | undefined>()
   const [adding, setAdding] = useState(false)
+  // Nothing is decided before its data arrives: no "add your first plant" while the greenhouse is still
+  // loading, no half-built feed rows. Until then each section shows its own skeleton.
+  const plantsWaiting = useSectionFetch(Boolean(currentUser), ['plants', 'todos'])
+  const feedWaiting = useSectionFetch(Boolean(currentUser), ['updates', 'plants', 'users'])
 
   if (!currentUser) return null
 
@@ -78,15 +90,45 @@ export function HomeToday() {
 
   return (
     <Root data-home-today>
+      <Columns>
+      <MainCol>
       <Hello>
         <Greeting>{t.homeToday[greetingKey(new Date().getHours())].replace('{name}', name)}</Greeting>
         <Summary>
-          {summary ? `${summary} · ` : ''}
-          {t.homeToday.level.replace('{n}', String(level))}
+          {plantsWaiting ? (
+            <SkeletonBar width="55%" height={14} />
+          ) : (
+            <>
+              {summary ? `${summary} · ` : ''}
+              {t.homeToday.level.replace('{n}', String(level))}
+            </>
+          )}
         </Summary>
       </Hello>
 
-      {plants.length === 0 ? (
+      {plantsWaiting ? (
+        <>
+          <Section data-home-loading aria-busy>
+            <SkeletonBar height={56} />
+            <SkeletonBar height={56} />
+          </Section>
+          <Section>
+            <Head>
+              <HeadTitle>{t.homeToday.greenhouse}</HeadTitle>
+            </Head>
+            <Strip>
+              {[0, 1, 2].map((index) => (
+                <PlantCardShell key={index} aria-hidden>
+                  <PlantPhoto>
+                    <SkeletonBar height={140} />
+                  </PlantPhoto>
+                  <SkeletonBar width="70%" />
+                </PlantCardShell>
+              ))}
+            </Strip>
+          </Section>
+        </>
+      ) : plants.length === 0 ? (
         <First data-home-first>
           <FirstTitle>{t.homeToday.firstTitle}</FirstTitle>
           <FirstBody>{t.homeToday.firstBody}</FirstBody>
@@ -99,23 +141,24 @@ export function HomeToday() {
           {todoOn ? (
             <FeatureGate placement="home.todo" title={t.todo.title}>
               <Section data-home-care>
+                <HeadLink to="/tasks">
+                  <HeadTitle>{t.todo.todayTitle}</HeadTitle>
+                  {due.length > 0 ? <HeadCount>{due.length}</HeadCount> : null}
+                </HeadLink>
                 {due.length === 0 ? (
                   <Calm>{t.homeToday.careDone}</Calm>
                 ) : (
-                  <>
-                    <TodoTable todos={todos} plants={plants} onOpen={setCareTodo} limit={3} />
-                    <More to="/tasks">{t.homeToday.careAll}</More>
-                  </>
+                  <TodoTable todos={todos} plants={plants} onOpen={setCareTodo} limit={3} bare />
                 )}
               </Section>
             </FeatureGate>
           ) : null}
 
           <Section data-home-greenhouse>
-            <Head>
+            <HeadLink to="/greenhouse">
               <HeadTitle>{t.homeToday.greenhouse}</HeadTitle>
-              <HeadLink to="/greenhouse">{t.homeToday.greenhouseAll.replace('{n}', String(plants.length))}</HeadLink>
-            </Head>
+              <HeadCount>{plants.length}</HeadCount>
+            </HeadLink>
             <Strip>
               {plants.slice(0, STRIP).map((plant) => (
                 <PlantCard key={plant.id} to={`/plants/${plant.id}`}>
@@ -130,26 +173,40 @@ export function HomeToday() {
         </>
       )}
 
-      <Section data-home-market>
-        <MarketRail />
-      </Section>
-
-      <Section data-home-rank>
-        <RankRail />
-      </Section>
+      <TopGreenhouses strip />
 
       <FeatureGate placement="home.feed" title={t.nav.feed}>
-        <Section data-home-feed>
-          <Head>
+        <Section data-home-feed $last>
+          <HeadLink to="/social">
             <HeadTitle>{t.homeToday.feed}</HeadTitle>
-            <HeadLink to="/feed">{t.homeToday.feedAll}</HeadLink>
-          </Head>
-          {items.length === 0 ? <Calm>{t.feed.empty}</Calm> : null}
-          {items.slice(0, FEED_PREVIEW).map((item) => (
-            <FeedUpdate key={item.id} update={item.update} />
-          ))}
+          </HeadLink>
+          {feedWaiting ? (
+            Array.from({ length: FEED_PREVIEW }, (_, index) => <FeedPostSkeleton key={index} />)
+          ) : (
+            <>
+              {items.length === 0 ? <Calm>{t.feed.empty}</Calm> : null}
+              {items.slice(0, FEED_PREVIEW).map((item) => (
+                <FeedPost key={item.id} update={item.update} />
+              ))}
+            </>
+          )}
         </Section>
       </FeatureGate>
+      </MainCol>
+
+      {/* Wide: a side column. Phone: these follow the greenhouse, and Social comes last. */}
+      <SideCol>
+        <Section data-home-market>
+          <MarketRail />
+        </Section>
+        <Section data-home-rank>
+          <RankRail />
+        </Section>
+        <Section data-home-wiki $wideOnly>
+          <WikiRail />
+        </Section>
+      </SideCol>
+      </Columns>
 
       {careTodo && carePlant ? (
         <TodoCareDialog
