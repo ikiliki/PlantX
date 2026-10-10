@@ -6,7 +6,7 @@ test.describe('phone navigation', { tag: '@prod' }, () => {
     test.skip(testInfo.project.name !== 'phone', 'The dock is the phone navigation')
     await expectPage(page, '/greenhouse')
     const dock = page.locator('[data-dock]')
-    await expect(dock.locator('a[href="/feed"]')).toBeVisible()
+    await expect(dock.locator('a[href="/social"]')).toBeVisible()
     // Market, when it is on, is the last dock item.
     const market = dock.locator('a[href="/market"]')
     if ((await market.count()) > 0) await expect(dock.locator('a').last()).toHaveAttribute('href', '/market')
@@ -30,17 +30,17 @@ test.describe('member Home and Feed', () => {
     await signIn(page, MEMBER)
   })
 
-  test('phone Home opens with a greeting and short sections, not the endless feed', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'phone', 'Desktop keeps the three-column Home')
+  test('Home opens with a greeting and short sections, not the endless feed (phone and desktop)', async ({ page }) => {
     await expectPage(page, '/home')
     const home = page.locator('[data-home-today]')
     await expect(home).toBeVisible()
     await expect(home.getByRole('heading', { level: 1 })).toHaveText(/^Good (morning|afternoon|evening), /)
     // Either the first-plant card or the grower's own plants, then at most two feed items with a link to Feed.
     await expect(home.locator('[data-home-first], [data-home-greenhouse]').first()).toBeVisible()
-    expect(await home.locator('[data-feed-update]').count()).toBeLessThanOrEqual(2)
-    await home.getByRole('link', { name: 'Feed' }).click()
-    await expect(page).toHaveURL(/\/feed$/)
+    expect(await home.locator('[data-home-feed] article').count()).toBeLessThanOrEqual(2)
+    // The feed is called Social now; /feed redirects there.
+    await home.getByRole('link', { name: /^Social/ }).click()
+    await expect(page).toHaveURL(/\/social$/)
   })
 
   test('Feed shows activities as photo posts with filters and catalog cards mixed in', async ({ page }) => {

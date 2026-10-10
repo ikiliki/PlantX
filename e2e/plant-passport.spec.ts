@@ -109,6 +109,6 @@ test.describe('plant passport', () => {
     await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
     // Closing goes back to the feed, not the greenhouse.
     await page.keyboard.press('Escape')
-    await expect(page).toHaveURL(/\/feed$/)
+    await expect(page).toHaveURL(/\/social$/)
   })
 })

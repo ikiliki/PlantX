@@ -10,10 +10,6 @@ export const Panel = styled.section`
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
   box-shadow: ${theme.shadow.soft};
-
-  @container (max-width: 899px) {
-    display: none;
-  }
 `
 
 export const Heading = styled.h2`
@@ -26,10 +22,4 @@ export const List = styled.div`
   display: grid;
   gap: 8px;
   min-width: 0;
-`
-
-export const Empty = styled.p`
-  margin: 0 4px 4px;
-  font-size: 13px;
-  color: ${theme.colors.muted};
 `

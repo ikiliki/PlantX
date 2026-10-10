@@ -99,9 +99,9 @@ export function TopBar() {
           </NavItem>
         )}
         {show('feed') && (
-          <NavItem to="/feed" $active={isActive('/feed')} aria-current={isActive('/feed') ? 'page' : undefined}>
+          <NavItem to="/social" $active={isActive('/social')} aria-current={isActive('/social') ? 'page' : undefined}>
             <NavIcon aria-hidden>
-              <Icon name="feed" size={18} />
+              <Icon name="social" size={18} />
             </NavIcon>
             {t.nav.feed}
           </NavItem>

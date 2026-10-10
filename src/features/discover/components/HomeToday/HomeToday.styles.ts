@@ -31,10 +31,52 @@ export const Summary = styled.p`
   color: ${theme.colors.muted};
 `
 
-export const Section = styled.section`
+export const Section = styled.section<{ $last?: boolean; $wideOnly?: boolean }>`
   display: grid;
   gap: ${theme.space.sm};
   min-width: 0;
+
+  @container (max-width: 899px) {
+    ${({ $last }) => ($last ? 'order: 1;' : '')}
+    ${({ $wideOnly }) => ($wideOnly ? 'display: none;' : '')}
+  }
+`
+
+/**
+ * Home's two columns on a wide screen: the day (greeting, care, your greenhouse, top greenhouses, Social)
+ * and a side column (market, rank, catalog). On a phone both columns dissolve into one list.
+ */
+export const Columns = styled.div`
+  display: grid;
+  gap: ${theme.space.lg};
+  min-width: 0;
+
+  @container (min-width: 900px) {
+    grid-template-columns: minmax(0, 1fr) min(360px, 34%);
+    align-items: start;
+  }
+`
+
+export const MainCol = styled.div`
+  display: contents;
+
+  @container (min-width: 900px) {
+    display: grid;
+    gap: ${theme.space.lg};
+    min-width: 0;
+  }
+`
+
+export const SideCol = styled.div`
+  display: contents;
+
+  @container (min-width: 900px) {
+    display: grid;
+    gap: ${theme.space.lg};
+    min-width: 0;
+    position: sticky;
+    top: 88px;
+  }
 `
 
 export const Head = styled.div`

@@ -11,6 +11,8 @@ import { publicGrowerName } from '../../../profile/avatarIcons'
 import { FeedPost, FeedPostSkeleton } from '../../../feed/components/FeedPost/FeedPost'
 import { MarketRail } from '../../../feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../../feed/components/RankRail/RankRail'
+import { TopGreenhouses } from '../../../feed/components/TopGreenhouses/TopGreenhouses'
+import { WikiRail } from '../../../feed/components/WikiRail/WikiRail'
 import { useHomeFeed } from '../../../feed/useHomeFeed'
 import { AddPlantDialog } from '../../../greenhouse/components/AddPlantDialog/AddPlantDialog'
 import { greenhouseLevel } from '../../../greenhouse/greenhouseLevel'
@@ -19,6 +21,9 @@ import { TodoTable } from '../../../todo/components/TodoTable/TodoTable'
 import { canFillTodo, dueTodos } from '../../../todo/todoSchedule'
 import {
   Calm,
+  Columns,
+  MainCol,
+  SideCol,
   First,
   FirstAction,
   FirstBody,
@@ -50,8 +55,8 @@ function greetingKey(hour: number) {
 }
 
 /**
- * Home on a phone for a signed-in grower: a greeting with today's count, today's care, the grower's own
- * plants, then short market, rank and feed sections. Desktop keeps the three-column Home.
+ * Home for a signed-in grower at every width: a greeting with today's count, today's care, the grower's own
+ * plants, top greenhouses, then short market, rank and Social sections; two columns from 900px.
  */
 export function HomeToday() {
   const { t, tr, locale } = useI18n()
@@ -85,6 +90,8 @@ export function HomeToday() {
 
   return (
     <Root data-home-today>
+      <Columns>
+      <MainCol>
       <Hello>
         <Greeting>{t.homeToday[greetingKey(new Date().getHours())].replace('{name}', name)}</Greeting>
         <Summary>
@@ -165,19 +172,13 @@ export function HomeToday() {
         </>
       )}
 
-      <Section data-home-market>
-        <MarketRail />
-      </Section>
-
-      <Section data-home-rank>
-        <RankRail />
-      </Section>
+      <TopGreenhouses />
 
       <FeatureGate placement="home.feed" title={t.nav.feed}>
-        <Section data-home-feed>
+        <Section data-home-feed $last>
           <Head>
             <HeadTitle>{t.homeToday.feed}</HeadTitle>
-            <HeadLink to="/feed">{t.homeToday.feedAll}</HeadLink>
+            <HeadLink to="/social">{t.homeToday.feedAll}</HeadLink>
           </Head>
           {feedWaiting ? (
             Array.from({ length: FEED_PREVIEW }, (_, index) => <FeedPostSkeleton key={index} />)
@@ -191,6 +192,21 @@ export function HomeToday() {
           )}
         </Section>
       </FeatureGate>
+      </MainCol>
+
+      {/* Wide: a side column. Phone: these follow the greenhouse, and Social comes last. */}
+      <SideCol>
+        <Section data-home-market>
+          <MarketRail />
+        </Section>
+        <Section data-home-rank>
+          <RankRail />
+        </Section>
+        <Section data-home-wiki $wideOnly>
+          <WikiRail />
+        </Section>
+      </SideCol>
+      </Columns>
 
       {careTodo && carePlant ? (
         <TodoCareDialog

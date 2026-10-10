@@ -19,7 +19,7 @@
     "configurations": "Configurations",
     "login": "Login",
     "language": "Language",
-    "feed": "Feed",
+    "feed": "Social",
     "toNight": "Switch to the night garden",
     "toDay": "Switch to the sunny garden"
   },
@@ -1254,7 +1254,7 @@
     },
     "systemPreview": "Preview",
     "placement": {
-      "home.feed": "Feed",
+      "home.feed": "Social",
       "home.market": "Market rail",
       "home.rank": "Rank rail",
       "home.wiki": "Catalog rail",
@@ -1274,8 +1274,8 @@
       "passport.todo": "Tasks tab in the passport",
       "rank.board": "Rank stack",
       "wiki.board": "Catalog",
-      "feed.board": "Feed posts",
-      "feed.social": "Feed reactions and comments"
+      "feed.board": "Social posts",
+      "feed.social": "Social reactions and comments"
     },
     "systemItem": "Item",
     "systemStatus": "Status",
@@ -1396,7 +1396,7 @@
     "rejectConfirmLead": "They will not be able to sign in. You can find them later under Decided.",
     "manageInModeration": "Manage in Moderation",
     "commentsTitle": "Comments",
-    "commentsLead": "Newest Feed comments. Remove takes one out for everyone and logs it on the post.",
+    "commentsLead": "Newest comments on Social. Remove takes one out for everyone and logs it on the post.",
     "commentsMock": "Comments are stored on the server; mock mode has none.",
     "commentsFailed": "Could not load comments. Try again.",
     "commentsEmpty": "No comments yet.",
@@ -1408,11 +1408,11 @@
     "serverColReactions": "🌿",
     "serverColComments": "💬",
     "reactionsTitle": "Reactions",
-    "reactionsLead": "Newest 🌿 on Feed posts: who gave it and on which post. Posts are the Activities above.",
+    "reactionsLead": "Newest 🌿 on Social posts: who gave it and on which post. Posts are the Activities above.",
     "reactionsMock": "Reactions are stored on the server; mock mode has none.",
     "reactionsFailed": "Could not load reactions. Try again.",
     "reactionsEmpty": "No reactions yet.",
-    "commentsLeadServer": "Newest Feed comments: who wrote them and on which post. Remove one in Moderation → Comments.",
+    "commentsLeadServer": "Newest comments on Social: who wrote them and on which post. Remove one in Moderation → Comments.",
     "careDefault": "Default",
     "careOff": "Off",
     "careEveryDays": "Every (days)",
@@ -1468,7 +1468,7 @@
     "careNotSet": "Not set",
     "careRuleCount": "{n} rules",
     "reactionsRemove": "Remove",
-    "reactionsLeadModeration": "Newest 🌿 on Feed posts. Remove takes one off its post and logs it."
+    "reactionsLeadModeration": "Newest 🌿 on Social posts. Remove takes one off its post and logs it."
   },
   "settings": {
     "region": "Location",
@@ -1530,7 +1530,7 @@
     "tasksTitle": "Log in to see your tasks",
     "tasksBody": "Watering and photo reminders come from your own plants. Try adding a plant to see how it starts.",
     "homeTitle": "Log in to see what's growing",
-    "homeBody": "The feed shows what growers water, photograph and add. Enjoy the catalog until you log in.",
+    "homeBody": "Social shows what growers water, photograph and add. Enjoy the catalog until you log in.",
     "passportTitle": "Log in to open this passport",
     "passportBody": "A plant's passport belongs to its grower and is shared with members.",
     "introEyebrow": "New to PlantX?",
@@ -1701,7 +1701,7 @@
     "notLaunchedTitle": "This page isn’t open yet",
     "notLaunchedBody": "PlantX isn’t launched. Nothing here is available right now.",
     "backToLanding": "Back",
-    "roomNews": "The feed opens when PlantX launches.",
+    "roomNews": "Social opens when PlantX launches.",
     "roomGreenhouse": "Greenhouses open when PlantX launches.",
     "roomMarket": "The market opens when PlantX launches.",
     "comingSoon": "Coming soon",
@@ -2022,8 +2022,8 @@
     "firstTitle": "Add your first plant",
     "firstBody": "Snap a photo and it gets a passport and care reminders.",
     "firstAction": "Add a plant",
-    "feed": "From the feed",
-    "feedAll": "Feed"
+    "feed": "From Social",
+    "feedAll": "Social"
   },
   "feedPage": {
     "all": "All",

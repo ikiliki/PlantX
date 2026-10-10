@@ -118,7 +118,9 @@ export function AppRoutes() {
         <Route element={<ProductShell />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="home" element={<DiscoverPage />} />
-          <Route path="feed" element={<FeedPage />} />
+          {/* The feed is called Social; /feed stays as a redirect. */}
+          <Route path="social" element={<FeedPage />} />
+          <Route path="feed" element={<Navigate to="/social" replace />} />
           <Route path="dashboard" element={<Navigate to="/greenhouse" replace />} />
           <Route path="market" element={<MarketPage />} />
           <Route path="market/categories" element={<CategoriesPage />} />
