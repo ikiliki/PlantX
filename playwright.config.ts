@@ -27,6 +27,9 @@ export default defineConfig({
     screenshot: 'on',
     video: 'on',
     trace: 'retain-on-failure',
+    // Plant photos come only from the live camera: Chromium's fake camera (a test pattern), access granted.
+    permissions: ['camera'],
+    launchOptions: { args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] },
     extraHTTPHeaders: bypass
       ? { 'x-vercel-protection-bypass': bypass, 'x-vercel-set-bypass-cookie': 'true' }
       : undefined,

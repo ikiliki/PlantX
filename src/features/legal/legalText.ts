@@ -27,7 +27,8 @@ const privacyEn: LegalDoc = {
         'Your Google account name and email address, when you sign in with Google. We use them to create and recognize your account, and we never show them to other members.',
         'Your profile: the nickname and icon you choose. The nickname is your public name. Without one, other members see a generic name such as “Grower 4F2A”.',
         'Your greenhouse place: the area you pick from a list (not your exact location). Your plants show on maps at that area.',
-        'Your plants: photos you upload, the details you enter or confirm, whether each plant is public or private, and its history.',
+        'Your plants: the photos you take, the details you enter or confirm, whether each plant is public or private, and its history.',
+        'Camera: plant photos are taken live with your device’s camera inside PlantX. We keep only the photo you choose to use. We do not record video or sound, and the saved photo carries no location or device details.',
         'Your care activity: tasks, watering and photo dates, and the activity log.',
         'AI scans: the photos you send for identification, the result, and how many scans you used each day.',
         'Usage events: a short list of steps (for example “saved a plant” or “came back another day”) so we can see whether PlantX is useful. They contain no names, emails or photos.',
@@ -40,6 +41,13 @@ const privacyEn: LegalDoc = {
         'We do not sell your data or show ads.',
         'We do not use third-party analytics, advertising trackers or tracking cookies.',
         'We do not process payments. The market records interest only.',
+      ],
+    },
+    {
+      heading: 'Camera access',
+      paragraphs: [
+        'PlantX asks for camera access the first time you add a photo, first in the app and then through your browser’s own permission prompt. The camera is on only while the camera screen is open and turns off when you take the photo or close it. Nothing is sent until you choose Use photo.',
+        'You can refuse or withdraw camera access at any time in your browser or phone settings. Without it you can still browse PlantX, but you cannot add photos, because photos from your gallery or files are not accepted.',
       ],
     },
     {
@@ -119,14 +127,15 @@ const termsEn: LegalDoc = {
       heading: 'Your content',
       paragraphs: [
         'You keep the rights to the photos and text you add. You allow PlantX to store them and to show them inside PlantX as your settings allow (public plants to members; private plants to you and the administrator). This permission ends when you delete the content or your account, apart from backups kept for up to 30 days.',
-        'Only upload photos you took or have the right to use, and do not upload photos of other people without their permission.',
+        'Plant photos must be taken live with your device’s camera inside PlantX, and must show the plant you are adding as it is now. Photos from your gallery, files, screenshots or the internet are not accepted. By adding a photo you allow PlantX to use your camera for that photo (see Camera access in the Privacy Policy).',
+        'Do not photograph other people without their permission.',
       ],
     },
     {
       heading: 'Acceptable use',
       list: [
         'No illegal, offensive or misleading content, and no spam.',
-        'No attempts to break, overload or scrape PlantX, or to get around limits such as daily AI scans.',
+        'No attempts to break, overload or scrape PlantX, or to get around limits such as daily AI scans or the camera-only photo rule (for example by photographing a screen or a printed picture).',
         'No impersonating others or using someone else’s account.',
       ],
       paragraphs: ['We may hide or remove content, or disable an account, that breaks these rules.'],
@@ -176,7 +185,8 @@ const privacyHe: LegalDoc = {
         'השם וכתובת האימייל בחשבון Google שלך, כשנכנסים עם Google. הם משמשים ליצירת החשבון ולזיהוי שלך, ולעולם לא מוצגים לחברים אחרים.',
         'הפרופיל: הכינוי והאייקון שבחרת. הכינוי הוא השם הציבורי שלך. בלי כינוי, חברים אחרים רואים שם כללי כמו “Grower 4F2A”.',
         'מקום החממה: האזור שבחרת מרשימה (לא מיקום מדויק). הצמחים שלך מופיעים במפות באזור הזה.',
-        'הצמחים: תמונות שהעלית, הפרטים שמילאת או אישרת, האם כל צמח ציבורי או פרטי, וההיסטוריה שלו.',
+        'הצמחים: התמונות שצילמת, הפרטים שמילאת או אישרת, האם כל צמח ציבורי או פרטי, וההיסטוריה שלו.',
+        'מצלמה: את תמונות הצמחים מצלמים בזמן אמת במצלמת המכשיר בתוך PlantX. אנחנו שומרים רק את התמונה שבחרת להשתמש בה. אנחנו לא מקליטים וידאו או קול, ובתמונה השמורה אין מיקום או פרטי מכשיר.',
         'פעילות הטיפול: משימות, תאריכי השקיה וצילום, ויומן הפעילות.',
         'סריקות AI: התמונות ששלחת לזיהוי, התוצאה, וכמה סריקות השתמשת בכל יום.',
         'אירועי שימוש: רשימה קצרה של צעדים (למשל “שמר צמח” או “חזר ביום אחר”) כדי לראות אם PlantX מועילה. אין בהם שמות, אימיילים או תמונות.',
@@ -189,6 +199,13 @@ const privacyHe: LegalDoc = {
         'לא מוכרים את המידע שלך ולא מציגים פרסומות.',
         'לא משתמשים באנליטיקה של צד שלישי, במעקב פרסומי או בעוגיות מעקב.',
         'לא מעבדים תשלומים. השוק רושם התעניינות בלבד.',
+      ],
+    },
+    {
+      heading: 'גישה למצלמה',
+      paragraphs: [
+        'PlantX מבקשת גישה למצלמה בפעם הראשונה שמוסיפים תמונה, קודם באפליקציה ואחר כך בבקשת ההרשאה של הדפדפן. המצלמה פועלת רק כשמסך המצלמה פתוח, ונכבית כשמצלמים או סוגרים אותו. שום דבר לא נשלח עד שבוחרים שימוש בתמונה.',
+        'אפשר לסרב או לבטל את הגישה למצלמה בכל עת בהגדרות הדפדפן או הטלפון. בלי גישה אפשר עדיין לגלוש ב-PlantX, אבל אי אפשר להוסיף תמונות, כי תמונות מהגלריה או מקבצים אינן מתקבלות.',
       ],
     },
     {
@@ -262,14 +279,15 @@ const termsHe: LegalDoc = {
       heading: 'התוכן שלך',
       paragraphs: [
         'הזכויות בתמונות ובטקסט שהוספת נשארות שלך. את/ה מתיר/ה ל-PlantX לשמור אותם ולהציג אותם בתוך PlantX לפי ההגדרות שלך (צמחים ציבוריים לחברים; צמחים פרטיים לך ולמנהל). ההיתר מסתיים כשמוחקים את התוכן או את החשבון, מלבד גיבויים שנשמרים עד 30 יום.',
-        'העלו רק תמונות שצילמתם או שיש לכם זכות להשתמש בהן, ואל תעלו תמונות של אנשים אחרים בלי רשותם.',
+        'את תמונות הצמחים יש לצלם בזמן אמת במצלמת המכשיר בתוך PlantX, והן צריכות להראות את הצמח שמוסיפים כמו שהוא היום. תמונות מהגלריה, מקבצים, צילומי מסך או מהאינטרנט אינן מתקבלות. בהוספת תמונה את/ה מתיר/ה ל-PlantX להשתמש במצלמה לצורך התמונה הזו (ראו גישה למצלמה במדיניות הפרטיות).',
+        'אל תצלמו אנשים אחרים בלי רשותם.',
       ],
     },
     {
       heading: 'שימוש מותר',
       list: [
         'בלי תוכן לא חוקי, פוגעני או מטעה, ובלי ספאם.',
-        'בלי ניסיונות לשבור, להעמיס או לגרד את PlantX, או לעקוף מגבלות כמו סריקות AI יומיות.',
+        'בלי ניסיונות לשבור, להעמיס או לגרד את PlantX, או לעקוף מגבלות כמו סריקות AI יומיות או את הכלל של צילום במצלמה בלבד (למשל צילום של מסך או של תמונה מודפסת).',
         'בלי להתחזות לאחרים או להשתמש בחשבון של מישהו אחר.',
       ],
       paragraphs: ['אנחנו רשאים להסתיר או להסיר תוכן, או להשבית חשבון, שמפר את הכללים.'],

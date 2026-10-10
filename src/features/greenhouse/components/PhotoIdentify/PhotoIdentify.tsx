@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { CameraCapture } from '../../../../components/CameraCapture/CameraCapture'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { useMediaQuery } from '../../../../lib/useMediaQuery'
 import { mockIdentify } from '../../../../mock/identifyMock'
 import { postIdentify } from '../../../../mock/liveApi'
 import { STAGE_LABEL } from '../../../../mock/marketNaming'
 import { useStore } from '../../../../mock/store'
 import type { Catalog, Diagnosis, IdentifyTried, Locale, PhotoCheck } from '../../../../mock/types'
-import { readPhoto, thumbPhoto, UnreadablePhotoError } from '../../../../lib/readPhoto'
+import { thumbPhoto } from '../../../../lib/readPhoto'
 import { catalogName } from '../../../catalog/catalog'
 import { MAX_PLANT_PHOTOS, scanActivityText } from '../../identification'
 import { AiScan, type AiScanFact, type AiScanState } from '../AiScan/AiScan'
@@ -24,7 +24,6 @@ import {
   SlotSticker,
   Strip,
   StripHint,
-  Unreadable,
 } from './PhotoIdentify.styles'
 
 /** A fast answer still shows the scan long enough to read. */
@@ -131,14 +130,10 @@ export function PhotoIdentify({
 }) {
   const { t, locale } = useI18n()
   const { db, currentUser, signedIn, liveWritable, plantxEnv, noteActivity, refreshScanQuota, noteScanQuota } = useStore()
-  const fileRef = useRef<HTMLInputElement>(null)
   const started = useRef(new Set<string>())
   const [selectedId, setSelectedId] = useState<string>()
-  const [dragging, setDragging] = useState(false)
-  // The last pick the browser could not decode (format name), shown until a photo reads fine.
-  const [unreadable, setUnreadable] = useState<string | null>(null)
-  // A phone can't drop a file: it takes a photo or picks one from the gallery.
-  const touch = useMediaQuery('(pointer: coarse)')
+  // Photos come only from the live camera: no file picker, gallery or drop.
+  const [camera, setCamera] = useState(false)
 
   const selected = scans.find((scan) => scan.id === selectedId) ?? scans[scans.length - 1]
   const room = Math.max(0, max - scans.length)
@@ -210,47 +205,14 @@ export function PhotoIdentify({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analyze, scans])
 
-  const onFiles = (files: FileList | null | undefined) => {
-    const picked = [...(files ?? [])].filter((file) => file.type.startsWith('image/')).slice(0, room)
-    for (const file of picked) {
-      const id = newScanId()
-      void readPhoto(file).then((dataUrl) => {
-        setUnreadable(null)
-        onScansChange((current) =>
-          current.length >= max
-            ? current
-            : [...current, { id, photo: dataUrl, phase: analyze ? 'identifying' : 'held' }],
-        )
-        setSelectedId(id)
-        if (analyze) begin(id, dataUrl)
-      }, (error: unknown) => {
-        // Never show or send a photo the browser cannot decode: it would look broken and fail the scan.
-        setUnreadable(error instanceof UnreadablePhotoError ? error.format : '')
-      })
-    }
-  }
-
-  const unreadableNote =
-    unreadable === null ? null : (
-      <Unreadable role="alert" data-photo-unreadable>
-        <strong>{t.addPlant.unreadableTitle}</strong>
-        <span>{t.addPlant.unreadableBody.replace('{format}', unreadable || '?')}</span>
-      </Unreadable>
+  const onCapture = (dataUrl: string) => {
+    setCamera(false)
+    const id = newScanId()
+    onScansChange((current) =>
+      current.length >= max ? current : [...current, { id, photo: dataUrl, phase: analyze ? 'identifying' : 'held' }],
     )
-
-  const onDrop = (event: DragEvent) => {
-    event.preventDefault()
-    setDragging(false)
-    onFiles(event.dataTransfer.files)
-  }
-
-  const dragProps = {
-    onDragOver: (event: DragEvent) => {
-      event.preventDefault()
-      setDragging(true)
-    },
-    onDragLeave: () => setDragging(false),
-    onDrop,
+    setSelectedId(id)
+    if (analyze) begin(id, dataUrl)
   }
 
   const remove = (id: string) => {
@@ -258,42 +220,25 @@ export function PhotoIdentify({
     if (id === selectedId) setSelectedId(undefined)
   }
 
-  const input = (
-    <input
-      ref={fileRef}
-      type="file"
-      accept="image/*"
-      multiple={max > 1}
-      hidden
-      onChange={(event) => {
-        onFiles(event.target.files)
-        event.target.value = ''
-      }}
-    />
-  )
+  const cameraLayer = camera ? <CameraCapture onCapture={onCapture} onClose={() => setCamera(false)} /> : null
 
   if (!selected) {
     return (
       <Root>
-        {input}
-        <Drop type="button" $dragging={dragging} onClick={() => fileRef.current?.click()} {...dragProps}>
+        {cameraLayer}
+        <Drop type="button" onClick={() => setCamera(true)} data-camera-open>
           <DropArt aria-hidden>
             <span>✦</span>
           </DropArt>
           <DropCopy>
             <strong>
-              {max > 1
-                ? t.addPlant.dropTitle.replace('{max}', String(max))
-                : touch
-                  ? t.addPlant.dropTitleTouch
-                  : t.addPlant.dropTitleOne}
+              {max > 1 ? t.addPlant.dropTitle.replace('{max}', String(max)) : t.addPlant.dropTitleOne}
             </strong>
             <small>
-              {max > 1 ? t.addPlant.dropHint.replace('{max}', String(max)) : touch ? t.addPlant.dropHintTouch : t.addPlant.dropHintOne}
+              {max > 1 ? t.addPlant.dropHint.replace('{max}', String(max)) : t.addPlant.dropHintOne}
             </small>
           </DropCopy>
         </Drop>
-        {unreadableNote}
       </Root>
     )
   }
@@ -323,7 +268,7 @@ export function PhotoIdentify({
 
   return (
     <Root>
-      {input}
+      {cameraLayer}
       <AiScan
         key={selected.id}
         photo={selected.photo}
@@ -342,7 +287,6 @@ export function PhotoIdentify({
         onRemove={max <= 1 ? () => remove(selected.id) : undefined}
         removeLabel={t.addPlant.removePhoto.replace('{n}', '1')}
       />
-      {unreadableNote}
       {max > 1 && (
       <>
       <Strip aria-label={t.addPlant.photoStrip.replace('{n}', String(scans.length)).replace('{max}', String(max))}>
@@ -367,7 +311,7 @@ export function PhotoIdentify({
           )
         })}
         {room > 0 ? (
-          <AddSlot type="button" $dragging={dragging} onClick={() => fileRef.current?.click()} {...dragProps}>
+          <AddSlot type="button" onClick={() => setCamera(true)} data-camera-open>
             <span aria-hidden>+</span>
             <strong>{t.addPlant.addPhoto}</strong>
             <small>

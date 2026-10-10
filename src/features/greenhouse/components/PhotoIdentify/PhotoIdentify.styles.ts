@@ -1,4 +1,4 @@
-import styled, { css, keyframes } from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 
@@ -18,7 +18,7 @@ export const Root = styled.div`
   min-width: 0;
 `
 
-export const Drop = styled.button<{ $dragging: boolean }>`
+export const Drop = styled.button`
   ${pressable}
   display: grid;
   justify-items: center;
@@ -26,7 +26,7 @@ export const Drop = styled.button<{ $dragging: boolean }>`
   width: 100%;
   padding: 44px 20px;
   border-radius: ${theme.radii.lg};
-  border: 2px dashed ${({ $dragging }) => ($dragging ? theme.colors.forest : theme.colors.border)};
+  border: 2px dashed ${theme.colors.border};
   background:
     radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c-growth) 35%, transparent), transparent 60%),
     ${theme.colors.creamCard};
@@ -39,12 +39,6 @@ export const Drop = styled.button<{ $dragging: boolean }>`
     border-color: ${theme.colors.moss};
   }
 
-  ${({ $dragging }) =>
-    $dragging &&
-    css`
-      transform: scale(1.01);
-      box-shadow: 0 0 0 6px ${theme.colors.chipGreen};
-    `}
 `
 
 export const DropArt = styled.span`
@@ -188,7 +182,7 @@ export const Remove = styled.button`
   box-shadow: ${theme.shadow.soft};
 `
 
-export const AddSlot = styled.button<{ $dragging: boolean }>`
+export const AddSlot = styled.button`
   ${pressable}
   display: grid;
   align-content: center;
@@ -197,9 +191,9 @@ export const AddSlot = styled.button<{ $dragging: boolean }>`
   aspect-ratio: 1;
   min-width: 0;
   padding: 8px;
-  border: 2px dashed ${({ $dragging }) => ($dragging ? theme.colors.forest : theme.colors.border)};
+  border: 2px dashed ${theme.colors.border};
   border-radius: ${theme.radii.md};
-  background: ${({ $dragging }) => ($dragging ? theme.colors.chipGreen : theme.colors.creamCard)};
+  background: ${theme.colors.creamCard};
   color: ${theme.colors.forest};
   font: inherit;
   text-align: center;
@@ -234,20 +228,3 @@ export const StripHint = styled.p`
   text-align: center;
 `
 
-/** A picked photo the browser cannot decode (e.g. HEIC on Chrome): what happened and what to do. */
-export const Unreadable = styled.div`
-  display: grid;
-  gap: 4px;
-  margin-top: 10px;
-  padding: 12px 14px;
-  border-radius: ${theme.radii.md};
-  background: ${theme.colors.chipWarm};
-  color: ${theme.colors.ink};
-  font-size: 13px;
-  line-height: 1.5;
-  text-align: start;
-
-  strong {
-    color: ${theme.colors.danger};
-  }
-`

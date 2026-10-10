@@ -1,4 +1,4 @@
-import { MEMBER, expect, expectPage, openAddPlant, plantPhoto, signIn, test } from './support'
+import { MEMBER, expect, expectPage, openAddPlant, takePhoto, signIn, test } from './support'
 
 /** W0 / W4 pieces of PR #65: scan quota (#67), moderation (#69), wording (#20), calendar names (#44). */
 test.describe('signed in', () => {
@@ -51,7 +51,7 @@ test.describe('member scan allowance', () => {
     )
     const dialog = await openAddPlant(page)
     await expect(dialog.locator('[data-scan-quota]')).toContainText('None left')
-    await dialog.locator('input[type=file]').first().setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
     await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeEnabled()
   })
