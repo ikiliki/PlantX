@@ -1,12 +1,18 @@
 import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
-import { GreenhouseCard, greenhouseHref, greenhouseShelf } from '../../../greenhouse/components/GreenhouseCard/GreenhouseCard'
+import { Head, HeadLink, HeadTitle, Section } from '../../../discover/components/HomeToday/HomeToday.styles'
+import {
+  GreenhouseCard,
+  GreenhouseCardSkeleton,
+  greenhouseHref,
+  greenhouseShelf,
+} from '../../../greenhouse/components/GreenhouseCard/GreenhouseCard'
 import { isPublicGreenhouse } from '../../../greenhouse/components/GreenhouseDirectory/GreenhouseDirectory'
 import { useGreenhouseLevelsState } from '../../../greenhouse/useGreenhouseLevels'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { useSectionFetch } from '../../../../mock/useServerSlices'
 import type { Plant, User } from '../../../../mock/types'
-import { Heading, List, Panel } from './TopGreenhouses.styles'
+import { Heading, List, Panel, Strip } from './TopGreenhouses.styles'
 
 const TOP = 3
 
@@ -15,17 +21,27 @@ function livingCount(plants: Plant[], ownerId: string) {
 }
 
 /**
- * Home: the top three greenhouses by XP (other growers', with plants), then the verified greenhouses.
- * Each list shows only when it has greenhouses; nothing at all when neither does. Skeletons while levels load.
+ * The top three greenhouses by XP (other growers', with plants), then the verified greenhouses; nothing when
+ * neither has any. `strip` (the daily Home): one sideways row of the Global cards with a link to all greenhouses.
+ * Otherwise (the desktop rail): two compact lists. Skeletons while levels load.
  */
-export function TopGreenhouses() {
+export function TopGreenhouses({ strip = false }: { strip?: boolean }) {
   const { t } = useI18n()
   const { db, currentUser } = useStore()
   const { levels, ready } = useGreenhouseLevelsState()
   const waiting = useSectionFetch(Boolean(currentUser), ['users', 'plants']) || !ready
+  const verifiedIds = db.verifiedGreenhouseIds ?? []
 
   if (waiting) {
-    return (
+    return strip ? (
+      <Section aria-busy data-top-greenhouses-loading>
+        <SkeletonBar width="40%" height={18} />
+        <Strip>
+          <GreenhouseCardSkeleton />
+          <GreenhouseCardSkeleton />
+        </Strip>
+      </Section>
+    ) : (
       <Panel aria-busy data-top-greenhouses-loading>
         <SkeletonBar width="40%" height={16} />
         <SkeletonBar height={64} />
@@ -42,7 +58,8 @@ export function TopGreenhouses() {
       plantCount={livingCount(db.plants, user.id)}
       photos={greenhouseShelf(db.plants, user.id)}
       verified={verified}
-      compact
+      level={strip ? levels[user.id] : undefined}
+      compact={!strip}
     />
   )
 
@@ -55,18 +72,35 @@ export function TopGreenhouses() {
         a.name.localeCompare(b.name),
     )
     .slice(0, TOP)
-  const verified = (db.verifiedGreenhouseIds ?? [])
+  const verified = verifiedIds
     .map((id) => db.users.find((user) => user.id === id && isPublicGreenhouse(user, currentUser)))
     .filter((user): user is User => Boolean(user))
 
   if (top.length === 0 && verified.length === 0) return null
+
+  if (strip) {
+    // One row: the top three, then the verified ones not already among them.
+    const extra = verified.filter((user) => !top.some((item) => item.id === user.id))
+    return (
+      <Section aria-label={t.feed.topGreenhouses} data-top-greenhouses>
+        <Head>
+          <HeadTitle>{t.feed.topGreenhouses}</HeadTitle>
+          <HeadLink to="/greenhouse?scope=global">{t.homeToday.greenhousesAll}</HeadLink>
+        </Head>
+        <Strip>
+          {top.map((user) => card(user, verifiedIds.includes(user.id)))}
+          {extra.map((user) => card(user, true))}
+        </Strip>
+      </Section>
+    )
+  }
 
   return (
     <>
       {top.length > 0 ? (
         <Panel aria-label={t.feed.topGreenhouses} data-top-greenhouses>
           <Heading>{t.feed.topGreenhouses}</Heading>
-          <List>{top.map((user) => card(user, (db.verifiedGreenhouseIds ?? []).includes(user.id)))}</List>
+          <List>{top.map((user) => card(user, verifiedIds.includes(user.id)))}</List>
         </Panel>
       ) : null}
       {verified.length > 0 ? (

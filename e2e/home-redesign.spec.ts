@@ -30,7 +30,9 @@ test.describe('member Home and Feed', () => {
     await signIn(page, MEMBER)
   })
 
-  test('Home opens with a greeting and short sections, not the endless feed (phone and desktop)', async ({ page }) => {
+  test('phone Home opens with a greeting and short sections, not the endless feed', async ({ page }, testInfo) => {
+    // The daily Home is a per-device flag (home.today): on for phones, off on desktop for now.
+    test.skip(testInfo.project.name !== 'phone', 'Desktop keeps the columns while home.today is off there')
     await expectPage(page, '/home')
     const home = page.locator('[data-home-today]')
     await expect(home).toBeVisible()
@@ -38,6 +40,12 @@ test.describe('member Home and Feed', () => {
     // Either the first-plant card or the grower's own plants, then at most two feed items with a link to Feed.
     await expect(home.locator('[data-home-first], [data-home-greenhouse]').first()).toBeVisible()
     expect(await home.locator('[data-home-feed] article').count()).toBeLessThanOrEqual(2)
+    // Top greenhouses, when there are any, are one sideways row with a link to every greenhouse.
+    const top = home.locator('[data-top-greenhouses]')
+    if ((await top.count()) > 0) {
+      await expect(top.getByRole('link', { name: /^All greenhouses/ })).toHaveAttribute('href', '/greenhouse?scope=global')
+      expect(await top.locator('[data-greenhouse]').count()).toBeGreaterThan(0)
+    }
     // The feed is called Social now; /feed redirects there.
     await home.getByRole('link', { name: /^Social/ }).click()
     await expect(page).toHaveURL(/\/social$/)

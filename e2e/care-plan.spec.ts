@@ -91,9 +91,8 @@ test.describe('care plan', () => {
     await expect(passport.locator('[data-care-kind="feed"]')).toContainText('2d overdue')
     // Turning to the light is only for linked categories: a pothos does not get it.
     await expect(passport.locator('[data-care-kind="rotate"]')).toHaveCount(0)
-    // The 12 weeks read as one square per week, with a legend.
-    await expect(passport.locator('[data-care-weeks] li')).toHaveCount(12)
-    await expect(passport.getByText('Nothing due', { exact: true })).toBeVisible()
+    // No week-by-week strip: the plan, then the history.
+    await expect(passport.locator('[data-care-weeks]')).toHaveCount(0)
 
     await passport.getByRole('button', { name: 'Edit Water' }).click()
     const editor = page.getByRole('dialog', { name: 'Edit Water' })

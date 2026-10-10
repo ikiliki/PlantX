@@ -392,3 +392,35 @@ export const Select = styled.select`
     box-shadow: ${theme.shadow.focus};
   }
 `
+
+/** Phone / Desktop switches for one component: pressed = shown on that device. */
+export const DeviceChips = styled.div`
+  display: inline-flex;
+  gap: 6px;
+`
+
+export const DeviceChip = styled.button`
+  min-height: 36px;
+  padding: 4px 12px;
+  border-radius: ${theme.radii.pill};
+  border: 1px solid ${theme.colors.border};
+  background: ${theme.colors.creamCard};
+  color: ${theme.colors.muted};
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: line-through;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    background: ${theme.colors.forest};
+    border-color: ${theme.colors.forest};
+    color: ${theme.colors.creamCard};
+    text-decoration: none;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+`

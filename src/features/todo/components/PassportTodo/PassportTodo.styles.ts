@@ -118,65 +118,6 @@ export const Copy = styled.div`
   }
 `
 
-/** Twelve week cells, oldest first; a filled cell had care that week, in the colour of its first kind. */
-export const Weeks = styled.ol`
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 4px;
-  max-width: 360px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-`
-
-type WeekState = 'all' | 'some' | 'missed' | 'none'
-
-/** A week's colour: green all done, yellow some, red missed, grey nothing due. */
-const weekColor = (state: WeekState) =>
-  state === 'all'
-    ? theme.colors.moss
-    : state === 'some'
-      ? '#E0B03C'
-      : state === 'missed'
-        ? theme.colors.danger
-        : 'color-mix(in srgb, var(--c-forest) 10%, transparent)'
-
-export const Week = styled.li<{ $state: WeekState }>`
-  aspect-ratio: 1;
-  border-radius: 4px;
-  background: ${({ $state }) => weekColor($state)};
-`
-
-/** "12 weeks ago" under the first square, "This week" under the last. */
-export const WeekEnds = styled.div`
-  display: flex;
-  justify-content: space-between;
-  max-width: 360px;
-  font-size: 11px;
-  color: ${theme.colors.muted};
-`
-
-export const Legend = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  font-size: 12px;
-  color: ${theme.colors.muted};
-
-  span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-`
-
-export const LegendDot = styled.i<{ $state: WeekState }>`
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: ${({ $state }) => weekColor($state)};
-`
-
 /** Optional tasks the owner can take on: a row of + chips under the plan. */
 export const AddRow = styled.div`
   display: flex;

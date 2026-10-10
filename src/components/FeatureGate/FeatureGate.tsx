@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useI18n } from '../../i18n/I18nProvider'
+import { useDevice } from '../../lib/useDevice'
 import { useStore } from '../../mock/store'
 import { PLACEMENTS, placementRelease, type PlacementId, type ReleaseMode } from '../../theme/release'
 import { Banner, Body, Card, Frame, Live, Mark, Scrim, Title } from './FeatureGate.styles'
@@ -10,7 +11,7 @@ function statusLabel(status: ReleaseMode, t: ReturnType<typeof useI18n>['t']) {
 }
 
 /**
- * Gates a feature entry from Admin → System.
+ * Gates a feature entry from Admin → System, on this device (phone / desktop switches).
  * When the feature is not ready, keep the mocked UI visible under a blur and a compact banner.
  * Pages are containers of features — never replace a page with an empty notice.
  */
@@ -30,7 +31,7 @@ export function FeatureGate({
 }) {
   const { t } = useI18n()
   const { db } = useStore()
-  const config = placementRelease(db.system, placement)
+  const config = placementRelease(db.system, placement, useDevice())
   const featureId = PLACEMENTS.find((item) => item.id === placement)?.featureId
 
   if (!config.enabled) return null

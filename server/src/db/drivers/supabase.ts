@@ -1021,7 +1021,11 @@ export function createSupabaseStore(): PlantxStore {
     }
     const placementMap = {} as SystemConfig['placements']
     for (const row of placements) {
-      placementMap[text(row, 'placement_id') as PlacementId] = { enabled: Boolean(row.enabled) }
+      placementMap[text(row, 'placement_id') as PlacementId] = {
+        enabled: Boolean(row.enabled),
+        phone: Boolean(row.phone),
+        desktop: Boolean(row.desktop),
+      }
     }
     return {
       launched: Boolean(config[0].launched),
@@ -1050,10 +1054,10 @@ export function createSupabaseStore(): PlantxStore {
       )
     }
     for (const [placementId, placement] of Object.entries(system.placements)) {
-      await client.query('insert into system_placements (placement_id, enabled) values ($1, $2)', [
-        placementId,
-        placement.enabled,
-      ])
+      await client.query(
+        'insert into system_placements (placement_id, enabled, phone, desktop) values ($1, $2, $3, $4)',
+        [placementId, placement.enabled, placement.phone, placement.desktop],
+      )
     }
   }
 }

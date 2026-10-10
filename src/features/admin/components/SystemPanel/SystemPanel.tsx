@@ -10,6 +10,7 @@ import {
   PAGE_IDS,
   PLAIN,
   PLACEMENTS,
+  type DeviceId,
   type FeatureId,
   type PageId,
   type PageStatus,
@@ -24,6 +25,8 @@ import {
   Block,
   Chevron,
   ComponentStack,
+  DeviceChip,
+  DeviceChips,
   Controls,
   Count,
   Group,
@@ -51,6 +54,7 @@ import {
   Shell,
 } from './SystemPanel.styles'
 
+const DEVICES: DeviceId[] = ['phone', 'desktop']
 const PAGE_STATUSES: PageStatus[] = ['live', 'maintenance']
 const RELEASE_MODES: ReleaseMode[] = ['ready', 'comingSoon', 'maintenance']
 const FEATURE_ORDER: FeatureId[] = ['news', 'market', 'greenhouse', 'todo', 'rank', 'wiki']
@@ -129,7 +133,7 @@ function featureStatusLabel(status: ReleaseMode, t: ReturnType<typeof useI18n>['
 
 export function SystemPanel() {
   const { t } = useI18n()
-  const { db, systemPending, setAppLaunched, setPageStatus, setFeatureEnabled, setFeatureStatus, setPlacementEnabled } =
+  const { db, systemPending, setAppLaunched, setPageStatus, setFeatureEnabled, setFeatureStatus, setPlacementEnabled, setPlacementDevice } =
     useStore()
   const locked = systemPending !== null
   const [appOpen, setAppOpen] = useState(true)
@@ -365,6 +369,25 @@ export function SystemPanel() {
                                             <MountPath pageId={item.pageId} id={item.id} />
                                           </NameCell>
                                           <Controls>
+                                            {feature.enabled && shown ? (
+                                              <DeviceChips role="group" aria-label={t.admin.systemDevices}>
+                                                {DEVICES.map((device) => {
+                                                  const on = db.system.placements[item.id][device]
+                                                  return (
+                                                    <DeviceChip
+                                                      key={device}
+                                                      type="button"
+                                                      aria-pressed={on}
+                                                      aria-busy={systemPending === `placement:${item.id}:${device}`}
+                                                      disabled={locked}
+                                                      onClick={() => setPlacementDevice(item.id as PlacementId, device, !on)}
+                                                    >
+                                                      {device === 'phone' ? t.admin.systemPhone : t.admin.systemDesktop}
+                                                    </DeviceChip>
+                                                  )
+                                                })}
+                                              </DeviceChips>
+                                            ) : null}
                                             {!feature.enabled ? (
                                               <Ok>{t.admin.systemDisabled}</Ok>
                                             ) : (

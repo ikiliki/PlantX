@@ -40,7 +40,7 @@ import type {
   Todo,
   User,
 } from './types'
-import { PLACEMENTS, type FeatureId, type PageId, type PageStatus, type PlacementId, type ReleaseMode } from '../theme/release'
+import { PLACEMENTS, type DeviceId, type FeatureId, type PageId, type PageStatus, type PlacementId, type ReleaseMode } from '../theme/release'
 import { publishBlocker } from '../features/greenhouse/communityGrade'
 import { supportedLocales } from '../i18n/locales'
 import { defaultPlantPhoto } from './images'
@@ -207,6 +207,7 @@ interface StoreApi {
   setFeatureEnabled: (featureId: FeatureId, enabled: boolean) => void
   setFeatureStatus: (featureId: FeatureId, status: ReleaseMode) => void
   setPlacementEnabled: (placement: PlacementId, enabled: boolean) => void
+  setPlacementDevice: (placement: PlacementId, device: DeviceId, on: boolean) => void
   loginAs: (userId: string | null) => void
   loginByEmail: (email: string) => Promise<boolean>
   /** Google Identity Services ID token → session. */
@@ -853,7 +854,13 @@ export function StoreProvider({
       if (item?.required && !enabled) return
       void saveSystem(`placement:${placement}`, {
         ...db.system,
-        placements: { ...db.system.placements, [placement]: { enabled } },
+        placements: { ...db.system.placements, [placement]: { ...db.system.placements[placement], enabled } },
+      })
+    },
+    setPlacementDevice: (placement, device, on) => {
+      void saveSystem(`placement:${placement}:${device}`, {
+        ...db.system,
+        placements: { ...db.system.placements, [placement]: { ...db.system.placements[placement], [device]: on } },
       })
     },
     loginAs: (userId) => {

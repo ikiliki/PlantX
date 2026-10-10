@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react'
+import { HomeToday } from '../../../discover/components/HomeToday/HomeToday'
 import { MarketRail } from '../../../feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../../feed/components/RankRail/RankRail'
 import { WikiRail } from '../../../feed/components/WikiRail/WikiRail'
@@ -111,6 +112,8 @@ function previewFor(id: PlacementId): ReactNode {
       return <WikiRail />
     case 'home.todo':
       return <TodoPage />
+    case 'home.today':
+      return <HomeToday />
     case 'market.board':
       return <MarketPage />
     case 'market.class':

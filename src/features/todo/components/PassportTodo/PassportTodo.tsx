@@ -7,32 +7,22 @@ import type { CareRule, Plant, PlantCare, Todo, TodoSubcategory } from '../../..
 import { EditPencil, InlineEdit } from '../../../greenhouse/components/InlineEdit/InlineEdit'
 import { CARE_INTERVAL_CHOICES, careFor, careResting, type EffectiveCare } from '../../carePlan'
 import { useCareTasks } from '../../careKinds'
-import { addDays, isFirstWaterTodo, isOpenTodo, todayIso } from '../../todoSchedule'
+import { isFirstWaterTodo, isOpenTodo, todayIso } from '../../todoSchedule'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
 import {
   AddChip,
   AddRow,
   Block,
-  BlockHead,
   Copy,
   DoneRow,
   Due,
   Empty,
   Kind,
-  Legend,
-  LegendDot,
   List,
   PlanRow,
   PrivateNote,
   Root,
-  Week,
-  WeekEnds,
-  Weeks,
 } from './PassportTodo.styles'
-
-const WEEKS = 12
-
-type WeekState = 'all' | 'some' | 'missed' | 'none'
 
 function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000)
@@ -42,7 +32,7 @@ function daysBetween(from: string, to: string) {
  * The passport Tasks tab (the grower's own): the care plan, one row per task with how often, last done and
  * next due. The pencil offers the catalog's suggestion first (marked default; AI's when AI suggested it), other
  * intervals, and pause; a task with no interval anywhere says so and gets a "Set schedule" task. Optional tasks
- * can be added. Then the last twelve weeks, each green / yellow / red / grey, and the care history.
+ * can be added. Then the care history.
  */
 export function PassportTodo({
   plant,
@@ -110,30 +100,6 @@ export function PassportTodo({
     if (ok) setEditing(null)
     return ok
   }
-
-  // Twelve weeks, oldest first: what was due in each and how much of it got done. Something due today and
-  // not done yet is still on time, so it does not count until tomorrow.
-  const weeks = Array.from({ length: WEEKS }, (_, index) => {
-    const end = addDays(today, -(WEEKS - 1 - index) * 7)
-    const start = addDays(end, -6)
-    const due = plantTodos.filter(
-      (todo) =>
-        todo.dueOn != null &&
-        todo.dueOn >= start &&
-        todo.dueOn <= end &&
-        (todo.completedOn != null || todo.dueOn < today),
-    )
-    const done = due.filter((todo) => todo.completedOn != null).length
-    const state: WeekState = due.length === 0 ? 'none' : done === due.length ? 'all' : done > 0 ? 'some' : 'missed'
-    const line =
-      due.length === 0
-        ? t.passport.careWeekEmpty.replace('{day}', shortDate(start))
-        : t.passport.careWeekLine
-            .replace('{day}', shortDate(start))
-            .replace('{done}', String(done))
-            .replace('{due}', String(due.length))
-    return { state, line }
-  })
 
   const history = plantTodos
     .filter((todo) => todo.completedOn != null)
@@ -250,35 +216,6 @@ export function PassportTodo({
             ))}
           </AddRow>
         ) : null}
-      </Block>
-
-      <Block>
-        <BlockHead>
-          <h3>{t.passport.careWeeksTitle}</h3>
-        </BlockHead>
-        <Weeks data-care-weeks>
-          {weeks.map((week, index) => (
-            <Week key={index} $state={week.state} title={week.line} aria-label={week.line} />
-          ))}
-        </Weeks>
-        <WeekEnds aria-hidden>
-          <span>{t.passport.careWeeksAgo}</span>
-          <span>{t.passport.careThisWeek}</span>
-        </WeekEnds>
-        <Legend>
-          <span>
-            <LegendDot $state="all" /> {t.passport.careWeekAll}
-          </span>
-          <span>
-            <LegendDot $state="some" /> {t.passport.careWeekSome}
-          </span>
-          <span>
-            <LegendDot $state="missed" /> {t.passport.careWeekMissed}
-          </span>
-          <span>
-            <LegendDot $state="none" /> {t.passport.careWeekNone}
-          </span>
-        </Legend>
       </Block>
 
       <Block>

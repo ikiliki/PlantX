@@ -172,7 +172,7 @@ export function HomeToday() {
         </>
       )}
 
-      <TopGreenhouses />
+      <TopGreenhouses strip />
 
       <FeatureGate placement="home.feed" title={t.nav.feed}>
         <Section data-home-feed $last>
