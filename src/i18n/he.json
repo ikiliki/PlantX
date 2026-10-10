@@ -360,7 +360,10 @@
     "nowDone": "בוצע עכשיו",
     "nowFrom": "נפתח מתוך",
     "moreDetails": "עוד פרטים ({n})",
-    "priceFrom": "מכירה אחרונה {last} · רצפה {floor}"
+    "priceFrom": "מכירה אחרונה {last} · רצפה {floor}",
+    "storyPrivateOwner": "בינתיים רק את/ה רואה את הפעילות של הצמח הזה.",
+    "storyPrivateAdmin": "פרטי למגדל/ת. את/ה רואה את זה כמנהל/ת.",
+    "storyPrivateOther": "הפעילות של הצמח הזה פרטית ל־{name} בינתיים."
   },
   "greenhouse": {
     "myGreenhouse": "שלי",

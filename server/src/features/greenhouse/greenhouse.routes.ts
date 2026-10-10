@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { Plant, User } from '../../../../src/mock/types.ts'
+import { canSeePlantStory } from '../../../../src/features/greenhouse/plantStory.ts'
 import { signedIn, type SignedInEnv } from '../../lib/session.ts'
 import { activityService, visibleTo } from '../activity/activity.service.ts'
 import { todoService } from '../todo/todo.service.ts'
@@ -53,12 +54,14 @@ greenhouseRoutes.delete('/:id', async (c) => {
   return c.json({ plantId: plant.id, activity })
 })
 
-/** Plant card / passport: plant from greenhouse, timeline from activity. */
+/** Passport story: the plant's activity, for its grower and admins only (private for now). */
 greenhouseRoutes.get('/:id/activities', async (c) => {
-  const plant = await visiblePlant(c.req.param('id'), c.get('user'))
+  const user = c.get('user')
+  const plant = await visiblePlant(c.req.param('id'), user)
+  if (!canSeePlantStory(plant, user)) return c.json({ plantId: plant.id, activities: [] })
   return c.json({
     plantId: plant.id,
-    activities: await visibleTo(await activityService.listForPlant(plant.id), c.get('user')),
+    activities: await visibleTo(await activityService.listForPlant(plant.id), user),
   })
 })
 

@@ -360,7 +360,10 @@
     "nowDone": "Just done",
     "nowFrom": "Opened from",
     "moreDetails": "More details ({n})",
-    "priceFrom": "Last sale {last} · floor {floor}"
+    "priceFrom": "Last sale {last} · floor {floor}",
+    "storyPrivateOwner": "Only you can see this plant's activity for now.",
+    "storyPrivateAdmin": "Private to its grower. You see it as an admin.",
+    "storyPrivateOther": "This plant's activity is private to {name} for now."
   },
   "greenhouse": {
     "myGreenhouse": "Mine",

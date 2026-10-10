@@ -29,6 +29,7 @@ import type { SizeBand, StageBand, TodoSubcategory } from '../../../../mock/type
 import { canSeeActivity } from '../../../feed/activityXp'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
 import { passportNow } from '../../passportNow'
+import { canSeePlantStory } from '../../plantStory'
 import { CatalogMark } from '../CatalogMark/CatalogMark'
 import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
@@ -75,6 +76,7 @@ import {
   ShowMore,
   CategoryName,
   StatNote,
+  StoryNote,
   SubName,
   Tab,
   TaxonomyItem,
@@ -338,7 +340,14 @@ export function PlantPassport({
   const titleLast = titleCut > 0 ? shownTitle.slice(titleCut + 1) : shownTitle
 
   // Story: activity (or the stored history) and community grades in one timeline, newest first.
-  const fromActivity = (db.updates ?? []).filter(
+  // The activity part is private to the grower (and admins) for now; others see the grades and a note why.
+  const storyOpen = canSeePlantStory(plant, signedIn ? currentUser : null)
+  const storyNote = !storyOpen
+    ? t.passport.storyPrivateOther.replace('{name}', ownerName || t.passport.owner)
+    : isOwner
+      ? t.passport.storyPrivateOwner
+      : t.passport.storyPrivateAdmin
+  const fromActivity = (storyOpen ? (db.updates ?? []) : []).filter(
     (item) => item.plantId === plant.id && canSeeActivity(item, signedIn ? currentUser : null),
   )
   const checks = plant.identification?.photos
@@ -368,7 +377,7 @@ export function PlantPassport({
             ),
           }
         })
-      : plant.history.map((entry, index) => ({
+      : (storyOpen ? plant.history : []).map((entry, index) => ({
           key: `${plant.id}:${index}`,
           at: entry.at,
           body: <span>{tr(entry.label, entry.labelHe)}</span>,
@@ -701,9 +710,15 @@ export function PlantPassport({
         </TabBar>
 
         <Panel role="tabpanel" $embedded={embedded} $dialog={dialog}>
+          {activeTab === 'story' && (
+            <StoryNote data-passport-story-note={storyOpen ? 'grower' : 'private'}>
+              <Icon name="lock" size={14} />
+              <span>{storyNote}</span>
+            </StoryNote>
+          )}
           {activeTab === 'story' &&
             (storyRows.length === 0 ? (
-              <Muted>{t.passport.noHistory}</Muted>
+              storyOpen ? <Muted>{t.passport.noHistory}</Muted> : null
             ) : (
               <Timeline data-passport-story>
                 {storyRows.map((row) => (
