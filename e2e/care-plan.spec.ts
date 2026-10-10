@@ -82,6 +82,8 @@ test.describe('care plan', () => {
     test.skip((await tasksTab.count()) === 0, 'the passport Tasks tab is off here')
     await tasksTab.click()
 
+    // Tasks are the grower's alone, and the tab says so.
+    await expect(passport.locator('[data-tasks-private]')).toContainText('Only you can see these tasks.')
     for (const kind of ['water', 'photo', 'feed', 'repot']) {
       await expect(passport.locator(`[data-care-kind="${kind}"]`)).toBeVisible()
     }

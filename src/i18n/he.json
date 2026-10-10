@@ -385,7 +385,8 @@
     "careAdd": "הוספת משימה",
     "careNoSchedule": "עוד אין תדירות",
     "careResume": "להפעיל שוב",
-    "carePaused": "מושהה"
+    "carePaused": "מושהה",
+    "careOnlyYou": "רק את/ה רואה את המשימות האלה."
   },
   "greenhouse": {
     "myGreenhouse": "שלי",

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
+import { Icon } from '../../../../components/Icon/Icon'
 import type { CareRule, Plant, PlantCare, Todo, TodoSubcategory } from '../../../../mock/types'
 import { EditPencil, InlineEdit } from '../../../greenhouse/components/InlineEdit/InlineEdit'
 import { CARE_INTERVAL_CHOICES, careFor, careResting, type EffectiveCare } from '../../carePlan'
@@ -22,6 +23,7 @@ import {
   LegendDot,
   List,
   PlanRow,
+  PrivateNote,
   Root,
   Week,
   WeekEnds,
@@ -142,6 +144,11 @@ export function PassportTodo({
 
   return (
     <Root>
+      {/* Tasks are the grower's own; the story is what others see. */}
+      <PrivateNote data-tasks-private>
+        <Icon name="lock" size={14} />
+        <span>{t.passport.careOnlyYou}</span>
+      </PrivateNote>
       <Block>
         <h3>{t.passport.carePlan}</h3>
         <List>

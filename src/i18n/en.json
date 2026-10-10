@@ -385,7 +385,8 @@
     "careAdd": "Add a task",
     "careNoSchedule": "No schedule yet",
     "careResume": "Turn back on",
-    "carePaused": "Paused"
+    "carePaused": "Paused",
+    "careOnlyYou": "Only you can see these tasks."
   },
   "greenhouse": {
     "myGreenhouse": "Mine",
