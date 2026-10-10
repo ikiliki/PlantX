@@ -8,7 +8,7 @@ import { useSectionFetch } from '../../../../mock/useServerSlices'
 import { isFeatureEnabled } from '../../../../theme/release'
 import type { Todo } from '../../../../mock/types'
 import { publicGrowerName } from '../../../profile/avatarIcons'
-import { FeedUpdate, FeedUpdateSkeleton, SKELETON_FEED_KINDS } from '../../../feed/components/FeedUpdate/FeedUpdate'
+import { FeedPost, FeedPostSkeleton } from '../../../feed/components/FeedPost/FeedPost'
 import { MarketRail } from '../../../feed/components/MarketRail/MarketRail'
 import { RankRail } from '../../../feed/components/RankRail/RankRail'
 import { useHomeFeed } from '../../../feed/useHomeFeed'
@@ -180,12 +180,12 @@ export function HomeToday() {
             <HeadLink to="/feed">{t.homeToday.feedAll}</HeadLink>
           </Head>
           {feedWaiting ? (
-            SKELETON_FEED_KINDS.slice(0, FEED_PREVIEW).map((kind, index) => <FeedUpdateSkeleton key={index} kind={kind} />)
+            Array.from({ length: FEED_PREVIEW }, (_, index) => <FeedPostSkeleton key={index} />)
           ) : (
             <>
               {items.length === 0 ? <Calm>{t.feed.empty}</Calm> : null}
               {items.slice(0, FEED_PREVIEW).map((item) => (
-                <FeedUpdate key={item.id} update={item.update} />
+                <FeedPost key={item.id} update={item.update} />
               ))}
             </>
           )}

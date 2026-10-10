@@ -483,7 +483,7 @@ export function ServerPanel() {
   const catalogOpen = Boolean(openSections.catalog)
   const careOpen = Boolean(openSections.care)
   const transactionsOpen = Boolean(openSections.transactions)
-  const usersFetching = useSectionFetch(usersOpen, ['users'])
+  const usersFetching = useSectionFetch(usersOpen, ['users'], { settle: true })
   const loadScanQuotas = useCallback(() => {
     if (plantxEnv === 'mock') return
     void fetchAdminScanQuotas().then((outcome) => {
@@ -493,11 +493,11 @@ export function ServerPanel() {
   useEffect(() => {
     if (usersOpen) loadScanQuotas()
   }, [usersOpen, loadScanQuotas])
-  const plantsFetching = useSectionFetch(plantsOpen, ['plants'])
-  const activitiesFetching = useSectionFetch(activitiesOpen, ['plants', 'updates'])
-  const catalogFetching = useSectionFetch(catalogOpen, ['catalog'])
-  const careFetching = useSectionFetch(careOpen, ['catalog', 'plants', 'todos'])
-  const transactionsFetching = useSectionFetch(transactionsOpen, ['transactions'])
+  const plantsFetching = useSectionFetch(plantsOpen, ['plants'], { settle: true })
+  const activitiesFetching = useSectionFetch(activitiesOpen, ['plants', 'updates'], { settle: true })
+  const catalogFetching = useSectionFetch(catalogOpen, ['catalog'], { settle: true })
+  const careFetching = useSectionFetch(careOpen, ['catalog', 'plants', 'todos'], { settle: true })
+  const transactionsFetching = useSectionFetch(transactionsOpen, ['transactions'], { settle: true })
 
   const toggleSection = (id: string, fetching = false) => {
     if (fetching) return

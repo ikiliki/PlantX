@@ -4,7 +4,7 @@ import { blurred } from '../../../../components/Skeleton/Skeleton'
 import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 import type { CareIcon } from '../../../../mock/types'
-import { careColor } from '../../../todo/careKinds'
+import { careColor, careTint } from '../../../todo/careKinds'
 
 const freshGlow = keyframes`
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 95%, transparent); transform: scale(0.94); }
@@ -279,13 +279,9 @@ export const Details = styled.div<{ $care?: boolean; $preview?: boolean }>`
               padding: 8px 8px 10px;
             `
           : css`
-              /* Phone shelf: the name only, so several plants can be told apart; tags stay off. */
-              gap: 0;
+              /* Phone shelf: the name, then what the plant needs now (no chips when it is fine). */
+              gap: 6px;
               padding: 8px 10px 10px;
-
-              > :not(:first-child) {
-                display: none;
-              }
             `}
   }
 `
@@ -410,16 +406,26 @@ export const CareAction = styled.span<{ $tone: CareIcon }>`
   }
 `
 
-export const PassportMark = styled.span`
+/** What a shelf plant needs now: one small chip per due task; a plant that is fine has none. */
+export const Needs = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+`
+
+export const Need = styled.span<{ $tone: CareIcon }>`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  min-height: 22px;
+  padding: 0 8px;
   border-radius: ${theme.radii.pill};
-  background: ${theme.colors.chipGreen};
-  color: ${theme.colors.forest};
+  background: ${({ $tone }) => careTint($tone, 20)};
+  color: ${theme.colors.ink};
   font-size: 11px;
   font-weight: 700;
+  white-space: nowrap;
 `
 
 export const Tags = styled.div`
@@ -453,22 +459,6 @@ export const CareDate = styled.span`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-`
-
-/** Identity chips on the bottom of the photo; they leave room for the photo count at the end. */
-export const PhotoTags = styled.span<{ $count?: boolean }>`
-  position: absolute;
-  z-index: 1;
-  inset-block-end: 10px;
-  inset-inline-start: 10px;
-  display: flex;
-  max-width: ${({ $count }) => ($count ? 'calc(100% - 76px)' : 'calc(100% - 20px)')};
-  min-width: 0;
-
-  @container (max-width: 559px) {
-    inset-block-end: 8px;
-    inset-inline-start: 8px;
   }
 `
 

@@ -1,4 +1,3 @@
-import { OTHER_CATEGORY_ID } from '../../plantClass'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
 import { useI18n } from '../../../../i18n/I18nProvider'
@@ -16,7 +15,6 @@ import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon
 import { useCareTasks } from '../../../todo/careKinds'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import { Icon } from '../../../../components/Icon/Icon'
-import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import {
   CareAction,
   CareActions,
@@ -25,12 +23,12 @@ import {
   CollectionGrid,
   Details,
   Name,
+  Need,
+  Needs,
   NameRow,
-  PassportMark,
   Photo,
   PhotoCount,
   PrivateMark,
-  PhotoTags,
   PhotoLink,
   Root,
   StatusMark,
@@ -116,7 +114,8 @@ export function GreenhousePlantCard({
   const needed = careKinds ? carePool.filter((todo) => careKinds.includes(todo.subcategory)) : []
   const primary = needed[0]
   const status = statusFor(plant, marketOpen, todos, t)
-  const verified = Boolean(plant.verifiedAt)
+  // On the shelf the card says only what the plant needs now (due, overdue, first watering, set a schedule).
+  const dueNow = careKinds ? [] : dueTodos(todos)
   const photos = plant.photos.filter(Boolean)
   const careMode = Boolean(careKinds)
   const dayLabel = primary ? formatCareDay(primary.dueOn, locale) : null
@@ -130,7 +129,7 @@ export function GreenhousePlantCard({
     <Root
       $fresh={fresh}
       $care={careMode}
-      $living={status.tone === 'calm'}
+      $living={careMode && status.tone === 'calm'}
       onClick={careMode ? openCare : undefined}
       onKeyDown={
         careMode
@@ -156,29 +155,16 @@ export function GreenhousePlantCard({
           ) : null}
         </Photo>
       ) : (
+        // The shelf card is the Home card: the photo and the name, nothing on the photo.
         <PhotoLink to={`/plants/${plant.id}`} aria-haspopup="dialog">
-          <Photo $stale={isPhotoStale(plant, todos)}>
+          <Photo $stale={false}>
             <PlantImage src={photos[0]} alt="" />
-            <StatusMark $tone={status.tone}>{status.label}</StatusMark>
-            {/* Who identified it sits on the photo, like the passport's AI stamp: AI, Edited, or Manual. */}
-            <PhotoTags $count={photos.length > 1}>
-              <IdentifyBadge
-                identification={plant.identification}
-                notInCatalog={plant.speciesId === OTHER_CATEGORY_ID}
-                compact
-              />
-            </PhotoTags>
-            {photos.length > 1 ? (
-              <PhotoCount title={t.addPlant.photosCount.replace('{n}', String(photos.length))}>
-                <span aria-hidden>▣</span> +{photos.length - 1}
-              </PhotoCount>
-            ) : null}
           </Photo>
         </PhotoLink>
       )}
       <Details $care={careMode} $preview={preview}>
         <NameRow>
-          <PlantCatalogMark plant={plant} size={24} />
+          {careMode || preview ? <PlantCatalogMark plant={plant} size={24} /> : null}
           {careMode || preview ? (
             <CareName>{tr(plant.title, plant.titleHe)}</CareName>
           ) : (
@@ -211,13 +197,20 @@ export function GreenhousePlantCard({
               )
             })}
           </CareActions>
-        ) : (
-          verified ? (
-            <Tags>
-              <PassportMark>✓ {t.greenhouse.passportOk}</PassportMark>
-            </Tags>
-          ) : null
-        )}
+        ) : dueNow.length > 0 ? (
+          <Needs data-plant-needs>
+            {dueNow.map((todo) => (
+              <Need key={todo.id} $tone={care.icon(todo.subcategory)}>
+                <TodoKindIcon kind={todo.subcategory} size={12} />
+                {isFirstWaterTodo(todo, todos)
+                  ? t.todo.statusFirstWater
+                  : isSetTodo(todo, todos)
+                    ? t.todo.actionSetSchedule
+                    : care.name(todo.subcategory)}
+              </Need>
+            ))}
+          </Needs>
+        ) : null}
       </Details>
     </Root>
   )

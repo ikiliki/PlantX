@@ -56,7 +56,7 @@ function applyProviderPatch(row: IdentifyProviderStatus, patch: Partial<Identify
 export function ApisPage() {
   const { t } = useI18n()
   const { currentUser } = useStore()
-  const catalogLoading = useSectionFetch(true, ['catalog'])
+  const catalogLoading = useSectionFetch(true, ['catalog'], { settle: true })
   const [suggestions, setSuggestions] = useState<CatalogSuggestion[]>([])
   const [providers, setProviders] = useState<IdentifyProviderStatus[]>([])
   const [providersError, setProvidersError] = useState<ApiFailure | null>(null)

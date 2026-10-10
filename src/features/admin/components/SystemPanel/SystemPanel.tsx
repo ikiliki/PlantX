@@ -83,7 +83,7 @@ function FetchHold({
   slices: readonly ServerSlice[]
   children: (fetching: boolean) => ReactNode
 }) {
-  const fetching = useSectionFetch(active, slices)
+  const fetching = useSectionFetch(active, slices, { settle: true })
   return children(fetching)
 }
 
