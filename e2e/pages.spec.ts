@@ -40,8 +40,10 @@ test.describe('signed in', () => {
       await route.fulfill({ response: res, json: { activities: [...extra, ...body.activities] } })
     })
     await expectPage(page, '/home')
-    await expect(page.locator('[data-feed-update="e2e-water"]')).toContainText('+10 XP')
-    await expect(page.locator('[data-feed-update="e2e-scan"]')).toHaveCount(0)
+    // Desktop Home lists feed rows; the phone's daily Home shows Social cards. Either way: XP kinds only.
+    const row = (id: string) => page.locator(`[data-feed-update="${id}"], [data-feed-post="${id}"]`)
+    await expect(row('e2e-water')).toContainText('+10 XP')
+    await expect(row('e2e-scan')).toHaveCount(0)
   })
 
   test('greenhouse activity opens on XP; All adds my scans', async ({ page }, testInfo) => {

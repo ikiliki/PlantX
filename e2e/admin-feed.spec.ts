@@ -6,11 +6,13 @@ test.describe('admin feed', () => {
     await signIn(page)
   })
 
-  test('System lists Feed as its own page', async ({ page }) => {
+  test('System lists Social (the feed) as its own page, with Phone / Desktop switches', async ({ page }) => {
     await expectPage(page, '/admin/system')
-    // Pages starts collapsed; Feed has its own Live / Maintenance select there.
+    // Pages starts collapsed; Social has its own Live / Maintenance select and a switch per device there.
     await page.locator('main').getByRole('button', { name: 'Pages', exact: true }).click()
-    await expect(page.locator('main').getByRole('combobox', { name: /^Feed / })).toBeVisible()
+    await expect(page.locator('main').getByRole('combobox', { name: /^Social / })).toBeVisible()
+    await expect(page.locator('main').getByRole('switch', { name: /^Social · Phone/ })).toBeVisible()
+    await expect(page.locator('main').getByRole('switch', { name: /^Social · Desktop/ })).toBeVisible()
   })
 
   test('Server shows the reactions and comments tables and 🌿 / 💬 counts on activities', async ({ page }) => {
@@ -28,6 +30,9 @@ test.describe('admin feed', () => {
       }),
     )
     await expectPage(page, '/admin/server')
+    // Reactions and Comments start collapsed on Server.
+    await page.locator('[data-reactions]').getByRole('button', { name: 'Reactions' }).click()
+    await page.locator('[data-comments]').getByRole('button', { name: 'Comments' }).click()
     // The reaction row (the comment row below also shows the post text).
     const row = page.locator('tr[data-row-id="e2e-post:e2e-member"]')
     await expect(row).toBeVisible()
