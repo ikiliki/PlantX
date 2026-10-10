@@ -5,7 +5,7 @@ import {
   expect,
   identifyFailed,
   openAddPlant,
-  plantPhoto,
+  takePhoto,
   signIn,
   test,
 } from './support'
@@ -21,42 +21,54 @@ test.describe('Add Plant', () => {
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
     await expect(dialog.getByRole('button', { name: 'Fill in manually' })).toBeEnabled()
 
-    // The manual path walks the steps with no photo; Review offers a compact drop and Save waits for it.
+    // The manual path walks the steps with no photo; Review offers the camera and Save waits for it.
     await dialog.getByRole('navigation').getByRole('button', { name: /Review/ }).click()
     await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeDisabled()
-    await expect(dialog.locator('input[type=file]')).toHaveCount(2)
+    await expect(dialog.locator('[data-camera-open]:visible')).toHaveCount(1)
   })
 
-  test('a photo the browser cannot read (HEIC) says so, is not shown and is not scanned', async ({ page }) => {
-    let scanned = false
-    page.on('request', (request) => {
-      if (request.url().endsWith('/api/identify') && request.method() === 'POST') scanned = true
+  test('photos come only from the camera: no file picker, and a taken photo is ready for AI', async ({ page }) => {
+    const dialog = await openAddPlant(page)
+    // No gallery, file picker or drop: the only way in is the camera.
+    await expect(page.locator('input[type=file]')).toHaveCount(0)
+    await expect(dialog.getByText('Taken live with your camera, not from the gallery.')).toBeVisible()
+    await takePhoto(dialog)
+    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeEnabled()
+    await expect(dialog.locator('img[src^="data:image/jpeg"]').first()).toBeAttached()
+  })
+
+  test('the camera is asked for first, and a refusal says how to turn it on', async ({ page }) => {
+    // The browser has not decided yet, and then refuses (as if the person tapped Block).
+    await page.addInitScript(() => {
+      const query = navigator.permissions.query.bind(navigator.permissions)
+      navigator.permissions.query = (descriptor) =>
+        descriptor.name === ('camera' as PermissionName)
+          ? Promise.resolve({ state: 'prompt' } as PermissionStatus)
+          : query(descriptor)
+      navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('Blocked', 'NotAllowedError'))
     })
     const dialog = await openAddPlant(page)
-    // Chrome cannot decode HEIC (a phone camera's "High efficiency pictures"); these bytes are not an image either.
-    await dialog.locator('input[type=file]').first().setInputFiles({
-      name: 'IMG_0001.heic',
-      mimeType: 'image/heic',
-      buffer: Buffer.from('ftypheic not a real photo'),
-    })
-    const note = dialog.locator('[data-photo-unreadable]')
-    await expect(note).toBeVisible()
-    await expect(note).toContainText('HEIC')
-    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
-    await expect(dialog.locator('img[src^="data:image/heic"]')).toHaveCount(0)
-    expect(scanned).toBe(false)
+    await dialog.locator('[data-camera-open]:visible').first().click()
 
-    // A photo that reads fine replaces the note.
-    await dialog.locator('input[type=file]').first().setInputFiles(plantPhoto())
-    await expect(note).toHaveCount(0)
-    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeEnabled()
+    const ask = page.getByRole('dialog', { name: 'Allow the camera' })
+    await expect(ask).toContainText('Gallery photos can’t be used')
+    await expect(ask.getByRole('link', { name: 'How we use photos' })).toHaveAttribute('href', '/privacy')
+    await ask.getByRole('button', { name: 'Allow camera' }).click()
+
+    const denied = page.getByRole('dialog', { name: 'Camera access is off' })
+    await expect(denied).toContainText('settings')
+    await expect(denied.locator('[data-camera-use]')).toHaveCount(0)
+    await denied.getByRole('button', { name: 'Cancel' }).click()
+    await expect(denied).toHaveCount(0)
+    // Add Plant stays open and still has no photo.
+    await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeDisabled()
   })
 
   test('a full AI answer is ready to save', async ({ page, identify }) => {
     const pick = await catalogPick(page)
     identify.answer(diagnosisFor(pick, { withTrait: true }))
     const dialog = await openAddPlant(page)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await dialog.getByRole('button', { name: 'Continue with AI' }).click()
     // Step headings hide under 420px of the dialog, so check what shows at every width.
     await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeEnabled({ timeout: 20_000 })
@@ -68,7 +80,7 @@ test.describe('Add Plant', () => {
     const pick = await catalogPick(page)
     identify.answer(diagnosisFor(pick, { withTrait: true }))
     const dialog = await openAddPlant(page)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await dialog.getByRole('button', { name: 'Continue with AI' }).click()
     const save = dialog.getByRole('button', { name: 'Save to the greenhouse' })
     await expect(save).toBeEnabled({ timeout: 20_000 })
@@ -83,7 +95,7 @@ test.describe('Add Plant', () => {
     const pick = await catalogPick(page)
     identify.answer(diagnosisFor(pick, { withTrait: true }))
     const dialog = await openAddPlant(page)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await dialog.getByRole('button', { name: 'Continue with AI' }).click()
     await expect(dialog.getByRole('button', { name: 'Save to the greenhouse' })).toBeEnabled({ timeout: 20_000 })
     await dialog.getByRole('navigation').getByRole('button', { name: /Details/ }).click()
@@ -96,7 +108,7 @@ test.describe('Add Plant', () => {
     const pick = await catalogPick(page)
     identify.answer(diagnosisFor(pick, { withTrait: true, withSizeStage: false }))
     const dialog = await openAddPlant(page)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await dialog.getByRole('button', { name: 'Continue with AI' }).click()
 
     await expect(dialog.getByRole('navigation').getByRole('button', { name: /Specs, needs input/ })).toBeVisible({
@@ -125,7 +137,7 @@ test.describe('Add Plant', () => {
     identify.answer(answer)
 
     const dialog = await openAddPlant(page)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await dialog.getByRole('button', { name: 'Continue with AI' }).click()
     await expect(dialog.getByRole('navigation').getByRole('button', { name: /Specs, needs input/ })).toBeVisible({
       timeout: 20_000,
@@ -145,7 +157,7 @@ test.describe('Add Plant', () => {
     const all = stageChoices(pick.catalog, emptyClassDraft)
     const sizes = sizeChoices(pick.catalog, emptyClassDraft)
     const dialog = await openAddPlant(page)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await dialog.getByRole('button', { name: 'Fill in manually' }).click()
     await dialog.getByRole('navigation').getByRole('button', { name: /Specs/ }).click()
     const stages = dialog.getByRole('group', { name: /^stage/i })
@@ -161,7 +173,7 @@ test.describe('Add Plant', () => {
     const trait = pick.trait.name
     identify.answer(diagnosisFor(pick, { withTrait: false }))
     const dialog = await openAddPlant(page)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await dialog.getByRole('button', { name: 'Continue with AI' }).click()
 
     await expect(dialog.getByText("AI couldn't fill these")).toBeVisible({ timeout: 20_000 })
@@ -181,7 +193,7 @@ test.describe('Add Plant', () => {
   test('a failed scan locks AI until the photo changes', async ({ page, identify }) => {
     identify.answer(identifyFailed)
     const dialog = await openAddPlant(page)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await dialog.getByRole('button', { name: 'Continue with AI' }).click()
 
     await expect(dialog.getByText("AI couldn't finish reading this photo", { exact: false })).toBeVisible({ timeout: 20_000 })
@@ -189,7 +201,7 @@ test.describe('Add Plant', () => {
     await expect(dialog.getByRole('navigation').getByRole('button', { name: /Identity/ })).toBeEnabled()
 
     await dialog.getByRole('button', { name: 'Remove photo 1' }).click()
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeEnabled()
   })
 })

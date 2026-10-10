@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { expect, test as base, type Page } from '@playwright/test'
+import { expect, test as base, type Locator, type Page } from '@playwright/test'
 import { emptyClassDraft, sizeChoices, stageChoices } from '../src/features/greenhouse/plantClass'
 import { LEGAL_VERSION } from '../src/features/legal/legalVersion'
 import { SESSION_DIR } from './sessionDir'
@@ -109,11 +109,17 @@ export async function expectPage(page: Page, path: string) {
   await expect(page.getByText(/Something went wrong/i)).toHaveCount(0)
 }
 
-export const plantPhoto = () => ({
-  name: 'plant.jpg',
-  mimeType: 'image/jpeg',
-  buffer: readFileSync('public/class-photos/begonia-std.jpg'),
-})
+/**
+ * Adds a photo the only way PlantX allows: the live camera. Chromium's fake camera (playwright.config) gives a
+ * test pattern and grants access; the test answers identify, so the picture's content does not matter.
+ */
+export async function takePhoto(scope: Locator) {
+  await scope.locator('[data-camera-open]:visible').first().click()
+  const camera = scope.page().getByRole('dialog', { name: 'Take a photo' })
+  await camera.locator('[data-camera-shutter]').click()
+  await camera.locator('[data-camera-use]').click()
+  await expect(camera).toHaveCount(0)
+}
 
 /** A category with a required trait, so a test can leave it out of the AI answer. */
 export async function catalogPick(page: Page) {

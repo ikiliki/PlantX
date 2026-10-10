@@ -5,8 +5,7 @@ import { ChoiceChips } from '../../../../components/ChoiceChips/ChoiceChips'
 import { Field, Input, TextArea } from '../../../../components/Form/Form'
 import { Segmented } from '../../../../components/Segmented/Segmented'
 import { useI18n } from '../../../../i18n/I18nProvider'
-import { notifyInfo } from '../../../../lib/httpNotice'
-import { readPhoto, UnreadablePhotoError } from '../../../../lib/readPhoto'
+import { CameraCapture } from '../../../../components/CameraCapture/CameraCapture'
 import type { Catalog, CatalogSuggestionInput } from '../../../../mock/types'
 import { wikiHref } from '../../../species/components/GuideLink/GuideLink'
 import { SUGGEST_NAME_MAX, SUGGEST_NOTE_MAX, SUGGEST_OPEN_LIMIT, emptySuggestionInput, existingEntry } from '../../catalogSuggest'
@@ -45,7 +44,10 @@ export function SuggestPlantDialog({
   initial?: Partial<CatalogSuggestionInput>
 }) {
   const { t, locale } = useI18n()
-  const fileRef = useRef<HTMLInputElement>(null)
+  // The photo comes only from the live camera.
+  const [camera, setCamera] = useState(false)
+  const cameraRef = useRef(false)
+  cameraRef.current = camera
   const nameRef = useRef<HTMLInputElement>(null)
   const [kind, setKind] = useState<Kind>('new')
   const [input, setInput] = useState<CatalogSuggestionInput>({ ...emptySuggestionInput, ...initial })
@@ -60,7 +62,8 @@ export function SuggestPlantDialog({
   useDialogLayer(() => closeRef.current())
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
+      // The camera on top closes first.
+      if (event.key !== 'Escape' || cameraRef.current) return
       event.stopImmediatePropagation()
       closeRef.current()
     }
@@ -107,18 +110,6 @@ export function SuggestPlantDialog({
   const pickKind = (next: Kind) => {
     setKind(next)
     set({ categoryId: '' })
-  }
-
-  const pickPhoto = (file: File | undefined) => {
-    if (!file) return
-    void readPhoto(file).then(
-      (photo) => set({ photo }),
-      (error: unknown) =>
-        notifyInfo(
-          t.addPlant.unreadableTitle,
-          t.addPlant.unreadableBody.replace('{format}', error instanceof UnreadablePhotoError ? error.format : '?'),
-        ),
-    )
   }
 
   const submit = async (event: FormEvent) => {
@@ -212,17 +203,16 @@ export function SuggestPlantDialog({
               />
             </Field>
 
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(event) => {
-                pickPhoto(event.target.files?.[0])
-                event.target.value = ''
-              }}
-            />
-            <PhotoDrop type="button" $filled={Boolean(input.photo)} onClick={() => fileRef.current?.click()}>
+            {camera ? (
+              <CameraCapture
+                onCapture={(photo) => {
+                  setCamera(false)
+                  set({ photo })
+                }}
+                onClose={() => setCamera(false)}
+              />
+            ) : null}
+            <PhotoDrop type="button" $filled={Boolean(input.photo)} onClick={() => setCamera(true)} data-camera-open>
               <PhotoPreview>{input.photo ? <img src={input.photo} alt="" /> : <span aria-hidden>＋</span>}</PhotoPreview>
               <PhotoText>
                 <strong>{input.photo ? t.suggest.photoChange : t.suggest.photo}</strong>

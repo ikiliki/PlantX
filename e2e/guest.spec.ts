@@ -1,4 +1,4 @@
-import { expect, expectPage, plantPhoto, test } from './support'
+import { expect, expectPage, takePhoto, test } from './support'
 
 /**
  * Signed out. Nothing here signs in or writes, so `@prod` tests also run against production after a release.
@@ -59,7 +59,7 @@ test.describe('guest', { tag: '@prod' }, () => {
     const ai = dialog.getByRole('button', { name: 'Log in to use AI' })
     await expect(ai).toBeEnabled()
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toHaveCount(0)
-    await dialog.locator('input[type=file]').setInputFiles(plantPhoto())
+    await takePhoto(dialog)
     await ai.click()
     await expect(page.getByRole('dialog').filter({ hasText: /log in|sign in|google/i }).last()).toBeVisible()
     expect(identifyCalls).toBe(0)
@@ -80,7 +80,7 @@ test.describe('guest', { tag: '@prod' }, () => {
     // Try adding a plant opens Add Plant on the greenhouse.
     await intro.getByRole('button', { name: /try adding a plant/i }).click()
     await expect(page).toHaveURL(/\/greenhouse/)
-    await expect(page.getByRole('dialog').first().locator('input[type=file]')).toBeAttached()
+    await expect(page.getByRole('dialog').first().locator('[data-camera-open]').first()).toBeAttached()
   })
 
   test('coming-soon market keeps sample listings out of the accessibility tree', async ({ page }) => {

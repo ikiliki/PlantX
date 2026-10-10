@@ -50,7 +50,7 @@ function staticHeaders() {
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'geolocation=(), microphone=(), payment=()',
+    'Permissions-Policy': 'camera=(self), geolocation=(), microphone=(), payment=()',
     ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
   }
 }
