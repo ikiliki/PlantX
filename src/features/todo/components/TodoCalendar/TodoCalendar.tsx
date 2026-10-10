@@ -17,8 +17,6 @@ import {
   Board,
   Cell,
   Day,
-  KindRow,
-  DaysChip,
   DayList,
   DayNum,
   DoneMark,
@@ -28,6 +26,7 @@ import {
   KindGroup,
   KindHead,
   DayPanelHead,
+  HeadPicker,
   DropIcon,
   EmptyDay,
   FilterSelect,
@@ -314,45 +313,34 @@ export function TodoCalendar({
     ...kinds.map((kind) => ({ id: kind, label: care.name(kind), iconNode: <TodoKindIcon kind={kind} size={14} /> })),
   ]
 
-  const toolbar =
-    !firstPlant && showFilters ? (
-      <Toolbar>
-        {mobile ? (
-          <KindRow role="radiogroup" aria-label={t.todo.filterKinds}>
-            {kindOptions.map((option) => (
-              <DaysChip
-                key={option.id}
-                type="button"
-                role="radio"
-                $on={kindFilter === option.id}
-                aria-checked={kindFilter === option.id}
-                onClick={() => setKindFilter(option.id)}
-              >
-                {'iconNode' in option ? option.iconNode : null}
-                {option.label}
-              </DaysChip>
-            ))}
-          </KindRow>
-        ) : (
-          <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
-        )}
-        <FilterSelect
-          aria-label={t.todo.filterPlants}
-          value={plantFilter}
-          onChange={(event) => {
-            const value = event.target.value
-            setPlantFilter(value === 'all' ? 'all' : value)
-          }}
-        >
-          <option value="all">{t.todo.filterAllPlants}</option>
-          {living.map((plant) => (
-            <option key={plant.id} value={plant.id}>
-              {tr(plant.title, plant.titleHe)}
-            </option>
-          ))}
-        </FilterSelect>
-      </Toolbar>
-    ) : null
+  const plantSelect = (
+    <FilterSelect
+      aria-label={t.todo.filterPlants}
+      value={plantFilter}
+      onChange={(event) => {
+        const value = event.target.value
+        setPlantFilter(value === 'all' ? 'all' : value)
+      }}
+    >
+      <option value="all">{t.todo.filterAllPlants}</option>
+      {living.map((plant) => (
+        <option key={plant.id} value={plant.id}>
+          {tr(plant.title, plant.titleHe)}
+        </option>
+      ))}
+    </FilterSelect>
+  )
+  const kindChips = <FilterChips label={t.todo.filterKinds} options={kindOptions} value={kindFilter} onChange={setKindFilter} />
+  const filtersOn = !firstPlant && showFilters
+
+  // Wide: chips and the plant picker on one toolbar. Phone: the picker sits small beside the Tasks title and the
+  // chips are one sideways row under it (same FilterChips as wide), never wrapping into a block.
+  const toolbar = filtersOn ? (
+    <Toolbar>
+      {kindChips}
+      {plantSelect}
+    </Toolbar>
+  ) : null
 
   const fullDate = (y: number, m: number, d: number) =>
     new Date(Date.UTC(y, m, d, 12)).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
@@ -498,9 +486,9 @@ export function TodoCalendar({
       <DayPanel>
         <DayPanelHead>
           <h3>{mobile ? t.todo.title : t.todo.dayTitle}</h3>
-          {mobile ? null : <p>{selectedLabel}</p>}
+          {mobile ? (filtersOn ? <HeadPicker>{plantSelect}</HeadPicker> : null) : <p>{selectedLabel}</p>}
         </DayPanelHead>
-        {mobile ? toolbar : null}
+        {mobile && filtersOn ? kindChips : null}
         {shownTodos.length === 0 ? (
           <EmptyDay>{mobile ? t.todo.emptyTasks : t.todo.emptyDay}</EmptyDay>
         ) : (

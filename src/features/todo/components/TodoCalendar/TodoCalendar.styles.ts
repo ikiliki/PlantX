@@ -501,10 +501,20 @@ export const DayPanel = styled.section`
   }
 `
 
+/** Phone: the plant picker, small, at the end of the Tasks title row. */
+export const HeadPicker = styled.div`
+  flex: 0 1 170px;
+  min-width: 0;
+
+  > select {
+    width: 100%;
+  }
+`
+
 export const DayPanelHead = styled.div`
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
 
