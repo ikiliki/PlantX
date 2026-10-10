@@ -2038,6 +2038,7 @@
     "commentOne": "תגובה אחת",
     "commentNone": "תגובה",
     "commentsTitle": "תגובות",
+    "viewAllComments": "הצגת כל {n} התגובות",
     "commentPlaceholder": "כתבו משהו נחמד",
     "send": "שליחה",
     "deleteComment": "מחיקה",

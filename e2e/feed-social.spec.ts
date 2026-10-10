@@ -86,6 +86,47 @@ test.describe('feed reactions and comments', () => {
     await expect(thread.getByText('Lovely')).toHaveCount(0)
   })
 
+  test('under the leaf: the two newest comments, View all, and a comment box (only the box with none)', async ({ page }) => {
+    const at = new Date().toISOString()
+    const c = (id: string, body: string) => ({ id, activityId: 'e2e-preview', userId: MEMBER, body, createdAt: at })
+    const talked = {
+      id: 'e2e-preview',
+      kind: 'added',
+      userId: MEMBER,
+      body: 'e2e preview post',
+      bodyHe: 'e2e preview post',
+      createdAt: at,
+      comments: 3,
+      latestComments: [c('e2e-p2', 'Second comment'), c('e2e-p3', 'Third comment')],
+    }
+    const quiet = { ...talked, id: 'e2e-quiet', body: 'e2e quiet post', bodyHe: 'e2e quiet post', comments: 0, latestComments: [] }
+    await page.route('**/api/activities', async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback()
+      const res = await route.fetch()
+      const body = (await res.json()) as { activities: unknown[] }
+      await route.fulfill({ response: res, json: { activities: [talked, quiet, ...body.activities] } })
+    })
+    await page.route(`**/api/activities/${quiet.id}/comments`, async (route) => {
+      const { body } = route.request().postDataJSON() as { body: string }
+      await route.fulfill({ status: 201, json: { comment: { ...c('e2e-q1', body), activityId: quiet.id } } })
+    })
+
+    await expectPage(page, '/social')
+    const preview = page.locator('[data-feed-post="e2e-preview"] [data-comment-preview]')
+    await expect(preview.locator('[data-comment]')).toHaveCount(2)
+    await expect(preview).toContainText('Third comment')
+    await expect(preview.locator('[data-comments-all]')).toHaveText('View all 3 comments')
+
+    // No comments yet: only the box. Sending shows the comment there at once.
+    const empty = page.locator('[data-feed-post="e2e-quiet"] [data-comment-preview]')
+    await expect(empty.locator('[data-comment]')).toHaveCount(0)
+    await expect(empty.locator('[data-comments-all]')).toHaveCount(0)
+    await empty.locator('[data-comment-field]').fill('Hello there')
+    await empty.getByRole('button', { name: 'Send' }).click()
+    await expect(empty.locator('[data-comment]')).toContainText('Hello there')
+    await expect(empty.locator('[data-comment-field]')).toHaveValue('')
+  })
+
   test('Greenhouse activities: Social lists every leaf and comment on my posts; the bell counts new ones', async ({ page }, testInfo) => {
     const at = new Date().toISOString()
     await page.route('**/api/activities/social/mine', (route) =>

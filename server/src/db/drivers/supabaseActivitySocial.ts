@@ -1,5 +1,5 @@
 import type pg from 'pg'
-import type { ActivityComment } from '../../../../src/mock/types.ts'
+import type { ActivityComment, ActivitySocialCounts } from '../../../../src/mock/types.ts'
 import type { PlantxStore } from '../store.ts'
 
 function commentOf(row: Record<string, unknown>): ActivityComment {
@@ -16,10 +16,10 @@ function commentOf(row: Record<string, unknown>): ActivityComment {
 export function supabaseActivitySocial(pool: pg.Pool): PlantxStore['activitySocial'] {
   return {
     async counts(activityIds, viewerId) {
-      const counts = new Map<string, { reactions: number; reacted: boolean; comments: number }>()
+      const counts = new Map<string, ActivitySocialCounts>()
       if (activityIds.length === 0) return counts
-      for (const id of activityIds) counts.set(id, { reactions: 0, reacted: false, comments: 0 })
-      const [reactions, comments] = await Promise.all([
+      for (const id of activityIds) counts.set(id, { reactions: 0, reacted: false, comments: 0, latestComments: [] })
+      const [reactions, comments, latest] = await Promise.all([
         pool.query(
           `select activity_id, count(*)::int as n, bool_or(user_id = $2) as mine
            from activity_reactions where activity_id = any($1) group by activity_id`,
@@ -28,6 +28,14 @@ export function supabaseActivitySocial(pool: pg.Pool): PlantxStore['activitySoci
         pool.query(
           `select activity_id, count(*)::int as n
            from activity_comments where activity_id = any($1) and deleted_at is null group by activity_id`,
+          [activityIds],
+        ),
+        // The two newest per post, for the preview under it.
+        pool.query(
+          `select * from (
+             select c.*, row_number() over (partition by activity_id order by created_at desc, id desc) as rn
+             from activity_comments c where activity_id = any($1) and deleted_at is null
+           ) latest where rn <= 2 order by created_at, id`,
           [activityIds],
         ),
       ])
@@ -41,6 +49,9 @@ export function supabaseActivitySocial(pool: pg.Pool): PlantxStore['activitySoci
       for (const row of comments.rows as { activity_id: string; n: number }[]) {
         const entry = counts.get(row.activity_id)
         if (entry) entry.comments = row.n
+      }
+      for (const row of latest.rows as Record<string, unknown>[]) {
+        counts.get(String(row.activity_id))?.latestComments.push(commentOf(row))
       }
       return counts
     },

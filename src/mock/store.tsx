@@ -20,6 +20,7 @@ import {
 } from '../features/greenhouse/guestPlants'
 import { createSeed } from './seed'
 import type {
+  ActivityComment,
   Catalog,
   CommunityGradeLetter,
   FeedUpdate,
@@ -252,7 +253,8 @@ interface StoreApi {
   /** 🌿 on a feed post: the count moves at once, then follows the server's answer. */
   reactToUpdate: (updateId: string, on: boolean) => void
   /** A comment was added (+1) or removed (-1) on a feed post. */
-  bumpCommentCount: (updateId: string, delta: number) => void
+  /** A comment was added or removed: moves the post's count and its two-comment preview. */
+  bumpCommentCount: (updateId: string, delta: number, change?: { added?: ActivityComment; removedId?: string }) => void
   addGreenhousePlant: (input: {
     title: string
     titleHe: string
@@ -1206,10 +1208,15 @@ export function StoreProvider({
         })
       })
     },
-    bumpCommentCount: (updateId, delta) => {
+    bumpCommentCount: (updateId, delta, change) => {
       update((d) => {
         const row = d.updates?.find((item) => item.id === updateId)
-        if (row) row.comments = Math.max(0, (row.comments ?? 0) + delta)
+        if (!row) return d
+        row.comments = Math.max(0, (row.comments ?? 0) + delta)
+        let latest = row.latestComments ?? []
+        if (change?.added) latest = [...latest, change.added].slice(-2)
+        if (change?.removedId) latest = latest.filter((comment) => comment.id !== change.removedId)
+        row.latestComments = latest
         return d
       })
     },

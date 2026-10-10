@@ -449,6 +449,8 @@ export interface FeedUpdate {
   reactions?: number
   reacted?: boolean
   comments?: number
+  /** The two newest comments, oldest first (the preview under a post). */
+  latestComments?: ActivityComment[]
 }
 
 /** Greenhouse activities → Social: a 🌿 or a comment another grower left on one of your posts. */
@@ -492,6 +494,15 @@ export interface ActivityComment {
   userId: string
   body: string
   createdAt: string
+}
+
+/** Per viewer, added to each activity on the way out: 🌿 count, whether the viewer reacted, comments. */
+export interface ActivitySocialCounts {
+  reactions: number
+  reacted: boolean
+  comments: number
+  /** The two newest visible comments, oldest first: the preview under a post. */
+  latestComments: ActivityComment[]
 }
 
 /** Top-level todo bucket. Later: market. */

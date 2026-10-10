@@ -2038,6 +2038,7 @@
     "commentOne": "1 comment",
     "commentNone": "Comment",
     "commentsTitle": "Comments",
+    "viewAllComments": "View all {n} comments",
     "commentPlaceholder": "Say something nice",
     "send": "Send",
     "deleteComment": "Delete",
