@@ -33,19 +33,16 @@ function daysBetween(from: string, to: string) {
 /**
  * The passport Tasks tab: the plant's care plan (one row per kind: how often, last done, next due), the
  * last twelve weeks of care, and the care history. The owner changes a kind's interval, pauses it, or goes
- * back to the catalog's rule with the pencil; another grower sees the plan read-only.
+ * back to the catalog's rule with the pencil. Only the grower sees it.
  */
 export function PassportTodo({
   plant,
   todos,
   careMark,
-  readOnly = false,
 }: {
   plant: Plant
   todos: Todo[]
   careMark?: TodoSubcategory
-  /** Another grower's plant: the plan shows, but nothing opens the Tasks page or changes it. */
-  readOnly?: boolean
 }) {
   const { t, locale } = useI18n()
   const { db, editPlant } = useStore()
@@ -116,7 +113,6 @@ export function PassportTodo({
         </BlockHead>
         <List>
           {plan.map(({ kind, rule }) => {
-            if (!rule && readOnly) return null
             const name = careKindName(kind, t)
             const open = plantTodos.find((todo) => todo.subcategory === kind && isOpenTodo(todo))
             const last = lastDone(kind)
@@ -146,21 +142,13 @@ export function PassportTodo({
                   </span>
                 </Copy>
                 {due && open ? (
-                  readOnly ? (
-                    <Due $tone={kind} $late={late > 0}>
-                      {due}
-                    </Due>
-                  ) : (
-                    <Due as={Link} to={`/tasks/${open.id}`} $tone={kind} $late={late > 0}>
-                      {due}
-                    </Due>
-                  )
+                  <Due as={Link} to={`/tasks/${open.id}`} $tone={kind} $late={late > 0}>
+                    {due}
+                  </Due>
                 ) : (
                   <span />
                 )}
-                {readOnly ? null : (
-                  <EditPencil label={name} onClick={() => setEditing(kind)} />
-                )}
+                <EditPencil label={name} onClick={() => setEditing(kind)} />
                 {editing === kind ? (
                   <InlineEdit
                     label={name}

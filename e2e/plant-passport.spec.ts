@@ -3,7 +3,8 @@ import { ADMIN, MEMBER, expect, expectPage, signIn, test } from './support'
 
 /**
  * Passport layout: one plant per passport (no quantity), tabs Story / Tasks / Settings with Story first,
- * and the class code under the name. A plant's activity is private to its grower (and admins) for now.
+ * and the class code under the name. A plant's activity and its Tasks tab are the grower's alone for now;
+ * other growers see the story (grades) and the market. `/plants/:id` opens over the page that linked to it.
  */
 const plant = {
   id: 'e2e-one-plant',
@@ -95,9 +96,28 @@ test.describe('plant passport', () => {
     await expect(passport.locator('[data-passport-story-note="private"]')).toContainText('is private to')
     await expect(passport.getByText(added.body)).toHaveCount(0)
     await expect(passport.getByText('E2E history entry')).toHaveCount(0)
+    // Tasks are the grower's own: another grower gets Story (and Market), never Tasks or Settings.
+    await expect(passport.getByRole('tab', { name: 'Story' })).toBeVisible()
+    await expect(passport.getByRole('tab', { name: 'Tasks' })).toHaveCount(0)
+    await expect(passport.getByRole('tab', { name: 'Settings' })).toHaveCount(0)
   })
 
-  test("the API gives no other grower's plant activity, but does give its tasks", async ({ page }) => {
+  test('a feed post opens its passport over the feed', async ({ page }) => {
+    await signIn(page, MEMBER)
+    await servePlant(page)
+    await expectPage(page, '/feed')
+    const post = page.locator('article', { hasText: added.body }).first()
+    test.skip((await post.count()) === 0, 'the feed is off here')
+    await post.getByRole('link', { name: /Passport/ }).click()
+    await expect(page).toHaveURL(new RegExp(`/plants/${plant.id}`))
+    const passport = page.getByRole('dialog').first()
+    await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
+    // Closing goes back to the feed, not the greenhouse.
+    await page.keyboard.press('Escape')
+    await expect(page).toHaveURL(//feed$/)
+  })
+
+  test("the API gives no other grower's plant activity", async ({ page }) => {
     await signIn(page, MEMBER)
     const { plants } = (await (await page.request.get('/api/plants')).json()) as {
       plants: { id: string; ownerId: string }[]
@@ -108,9 +128,5 @@ test.describe('plant passport', () => {
     expect(((await byQuery.json()) as { activities: unknown[] }).activities).toEqual([])
     const byPlant = await page.request.get(`/api/plants/${theirs!.id}/activities`)
     expect(((await byPlant.json()) as { activities: unknown[] }).activities).toEqual([])
-    // Tasks are shared read-only: any member who may see the plant gets its schedule.
-    const tasks = await page.request.get(`/api/todos/plant/${theirs!.id}`)
-    expect(tasks.ok()).toBeTruthy()
-    expect(Array.isArray(((await tasks.json()) as { todos: unknown }).todos)).toBe(true)
   })
 })

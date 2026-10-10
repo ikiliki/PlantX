@@ -1,8 +1,7 @@
 import { Hono } from 'hono'
 import { requireUser } from '../../lib/session.ts'
 import { activityService, visibleTo } from '../activity/activity.service.ts'
-import { canSeePlant, loadVisibility } from '../../lib/visibility.ts'
-import { greenhouseService } from '../greenhouse/greenhouse.service.ts'
+import { loadVisibility } from '../../lib/visibility.ts'
 import { isFirstWaterTodo, todoService } from './todo.service.ts'
 
 export const todoRoutes = new Hono()
@@ -14,16 +13,6 @@ todoRoutes.get('/', async (c) => {
   // A deleted plant takes its tasks with it (they come back if an admin restores the plant).
   const todos = rows.filter((todo) => !todo.plantId || index.plant(todo.plantId) !== 'deleted')
   return c.json({ todos })
-})
-
-/** One plant's care, read-only: planned and done tasks for any member who may see that plant (its passport Tasks tab). */
-todoRoutes.get('/plant/:plantId', async (c) => {
-  const user = await requireUser(c)
-  const plantId = c.req.param('plantId')
-  const [plants, index] = await Promise.all([greenhouseService.list(), loadVisibility()])
-  const plant = plants.find((item) => item.id === plantId)
-  if (!plant || !canSeePlant(plant, index, user)) return c.json({ error: 'Plant not found' }, 404)
-  return c.json({ todos: await todoService.list({ plantId }) })
 })
 
 todoRoutes.get('/:id', async (c) => {

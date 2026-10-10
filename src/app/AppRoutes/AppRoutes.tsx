@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import {
   matchPath,
   Navigate,
@@ -94,16 +94,6 @@ export function AppRoutes() {
   else backRef.current ??= staticLocation(sellerId ? '/market' : '/greenhouse')
   const background = backRef.current
 
-  const fromGreenhouse = background.pathname === '/greenhouse'
-
-  useEffect(() => {
-    if (!plantId || fromGreenhouse) return
-    navigate(
-      { pathname: background.pathname, search: background.search, hash: background.hash },
-      { replace: true, state: background.state },
-    )
-  }, [plantId, fromGreenhouse, background.pathname, background.search, background.hash, background.state, navigate])
-
   const closeOverlay = useCallback(() => {
     const back = backRef.current ?? staticLocation('/greenhouse')
     navigate(
@@ -158,7 +148,8 @@ export function AppRoutes() {
         </Route>
         <Route path="*" element={<Navigate to="/greenhouse" replace />} />
       </Routes>
-      {plantId && fromGreenhouse && <PassportDialog plantId={plantId} onClose={closeOverlay} routed />}
+      {/* A passport opens over whatever page linked to it (feed, home, rank, greenhouse); a direct visit sits on the greenhouse. */}
+      {plantId && <PassportDialog plantId={plantId} onClose={closeOverlay} routed />}
       {sellerId && !sellerFull && <SellerDialog userId={sellerId} onClose={closeOverlay} />}
       {profilePreview && !sellerId && (
         <SellerDialog

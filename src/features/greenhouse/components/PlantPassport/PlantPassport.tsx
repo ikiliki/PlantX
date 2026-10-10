@@ -1,6 +1,6 @@
 import { OTHER_CATEGORY_ID, OTHER_SUBCATEGORY_ID } from '../../plantClass'
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { UNKNOWN_AREA } from '../../../../mock/locations'
 import { Avatar } from '../../../../components/Avatar/Avatar'
 import { Button } from '../../../../components/Button/Button'
@@ -36,7 +36,6 @@ import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
 import { PassportNow } from '../PassportNow/PassportNow'
 import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo'
-import { usePlantTodos } from '../../../todo/usePlantTodos'
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
 import { PlantPhotoGallery } from '../PlantPhotoGallery/PlantPhotoGallery'
@@ -156,8 +155,6 @@ export function PlantPassport({
   const { t, tr, formatMoney, locale } = useI18n()
   const plant = db.plants.find((item) => item.id === plantId)
   const viewerId = signedIn && currentUser ? currentUser.id : db.visitorId
-  // Tasks show for every grower: yours live from the store, another grower's read-only from the server.
-  const plantTodos = usePlantTodos({ id: plantId }, plant?.ownerId === viewerId)
   const startTab: PassportTab = initialTab ?? (careMark ? 'care' : 'story')
   const [tab, setTab] = useState<PassportTab>(startTab)
   const [customsOpen, setCustomsOpen] = useState(false)
@@ -169,10 +166,7 @@ export function PlantPassport({
   // The passport field being edited (#70); one at a time.
   const [editField, setEditField] = useState<string | null>(null)
   const levels = useGreenhouseLevels()
-  const { pathname } = useLocation()
   const navigate = useNavigate()
-  // As a popup, the owner and greenhouse rows only make sense from Home and the market; elsewhere the grower is already known.
-  const showOwner = !dialog || pathname === '/home' || pathname.startsWith('/market')
 
   useEffect(() => {
     setPhotoIndex(0)
@@ -289,13 +283,16 @@ export function PlantPassport({
   const gradesOn = isPlacementReady(db.system, 'passport.rank')
   const tabs: { id: PassportTab; label: string }[] = [
     { id: 'story', label: t.passport.storyTab },
-    ...(todoOn ? [{ id: 'care' as const, label: t.passport.todoTab }] : []),
+    // Tasks are the grower's own; other growers see the story and the market.
+    ...(todoOn && isOwner ? [{ id: 'care' as const, label: t.passport.todoTab }] : []),
     ...(marketOn ? [{ id: 'market' as const, label: t.passport.marketTab }] : []),
     // The owner's actions on the plant (who sees it, delete it), last.
     ...(canEdit && isOwner ? [{ id: 'settings' as const, label: t.passport.settingsTab }] : []),
   ]
   const activeTab: PassportTab =
-    (tab === 'market' && !marketOn) || (tab === 'care' && !todoOn) || (tab === 'settings' && !(canEdit && isOwner))
+    (tab === 'market' && !marketOn) ||
+    (tab === 'care' && !(todoOn && isOwner)) ||
+    (tab === 'settings' && !(canEdit && isOwner))
       ? 'story'
       : tab
 
@@ -648,7 +645,8 @@ export function PlantPassport({
           </ShowMore>
         )}
 
-        {owner && showOwner && (
+        {/* Someone else's plant names its grower; your own does not repeat you. */}
+        {owner && (!isOwner || !dialog) && (
           <>
             <OwnerLabel data-owner-label>{t.passport.owner}</OwnerLabel>
             {/* On a phone the greenhouse row stands for the grower; the owner row shows only without it. */}
@@ -731,13 +729,12 @@ export function PlantPassport({
               </Timeline>
             ))}
 
-          {activeTab === 'care' && todoOn && (
+          {activeTab === 'care' && todoOn && isOwner && (
             <FeatureGate placement="passport.todo" title={t.passport.todoTab}>
               <PassportTodo
                 plant={plant}
-                todos={plantTodos}
+                todos={(db.todos ?? []).filter((todo) => todo.plantId === plant.id)}
                 careMark={careMark}
-                readOnly={!isOwner}
               />
             </FeatureGate>
           )}

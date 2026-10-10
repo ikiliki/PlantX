@@ -175,11 +175,6 @@ export function fetchGreenhouseLevel(ownerId: string) {
   )
 }
 
-/** One plant's tasks (any grower's plant the member may see), read-only. */
-export function fetchPlantTodos(plantId: string) {
-  return request<{ todos: Todo[] }>(`/api/todos/plant/${encodeURIComponent(plantId)}`)
-}
-
 export function fetchTodosOutcome() {
   return requestOutcome<{ todos: Todo[] }>('/api/todos')
 }
