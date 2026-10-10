@@ -888,3 +888,12 @@ export const NoteText = styled.span<{ $empty: boolean }>`
   color: ${({ $empty }) => ($empty ? theme.colors.muted : 'inherit')};
   font-style: ${({ $empty }) => ($empty ? 'italic' : 'normal')};
 `
+
+/** A story row's kind badge and its time, on one line (wrapping when narrow). */
+export const RowMeta = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+`

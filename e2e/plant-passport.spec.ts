@@ -75,6 +75,8 @@ test.describe('plant passport', () => {
     await expect(tabs.getByRole('tab', { name: 'Settings' })).toBeVisible()
 
     await expect(passport.locator('[data-passport-story]')).toContainText(added.body)
+    // Each story row carries its kind as a tinted badge, so it reads without the text.
+    await expect(passport.locator('[data-passport-story] [data-moment="added"]')).toContainText('New plant')
 
     // One plant: no quantity anywhere, and the class code is still on the passport.
     await expect(passport.getByText('Size', { exact: true }).first()).toBeVisible()

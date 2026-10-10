@@ -27,8 +27,10 @@ import { LevelBadge } from '../LevelBadge/LevelBadge'
 import { greenhouseHref } from '../GreenhouseCard/GreenhouseCard'
 import { useGreenhouseLevels } from '../../useGreenhouseLevels'
 import { isPlacementEnabled, isPlacementReady } from '../../../../theme/release'
-import type { SizeBand, StageBand, TodoSubcategory } from '../../../../mock/types'
+import type { FeedUpdateKind, SizeBand, StageBand, TodoSubcategory } from '../../../../mock/types'
 import { canSeeActivity } from '../../../feed/activityXp'
+import { activityKindLabel } from '../../../feed/activityMoment'
+import { ActivityKindMark } from '../../../feed/components/ActivityMoment/ActivityMoment'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
 import { passportNow } from '../../passportNow'
 import { CatalogMark } from '../CatalogMark/CatalogMark'
@@ -83,6 +85,7 @@ import {
   TaxonomyRow,
   TabBar,
   Timeline,
+  RowMeta,
   TimelineRow,
   Title,
   TitleTail,
@@ -360,7 +363,7 @@ export function PlantPassport({
     (item) => item.plantId === plant.id && canSeeActivity(item, signedIn ? currentUser : null),
   )
   const checks = plant.identification?.photos
-  const storyRows: { key: string; at: string; body: ReactNode }[] = [
+  const storyRows: { key: string; at: string; kind?: FeedUpdateKind; body: ReactNode }[] = [
     ...(fromActivity.length > 0
       ? fromActivity.map((item) => {
           const scanCheck =
@@ -368,6 +371,7 @@ export function PlantPassport({
           return {
             key: item.id,
             at: item.createdAt,
+            kind: item.kind,
             body: (
               <ActivityBody>
                 <span>{tr(item.body, item.bodyHe)}</span>
@@ -727,7 +731,13 @@ export function PlantPassport({
               <Timeline data-passport-story>
                 {storyRows.map((row) => (
                   <TimelineRow key={row.key} id={`passport-activity-${row.key}`} $mark={row.key === activityKey}>
-                    <time dateTime={row.at}>{formatGradeWhen(row.at, locale)}</time>
+                    {/* A tinted kind badge (water, AI scan, edit …) so a row reads at a glance. */}
+                    <RowMeta>
+                      {row.kind ? (
+                        <ActivityKindMark kind={row.kind}>{activityKindLabel(row.kind, t.feed)}</ActivityKindMark>
+                      ) : null}
+                      <time dateTime={row.at}>{formatGradeWhen(row.at, locale)}</time>
+                    </RowMeta>
                     {row.body}
                   </TimelineRow>
                 ))}

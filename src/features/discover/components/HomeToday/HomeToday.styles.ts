@@ -94,38 +94,40 @@ export const HeadTitle = styled.h2`
   color: ${theme.colors.ink};
 `
 
-const arrow = `
-  &::after {
-    content: ' →';
-  }
-  [dir='rtl'] &::after {
-    content: ' ←';
-  }
-`
-
-/** "All tasks →", "All 2 →", "Feed →": a small pill that reads as tappable, not plain text. */
-const linkChip = css`
+/**
+ * One heading style for every Home section: the heading is the way into its full page — the title, an
+ * optional count, and a chevron. No separate "All …" buttons.
+ */
+export const HeadLink = styled(Link)`
   display: inline-flex;
   align-items: center;
-  /* The arrow is its own flex item, so its leading space is dropped: the gap stands in for it. */
-  gap: 6px;
-  min-height: 32px;
-  padding: 0 12px;
-  border: 1px solid ${theme.colors.borderStrong};
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.chipGreen};
-  font-size: ${theme.text.sm};
-  font-weight: 700;
-  color: ${theme.colors.forest};
-  white-space: nowrap;
+  justify-self: start;
+  gap: 8px;
+  min-height: 40px;
+  min-width: 0;
+  color: inherit;
   text-decoration: none;
-  transition: background ${theme.motion.fast} ${theme.motion.ease}, border-color ${theme.motion.fast} ${theme.motion.ease};
-  ${arrow}
+  border-radius: ${theme.radii.md};
 
-  &:hover {
-    background: ${theme.colors.growth};
-    border-color: ${theme.colors.growth};
-    color: ${theme.colors.onGrowth};
+  &::after {
+    content: '›';
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    color: ${theme.colors.moss};
+    transition: transform ${theme.motion.fast} ${theme.motion.ease};
+  }
+  [dir='rtl'] &::after {
+    content: '‹';
+  }
+  &:hover::after {
+    transform: translateX(3px);
+  }
+  [dir='rtl'] &:hover::after {
+    transform: translateX(-3px);
+  }
+  &:hover h2 {
+    color: ${theme.colors.forest};
   }
   &:focus-visible {
     outline: 2px solid ${theme.colors.forest};
@@ -133,16 +135,18 @@ const linkChip = css`
   }
 `
 
-export const HeadLink = styled(Link)`
-  ${linkChip}
-`
-
-/** Under a section's list, set apart from the next section's heading. */
-export const More = styled(Link)`
-  ${linkChip}
-  justify-self: end;
-  margin-top: 4px;
-  margin-bottom: ${theme.space.md};
+/** How many are behind the heading (tasks due, your plants). */
+export const HeadCount = styled.span`
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.chipGreen};
+  color: ${theme.colors.forest};
+  font-size: 12px;
+  font-weight: 800;
 `
 
 /** One sideways row; the page itself never scrolls sideways. */

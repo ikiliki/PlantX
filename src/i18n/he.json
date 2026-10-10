@@ -2010,16 +2010,12 @@
     "summaryOneDue": "צמח אחד צריך אותך היום",
     "summaryCalm": "אין משימות להיום",
     "level": "מגדל ברמה {n}",
-    "careAll": "כל המשימות",
     "careDone": "סיימת להיום. כל הכבוד.",
     "greenhouse": "החממה שלך",
-    "greenhouseAll": "כל ה-{n}",
-    "greenhousesAll": "כל החממות",
     "firstTitle": "הוסיפו את הצמח הראשון",
     "firstBody": "צלמו תמונה והצמח יקבל דרכון ותזכורות טיפול.",
     "firstAction": "הוספת צמח",
-    "feed": "מהחברתי",
-    "feedAll": "לחברתי"
+    "feed": "מהחברתי"
   },
   "feedPage": {
     "all": "הכול",

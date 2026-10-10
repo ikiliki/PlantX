@@ -2010,16 +2010,12 @@
     "summaryOneDue": "1 plant needs you today",
     "summaryCalm": "Nothing due today",
     "level": "Level {n} grower",
-    "careAll": "All tasks",
     "careDone": "All done for today. Nice work.",
     "greenhouse": "Your greenhouse",
-    "greenhouseAll": "All {n}",
-    "greenhousesAll": "All greenhouses",
     "firstTitle": "Add your first plant",
     "firstBody": "Snap a photo and it gets a passport and care reminders.",
     "firstAction": "Add a plant",
-    "feed": "From Social",
-    "feedAll": "Social"
+    "feed": "From Social"
   },
   "feedPage": {
     "all": "All",

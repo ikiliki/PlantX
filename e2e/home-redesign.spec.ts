@@ -40,14 +40,14 @@ test.describe('member Home and Feed', () => {
     // Either the first-plant card or the grower's own plants, then at most two feed items with a link to Feed.
     await expect(home.locator('[data-home-first], [data-home-greenhouse]').first()).toBeVisible()
     expect(await home.locator('[data-home-feed] article').count()).toBeLessThanOrEqual(2)
-    // Top greenhouses, when there are any, are one sideways row with a link to every greenhouse.
+    // Top greenhouses, when there are any, are one sideways row; the heading links to every greenhouse.
     const top = home.locator('[data-top-greenhouses]')
     if ((await top.count()) > 0) {
-      await expect(top.getByRole('link', { name: /^All greenhouses/ })).toHaveAttribute('href', '/greenhouse?scope=global')
+      await expect(top.getByRole('link', { name: /^Top greenhouses/ })).toHaveAttribute('href', '/greenhouse?scope=global')
       expect(await top.locator('[data-greenhouse]').count()).toBeGreaterThan(0)
     }
     // The feed is called Social now; /feed redirects there.
-    await home.getByRole('link', { name: /^Social/ }).click()
+    await home.getByRole('link', { name: /^From Social/ }).click()
     await expect(page).toHaveURL(/\/social$/)
   })
 

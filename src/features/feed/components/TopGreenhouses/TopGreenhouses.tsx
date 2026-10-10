@@ -1,5 +1,5 @@
 import { SkeletonBar } from '../../../../components/Skeleton/Skeleton'
-import { Head, HeadLink, HeadTitle, Section } from '../../../discover/components/HomeToday/HomeToday.styles'
+import { HeadLink, HeadTitle, Section } from '../../../discover/components/HomeToday/HomeToday.styles'
 import {
   GreenhouseCard,
   GreenhouseCardSkeleton,
@@ -83,10 +83,9 @@ export function TopGreenhouses({ strip = false }: { strip?: boolean }) {
     const extra = verified.filter((user) => !top.some((item) => item.id === user.id))
     return (
       <Section aria-label={t.feed.topGreenhouses} data-top-greenhouses>
-        <Head>
+        <HeadLink to="/greenhouse?scope=global">
           <HeadTitle>{t.feed.topGreenhouses}</HeadTitle>
-          <HeadLink to="/greenhouse?scope=global">{t.homeToday.greenhousesAll}</HeadLink>
-        </Head>
+        </HeadLink>
         <Strip>
           {top.map((user) => card(user, verifiedIds.includes(user.id)))}
           {extra.map((user) => card(user, true))}

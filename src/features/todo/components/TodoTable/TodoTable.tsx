@@ -19,11 +19,14 @@ export function TodoTable({
   plants,
   onOpen,
   limit = 4,
+  bare = false,
 }: {
   todos: Todo[]
   plants: Plant[]
   onOpen: (todo: Todo) => void
   limit?: number
+  /** Rows only: the page around it (Home) gives the heading. */
+  bare?: boolean
 }) {
   const { t, tr } = useI18n()
   const care = useCareTasks()
@@ -33,13 +36,8 @@ export function TodoTable({
 
   if (plants.length === 0 || due.length === 0) return null
 
-  return (
-    <Root aria-label={t.todo.todayTitle}>
-      <Head>
-        <Title>{t.todo.todayTitle}</Title>
-        <Count>{fillable.length}</Count>
-      </Head>
-      <Rows>
+  const rows = (
+      <Rows aria-label={bare ? t.todo.todayTitle : undefined}>
         {due.map((todo, index) => {
           const plant = plants.find((item) => item.id === todo.plantId)
           const name = plant ? tr(plant.title, plant.titleHe) : todo.plantId
@@ -83,6 +81,17 @@ export function TodoTable({
           )
         })}
       </Rows>
+  )
+
+  if (bare) return rows
+
+  return (
+    <Root aria-label={t.todo.todayTitle}>
+      <Head>
+        <Title>{t.todo.todayTitle}</Title>
+        <Count>{fillable.length}</Count>
+      </Head>
+      {rows}
     </Root>
   )
 }

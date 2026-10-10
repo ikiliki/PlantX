@@ -31,9 +31,9 @@ import {
   Greeting,
   Head,
   HeadLink,
+  HeadCount,
   HeadTitle,
   Hello,
-  More,
   PlantCard,
   PlantCardShell,
   PlantName,
@@ -141,23 +141,24 @@ export function HomeToday() {
           {todoOn ? (
             <FeatureGate placement="home.todo" title={t.todo.title}>
               <Section data-home-care>
+                <HeadLink to="/tasks">
+                  <HeadTitle>{t.todo.todayTitle}</HeadTitle>
+                  {due.length > 0 ? <HeadCount>{due.length}</HeadCount> : null}
+                </HeadLink>
                 {due.length === 0 ? (
                   <Calm>{t.homeToday.careDone}</Calm>
                 ) : (
-                  <>
-                    <TodoTable todos={todos} plants={plants} onOpen={setCareTodo} limit={3} />
-                    <More to="/tasks">{t.homeToday.careAll}</More>
-                  </>
+                  <TodoTable todos={todos} plants={plants} onOpen={setCareTodo} limit={3} bare />
                 )}
               </Section>
             </FeatureGate>
           ) : null}
 
           <Section data-home-greenhouse>
-            <Head>
+            <HeadLink to="/greenhouse">
               <HeadTitle>{t.homeToday.greenhouse}</HeadTitle>
-              <HeadLink to="/greenhouse">{t.homeToday.greenhouseAll.replace('{n}', String(plants.length))}</HeadLink>
-            </Head>
+              <HeadCount>{plants.length}</HeadCount>
+            </HeadLink>
             <Strip>
               {plants.slice(0, STRIP).map((plant) => (
                 <PlantCard key={plant.id} to={`/plants/${plant.id}`}>
@@ -176,10 +177,9 @@ export function HomeToday() {
 
       <FeatureGate placement="home.feed" title={t.nav.feed}>
         <Section data-home-feed $last>
-          <Head>
+          <HeadLink to="/social">
             <HeadTitle>{t.homeToday.feed}</HeadTitle>
-            <HeadLink to="/social">{t.homeToday.feedAll}</HeadLink>
-          </Head>
+          </HeadLink>
           {feedWaiting ? (
             Array.from({ length: FEED_PREVIEW }, (_, index) => <FeedPostSkeleton key={index} />)
           ) : (
