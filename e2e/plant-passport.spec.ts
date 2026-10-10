@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import { ADMIN, MEMBER, expect, expectPage, signIn, test } from './support'
 
 /**
- * Passport layout: one plant per passport (no quantity), tabs Story / Tasks / Settings with Story first,
+ * Passport layout: one plant per passport (no quantity), tabs Tasks / Story / Settings for the grower (Tasks first and open),
  * and the class code under the name. The story is public; the Tasks tab is the grower's alone.
  * `/plants/:id` opens over the page that linked to it.
  */
@@ -59,17 +59,19 @@ async function servePlant(page: Page) {
 }
 
 test.describe('plant passport', () => {
-  test('opens on its story, names one plant, and shows no quantity', async ({ page }) => {
+  test('the grower opens on Tasks, then Story; one plant, no quantity', async ({ page }) => {
     await signIn(page, ADMIN)
     await servePlant(page)
     await expectPage(page, `/plants/${plant.id}`)
     const passport = page.getByRole('dialog').first()
     await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
 
-    // Story leads and is open; the old Grading / Activity tabs are gone.
+    // The grower sees their tasks first: Tasks leads and is open, Story next; the old Grading / Activity tabs are gone.
     const tabs = passport.getByRole('tablist')
-    await expect(tabs.getByRole('tab').first()).toHaveText('Story')
-    await expect(tabs.getByRole('tab', { name: 'Story' })).toHaveAttribute('aria-selected', 'true')
+    await expect(tabs.getByRole('tab').first()).toHaveText('Tasks')
+    await expect(tabs.getByRole('tab', { name: 'Tasks' })).toHaveAttribute('aria-selected', 'true')
+    await expect(tabs.getByRole('tab').nth(1)).toHaveText('Story')
+    await tabs.getByRole('tab', { name: 'Story' }).click()
     await expect(tabs.getByRole('tab', { name: 'User rank' })).toHaveCount(0)
     await expect(tabs.getByRole('tab', { name: 'Activity' })).toHaveCount(0)
     await expect(tabs.getByRole('tab', { name: 'Settings' })).toBeVisible()
@@ -93,8 +95,9 @@ test.describe('plant passport', () => {
     await expect(passport.getByRole('heading', { name: plant.title })).toBeVisible()
     // The story is public: another grower sees the plant's public activity.
     await expect(passport.locator('[data-passport-story]')).toContainText(added.body)
-    // Tasks are the grower's own: another grower gets Story (and Market), never Tasks or Settings.
-    await expect(passport.getByRole('tab', { name: 'Story' })).toBeVisible()
+    // Tasks are the grower's own: another grower opens on Story (then Market), never Tasks or Settings.
+    await expect(passport.getByRole('tab').first()).toHaveText('Story')
+    await expect(passport.getByRole('tab', { name: 'Story' })).toHaveAttribute('aria-selected', 'true')
     await expect(passport.getByRole('tab', { name: 'Tasks' })).toHaveCount(0)
     await expect(passport.getByRole('tab', { name: 'Settings' })).toHaveCount(0)
   })

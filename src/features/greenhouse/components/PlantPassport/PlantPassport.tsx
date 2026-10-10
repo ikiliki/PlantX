@@ -160,8 +160,10 @@ export function PlantPassport({
   const viewerId = signedIn && currentUser ? currentUser.id : db.visitorId
   // A plant not in the store yet may still be loading: show the passport's shell, not "not found".
   const plantsWaiting = useSectionFetch(!plant, ['plants'])
-  const startTab: PassportTab = initialTab ?? (careMark ? 'care' : 'story')
-  const [tab, setTab] = useState<PassportTab>(startTab)
+  // No tab asked for: the grower opens on Tasks, everyone else on Story (decided once we know who owns it).
+  // An activity link opens Story with that row marked.
+  const startTab: PassportTab | null = initialTab ?? (careMark ? 'care' : activityKey ? 'story' : null)
+  const [tab, setTab] = useState<PassportTab | null>(startTab)
   const [customsOpen, setCustomsOpen] = useState(false)
   const listing = db.listings.find((item) => item.plantId === plantId && item.status === 'active')
   const [toast, setToast] = useState('')
@@ -181,7 +183,7 @@ export function PlantPassport({
   }, [plantId, startTab])
 
   useEffect(() => {
-    if (tab !== 'story' || !activityKey) return
+    if ((tab ?? 'story') !== 'story' || !activityKey) return
     document.getElementById(`passport-activity-${activityKey}`)?.scrollIntoView({ block: 'nearest' })
   }, [tab, activityKey, plantId])
 
@@ -301,20 +303,22 @@ export function PlantPassport({
   const todoOn = isPlacementEnabled(db.system, 'passport.todo')
   // Community grades join the story only while Rank is live.
   const gradesOn = isPlacementReady(db.system, 'passport.rank')
+  const tasksOn = todoOn && isOwner
   const tabs: { id: PassportTab; label: string }[] = [
+    // Tasks are the grower's own and come first for them; other growers see the story first, then the market.
+    ...(tasksOn ? [{ id: 'care' as const, label: t.passport.todoTab }] : []),
     { id: 'story', label: t.passport.storyTab },
-    // Tasks are the grower's own; other growers see the story and the market.
-    ...(todoOn && isOwner ? [{ id: 'care' as const, label: t.passport.todoTab }] : []),
     ...(marketOn ? [{ id: 'market' as const, label: t.passport.marketTab }] : []),
     // The owner's actions on the plant (who sees it, delete it), last.
     ...(canEdit && isOwner ? [{ id: 'settings' as const, label: t.passport.settingsTab }] : []),
   ]
+  const wanted: PassportTab = tab ?? (tasksOn ? 'care' : 'story')
   const activeTab: PassportTab =
-    (tab === 'market' && !marketOn) ||
-    (tab === 'care' && !(todoOn && isOwner)) ||
-    (tab === 'settings' && !(canEdit && isOwner))
+    (wanted === 'market' && !marketOn) ||
+    (wanted === 'care' && !tasksOn) ||
+    (wanted === 'settings' && !(canEdit && isOwner))
       ? 'story'
-      : tab
+      : wanted
 
   const now = passportNow({
     plant,
