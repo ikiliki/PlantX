@@ -213,7 +213,11 @@ interface StoreApi {
   loginAs: (userId: string | null) => void
   loginByEmail: (email: string) => Promise<boolean>
   /** Google Identity Services ID token → session. */
-  loginWithGoogle: (credential: string, termsVersion?: string) => Promise<{ ok: true } | { ok: false; reason: string }>
+  loginWithGoogle: (
+    credential: string,
+    termsVersion?: string,
+    intent?: 'login' | 'register',
+  ) => Promise<{ ok: true } | { ok: false; reason: string }>
   /** PP: email + password sign-in or sign-up → session. `message` is the server's reason, for the form. */
   loginWithPassword: (
     mode: 'login' | 'register',
@@ -923,8 +927,8 @@ export function StoreProvider({
       update((d) => ({ ...d, currentUserId: operator.id, flags: personaFlags(operator.id) }))
       return { ok: true as const }
     },
-    loginWithGoogle: async (credential, termsVersion) => {
-      const result = await postGoogleSessionResult(credential, termsVersion)
+    loginWithGoogle: async (credential, termsVersion, intent) => {
+      const result = await postGoogleSessionResult(credential, termsVersion, intent)
       if (!result.ok) return { ok: false as const, reason: result.error }
       applyLive(result.live)
       setLiveStatus('up')

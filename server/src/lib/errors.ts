@@ -30,6 +30,8 @@ export const Errors = {
   forbidden: (message = 'Forbidden') => new AppError(403, 'forbidden', message),
   missing: (message = 'Not found') => new AppError(404, 'missing', message),
   unknown: (message = 'Unknown account') => new AppError(404, 'unknown', message),
+  /** Log in with an identity that has no PlantX account: the client switches to Sign up. */
+  noAccount: (message = 'No PlantX account yet. Sign up to create one.') => new AppError(404, 'no_account', message),
   exists: (message = 'Already exists') => new AppError(409, 'exists', message),
   /** Signed up and waiting for admin approval. */
   pending: (message = 'Waiting for approval') => new AppError(403, 'pending', message),

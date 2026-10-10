@@ -899,7 +899,15 @@
     "tooMany": "יותר מדי ניסיונות. כדאי לחכות דקה ולנסות שוב.",
     "signInFailed": "ההתחברות נכשלה. אפשר לנסות שוב.",
     "passwordLoginBody": "התחברות עם אימייל וסיסמה.",
-    "passwordRegisterBody": "יצירת חשבון PlantX עם אימייל וסיסמה."
+    "passwordRegisterBody": "יצירת חשבון PlantX עם אימייל וסיסמה.",
+    "noAccount": "עדיין אין חשבון PlantX לחשבון ה-Google הזה. הירשמו למטה כדי ליצור אחד.",
+    "inAppTitle": "פתחו את PlantX ב-Safari או ב-Chrome",
+    "inAppBody": "ההתחברות עם Google לא עובדת בדפדפן שבתוך אפליקציית {app}. פתחו את הדף ב-Safari או ב-Chrome כדי להתחבר או להירשם.",
+    "inAppSafari": "פתיחה ב-Safari",
+    "inAppChrome": "פתיחה ב-Chrome",
+    "inAppCopy": "העתקת קישור",
+    "inAppCopied": "הקישור הועתק",
+    "inAppBodyGeneric": "ההתחברות עם Google לא עובדת בדפדפן המובנה של האפליקציה הזו. פתחו את הדף ב-Safari או ב-Chrome כדי להתחבר או להירשם."
   },
   "seller": {
     "orders": "הזמנות שהושלמו",
@@ -2060,6 +2068,11 @@
     "unavailableBody": "במכשיר הזה אין מצלמה ש-PlantX יכולה להשתמש בה. פתחו את PlantX בטלפון כדי לצלם את הצמח.",
     "failedTitle": "המצלמה לא נפתחה",
     "failedBody": "ייתכן שאפליקציה אחרת משתמשת בה. סגרו אותה ונסו שוב.",
-    "tryAgain": "נסו שוב"
+    "tryAgain": "נסו שוב",
+    "deniedIos": "באייפון: הקישו aA בשורת הכתובת ← הגדרות אתר ← מצלמה ← אפשר. או הגדרות ← Safari ← מצלמה ← אפשר. ואז נסו שוב.",
+    "deniedAndroid": "באנדרואיד: הקישו על הסמל משמאל לכתובת ← הרשאות ← מצלמה ← אפשר. ואז נסו שוב.",
+    "inAppTitle": "פתחו את PlantX ב-Safari או ב-Chrome",
+    "inAppBody": "המצלמה לא עובדת בדפדפן שבתוך אפליקציית {app}. פתחו את הדף ב-Safari או ב-Chrome כדי לצלם.",
+    "inAppBodyGeneric": "המצלמה לא עובדת בדפדפן המובנה של האפליקציה הזו. פתחו את הדף ב-Safari או ב-Chrome כדי לצלם."
   }
 }
