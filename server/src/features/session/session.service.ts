@@ -78,8 +78,10 @@ export const sessionService = {
   /**
    * Sign in from a verified email (Google, or a PP password). Bootstrap Gmail is the sole admin. `termsVersion`
    * is the version the person ticked on the login page: required to sign up, recorded for a member when it is current.
+   * `intent` is the card the person used: Log in never creates an account (`no_account`, the card switches to
+   * Sign up); Sign up, or no intent (PP password sign-in), creates one for a new email.
    */
-  async loginVerified(profile: { email: string; name: string }, termsVersion?: unknown) {
+  async loginVerified(profile: { email: string; name: string }, termsVersion?: unknown, intent?: unknown) {
     const consent = consentNow(termsVersion)
     const email = profile.email.toLowerCase()
     const store = getStore()
@@ -112,6 +114,7 @@ export const sessionService = {
     }
 
     if (!user) {
+      if (intent === 'login') throw Errors.noAccount()
       // The first Google sign-in is the sign-up, with the Terms agreed. App on: the account opens and signs in.
       // App off: it waits for the admin to pre-approve it.
       if (!consent.termsVersion) throw Errors.invalid('Agree to the Terms of Use and Privacy Policy to sign up')

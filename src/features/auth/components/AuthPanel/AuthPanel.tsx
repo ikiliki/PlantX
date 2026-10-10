@@ -4,9 +4,11 @@ import { fetchGoogleAuth, fetchPasswordAuth } from '../../../../mock/liveApi'
 import { useStore } from '../../../../mock/store'
 import { clientEnv } from '../../../../theme/plantxEnv'
 import { track } from '../../../../lib/track'
+import { inAppBrowser } from '../../../../lib/inAppBrowser'
 import { LEGAL_VERSION } from '../../../legal/legalVersion'
 import { PRIVACY_PATH, TERMS_PATH } from '../../../legal/legalPaths'
 import type { AuthReason } from '../../AuthProvider'
+import { InAppBrowserNotice } from '../InAppBrowserNotice/InAppBrowserNotice'
 import { PasswordForm } from '../PasswordForm/PasswordForm'
 import { Divider } from '../PasswordForm/PasswordForm.styles'
 import {
@@ -96,10 +98,12 @@ function envGoogleClientId() {
 }
 
 /**
- * Google signs in everywhere; PP also offers email + password (`PasswordForm`). With Google, log in and sign up are one
- * flow: a new Google email signs up. While the app is on
+ * Google signs in everywhere; PP also offers email + password (`PasswordForm`). Log in never creates an account: a Google
+ * email PlantX does not know switches the card to Sign up with a note, and Sign up creates it. While the app is on
  * the account opens and signs in at once; while it is off the card says thanks and the admin pre-approves it.
  * With Google off, the panel says sign-ups are paused and offers the guest path instead of an error.
+ * Inside an app's built-in browser (the Google app, Instagram, …) Google sign-in hangs on a white page, so the card
+ * sends the visitor to Safari or Chrome instead of showing the Google button.
  */
 export function AuthPanel({
   reason = 'buy',
@@ -130,6 +134,9 @@ export function AuthPanel({
   const { loginWithGoogle, loginWithMockSso } = useStore()
   const [mode, setMode] = useState<'login' | 'register'>(start ?? (reason === 'sell' ? 'register' : 'login'))
   const [error, setError] = useState('')
+  // Log in with a Google account PlantX does not know: the card is now Sign up and says why.
+  const [notice, setNotice] = useState('')
+  const [inApp] = useState(() => inAppBrowser())
   const [busy, setBusy] = useState(false)
   const [pending, setPending] = useState(false)
   // The first Google sign-in is the sign-up, so every sign-in agrees to the Terms first.
@@ -148,6 +155,8 @@ export function AuthPanel({
   onSuccessRef.current = onSuccess
   const loginRef = useRef(loginWithGoogle)
   loginRef.current = loginWithGoogle
+  const modeRef = useRef(mode)
+  modeRef.current = mode
 
   const mockSso = clientEnv() === 'mock'
   const showGoogle = !gate && !pending && !mockSso && Boolean(googleClientId)
@@ -200,7 +209,7 @@ export function AuthPanel({
   }
 
   useEffect(() => {
-    if (!showGoogle || !googleClientId) return
+    if (!showGoogle || !googleClientId || inApp) return
     let cancelled = false
     void (async () => {
       try {
@@ -213,10 +222,15 @@ export function AuthPanel({
             void (async () => {
               setBusy(true)
               setError('')
-              const result = await loginRef.current(response.credential, LEGAL_VERSION)
+              const result = await loginRef.current(response.credential, LEGAL_VERSION, modeRef.current)
               setBusy(false)
               if (result.ok) {
                 onSuccessRef.current()
+                return
+              }
+              if (result.reason === 'no_account') {
+                setMode('register')
+                setNotice(t.auth.noAccount)
                 return
               }
               if (result.reason === 'pending') {
@@ -250,7 +264,7 @@ export function AuthPanel({
     return () => {
       cancelled = true
     }
-  }, [showGoogle, googleClientId, googleLocale, mode, t.auth])
+  }, [showGoogle, googleClientId, googleLocale, mode, t.auth, inApp])
 
   const onAgree = (next: boolean) => {
     setAgreed(next)
@@ -260,6 +274,7 @@ export function AuthPanel({
   const switchMode = (next: 'login' | 'register') => {
     setMode(next)
     setError('')
+    setNotice('')
     setPending(false)
   }
 
@@ -309,7 +324,12 @@ export function AuthPanel({
             </>
           ) : (
             <>
-              {((mockSso || showGoogle) && !gisFailed) || showPassword ? (
+              {notice ? (
+                <Pending role="status" data-no-account>
+                  {notice}
+                </Pending>
+              ) : null}
+              {((mockSso || showGoogle) && !gisFailed && !inApp) || showPassword ? (
                 <Consent>
                   <input
                     type="checkbox"
@@ -338,6 +358,8 @@ export function AuthPanel({
                 <Submit type="button" onClick={() => void onMockSso()} disabled={busy || !agreed}>
                   {busy ? t.common.loading : t.auth.google}
                 </Submit>
+              ) : showGoogle && inApp ? (
+                <InAppBrowserNotice app={inApp} />
               ) : showGoogle && gisFailed ? (
                 <ErrorText>{t.auth.googleUnavailable}</ErrorText>
               ) : showGoogle ? (

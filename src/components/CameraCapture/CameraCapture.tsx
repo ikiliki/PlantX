@@ -4,14 +4,17 @@ import { ModalDialog } from '../ModalDialog/ModalDialog'
 import { useI18n } from '../../i18n/I18nProvider'
 import { PRIVACY_PATH } from '../../features/legal/legalPaths'
 import { cameraPermission, captureFrame, startCamera, stopCamera, type CameraProblem } from '../../lib/camera'
-import { Note, PrivacyLine, Shield, Shot, Viewfinder } from './CameraCapture.styles'
+import { inAppBrowser, isAndroid, isIos, openInBrowserLinks } from '../../lib/inAppBrowser'
+import { Note, OpenLink, PrivacyLine, Shield, Shot, Viewfinder } from './CameraCapture.styles'
 
 type Phase = 'checking' | 'ask' | 'starting' | 'live' | 'taken' | CameraProblem
 
 /**
  * The only way to add a plant photo: a live camera in a dialog. Asks first (what the camera is for, then the
  * browser's own prompt), skips the ask when access is already granted, and explains a refusal or a missing
- * camera. `onCapture` gets a JPEG data URL; the camera stops as soon as the dialog closes.
+ * camera. `onCapture` gets a JPEG data URL; the camera stops as soon as the dialog closes. Inside an app's built-in
+ * browser (the Google app, Instagram, …) the camera is usually blocked, so a refusal there offers Safari or Chrome.
+ * A browser that already said no is still asked once more: iPhone's "denied" is often only for that visit.
  */
 export function CameraCapture({ onCapture, onClose }: { onCapture: (photo: string) => void; onClose: () => void }) {
   const { t } = useI18n()
@@ -21,6 +24,7 @@ export function CameraCapture({ onCapture, onClose }: { onCapture: (photo: strin
   const [shot, setShot] = useState<string>()
   // The shutter waits for the first frame, so a photo is never blank.
   const [ready, setReady] = useState(false)
+  const [inApp] = useState(() => inAppBrowser())
 
   const open = useCallback(async () => {
     setPhase('starting')
@@ -39,8 +43,9 @@ export function CameraCapture({ onCapture, onClose }: { onCapture: (photo: strin
     let alive = true
     void cameraPermission().then((state) => {
       if (!alive) return
-      if (state === 'granted') void open()
-      else setPhase(state === 'denied' ? 'denied' : 'ask')
+      // Granted, or refused before: try at once (a refusal comes back as 'denied' with the how-to).
+      if (state === 'prompt') setPhase('ask')
+      else void open()
     })
     return () => {
       alive = false
@@ -72,8 +77,15 @@ export function CameraCapture({ onCapture, onClose }: { onCapture: (photo: strin
     onCapture(shot)
   }
 
-  const problem =
-    phase === 'denied'
+  const blockedInApp = inApp && (phase === 'denied' || phase === 'failed' || phase === 'unavailable')
+  const links = blockedInApp ? openInBrowserLinks(window.location.href) : null
+
+  const problem = blockedInApp
+    ? {
+        title: t.camera.inAppTitle,
+        body: inApp === 'app' ? t.camera.inAppBodyGeneric : t.camera.inAppBody.replace('{app}', inApp),
+      }
+    : phase === 'denied'
       ? { title: t.camera.deniedTitle, body: t.camera.deniedBody }
       : phase === 'unavailable'
         ? { title: t.camera.unavailableTitle, body: t.camera.unavailableBody }
@@ -138,6 +150,15 @@ export function CameraCapture({ onCapture, onClose }: { onCapture: (photo: strin
             <a href={PRIVACY_PATH} target="_blank" rel="noreferrer">
               {t.camera.privacyLink}
             </a>
+          </PrivacyLine>
+        ) : null}
+        {phase === 'denied' && !blockedInApp && (isIos() || isAndroid()) ? (
+          <PrivacyLine data-camera-howto>{isIos() ? t.camera.deniedIos : t.camera.deniedAndroid}</PrivacyLine>
+        ) : null}
+        {links ? (
+          <PrivacyLine>
+            {links.safari ? <OpenLink href={links.safari}>{t.auth.inAppSafari}</OpenLink> : null}
+            <OpenLink href={links.chrome}>{t.auth.inAppChrome}</OpenLink>
           </PrivacyLine>
         ) : null}
         {phase === 'starting' || phase === 'checking' ? (

@@ -205,3 +205,24 @@ test.describe('Add Plant', () => {
     await expect(dialog.getByRole('button', { name: 'Continue with AI' })).toBeEnabled()
   })
 })
+
+test.describe('Add Plant inside the Google app on an iPhone', () => {
+  test.use({
+    userAgent:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/380.0.778463337 Mobile/15E148 Safari/604.1',
+  })
+
+  test('a blocked camera offers Safari or Chrome', async ({ page }) => {
+    await signIn(page)
+    // The Google app's browser refuses the camera.
+    await page.addInitScript(() => {
+      navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('Blocked', 'NotAllowedError'))
+    })
+    const dialog = await openAddPlant(page)
+    await dialog.locator('[data-camera-open]:visible').first().click()
+    const blocked = page.getByRole('dialog', { name: 'Open PlantX in Safari or Chrome' })
+    await expect(blocked).toContainText('inside the Google app')
+    await expect(blocked.getByRole('link', { name: 'Open in Safari' })).toHaveAttribute('href', /^x-safari-https?:\/\//)
+    await expect(blocked.getByRole('link', { name: 'Open in Chrome' })).toHaveAttribute('href', /^googlechromes?:\/\//)
+  })
+})

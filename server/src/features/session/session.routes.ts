@@ -93,9 +93,9 @@ sessionRoutes.post('/signup', signInLimit, async (c) => {
 })
 
 sessionRoutes.post('/google', signInLimit, async (c) => {
-  const body = (await c.req.json()) as { credential?: string; termsVersion?: unknown }
+  const body = (await c.req.json()) as { credential?: string; termsVersion?: unknown; intent?: unknown }
   const profile = await verifyGoogleIdToken(body.credential ?? '')
-  const user = await sessionService.loginVerified(profile, body.termsVersion)
+  const user = await sessionService.loginVerified(profile, body.termsVersion, body.intent)
   await setSession(c, user.id)
   return c.json(await liveService.payload(user.id))
 })

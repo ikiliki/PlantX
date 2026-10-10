@@ -899,7 +899,15 @@
     "tooMany": "Too many tries. Wait a minute and try again.",
     "signInFailed": "Sign-in failed. Try again.",
     "passwordLoginBody": "Sign in with your email and password.",
-    "passwordRegisterBody": "Create your PlantX account with an email and password."
+    "passwordRegisterBody": "Create your PlantX account with an email and password.",
+    "noAccount": "There’s no PlantX account for that Google account yet. Sign up below to create one.",
+    "inAppTitle": "Open PlantX in Safari or Chrome",
+    "inAppBody": "Google sign-in doesn’t work in the browser inside the {app} app. Open this page in Safari or Chrome to log in or sign up.",
+    "inAppSafari": "Open in Safari",
+    "inAppChrome": "Open in Chrome",
+    "inAppCopy": "Copy link",
+    "inAppCopied": "Link copied",
+    "inAppBodyGeneric": "Google sign-in doesn’t work in this app’s built-in browser. Open this page in Safari or Chrome to log in or sign up."
   },
   "seller": {
     "orders": "Completed orders",
@@ -2060,6 +2068,11 @@
     "unavailableBody": "This device has no camera PlantX can use. Open PlantX on your phone to photograph the plant.",
     "failedTitle": "The camera didn’t start",
     "failedBody": "Another app may be using it. Close that app and try again.",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "deniedIos": "On iPhone: tap aA in the address bar → Website Settings → Camera → Allow. Or Settings → Safari → Camera → Allow. Then try again.",
+    "deniedAndroid": "On Android: tap the icon left of the address → Permissions → Camera → Allow. Then try again.",
+    "inAppTitle": "Open PlantX in Safari or Chrome",
+    "inAppBody": "The camera doesn’t work in the browser inside the {app} app. Open this page in Safari or Chrome to take the photo.",
+    "inAppBodyGeneric": "The camera doesn’t work in this app’s built-in browser. Open this page in Safari or Chrome to take the photo."
   }
 }

@@ -231,9 +231,12 @@ export function fetchPasswordAuth() {
   return request<{ enabled: boolean; preprod: boolean }>('/api/session/password')
 }
 
-/** Google sign-in. `termsVersion` is the Terms version ticked on the login page (needed to sign up). */
-export function postGoogleSessionResult(credential: string, termsVersion?: string) {
-  return postSignIn('/api/session/google', { credential, termsVersion })
+/**
+ * Google sign-in. `termsVersion` is the Terms version ticked on the login page (needed to sign up). `intent` is
+ * the card: `login` never creates an account (the server answers `no_account`).
+ */
+export function postGoogleSessionResult(credential: string, termsVersion?: string, intent?: 'login' | 'register') {
+  return postSignIn('/api/session/google', { credential, termsVersion, intent })
 }
 
 /** PP: email + password sign-in (`login`) or a new account (`register`). */

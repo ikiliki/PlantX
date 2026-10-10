@@ -46,3 +46,16 @@ export const PrivacyLine = styled.p`
     font-weight: 600;
   }
 `
+
+export const OpenLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  margin-inline-end: 8px;
+  padding: 0 16px;
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.deep};
+  color: ${theme.colors.onDeep} !important;
+  font-weight: 600;
+  text-decoration: none;
+`
