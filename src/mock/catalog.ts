@@ -4,6 +4,7 @@ import { defaultPlantPhoto } from './images'
 import { MARKET_AREAS } from './locations'
 import { STAGE_LABEL, varietyCode } from './marketNaming'
 import type {
+  CarePlan,
   Catalog,
   CatalogCategory,
   CatalogProperty,
@@ -75,6 +76,16 @@ export function catalogSlug(value: string) {
   return slug || `id-${Date.now().toString(36)}`
 }
 
+/** Example care plans: where a plant differs from PlantX's default (water weekly, feed in spring–summer, repot yearly). */
+const EXAMPLE_CARE: Record<string, CarePlan> = {
+  fiddle: { rotate: { everyDays: 14 } },
+  monstera: { rotate: { everyDays: 21 } },
+  'snake-plant': { water: { everyDays: 14, winterEveryDays: 28 }, feed: { everyDays: 60, months: [4, 5, 6, 7, 8] } },
+  zz: { water: { everyDays: 14, winterEveryDays: 28 }, feed: { everyDays: 60, months: [4, 5, 6, 7, 8] } },
+  'boston-fern': { water: { everyDays: 4, winterEveryDays: 7 } },
+  orchid: { water: { everyDays: 10 }, repot: { everyDays: 730 } },
+}
+
 export function createCatalog(): Catalog {
   const categories: CatalogCategory[] = classDictionary.map((plant) => ({
     id: plant.id,
@@ -83,6 +94,7 @@ export function createCatalog(): Catalog {
     nameHe: plant.nameHe,
     ticker: plant.ticker,
     photo: plant.cover || defaultPlantPhoto,
+    ...(EXAMPLE_CARE[plant.id] ? { care: EXAMPLE_CARE[plant.id] } : {}),
   }))
 
   const subcategories: CatalogSubcategory[] = classDictionary.flatMap((plant) => {

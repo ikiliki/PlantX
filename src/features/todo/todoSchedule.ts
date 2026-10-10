@@ -1,7 +1,5 @@
-import type { Plant, Todo, TodoSubcategory } from '../../mock/types'
-
-export const WATER_GAP_DAYS = 7
-export const PHOTO_GAP_MONTHS = 1
+import type { Catalog, Plant, Todo, TodoSubcategory } from '../../mock/types'
+import { careFillFrom, careFor, nextCareDue } from './carePlan'
 
 export function todayIso() {
   return new Date().toISOString().slice(0, 10)
@@ -46,13 +44,11 @@ export function isFirstWaterTodo(todo: Todo, todos: Todo[]) {
 }
 
 /**
- * Days a care task may be logged on: today, and back through one category gap.
- * Water’s next task is a week later, so only the past week counts.
- * A photo’s next task is a month later, so only the past month counts.
+ * Days a care task may be logged on: today, and back through that kind's window
+ * (water the past week, a photo or feeding the past month; see `CARE_FILL_DAYS`).
  */
 export function careFillWindow(subcategory: TodoSubcategory, now = todayIso()) {
-  const min = subcategory === 'photo' ? addMonths(now, -PHOTO_GAP_MONTHS) : addDays(now, -WATER_GAP_DAYS)
-  return { min, max: now }
+  return { min: careFillFrom(subcategory, now), max: now }
 }
 
 export function inCareFillWindow(day: string, subcategory: TodoSubcategory, now = todayIso()) {
@@ -115,6 +111,16 @@ export function plantHasPhotoDue(todos: Todo[], plantId: string, now = todayIso(
   return dueTodos(todos, now).some((todo) => todo.plantId === plantId && todo.subcategory === 'photo')
 }
 
+/** Due today or earlier for any of these kinds. */
+export function plantHasDueKinds(todos: Todo[], plantId: string, kinds: TodoSubcategory[], now = todayIso()) {
+  return dueTodos(todos, now).some((todo) => todo.plantId === plantId && kinds.includes(todo.subcategory))
+}
+
+/** Scheduled after today for any of these kinds. */
+export function plantHasUpcomingKinds(todos: Todo[], plantId: string, kinds: TodoSubcategory[], now = todayIso()) {
+  return upcomingTodos(todos, now).some((todo) => todo.plantId === plantId && kinds.includes(todo.subcategory))
+}
+
 export function plantHasUpcoming(todos: Todo[], plantId: string, now = todayIso()) {
   return upcomingTodos(todos, now).some((todo) => todo.plantId === plantId)
 }
@@ -130,104 +136,89 @@ export function plantHasUpcomingPhoto(todos: Todo[], plantId: string, now = toda
 /** Seed-only care dates (mock demo), keyed by plant id. Plants themselves carry no care dates. */
 export type CareDates = Record<string, { wateredAt?: string; photoAt?: string }>
 
-/** Gives every unsold plant its water todo and, with a photo, an open photo todo; `care` dates the demo ones. */
-export function seedCareTodos(plants: Plant[], todos: Todo[], care: CareDates = {}): Todo[] {
-  const rows = todos.slice()
-  let changed = false
+type CarePlant = Pick<Plant, 'id' | 'ownerId' | 'speciesId' | 'subcategoryId' | 'care' | 'photos' | 'createdAt' | 'status'>
+
+function lastDone(todos: Todo[], plantId: string, kind: TodoSubcategory) {
+  let last: string | undefined
+  for (const row of todos) {
+    if (row.plantId !== plantId || row.subcategory !== kind || row.completedOn == null) continue
+    if (!last || row.completedOn > last) last = row.completedOn
+  }
+  return last
+}
+
+function careTodo(plant: CarePlant, kind: TodoSubcategory, dueOn: string | null, completedOn: string | null = null): Todo {
+  return {
+    id: newId('todo'),
+    ownerId: plant.ownerId,
+    plantId: plant.id,
+    category: 'plant',
+    subcategory: kind,
+    dueOn,
+    completedOn,
+    createdAt: new Date().toISOString(),
+  }
+}
+
+/**
+ * Makes a plant's open tasks match its care plan (`careFor`): one open task per kind that is on, due one
+ * interval after that care was last done (or after the plant was added); a plant never watered gets a
+ * first-watering session instead; a kind turned off loses its open task; a photo task waits for a photo.
+ * Existing due days stay unless `move` is set (the plan itself changed). Shared by the server and mock mode.
+ */
+export function syncCareTodos(
+  todos: Todo[],
+  plant: CarePlant,
+  catalog: Pick<Catalog, 'categories' | 'subcategories'>,
+  { move = false }: { move?: boolean } = {},
+): { todos: Todo[]; removed: string[] } {
+  if (plant.status === 'sold') return { todos, removed: [] }
+  let rows = todos
+  const removed: string[] = []
+  for (const { kind, rule } of careFor(plant, catalog)) {
+    const open = openTodo(rows, plant.id, kind)
+    if (!rule) {
+      if (open) {
+        removed.push(open.id)
+        rows = rows.filter((row) => row.id !== open.id)
+      }
+      continue
+    }
+    const done = lastDone(rows, plant.id, kind)
+    if (kind === 'water' && !done) {
+      if (!open) rows = [careTodo(plant, kind, null), ...rows]
+      continue
+    }
+    if (kind === 'photo' && !open && plant.photos.length === 0) continue
+    const dueOn = nextCareDue(rule, done ?? plant.createdAt.slice(0, 10))
+    if (!open) rows = [careTodo(plant, kind, dueOn), ...rows]
+    else if (move && open.dueOn != null && open.dueOn !== dueOn) {
+      rows = rows.map((row) => (row.id === open.id ? { ...row, dueOn } : row))
+    }
+  }
+  return { todos: rows, removed }
+}
+
+/** Gives every unsold plant its care plan's open tasks; `care` dates the demo ones (a watering, a photo). */
+export function seedCareTodos(
+  plants: Plant[],
+  todos: Todo[],
+  catalog: Pick<Catalog, 'categories' | 'subcategories'>,
+  care: CareDates = {},
+): Todo[] {
+  let rows = todos
   for (const plant of plants) {
     if (plant.status === 'sold') continue
     const dates = care[plant.id] ?? {}
-
-    const hasWater = rows.some((row) => row.plantId === plant.id && row.subcategory === 'water')
-    if (dates.wateredAt && !hasWater) {
+    if (dates.wateredAt && !rows.some((row) => row.plantId === plant.id && row.subcategory === 'water')) {
       const watered = dates.wateredAt.slice(0, 10)
-      rows.unshift({
-        id: newId('todo'),
-        ownerId: plant.ownerId,
-        plantId: plant.id,
-        category: 'plant',
-        subcategory: 'water',
-        dueOn: watered,
-        completedOn: watered,
-        createdAt: `${watered}T12:00:00.000Z`,
-      })
-      rows.unshift({
-        id: newId('todo'),
-        ownerId: plant.ownerId,
-        plantId: plant.id,
-        category: 'plant',
-        subcategory: 'water',
-        dueOn: addDays(watered, WATER_GAP_DAYS),
-        completedOn: null,
-        createdAt: new Date().toISOString(),
-      })
-      changed = true
-    } else if (!hasWater) {
-      rows.unshift({
-        id: newId('todo'),
-        ownerId: plant.ownerId,
-        plantId: plant.id,
-        category: 'plant',
-        subcategory: 'water',
-        dueOn: null,
-        completedOn: null,
-        createdAt: new Date().toISOString(),
-      })
-      changed = true
+      rows = [careTodo(plant, 'water', watered, watered), ...rows]
     }
-
-    if (!openTodo(rows, plant.id, 'photo') && (dates.photoAt || plant.photos.length > 0)) {
-      const uploaded = (dates.photoAt ?? plant.createdAt).slice(0, 10)
-      rows.unshift({
-        id: newId('todo'),
-        ownerId: plant.ownerId,
-        plantId: plant.id,
-        category: 'plant',
-        subcategory: 'photo',
-        dueOn: addMonths(uploaded, PHOTO_GAP_MONTHS),
-        completedOn: null,
-        createdAt: new Date().toISOString(),
-      })
-      changed = true
+    if (dates.photoAt && !rows.some((row) => row.plantId === plant.id && row.subcategory === 'photo')) {
+      const shot = dates.photoAt.slice(0, 10)
+      rows = [careTodo(plant, 'photo', shot, shot), ...rows]
     }
+    rows = syncCareTodos(rows, plant, catalog).todos
   }
-  return changed ? rows : todos
-}
-
-export function ensureFirstWaterTodo(todos: Todo[], plant: Plant): Todo[] {
-  if (todos.some((row) => row.plantId === plant.id && row.subcategory === 'water')) return todos
-  return [
-    {
-      id: newId('todo'),
-      ownerId: plant.ownerId,
-      plantId: plant.id,
-      category: 'plant',
-      subcategory: 'water',
-      dueOn: null,
-      completedOn: null,
-      createdAt: new Date().toISOString(),
-    },
-    ...todos,
-  ]
-}
-
-export function schedulePhotoTodo(todos: Todo[], plant: Plant, uploadedOn = todayIso()): Todo[] {
-  const dueOn = addMonths(uploadedOn, PHOTO_GAP_MONTHS)
-  const open = openTodo(todos, plant.id, 'photo')
-  if (open) {
-    return todos.map((row) => (row.id === open.id ? { ...row, dueOn } : row))
-  }
-  return [
-    {
-      id: newId('todo'),
-      ownerId: plant.ownerId,
-      plantId: plant.id,
-      category: 'plant',
-      subcategory: 'photo',
-      dueOn,
-      completedOn: null,
-      createdAt: new Date().toISOString(),
-    },
-    ...todos,
-  ]
+  return rows
 }

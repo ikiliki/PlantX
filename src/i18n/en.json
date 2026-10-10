@@ -362,7 +362,22 @@
     "priceFrom": "Last sale {last} · floor {floor}",
     "storyPrivateOwner": "Only you can see this plant's activity for now.",
     "storyPrivateAdmin": "Private to its grower. You see it as an admin.",
-    "storyPrivateOther": "This plant's activity is private to {name} for now."
+    "storyPrivateOther": "This plant's activity is private to {name} for now.",
+    "carePlan": "Care plan",
+    "careEvery": "Every {n} days",
+    "careEveryWinter": "Every {n} days · {w} in winter",
+    "careResting": "Resting until {month}",
+    "careOff": "Off",
+    "careNext": "Next {day}",
+    "careLast": "Last {day}",
+    "careNever": "Not done yet",
+    "careFromCatalog": "From the catalog",
+    "careYours": "Your plan",
+    "careUseCatalog": "Use the catalog",
+    "carePause": "Pause",
+    "careOnTime": "{n} of {total} on time",
+    "careWeeks": "Last 12 weeks",
+    "careHistory": "Care history"
   },
   "greenhouse": {
     "myGreenhouse": "Mine",
@@ -514,7 +529,8 @@
     "socialYouReacted": "You gave your post a 🌿",
     "socialYouCommented": "You commented: “{text}”",
     "socialUnread": "{n} new",
-    "bellUnread": "Greenhouse activities, {n} new"
+    "bellUnread": "Greenhouse activities, {n} new",
+    "careOther": "Other care"
   },
   "todo": {
     "cancel": "Cancel",
@@ -568,7 +584,18 @@
     "dayTasks": "Day {day}, {n} tasks",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
-    "dayTasksFull": "{date}, {n} tasks"
+    "dayTasksFull": "{date}, {n} tasks",
+    "kindFeed": "Feeding",
+    "kindRepot": "Repotting",
+    "kindRotate": "Turn to the light",
+    "actionFeed": "Feed",
+    "actionRepot": "Repot",
+    "actionRotate": "Turn",
+    "detailFeed": "Give it fertilizer in its water.",
+    "detailRepot": "Move it to a pot one size up with fresh soil.",
+    "detailRotate": "Turn the pot a quarter so it grows straight.",
+    "fillWindowOther": "Only today and the past {n} days. The next one follows its care plan from the day you pick.",
+    "doneAll": "Done all ({n})"
   },
   "addPlant": {
     "title": "Add a plant",
@@ -1383,7 +1410,17 @@
     "reactionsMock": "Reactions are stored on the server; mock mode has none.",
     "reactionsFailed": "Could not load reactions. Try again.",
     "reactionsEmpty": "No reactions yet.",
-    "commentsLeadServer": "Newest Feed comments: who wrote them and on which post. Remove one in Moderation → Comments."
+    "commentsLeadServer": "Newest Feed comments: who wrote them and on which post. Remove one in Moderation → Comments.",
+    "careHeading": "Care plan",
+    "careHint": "Each kind of care repeats on its own. Default uses PlantX's standard; a variety overrides its category.",
+    "careDefault": "Default · {rule}",
+    "careDefaultOff": "Default · off",
+    "careCustom": "Custom",
+    "careOff": "Off",
+    "careEveryDays": "Every (days)",
+    "careWinterDays": "In winter (days)",
+    "careSeasonOnly": "Only March–September",
+    "careSeasonShort": "Mar–Sep"
   },
   "settings": {
     "region": "Location",
@@ -1506,7 +1543,10 @@
     "sending": "Sending…",
     "sendFailed": "Could not send the report",
     "cancel": "Cancel",
-    "donePlant": "Planted · +{xp} XP"
+    "donePlant": "Planted · +{xp} XP",
+    "doneFeed": "Fed · +{xp} XP",
+    "doneRepot": "Repotted · +{xp} XP",
+    "doneRotate": "Turned · +{xp} XP"
   },
   "roles": {
     "grower": "Home grower",

@@ -85,6 +85,8 @@ export interface PlantxStore {
     list(): Promise<Todo[]>
     saveAll(rows: Todo[]): Promise<void>
     upsert(rows: Todo[]): Promise<void>
+    /** Drop open tasks a paused kind of care no longer needs. */
+    remove(ids: string[]): Promise<void>
   }
   catalog: {
     get(): Promise<Catalog>

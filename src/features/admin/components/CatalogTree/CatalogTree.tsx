@@ -166,6 +166,7 @@ export function CatalogTree({
         <SubcategoryEditorDialog
           categoryId={dialog.categoryId}
           initial={dialog.item}
+          inheritedCare={catalog.categories.find((item) => item.id === dialog.categoryId)?.care}
           onClose={close}
           onConfirm={(draft) => {
             commitCatalog(({ catalog: cat }) => ({ catalog: upsertSubcategory(cat, draft) }))

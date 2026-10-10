@@ -1,6 +1,7 @@
 import pg from 'pg'
 import { generateNickname } from '../../../../src/features/profile/avatarIcons.ts'
 import type {
+  CarePlan,
   Catalog,
   CatalogProperty,
   PhotoCheck,
@@ -170,6 +171,10 @@ export function createSupabaseStore(): PlantxStore {
       list: () => withTx(listTodos),
       saveAll: (items) => withTx((client) => saveTodos(client, items)),
       upsert: (items) => withTx((client) => saveTodos(client, items, 'rows')),
+      remove: async (ids) => {
+        if (ids.length === 0) return
+        await withTx((client) => client.query('delete from todos where id = any($1::text[])', [ids]))
+      },
     },
     catalog: {
       get: () => withTx(getCatalog),
@@ -542,11 +547,11 @@ export function createSupabaseStore(): PlantxStore {
           stem_length_cm, leaf_count, location_zone, location_zone_he, lat, lng, parent_id,
           batch_id, propagated_at, verified_at, verified_by, status,
           published_at, rarity, growth_time_en, growth_time_he, growth_light, growth_light_he,
-          growth_water, growth_water_he, growth_note, growth_note_he, created_at, is_private
+          growth_water, growth_water_he, growth_note, growth_note_he, created_at, is_private, care
         ) values (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
           $21,$22,$23,$24,$25,$26,$27,null,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,
-          $38,$39,$40,$41,$42,$43,$44
+          $38,$39,$40,$41,$42,$43,$44,$45
         )
         on conflict (id) do update set
           position = excluded.position,
@@ -591,7 +596,8 @@ export function createSupabaseStore(): PlantxStore {
           growth_note = excluded.growth_note,
           growth_note_he = excluded.growth_note_he,
           created_at = excluded.created_at,
-          is_private = excluded.is_private`,
+          is_private = excluded.is_private,
+          care = excluded.care`,
         plantParams(plant, position, subIds),
       )
     }
@@ -843,6 +849,7 @@ export function createSupabaseStore(): PlantxStore {
         nameHe: text(row, 'name_he'),
         ticker: text(row, 'ticker'),
         photo: text(row, 'photo'),
+        ...(careOf(row) ? { care: careOf(row) } : {}),
       })),
       subcategories: subcategories.map((row) => {
         const item = {
@@ -851,6 +858,7 @@ export function createSupabaseStore(): PlantxStore {
           name: text(row, 'name'),
           nameHe: text(row, 'name_he'),
           code: text(row, 'code'),
+          ...(careOf(row) ? { care: careOf(row) } : {}),
         }
         const photo = optional(row, 'photo')
         return photo ? { ...item, photo } : item
@@ -863,32 +871,34 @@ export function createSupabaseStore(): PlantxStore {
     const categoryIds = catalog.categories.map((item) => item.id)
     for (const [position, item] of catalog.categories.entries()) {
       await client.query(
-        `insert into catalog_categories (id, position, species_id, name, name_he, ticker, photo)
-         values ($1,$2,$3,$4,$5,$6,$7)
+        `insert into catalog_categories (id, position, species_id, name, name_he, ticker, photo, care)
+         values ($1,$2,$3,$4,$5,$6,$7,$8)
          on conflict (id) do update set
            position = excluded.position,
            species_id = excluded.species_id,
            name = excluded.name,
            name_he = excluded.name_he,
            ticker = excluded.ticker,
-           photo = excluded.photo`,
-        [item.id, position, item.speciesId, item.name, item.nameHe, item.ticker, item.photo ?? ''],
+           photo = excluded.photo,
+           care = excluded.care`,
+        [item.id, position, item.speciesId, item.name, item.nameHe, item.ticker, item.photo ?? '', item.care ? JSON.stringify(item.care) : null],
       )
     }
     const knownCategories = new Set(categoryIds)
     for (const [position, item] of catalog.subcategories.entries()) {
       if (!knownCategories.has(item.categoryId)) continue
       await client.query(
-        `insert into catalog_subcategories (id, position, category_id, name, name_he, code, photo)
-         values ($1,$2,$3,$4,$5,$6,$7)
+        `insert into catalog_subcategories (id, position, category_id, name, name_he, code, photo, care)
+         values ($1,$2,$3,$4,$5,$6,$7,$8)
          on conflict (id) do update set
            position = excluded.position,
            category_id = excluded.category_id,
            name = excluded.name,
            name_he = excluded.name_he,
            code = excluded.code,
-           photo = excluded.photo`,
-        [item.id, position, item.categoryId, item.name, item.nameHe, item.code, item.photo ?? null],
+           photo = excluded.photo,
+           care = excluded.care`,
+        [item.id, position, item.categoryId, item.name, item.nameHe, item.code, item.photo ?? null, item.care ? JSON.stringify(item.care) : null],
       )
     }
     const keptSubs = catalog.subcategories.filter((item) => knownCategories.has(item.categoryId)).map((item) => item.id)
@@ -1033,6 +1043,7 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.conditions?.noteHe ?? null,
     plant.createdAt,
     plant.private === true,
+    plant.care ? JSON.stringify(plant.care) : null,
   ]
 }
 
@@ -1111,6 +1122,7 @@ function plantFrom(
   assign(plant, 'stemLengthCm', optionalNum(row, 'stem_length_cm'))
   assign(plant, 'leafCount', optionalNum(row, 'leaf_count'))
   assign(plant, 'parentId', optional(row, 'parent_id'))
+  assign(plant, 'care', careOf(row))
   assign(plant, 'batchId', optional(row, 'batch_id'))
   assign(plant, 'propagatedAt', optional(row, 'propagated_at'))
   assign(plant, 'verifiedAt', optional(row, 'verified_at'))
@@ -1200,6 +1212,12 @@ function labels(rows: SqlRow[], userId: string, locale: string) {
 function text(row: SqlRow, key: string) {
   const value = row[key]
   return value == null ? '' : String(value)
+}
+
+/** A `care` jsonb column: the parsed plan, or undefined when unset. */
+function careOf(row: SqlRow): CarePlan | undefined {
+  const value = row.care
+  return value && typeof value === 'object' ? (value as CarePlan) : undefined
 }
 
 function optional(row: SqlRow, key: string) {

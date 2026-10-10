@@ -1,20 +1,15 @@
 import styled, { css } from 'styled-components'
 import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
+import type { TodoSubcategory } from '../../../../mock/types'
+import { careColor, careTint } from '../../../todo/careKinds'
 
-type Tone = 'water' | 'photo' | 'calm'
+type Tone = TodoSubcategory | 'calm'
 
-const tint: Record<Tone, string> = {
-  water: 'color-mix(in srgb, var(--c-water) 14%, var(--c-creamCard))',
-  photo: 'color-mix(in srgb, var(--c-metal) 14%, var(--c-creamCard))',
-  calm: 'color-mix(in srgb, var(--c-creamCard) 70%, transparent)',
-}
+const tint = (tone: Tone) => (tone === 'calm' ? 'color-mix(in srgb, var(--c-creamCard) 70%, transparent)' : careTint(tone))
 
-const edge: Record<Tone, string> = {
-  water: 'color-mix(in srgb, var(--c-water) 40%, transparent)',
-  photo: 'color-mix(in srgb, var(--c-metal) 40%, transparent)',
-  calm: 'color-mix(in srgb, var(--c-forest) 10%, transparent)',
-}
+const edge = (tone: Tone) =>
+  tone === 'calm' ? 'color-mix(in srgb, var(--c-forest) 10%, transparent)' : `color-mix(in srgb, ${careColor(tone)} 40%, transparent)`
 
 export const Root = styled.div<{ $tone: Tone; $late?: boolean }>`
   display: grid;
@@ -23,9 +18,9 @@ export const Root = styled.div<{ $tone: Tone; $late?: boolean }>`
   gap: 10px;
   min-width: 0;
   padding: 10px 12px;
-  border: 1px solid ${({ $tone, $late }) => ($late ? theme.colors.warn : edge[$tone])};
+  border: 1px solid ${({ $tone, $late }) => ($late ? theme.colors.warn : edge($tone))};
   border-radius: ${theme.radii.md};
-  background: ${({ $tone }) => tint[$tone]};
+  background: ${({ $tone }) => tint($tone)};
   color: ${theme.colors.ink};
   text-decoration: none;
   animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;

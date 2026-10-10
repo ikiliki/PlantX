@@ -233,6 +233,8 @@ export interface Plant extends VisibilityMeta {
   identification?: PlantIdentification
   createdAt: string
   history: { at: string; label: string; labelHe: string }[]
+  /** The owner's own care for this plant, over the catalog's (a rule, or null to pause that kind). */
+  care?: CarePlan
   comps?: { price: number; date: string; note: string; noteHe: string }[]
 }
 
@@ -495,8 +497,17 @@ export interface ActivityComment {
 /** Top-level todo bucket. Later: market. */
 export type TodoCategory = 'plant'
 
-/** Action under the category. Later under market: verify. */
-export type TodoSubcategory = 'water' | 'photo'
+/** Action under the category: one kind of care. Later under market: verify. */
+export type TodoSubcategory = 'water' | 'photo' | 'feed' | 'repot' | 'rotate'
+
+/**
+ * How often one kind of care repeats. `winterEveryDays` replaces `everyDays` from November to February;
+ * `months` (1–12) keeps it to a season (feeding in spring and summer).
+ */
+export type CareRule = { everyDays: number; winterEveryDays?: number; months?: number[] }
+
+/** Care per kind. A rule sets it, `null` turns that kind off, a missing kind falls back (plant → variety → category → default). */
+export type CarePlan = Partial<Record<TodoSubcategory, CareRule | null>>
 
 export interface Todo {
   id: string
@@ -546,6 +557,8 @@ export type CatalogCategory = {
   nameHe: string
   ticker: string
   photo: string
+  /** Care for every plant of this category. */
+  care?: CarePlan
 }
 
 export type CatalogSubcategory = {
@@ -555,6 +568,8 @@ export type CatalogSubcategory = {
   nameHe: string
   code: string
   photo?: string
+  /** Care for this variety, over its category's. */
+  care?: CarePlan
 }
 
 export type Catalog = {

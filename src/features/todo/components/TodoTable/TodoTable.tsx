@@ -2,6 +2,7 @@ import type { Plant, Todo } from '../../../../mock/types'
 import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useI18n } from '../../../../i18n/I18nProvider'
 import { canFillTodo, dueTodos, isFirstWaterTodo, todayIso } from '../../todoSchedule'
+import { careAction, careKindName } from '../../careKinds'
 import { TodoKindIcon } from '../TodoKindIcon/TodoKindIcon'
 import { Action, Badge, Copy, Count, Head, Name, Root, Row, Rows, Status, Thumb, Title } from './TodoTable.styles'
 
@@ -48,9 +49,8 @@ export function TodoTable({
             : late > 0
               ? t.todo.statusOverdue.replace('{n}', String(late))
               : t.todo.statusToday
-          const kindName = todo.subcategory === 'photo' ? t.todo.kindPhoto : t.todo.kindWater
-          const actionLabel =
-            todo.subcategory === 'photo' ? t.todo.actionPhoto : first ? t.todo.actionSetWaterDate : t.todo.actionWater
+          const kindName = careKindName(todo.subcategory, t)
+          const actionLabel = first ? t.todo.actionSetWaterDate : careAction(todo.subcategory, t)
           return (
             <li key={todo.id}>
               <Row

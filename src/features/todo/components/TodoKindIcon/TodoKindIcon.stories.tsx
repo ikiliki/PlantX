@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CARE_KINDS } from '../../carePlan'
 import { TodoKindIcon } from './TodoKindIcon'
 
 const withPad = (Story: () => ReactNode) => (
@@ -15,9 +16,17 @@ export default {
 
 export const Water = () => <TodoKindIcon kind="water" size={24} />
 export const Photo = () => <TodoKindIcon kind="photo" size={24} />
+export const AllKinds = () => (
+  <>
+    {CARE_KINDS.map((kind) => (
+      <TodoKindIcon key={kind} kind={kind} size={24} />
+    ))}
+  </>
+)
 export const Marks = () => (
   <>
-    <TodoKindIcon kind="water" size={20} mark />
-    <TodoKindIcon kind="photo" size={20} mark />
+    {CARE_KINDS.map((kind) => (
+      <TodoKindIcon key={kind} kind={kind} size={20} mark />
+    ))}
   </>
 )

@@ -15,6 +15,7 @@ import { logger } from '../../lib/logger.ts'
 import { activityService } from '../activity/activity.service.ts'
 import { catalogService } from '../catalog/catalog.service.ts'
 import { todoService } from '../todo/todo.service.ts'
+import { cleanCarePlan } from '../../../../src/features/todo/carePlan.ts'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -144,6 +145,7 @@ export const greenhouseService = {
     const row: Plant = {
       ...withLocation({
         ...rest,
+        care: cleanCarePlan(rest.care),
         photos,
         ownerId,
         status: 'owned',
@@ -159,8 +161,7 @@ export const greenhouseService = {
       logger.error('identify link failed', { plantId: row.id }, err)
     }
     try {
-      await todoService.ensureFirstWater(row.id, ownerId)
-      if (photos.length > 0) await todoService.schedulePhoto(row.id, ownerId, today())
+      await todoService.planCare(row)
     } catch (err) {
       logger.error('todo schedule failed', { plantId: row.id }, err)
     }
@@ -222,6 +223,14 @@ export const greenhouseService = {
       if (photos.length > MAX_PLANT_PHOTOS) throw Errors.invalid(`A plant has at most ${MAX_PLANT_PHOTOS} photos`)
       set('photos', photos)
     }
+    // The owner's care plan for this plant: a rule per kind, null to pause one, {} to follow the catalog again.
+    if (patch.care !== undefined) {
+      const care = cleanCarePlan(patch.care)
+      if (JSON.stringify(care ?? null) !== JSON.stringify(plant.care ?? null)) {
+        next.care = care
+        changed.push('care')
+      }
+    }
     let privacy: 'private' | 'public' | undefined
     if (patch.private !== undefined && Boolean(patch.private) !== Boolean(plant.private)) {
       next.private = Boolean(patch.private)
@@ -231,6 +240,7 @@ export const greenhouseService = {
     if (changed.length === 0) return { plant, changed }
     next.identification = remark(next, plant.identification)
     await store.plants.upsert([next])
+    if (changed.includes('care')) await todoService.replanCare(next)
     // The owner's private log (and the admin's): what changed, under the owner even when an admin edited.
     try {
       await activityService.record({
@@ -282,6 +292,7 @@ export type PlantPatch = Partial<
     | 'traits'
     | 'photos'
     | 'private'
+    | 'care'
   >
 >
 

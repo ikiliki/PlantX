@@ -256,7 +256,7 @@ export function ensureSession(db: MockDb) {
     if (plant.status !== 'listed' || care[plant.id]?.photoAt) continue
     care[plant.id] = { ...care[plant.id], photoAt: stalePhotos.has(plant.id) ? '2026-09-10' : '2026-09-28' }
   }
-  db.todos = seedCareTodos(db.plants, db.todos, care)
+  db.todos = seedCareTodos(db.plants, db.todos, db.catalog, care)
   // Demo: a few listed plants keep an overdue photo todo so Needs care has rows.
   for (const plant of db.plants) {
     if (!stalePhotos.has(plant.id)) continue

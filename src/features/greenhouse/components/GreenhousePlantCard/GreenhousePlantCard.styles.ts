@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { blurred } from '../../../../components/Skeleton/Skeleton'
 import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
+import type { TodoSubcategory } from '../../../../mock/types'
+import { careColor } from '../../../todo/careKinds'
 
 const freshGlow = keyframes`
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-growth) 95%, transparent); transform: scale(0.94); }
@@ -374,14 +376,14 @@ export const CareActions = styled.div`
   }
 `
 
-export const CareAction = styled.span<{ $tone: 'water' | 'photo' }>`
+export const CareAction = styled.span<{ $tone: TodoSubcategory }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-height: 28px;
   padding: 0 10px;
   border-radius: ${theme.radii.pill};
-  background: ${({ $tone }) => ($tone === 'photo' ? theme.colors.metal : theme.colors.aiBlue)};
+  background: ${({ $tone }) => ($tone === 'water' ? theme.colors.aiBlue : careColor($tone))};
   color: ${theme.colors.creamCard};
   font-size: 12px;
   font-weight: 700;

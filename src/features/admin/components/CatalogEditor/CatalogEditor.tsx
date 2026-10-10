@@ -447,6 +447,7 @@ export function CatalogEditor() {
         <SubcategoryEditorDialog
           categoryId={scopeCategoryId}
           initial={dialog.item}
+          inheritedCare={catalog.categories.find((item) => item.id === scopeCategoryId)?.care}
           onClose={close}
           onConfirm={(draft) => {
             commitCatalog(({ catalog: cat }) => ({

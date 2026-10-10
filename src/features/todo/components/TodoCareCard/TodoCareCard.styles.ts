@@ -1,11 +1,10 @@
 import styled, { css } from 'styled-components'
 import { pressable } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
+import type { TodoSubcategory } from '../../../../mock/types'
+import { careColor } from '../../careKinds'
 
-const water = theme.colors.water
-const metal = theme.colors.metal
-
-const cardFace = css<{ $tone: 'water' | 'photo' }>`
+const cardFace = css<{ $tone: TodoSubcategory }>`
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px;
@@ -13,19 +12,19 @@ const cardFace = css<{ $tone: 'water' | 'photo' }>`
   min-width: 0;
   padding: 10px;
   border-radius: ${theme.radii.lg};
-  border: 1px solid ${({ $tone }) => ($tone === 'water' ? water : metal)};
+  border: 1px solid ${({ $tone }) => careColor($tone)};
   background: ${theme.colors.creamCard};
   box-shadow: ${theme.shadow.lift};
   color: ${theme.colors.ink};
   text-align: start;
 `
 
-export const Card = styled.div<{ $tone: 'water' | 'photo' }>`
+export const Card = styled.div<{ $tone: TodoSubcategory }>`
   ${cardFace}
 `
 
 /** Phone task: the whole card opens the day sheet. */
-export const CardHit = styled.button<{ $tone: 'water' | 'photo' }>`
+export const CardHit = styled.button<{ $tone: TodoSubcategory }>`
   ${cardFace}
   ${pressable}
   appearance: none;
@@ -48,7 +47,7 @@ export const Photo = styled.div`
   }
 `
 
-export const Tone = styled.span<{ $tone: 'water' | 'photo' }>`
+export const Tone = styled.span<{ $tone: TodoSubcategory }>`
   position: absolute;
   inset-inline: 4px;
   bottom: 4px;
@@ -59,7 +58,7 @@ export const Tone = styled.span<{ $tone: 'water' | 'photo' }>`
   min-height: 18px;
   padding: 0 6px;
   border-radius: ${theme.radii.pill};
-  background: ${({ $tone }) => ($tone === 'water' ? water : metal)};
+  background: ${({ $tone }) => careColor($tone)};
   color: ${theme.colors.creamCard};
   font-size: 9px;
   font-weight: 800;
@@ -122,7 +121,7 @@ export const Meta = styled.p`
   line-height: 1.35;
 `
 
-export const Action = styled.button<{ $tone: 'water' | 'photo' | 'quiet' }>`
+export const Action = styled.button<{ $tone: TodoSubcategory | 'quiet' }>`
   ${pressable}
   appearance: none;
   display: inline-flex;
@@ -133,7 +132,7 @@ export const Action = styled.button<{ $tone: 'water' | 'photo' | 'quiet' }>`
   padding: 0 12px;
   border: 0;
   border-radius: ${theme.radii.pill};
-  background: ${({ $tone }) => ($tone === 'water' ? water : $tone === 'photo' ? metal : 'transparent')};
+  background: ${({ $tone }) => ($tone === 'quiet' ? 'transparent' : careColor($tone))};
   color: ${({ $tone }) => ($tone === 'quiet' ? theme.colors.forest : theme.colors.creamCard)};
   box-shadow: ${({ $tone }) => ($tone === 'quiet' ? `inset 0 0 0 1px ${theme.colors.border}` : 'none')};
   font: inherit;

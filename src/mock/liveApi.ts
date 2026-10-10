@@ -595,7 +595,17 @@ export function postAdminScans(
 export type PlantPatch = Partial<
   Pick<
     Plant,
-    'title' | 'titleHe' | 'description' | 'descriptionHe' | 'sizeBand' | 'stage' | 'quality' | 'traits' | 'photos' | 'private'
+    | 'title'
+    | 'titleHe'
+    | 'description'
+    | 'descriptionHe'
+    | 'sizeBand'
+    | 'stage'
+    | 'quality'
+    | 'traits'
+    | 'photos'
+    | 'private'
+    | 'care'
   >
 >
 

@@ -11,6 +11,7 @@ import {
   type HttpNotice,
 } from '../../lib/httpNotice'
 import { useStore } from '../../mock/store'
+import { careDoneLine } from '../../features/todo/careKinds'
 import {
   Actions,
   Card,
@@ -114,12 +115,9 @@ export function RequestNoticeStack({
               <Orb aria-hidden $tone="done" />
               <Copy>
                 <Title>
-                  {(item.care === 'photo'
-                    ? t.http.donePhoto
-                    : item.care === 'plant'
-                      ? t.http.donePlant
-                      : t.http.doneWater
-                  ).replace('{xp}', String(item.xp))}
+                  {item.care === 'plant'
+                    ? t.http.donePlant.replace('{xp}', String(item.xp))
+                    : careDoneLine(item.care, t, item.xp)}
                 </Title>
               </Copy>
               <Close type="button" aria-label={t.http.dismiss} onClick={() => onDismiss(item.id)}>

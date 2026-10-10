@@ -5,13 +5,14 @@ import { useI18n } from '../../../../i18n/I18nProvider'
 import { useStore } from '../../../../mock/store'
 import { isPlacementEnabled, isPlacementReady } from '../../../../theme/release'
 import { isPhotoStale, isWaterDue } from '../../plantCare'
-import type { Plant, Todo } from '../../../../mock/types'
+import type { Plant, Todo, TodoSubcategory } from '../../../../mock/types'
 import {
   dueTodos,
   isFirstWaterTodo,
   upcomingTodos,
 } from '../../../todo/todoSchedule'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
+import { careAction } from '../../../todo/careKinds'
 import { PlantCatalogMark } from '../CatalogMark/CatalogMark'
 import { Icon } from '../../../../components/Icon/Icon'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
@@ -85,7 +86,7 @@ export function GreenhousePlantCardSkeleton({ blurred = false }: { blurred?: boo
 export function GreenhousePlantCard({
   plant,
   fresh,
-  careKind,
+  careKinds,
   careScope = 'due',
   onCare,
   preview,
@@ -93,8 +94,8 @@ export function GreenhousePlantCard({
   plant: Plant
   /** Just added: the card glows once. */
   fresh?: boolean
-  /** Needs care / Upcoming section: show only this action under the name. */
-  careKind?: 'water' | 'photo'
+  /** Needs care / Upcoming section: show only these kinds of care under the name. */
+  careKinds?: TodoSubcategory[]
   /** `due` = Needs care; `upcoming` = scheduled later. */
   careScope?: 'due' | 'upcoming'
   /** Care filter: open the day popup for this todo instead of navigating. */
@@ -110,12 +111,12 @@ export function GreenhousePlantCard({
 
   const todos = db.todos.filter((todo) => todo.plantId === plant.id)
   const carePool = careScope === 'upcoming' ? upcomingTodos(todos) : dueTodos(todos)
-  const needed = careKind ? carePool.filter((todo) => todo.subcategory === careKind) : []
+  const needed = careKinds ? carePool.filter((todo) => careKinds.includes(todo.subcategory)) : []
   const primary = needed[0]
   const status = statusFor(plant, marketOpen, todos, t)
   const verified = Boolean(plant.verifiedAt)
   const photos = plant.photos.filter(Boolean)
-  const careMode = Boolean(careKind)
+  const careMode = Boolean(careKinds)
   const dayLabel = primary ? formatCareDay(primary.dueOn, locale) : null
 
   const openCare = () => {
@@ -191,15 +192,10 @@ export function GreenhousePlantCard({
           <CareActions>
             {needed.map((todo) => {
               const first = isFirstWaterTodo(todo, todos)
-              const label =
-                todo.subcategory === 'photo'
-                  ? t.todo.actionPhoto
-                  : first
-                    ? t.todo.actionSetWaterDate
-                    : t.todo.actionWater
+              const label = first ? t.todo.actionSetWaterDate : careAction(todo.subcategory, t)
               const when = formatCareDay(todo.dueOn, locale)
               return (
-                <CareAction key={todo.id} $tone={todo.subcategory === 'photo' ? 'photo' : 'water'}>
+                <CareAction key={todo.id} $tone={todo.subcategory}>
                   <TodoKindIcon kind={todo.subcategory} size={14} />
                   <span>
                     {label}

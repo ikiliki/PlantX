@@ -93,20 +93,10 @@ import { clientEnv, clientEnvLabel, type ClientEnv } from '../theme/plantxEnv'
 import { cleanNickname } from '../features/profile/avatarIcons'
 import { LEGAL_VERSION } from '../features/legal/legalVersion'
 import { MOCK_OPERATOR_ID } from '../theme/operator'
-import {
-  addDays,
-  addMonths,
-  ensureFirstWaterTodo,
-  isFirstWaterTodo,
-  openTodo,
-  PHOTO_GAP_MONTHS,
-  careFillWindow,
-  schedulePhotoTodo,
-  todayIso,
-  WATER_GAP_DAYS,
-} from '../features/todo/todoSchedule'
+import { isFirstWaterTodo, openTodo, careFillWindow, syncCareTodos, todayIso } from '../features/todo/todoSchedule'
+import { CARE_HISTORY, cleanCarePlan } from '../features/todo/carePlan'
 
-const STORAGE_KEY = 'plantx-mock-db-v8'
+const STORAGE_KEY = 'plantx-mock-db-v9'
 
 export type LiveStatus = 'loading' | 'up' | 'down'
 
@@ -686,6 +676,7 @@ export function StoreProvider({
         const current = db.plants.find((item) => item.id === plantId)
         if (!current) return false
         const next: Plant = { ...current, ...patch }
+        if (patch.care !== undefined) next.care = cleanCarePlan(patch.care)
         if (patch.sizeBand) next.sizeGrade = patch.sizeBand
         if (patch.stage) next.rooting = patch.stage === 'CUT' ? 'unrooted' : patch.stage === 'ROOTED' ? 'rooted' : 'established'
         const changed = Object.keys(patch).filter((key) => key !== 'private' && key !== 'titleHe' && key !== 'descriptionHe')
@@ -698,6 +689,8 @@ export function StoreProvider({
         update((d) => {
           const index = d.plants.findIndex((item) => item.id === plantId)
           if (index >= 0) d.plants[index] = next
+          // A changed care plan moves this plant's due days and drops paused kinds, like the server.
+          if (patch.care !== undefined) d.todos = syncCareTodos(d.todos ?? [], next, d.catalog, { move: true }).todos
           d.updates = [
             {
               id: `u-edit-${Date.now()}`,
@@ -716,8 +709,9 @@ export function StoreProvider({
       const outcome = await patchPlant(plantId, patch)
       if (!outcome.ok) return false
       apply(outcome.data.plant)
-      // The server wrote an 'edited' row in the owner's activity.
+      // The server wrote an 'edited' row in the owner's activity, and a care change rescheduled tasks.
       void reloadSlice('updates')
+      if (patch.care !== undefined) void reloadSlice('todos')
       return true
     },
     deletePlant: async (plantId) => {
@@ -1209,64 +1203,31 @@ export function StoreProvider({
         const window = careFillWindow(todo.subcategory, todayIso())
         if (at < window.min || at > window.max) return d
         if (firstWater && !completedOn) return d
-        if (firstWater && completedOn && completedOn > todayIso()) return d
         if (!firstWater && (todo.dueOn == null || todo.dueOn > todayIso())) return d
 
         todo.completedOn = at
         if (todo.dueOn == null) todo.dueOn = at
         // Outside the update: the store has no i18n, the toast builds the text.
-        const care = todo.subcategory === 'photo' ? 'photo' : 'water'
+        const care = todo.subcategory
         queueMicrotask(() => notifyCareDone(todo.id, care, CARE_XP))
+        plant.history = [{ at, ...CARE_HISTORY[care] }, ...plant.history]
 
-        if (todo.subcategory === 'water') {
-          plant.history = [{ at, label: 'Watered', labelHe: 'הושקה' }, ...plant.history]
+        // Water and photo are feed posts; every kind counts for XP through its finished task.
+        if (care === 'water' || care === 'photo') {
           d.updates = d.updates ?? []
           d.updates.unshift({
-            id: `up-water-${Date.now()}`,
-            kind: 'water',
+            id: `up-${care}-${Date.now()}`,
+            kind: care,
             userId: owner,
             plantId: plant.id,
-            body: `Water confirmed on ${plant.title}.`,
-            bodyHe: `השקיה אושרה ל־${plant.titleHe}.`,
-            createdAt: new Date().toISOString(),
-          })
-          todos.unshift({
-            id: `todo-${Date.now()}-w`,
-            ownerId: owner,
-            plantId: plant.id,
-            category: 'plant',
-            subcategory: 'water',
-            dueOn: addDays(at, WATER_GAP_DAYS),
-            completedOn: null,
+            body: care === 'water' ? `Water confirmed on ${plant.title}.` : `${plant.title} photo refreshed.`,
+            bodyHe: care === 'water' ? `השקיה אושרה ל־${plant.titleHe}.` : `תמונת ${plant.titleHe} רועננה.`,
             createdAt: new Date().toISOString(),
           })
         }
 
-        if (todo.subcategory === 'photo') {
-          plant.history = [{ at, label: 'Photo refreshed', labelHe: 'התמונה רועננה' }, ...plant.history]
-          d.updates = d.updates ?? []
-          d.updates.unshift({
-            id: `up-photo-${Date.now()}`,
-            kind: 'photo',
-            userId: owner,
-            plantId: plant.id,
-            body: `${plant.title} photo refreshed.`,
-            bodyHe: `תמונת ${plant.titleHe} רועננה.`,
-            createdAt: new Date().toISOString(),
-          })
-          todos.unshift({
-            id: `todo-${Date.now()}-p`,
-            ownerId: owner,
-            plantId: plant.id,
-            category: 'plant',
-            subcategory: 'photo',
-            dueOn: addMonths(at, PHOTO_GAP_MONTHS),
-            completedOn: null,
-            createdAt: new Date().toISOString(),
-          })
-        }
-
-        d.todos = todos
+        // The plan opens the next task of this kind.
+        d.todos = syncCareTodos(todos, plant, d.catalog).todos
         return d
       })
       void postTodoComplete(todoId, completedOn).then((res) => {
@@ -1348,8 +1309,7 @@ export function StoreProvider({
         }
         const row = structuredClone(created)
         d.plants.unshift(row)
-        d.todos = ensureFirstWaterTodo(d.todos ?? [], row)
-        if (row.photos.length > 0) d.todos = schedulePhotoTodo(d.todos, row)
+        d.todos = syncCareTodos(d.todos ?? [], row, d.catalog).todos
         return d
       })
       // Same XP note as finished care; the success screen stays as it is.

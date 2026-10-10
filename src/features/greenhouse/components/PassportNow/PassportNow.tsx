@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useI18n } from '../../../../i18n/I18nProvider'
+import { careAction, careDoneLine } from '../../../todo/careKinds'
 import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { todayIso } from '../../../todo/todoSchedule'
 import { CARE_XP } from '../../greenhouseLevel'
@@ -15,7 +16,7 @@ export function PassportNow({ now }: { now: PassportNowState }) {
   const { t } = useI18n()
 
   if (now.kind === 'done') {
-    const line = (now.care === 'photo' ? t.http.donePhoto : t.http.doneWater).replace('{xp}', String(CARE_XP))
+    const line = careDoneLine(now.care, t, CARE_XP)
     return (
       <Root $tone={now.care} data-passport-now="done">
         <Mark>
@@ -57,7 +58,7 @@ export function PassportNow({ now }: { now: PassportNowState }) {
       <Body>
         <Label>{t.passport.nowNext}</Label>
         <Line>
-          {todo.subcategory === 'photo' ? t.todo.actionPhoto : t.todo.actionWater} · {when}
+          {careAction(todo.subcategory, t)} · {when}
         </Line>
       </Body>
       <Go aria-hidden>›</Go>

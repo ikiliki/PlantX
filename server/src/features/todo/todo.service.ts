@@ -3,48 +3,18 @@ import { changedSince, snapshot } from '../../lib/changedRows.ts'
 import { Errors } from '../../lib/errors.ts'
 import { getStore } from '../../db/index.ts'
 import { activityService } from '../activity/activity.service.ts'
-import type { Todo, TodoCategory, TodoInput, TodoSubcategory } from './todo.types.ts'
-
-export const WATER_GAP_DAYS = 7
-export const PHOTO_GAP_MONTHS = 1
+import { catalogService } from '../catalog/catalog.service.ts'
+import { CARE_HISTORY, careFillFrom } from '../../../../src/features/todo/carePlan.ts'
+import { syncCareTodos } from '../../../../src/features/todo/todoSchedule.ts'
+import type { Plant } from '../../../../src/mock/types.ts'
+import type { Todo } from './todo.types.ts'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function addDays(iso: string, days: number) {
-  const date = new Date(`${iso}T12:00:00.000Z`)
-  date.setUTCDate(date.getUTCDate() + days)
-  return date.toISOString().slice(0, 10)
-}
-
-function addMonths(iso: string, months: number) {
-  const date = new Date(`${iso}T12:00:00.000Z`)
-  date.setUTCMonth(date.getUTCMonth() + months)
-  return date.toISOString().slice(0, 10)
-}
-
-function careFillWindow(subcategory: string, now = today()) {
-  const min = subcategory === 'photo' ? addMonths(now, -PHOTO_GAP_MONTHS) : addDays(now, -WATER_GAP_DAYS)
-  return { min, max: now }
-}
-
-function newId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
-
 function isOpen(todo: Todo) {
   return todo.completedOn == null
-}
-
-function openOf(rows: Todo[], plantId: string, subcategory: TodoSubcategory) {
-  return rows.find(
-    (row) => row.plantId === plantId && row.subcategory === subcategory && row.category === 'plant' && isOpen(row),
-  )
-}
-
-function hasAnyWater(rows: Todo[], plantId: string) {
-  return rows.some((row) => row.plantId === plantId && row.subcategory === 'water' && row.category === 'plant')
 }
 
 /** First watering still needs a calendar pick. */
@@ -66,44 +36,20 @@ async function save(rows: Todo[], before: Map<string, string>) {
   if (changed.length) await getStore().todos.upsert(changed)
 }
 
-function push(rows: Todo[], input: TodoInput): Todo {
-  const row: Todo = {
-    id: input.id ?? newId('todo'),
-    ownerId: input.ownerId,
-    plantId: input.plantId,
-    category: input.category,
-    subcategory: input.subcategory,
-    dueOn: input.dueOn,
-    completedOn: input.completedOn,
-    createdAt: input.createdAt ?? new Date().toISOString(),
-  }
-  rows.unshift(row)
-  return row
-}
-
-/** Keep a single open todo. The current row must already be completed. */
-function placeOpen(
-  rows: Todo[],
-  input: { ownerId: string; plantId: string; subcategory: TodoSubcategory; dueOn: string },
-) {
-  const open = openOf(rows, input.plantId, input.subcategory)
-  if (open) {
-    open.dueOn = input.dueOn
-    return open
-  }
-  return push(rows, {
-    ownerId: input.ownerId,
-    plantId: input.plantId,
-    category: 'plant',
-    subcategory: input.subcategory,
-    dueOn: input.dueOn,
-    completedOn: null,
-  })
+/** Brings one plant's open tasks in line with its care plan and writes the difference. */
+async function syncPlant(plant: Plant, move: boolean) {
+  const store = getStore()
+  const [rows, catalog] = await Promise.all([store.todos.list(), catalogService.get()])
+  const before = snapshot(rows)
+  const { todos, removed } = syncCareTodos(rows, plant, catalog, { move })
+  await store.todos.remove(removed)
+  await save(todos, before)
 }
 
 /**
- * Care todos for water and photo. Completing a water or photo todo also
- * writes the matching news activity and plant history.
+ * Care tasks. Each plant has one open task per kind of care its plan turns on (`careFor`: the owner's,
+ * the variety's, the category's, or the default). Completing one schedules the next from that plan.
+ * Water and photo also write a feed activity; every kind writes plant history and counts for XP.
  */
 export const todoService = {
   async list(query: { ownerId?: string; plantId?: string; open?: boolean } = {}) {
@@ -124,44 +70,14 @@ export const todoService = {
     return todo
   },
 
-  /** New plant with no water history: open a first-watering session. */
-  async ensureFirstWater(plantId: string, ownerId: string) {
-    const rows = await getStore().todos.list()
-    const before = snapshot(rows)
-    if (hasAnyWater(rows, plantId)) return openOf(rows, plantId, 'water') ?? null
-    const todo = push(rows, {
-      ownerId,
-      plantId,
-      category: 'plant',
-      subcategory: 'water',
-      dueOn: null,
-      completedOn: null,
-    })
-    await save(rows, before)
-    return todo
+  /** A new plant: a first-watering session, then every other kind of care its plan turns on. */
+  async planCare(plant: Plant) {
+    await syncPlant(plant, false)
   },
 
-  /** After a photo upload, open or move the photo todo one month out. */
-  async schedulePhoto(plantId: string, ownerId: string, uploadedOn = today()) {
-    const rows = await getStore().todos.list()
-    const before = snapshot(rows)
-    const dueOn = addMonths(uploadedOn, PHOTO_GAP_MONTHS)
-    const open = openOf(rows, plantId, 'photo')
-    if (open) {
-      open.dueOn = dueOn
-      await save(rows, before)
-      return open
-    }
-    const todo = push(rows, {
-      ownerId,
-      plantId,
-      category: 'plant',
-      subcategory: 'photo',
-      dueOn,
-      completedOn: null,
-    })
-    await save(rows, before)
-    return todo
+  /** The owner changed the plant's care: due days move to the new intervals, paused kinds lose their task. */
+  async replanCare(plant: Plant) {
+    await syncPlant(plant, true)
   },
 
   /**
@@ -186,55 +102,42 @@ export const todoService = {
     const firstWater = isFirstWaterTodo(todo, rows)
     const at = completedOn ?? today()
     if (!/^\d{4}-\d{2}-\d{2}$/.test(at)) throw Errors.invalid('completedOn must be YYYY-MM-DD')
-    const window = careFillWindow(todo.subcategory)
-    if (at < window.min || at > window.max) throw Errors.invalid('Care day is outside this category’s window')
+    if (at < careFillFrom(todo.subcategory, today()) || at > today()) {
+      throw Errors.invalid('Care day is outside this category’s window')
+    }
     if (firstWater && !completedOn) throw Errors.invalid('First watering needs a calendar day')
-    if (firstWater && at > today()) throw Errors.invalid('First watering cannot be in the future')
     if (!firstWater && (todo.dueOn == null || todo.dueOn > today())) {
       throw Errors.invalid('Task can only be filled on or after its due day')
     }
 
     todo.completedOn = at
     if (todo.dueOn == null) todo.dueOn = at
+    plant.history = [{ at, ...CARE_HISTORY[todo.subcategory] }, ...plant.history]
 
-    let activityInput: Parameters<typeof activityService.record>[0] | null = null
+    const activityInput: Parameters<typeof activityService.record>[0] | null =
+      todo.subcategory === 'water'
+        ? {
+            kind: 'water',
+            userId,
+            plantId: plant.id,
+            body: `Water confirmed on ${plant.title}.`,
+            bodyHe: `השקיה אושרה ל־${plant.titleHe}.`,
+          }
+        : todo.subcategory === 'photo'
+          ? {
+              kind: 'photo',
+              userId,
+              plantId: plant.id,
+              body: `${plant.title} photo refreshed.`,
+              bodyHe: `תמונת ${plant.titleHe} רועננה.`,
+            }
+          : null
 
-    if (todo.subcategory === 'water') {
-      plant.history = [{ at, label: 'Watered', labelHe: 'הושקה' }, ...plant.history]
-      activityInput = {
-        kind: 'water',
-        userId,
-        plantId: plant.id,
-        body: `Water confirmed on ${plant.title}.`,
-        bodyHe: `השקיה אושרה ל־${plant.titleHe}.`,
-      }
-      placeOpen(rows, {
-        ownerId: userId,
-        plantId: plant.id,
-        subcategory: 'water',
-        dueOn: addDays(at, WATER_GAP_DAYS),
-      })
-    }
-
-    if (todo.subcategory === 'photo') {
-      plant.history = [{ at, label: 'Photo refreshed', labelHe: 'התמונה רועננה' }, ...plant.history]
-      activityInput = {
-        kind: 'photo',
-        userId,
-        plantId: plant.id,
-        body: `${plant.title} photo refreshed.`,
-        bodyHe: `תמונת ${plant.titleHe} רועננה.`,
-      }
-      placeOpen(rows, {
-        ownerId: userId,
-        plantId: plant.id,
-        subcategory: 'photo',
-        dueOn: addMonths(at, PHOTO_GAP_MONTHS),
-      })
-    }
-
-    // Todos first. A unique-index failure must not leave a watering that never completed.
-    await save(rows, before)
+    // The finished task closes first, then the plan opens the next one. todos_open_unique allows one open per kind.
+    const catalog = await catalogService.get()
+    const next = syncCareTodos(rows, plant, catalog)
+    await store.todos.remove(next.removed)
+    await save(next.todos, before)
     await store.plants.upsert([plant])
     const activity = activityInput ? await activityService.record(activityInput) : null
     await analyticsService.trackFirst('care_done', userId, { kind: todo.subcategory })
@@ -246,39 +149,21 @@ export const todoService = {
     }
   },
 
-  /** Every unsold plant has a water todo and, once it has a photo, an open photo todo. */
+  /** Every unsold plant has the open tasks its care plan asks for (run when the server starts). */
   async ensureCareTodos() {
     const store = getStore()
-    const plants = await store.plants.list()
-    const rows = await store.todos.list()
+    const [plants, rows, catalog] = await Promise.all([store.plants.list(), store.todos.list(), catalogService.get()])
     const before = snapshot(rows)
-    let added = 0
+    let current = rows
+    const removed: string[] = []
     for (const plant of plants) {
-      if (plant.status === 'sold') continue
-      if (!hasAnyWater(rows, plant.id)) {
-        push(rows, {
-          ownerId: plant.ownerId,
-          plantId: plant.id,
-          category: 'plant' satisfies TodoCategory,
-          subcategory: 'water' satisfies TodoSubcategory,
-          dueOn: null,
-          completedOn: null,
-        })
-        added += 1
-      }
-      if (!openOf(rows, plant.id, 'photo') && plant.photos.length > 0) {
-        push(rows, {
-          ownerId: plant.ownerId,
-          plantId: plant.id,
-          category: 'plant',
-          subcategory: 'photo',
-          dueOn: addMonths(plant.createdAt.slice(0, 10), PHOTO_GAP_MONTHS),
-          completedOn: null,
-        })
-        added += 1
-      }
+      const next = syncCareTodos(current, plant, catalog)
+      current = next.todos
+      removed.push(...next.removed)
     }
-    if (added > 0) await save(rows, before)
+    const added = current.length - rows.length + removed.length
+    await store.todos.remove(removed)
+    if (added > 0) await save(current, before)
     return { added }
   },
 }

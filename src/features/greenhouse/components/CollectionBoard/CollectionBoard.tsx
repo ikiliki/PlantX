@@ -11,13 +11,15 @@ import { useStore } from '../../../../mock/store'
 import { isFeatureEnabled, isPlacementReady } from '../../../../theme/release'
 import { needsCare } from '../../plantCare'
 import {
+  plantHasDueKinds,
   plantHasPhotoDue,
   plantHasUpcoming,
+  plantHasUpcomingKinds,
   plantHasUpcomingPhoto,
   plantHasUpcomingWater,
   plantHasWaterDue,
 } from '../../../todo/todoSchedule'
-import type { Plant, Todo } from '../../../../mock/types'
+import type { Plant, Todo, TodoSubcategory } from '../../../../mock/types'
 import { SkeletonCards,
   Board,
   CareGrid,
@@ -39,6 +41,11 @@ export type GreenhouseFilter = 'all' | 'needs' | 'upcoming' | 'ai' | 'listed' | 
 
 /** Two rows × four columns for each care category strip. */
 const CARE_PAGE = 8
+
+/** Care sections: watering, a picture, then everything else the care plan schedules. */
+const WATER_CARE: TodoSubcategory[] = ['water']
+const PHOTO_CARE: TodoSubcategory[] = ['photo']
+const OTHER_CARE: TodoSubcategory[] = ['feed', 'repot', 'rotate']
 
 /** Placeholder cards next to the Add tile: two full rows on a wide shelf. */
 const SKELETON_CARDS = 7
@@ -140,6 +147,13 @@ export function CollectionBoard({
     return []
   }, [filter, visible, ownerTodos])
 
+  // Feeding, repotting and turning share one section after Watering and Picture.
+  const otherPlants = useMemo(() => {
+    if (filter === 'needs') return visible.filter((plant) => plantHasDueKinds(ownerTodos, plant.id, OTHER_CARE))
+    if (filter === 'upcoming') return visible.filter((plant) => plantHasUpcomingKinds(ownerTodos, plant.id, OTHER_CARE))
+    return []
+  }, [filter, visible, ownerTodos])
+
   const careMode = filter === 'needs' || filter === 'upcoming'
   const list = useInfiniteList(visible, {
     enabled: !compact && !careMode,
@@ -154,6 +168,11 @@ export function CollectionBoard({
     enabled: !compact && careMode,
     pageSize: CARE_PAGE,
     signature: `${filter}-photo|${photoPlants.map((plant) => plant.id).join('|')}`,
+  })
+  const otherList = useInfiniteList(otherPlants, {
+    enabled: !compact && careMode,
+    pageSize: CARE_PAGE,
+    signature: `${filter}-other|${otherPlants.map((plant) => plant.id).join('|')}`,
   })
 
   const filters: { id: GreenhouseFilter; label: string; count: number }[] = [
@@ -194,7 +213,7 @@ export function CollectionBoard({
       node.removeEventListener('scroll', measure)
       observer.disconnect()
     }
-  }, [compact, filter, list.shown.length, waterList.shown.length, photoList.shown.length])
+  }, [compact, filter, list.shown.length, waterList.shown.length, photoList.shown.length, otherList.shown.length])
 
   useLayoutEffect(() => {
     if (compact) return
@@ -234,7 +253,7 @@ export function CollectionBoard({
       observer.disconnect()
       window.removeEventListener('resize', measure)
     }
-  }, [compact, filter, careMode, list.shown.length, waterList.shown.length, photoList.shown.length])
+  }, [compact, filter, careMode, list.shown.length, waterList.shown.length, photoList.shown.length, otherList.shown.length])
 
   const careDialog =
     careTodo && carePlant ? (
@@ -286,7 +305,7 @@ export function CollectionBoard({
       ) : null}
 
       {careMode && careScope ? (
-        waterPlants.length === 0 && photoPlants.length === 0 && !empty ? (
+        waterPlants.length === 0 && photoPlants.length === 0 && otherPlants.length === 0 && !empty ? (
           <Empty>{t.greenhouse.filterEmpty}</Empty>
         ) : (
           <CareSections>
@@ -303,7 +322,7 @@ export function CollectionBoard({
                       key={`${filter}-water-${plant.id}`}
                       plant={plant}
                       fresh={plant.id === freshId}
-                      careKind="water"
+                      careKinds={WATER_CARE}
                       careScope={careScope}
                       onCare={openCare}
                     />
@@ -330,7 +349,7 @@ export function CollectionBoard({
                       key={`${filter}-photo-${plant.id}`}
                       plant={plant}
                       fresh={plant.id === freshId}
-                      careKind="photo"
+                      careKinds={PHOTO_CARE}
                       careScope={careScope}
                       onCare={openCare}
                     />
@@ -341,6 +360,33 @@ export function CollectionBoard({
                   onLoadMore={photoList.loadMore}
                   root={shelfRef}
                   tick={photoList.shown.length}
+                />
+              </CareSection>
+            ) : null}
+            {otherPlants.length > 0 ? (
+              <CareSection>
+                <CareSectionHead>
+                  <TodoKindIcon kind="feed" size={14} />
+                  {t.greenhouse.careOther}
+                  <Count>({otherPlants.length})</Count>
+                </CareSectionHead>
+                <CareGrid data-plant-grid>
+                  {otherList.shown.map((plant) => (
+                    <GreenhousePlantCard
+                      key={`${filter}-other-${plant.id}`}
+                      plant={plant}
+                      fresh={plant.id === freshId}
+                      careKinds={OTHER_CARE}
+                      careScope={careScope}
+                      onCare={openCare}
+                    />
+                  ))}
+                </CareGrid>
+                <InfiniteSentinel
+                  hasMore={otherList.hasMore}
+                  onLoadMore={otherList.loadMore}
+                  root={shelfRef}
+                  tick={otherList.shown.length}
                 />
               </CareSection>
             ) : null}

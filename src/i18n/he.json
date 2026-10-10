@@ -362,7 +362,22 @@
     "priceFrom": "מכירה אחרונה {last} · רצפה {floor}",
     "storyPrivateOwner": "בינתיים רק את/ה רואה את הפעילות של הצמח הזה.",
     "storyPrivateAdmin": "פרטי למגדל/ת. את/ה רואה את זה כמנהל/ת.",
-    "storyPrivateOther": "הפעילות של הצמח הזה פרטית ל־{name} בינתיים."
+    "storyPrivateOther": "הפעילות של הצמח הזה פרטית ל־{name} בינתיים.",
+    "carePlan": "תוכנית טיפול",
+    "careEvery": "כל {n} ימים",
+    "careEveryWinter": "כל {n} ימים · {w} בחורף",
+    "careResting": "במנוחה עד {month}",
+    "careOff": "כבוי",
+    "careNext": "הבא {day}",
+    "careLast": "אחרון {day}",
+    "careNever": "עוד לא בוצע",
+    "careFromCatalog": "מהקטלוג",
+    "careYours": "התוכנית שלך",
+    "careUseCatalog": "לפי הקטלוג",
+    "carePause": "השהיה",
+    "careOnTime": "{n} מתוך {total} בזמן",
+    "careWeeks": "12 השבועות האחרונים",
+    "careHistory": "היסטוריית טיפול"
   },
   "greenhouse": {
     "myGreenhouse": "שלי",
@@ -514,7 +529,8 @@
     "socialYouReacted": "נתת 🌿 לפוסט שלך",
     "socialYouCommented": "הגבת: ״{text}״",
     "socialUnread": "{n} חדשים",
-    "bellUnread": "פעילויות החממה, {n} חדשים"
+    "bellUnread": "פעילויות החממה, {n} חדשים",
+    "careOther": "טיפול נוסף"
   },
   "todo": {
     "cancel": "ביטול",
@@ -568,7 +584,18 @@
     "dayTasks": "יום {day}, {n} משימות",
     "prevMonth": "החודש הקודם",
     "nextMonth": "החודש הבא",
-    "dayTasksFull": "{date}, {n} משימות"
+    "dayTasksFull": "{date}, {n} משימות",
+    "kindFeed": "דישון",
+    "kindRepot": "העברת עציץ",
+    "kindRotate": "סיבוב לאור",
+    "actionFeed": "דישון",
+    "actionRepot": "העברת עציץ",
+    "actionRotate": "סיבוב",
+    "detailFeed": "לתת דשן במי ההשקיה.",
+    "detailRepot": "להעביר לעציץ גדול במידה אחת עם אדמה טרייה.",
+    "detailRotate": "לסובב את העציץ ברבע כדי שיצמח ישר.",
+    "fillWindowOther": "רק היום ו־{n} הימים האחרונים. הבא נקבע לפי תוכנית הטיפול מהיום שבחרת.",
+    "doneAll": "סיום הכול ({n})"
   },
   "addPlant": {
     "title": "הוספת צמח",
@@ -1383,7 +1410,17 @@
     "reactionsMock": "העלים נשמרים בשרת; במצב הדמו אין כאלה.",
     "reactionsFailed": "לא הצלחנו לטעון. נסו שוב.",
     "reactionsEmpty": "עדיין אין עלים.",
-    "commentsLeadServer": "התגובות האחרונות בפיד: מי כתב ועל איזה פוסט. הסרה בניהול תוכן → תגובות."
+    "commentsLeadServer": "התגובות האחרונות בפיד: מי כתב ועל איזה פוסט. הסרה בניהול תוכן → תגובות.",
+    "careHeading": "תוכנית טיפול",
+    "careHint": "כל סוג טיפול חוזר בנפרד. ברירת מחדל לפי התקן של PlantX; זן גובר על הקטגוריה שלו.",
+    "careDefault": "ברירת מחדל · {rule}",
+    "careDefaultOff": "ברירת מחדל · כבוי",
+    "careCustom": "מותאם",
+    "careOff": "כבוי",
+    "careEveryDays": "כל (ימים)",
+    "careWinterDays": "בחורף (ימים)",
+    "careSeasonOnly": "רק מרץ–ספטמבר",
+    "careSeasonShort": "מרץ–ספט׳"
   },
   "settings": {
     "region": "מיקום",
@@ -1506,7 +1543,10 @@
     "sending": "שולח…",
     "sendFailed": "לא הצלחנו לשלוח את הדיווח",
     "cancel": "ביטול",
-    "donePlant": "נשתל · ‎+{xp} XP"
+    "donePlant": "נשתל · ‎+{xp} XP",
+    "doneFeed": "דושן · +{xp} XP",
+    "doneRepot": "הועבר עציץ · +{xp} XP",
+    "doneRotate": "סובב · +{xp} XP"
   },
   "roles": {
     "grower": "מגדל/ת ביתי/ת",
