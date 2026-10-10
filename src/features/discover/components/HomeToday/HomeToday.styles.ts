@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { theme } from '../../../../theme/tokens'
 
 export const Root = styled.div`
@@ -39,7 +39,7 @@ export const Section = styled.section`
 
 export const Head = styled.div`
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: ${theme.space.md};
 `
@@ -61,22 +61,46 @@ const arrow = `
   }
 `
 
-export const HeadLink = styled(Link)`
+/** "All tasks →", "All 2 →", "Feed →": a small pill that reads as tappable, not plain text. */
+const linkChip = css`
+  display: inline-flex;
+  align-items: center;
+  /* The arrow is its own flex item, so its leading space is dropped: the gap stands in for it. */
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid ${theme.colors.borderStrong};
+  border-radius: ${theme.radii.pill};
+  background: ${theme.colors.chipGreen};
   font-size: ${theme.text.sm};
   font-weight: 700;
   color: ${theme.colors.forest};
   white-space: nowrap;
   text-decoration: none;
+  transition: background ${theme.motion.fast} ${theme.motion.ease}, border-color ${theme.motion.fast} ${theme.motion.ease};
   ${arrow}
+
+  &:hover {
+    background: ${theme.colors.growth};
+    border-color: ${theme.colors.growth};
+    color: ${theme.colors.onGrowth};
+  }
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.forest};
+    outline-offset: 2px;
+  }
 `
 
+export const HeadLink = styled(Link)`
+  ${linkChip}
+`
+
+/** Under a section's list, set apart from the next section's heading. */
 export const More = styled(Link)`
+  ${linkChip}
   justify-self: end;
-  font-size: ${theme.text.sm};
-  font-weight: 700;
-  color: ${theme.colors.forest};
-  text-decoration: none;
-  ${arrow}
+  margin-top: 4px;
+  margin-bottom: ${theme.space.md};
 `
 
 /** One sideways row; the page itself never scrolls sideways. */

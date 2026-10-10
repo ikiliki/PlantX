@@ -21,7 +21,10 @@ import { PhotoChecks } from '../../../greenhouse/components/PhotoChecks/PhotoChe
 import { ActivityKindMark, ActivityMoment } from '../../../feed/components/ActivityMoment/ActivityMoment'
 import { AdminDetailGrid, AdminTable } from '../AdminTable/AdminTable'
 import { ApiDown } from '../ApiDown/ApiDown'
-import { IssueReports } from '../IssueReports/IssueReports'
+import { SystemHealthCard } from '../SystemHealth/SystemHealth'
+import { FunnelCard } from '../FunnelCard/FunnelCard'
+import { ReactionTable } from '../ReactionTable/ReactionTable'
+import { CommentModeration } from '../CommentModeration/CommentModeration'
 import { EnvMissing } from '../EnvMissing/EnvMissing'
 import { CarePlans } from '../CarePlans/CarePlans'
 import { CatalogTree, CatalogTreeDialog } from '../CatalogTree/CatalogTree'
@@ -624,7 +627,9 @@ export function ServerPanel() {
         </StatusActions>
       </StatusCard>
       <EnvMissing />
-      <IssueReports />
+      {/* Health and the funnel sit right under the live status (moved from System). */}
+      <SystemHealthCard />
+      <FunnelCard />
 
       {mock && reports.length > 0 && (
       <Section $demo>
@@ -1086,6 +1091,30 @@ export function ServerPanel() {
           </HeadMeta>
         </SectionHead>
         {careOpen && sliceBody('catalog', careFetching, <CarePlans />)}
+      </Section>
+
+      <Section $demo={mock} data-reactions>
+        <SectionHead
+          type="button"
+          $open={Boolean(openSections.reactions)}
+          aria-expanded={Boolean(openSections.reactions)}
+          onClick={() => toggleSection('reactions')}
+        >
+          <h2>{t.admin.reactionsTitle}</h2>
+        </SectionHead>
+        {openSections.reactions ? <ReactionTable bare /> : null}
+      </Section>
+
+      <Section $demo={mock} data-comments>
+        <SectionHead
+          type="button"
+          $open={Boolean(openSections.comments)}
+          aria-expanded={Boolean(openSections.comments)}
+          onClick={() => toggleSection('comments')}
+        >
+          <h2>{t.admin.commentsTitle}</h2>
+        </SectionHead>
+        {openSections.comments ? <CommentModeration readOnly bare /> : null}
       </Section>
 
       {categoryPopupId && (

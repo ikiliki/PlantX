@@ -433,6 +433,14 @@ export function fetchMySocial() {
 }
 
 /** Admin → Server → Reactions. */
+/** Admin → Moderation → Reactions: remove one 🌿 (logged on that post). */
+export function deleteAdminReaction(activityId: string, userId: string) {
+  return requestOutcome<{ ok: true }>(
+    `/api/admin/reactions/${encodeURIComponent(activityId)}/${encodeURIComponent(userId)}`,
+    { method: 'DELETE' },
+  )
+}
+
 export function fetchAdminReactionsOutcome() {
   return requestOutcome<{ reactions: import('./types').AdminReaction[] }>('/api/admin/reactions')
 }

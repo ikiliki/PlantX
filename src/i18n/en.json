@@ -1465,7 +1465,9 @@
     "careEvery": "Every {n} days",
     "careEveryWinter": "Every {n} days · {w} in winter",
     "careNotSet": "Not set",
-    "careRuleCount": "{n} rules"
+    "careRuleCount": "{n} rules",
+    "reactionsRemove": "Remove",
+    "reactionsLeadModeration": "Newest 🌿 on Feed posts. Remove takes one off its post and logs it."
   },
   "settings": {
     "region": "Location",

@@ -1465,7 +1465,9 @@
     "careEvery": "כל {n} ימים",
     "careEveryWinter": "כל {n} ימים · {w} בחורף",
     "careNotSet": "לא נקבע",
-    "careRuleCount": "{n} כללים"
+    "careRuleCount": "{n} כללים",
+    "reactionsRemove": "הסרה",
+    "reactionsLeadModeration": "🌿 אחרונים על פוסטים בפיד. הסרה מורידה אחד מהפוסט ונרשמת ביומן."
   },
   "settings": {
     "region": "מיקום",

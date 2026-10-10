@@ -75,6 +75,11 @@ export const feedSocialService = {
     return getStore().activitySocial.recentReactions(Math.min(Math.max(limit, 1), 500))
   },
 
+  /** Admin → Moderation → Reactions: take one member's 🌿 off a post. */
+  async removeReaction(activityId: string, userId: string) {
+    await getStore().activitySocial.unreact(activityId, userId)
+  },
+
   async deleteComment(commentId: string, viewer: Viewer) {
     const social = getStore().activitySocial
     const comment = await social.getComment(commentId)
