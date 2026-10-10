@@ -185,8 +185,11 @@ export function PassportTodo({
               }).map(
                 (days) => ({ id: String(days), label: t.passport.careEvery.replace('{n}', String(days)) }),
               ),
-              { id: 'off', label: t.passport.carePause },
-              ...(own?.added ? [{ id: 'remove', label: t.passport.careRemove }] : []),
+            ]
+            // Pause and Remove act at once: they sit in the footer next to Cancel and Save, not among the intervals.
+            const actions = [
+              ...(own?.off ? [] : [{ id: 'off', label: t.passport.carePause }]),
+              ...(own?.added ? [{ id: 'remove', label: t.passport.careRemove, variant: 'danger' as const }] : []),
             ]
             return (
               <PlanRow key={kind} $tone={item.task.icon} $off={paused} $mark={careMark === kind} data-care-kind={kind}>
@@ -223,6 +226,7 @@ export function PassportTodo({
                     kind="choice"
                     value={current}
                     options={options}
+                    actions={actions}
                     onSave={(choice) => save(item, choice)}
                     onCancel={() => setEditing(null)}
                   />
