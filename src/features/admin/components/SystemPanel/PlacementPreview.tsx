@@ -71,7 +71,7 @@ function RankPassportPreview() {
   const ownerId = ownerIdOf(signedIn, currentUser?.id, db.visitorId)
   const plant = db.plants.find((item) => item.ownerId === ownerId) ?? db.plants[0]
   if (!plant) return null
-  return <PlantPassport plantId={plant.id} embedded initialTab="grading" />
+  return <PlantPassport plantId={plant.id} embedded initialTab="story" />
 }
 
 function TodoPassportPreview() {
@@ -79,7 +79,7 @@ function TodoPassportPreview() {
   const ownerId = ownerIdOf(signedIn, currentUser?.id, db.visitorId)
   const plant = db.plants.find((item) => item.ownerId === ownerId) ?? db.plants[0]
   if (!plant) return null
-  return <PlantPassport plantId={plant.id} embedded initialTab="todo" />
+  return <PlantPassport plantId={plant.id} embedded initialTab="care" />
 }
 
 function ClassPreview() {

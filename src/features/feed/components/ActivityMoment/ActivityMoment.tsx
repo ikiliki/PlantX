@@ -8,7 +8,7 @@ import { GreenhousePlantCard } from '../../../greenhouse/components/GreenhousePl
 import { PhotoChecks } from '../../../greenhouse/components/PhotoChecks/PhotoChecks'
 import { SheetGrip, useSheetDrag } from '../../../../components/SheetGrip/SheetGrip'
 import { formatFeedTime } from '../../formatFeedTime'
-import { activityKindLabel, momentPassportTab } from '../../activityMoment'
+import { activityKindLabel, opensPassport } from '../../activityMoment'
 import {
   Backdrop,
   Checks,
@@ -169,9 +169,8 @@ function MomentSheet({
 export function ActivityMoment({ update, onClose }: { update: FeedUpdate; onClose: () => void }) {
   const { db } = useStore()
   const plant = update.plantId ? db.plants.find((item) => item.id === update.plantId) : undefined
-  const tab = momentPassportTab(update.kind)
-  if (tab && plant) {
-    return <PassportDialog plantId={plant.id} tab={tab} onClose={onClose} />
+  if (opensPassport(update.kind) && plant) {
+    return <PassportDialog plantId={plant.id} activityKey={update.id} onClose={onClose} />
   }
   return <MomentSheet update={update} plant={plant} onClose={onClose} />
 }

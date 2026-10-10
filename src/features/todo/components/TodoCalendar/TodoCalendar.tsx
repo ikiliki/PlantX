@@ -569,7 +569,7 @@ export function TodoCalendar({
         <PassportDialog
           plantId={passport.plantId}
           careMark={passport.careMark}
-          tab="todo"
+          tab="care"
           onClose={() => setPassport(undefined)}
         />
       ) : null}

@@ -7,20 +7,21 @@ import { GuestView } from '../../../../components/GuestView/GuestView'
 import { SheetGrip, useSheetDrag } from '../../../../components/SheetGrip/SheetGrip'
 import { useDialogLayer } from '../../../../lib/dialogLayer'
 import { forAudience } from '../../../../theme/audience'
-import { PlantPassport } from '../PlantPassport/PlantPassport'
+import { PlantPassport, type PassportTab } from '../PlantPassport/PlantPassport'
 import { Backdrop, Close, CloseBar, Dialog, GuestPane } from './PassportDialog.styles'
 
 export function PassportDialog({
   plantId,
   onClose,
-  tab = 'grading',
+  tab,
   activityKey,
   careMark,
   routed = false,
 }: {
   plantId: string
   onClose: () => void
-  tab?: 'grading' | 'todo' | 'activity' | 'market'
+  /** Default: Care right after care was done, otherwise Story. */
+  tab?: Exclude<PassportTab, 'settings'>
   activityKey?: string
   careMark?: TodoSubcategory
   /** Opened by its own URL (`/plants/:id`): back already closes it, so it adds no history entry of its own. */

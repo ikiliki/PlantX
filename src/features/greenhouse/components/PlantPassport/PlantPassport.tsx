@@ -1,5 +1,5 @@
 import { OTHER_CATEGORY_ID, OTHER_SUBCATEGORY_ID } from '../../plantClass'
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UNKNOWN_AREA } from '../../../../mock/locations'
 import { Avatar } from '../../../../components/Avatar/Avatar'
@@ -7,7 +7,6 @@ import { Button } from '../../../../components/Button/Button'
 import { FeatureGate } from '../../../../components/FeatureGate/FeatureGate'
 import { HealthChip } from '../../../../components/HealthChip/HealthChip'
 import { Icon } from '../../../../components/Icon/Icon'
-import { PlantImage } from '../../../../components/PlantImage/PlantImage'
 import { useAuth } from '../../../auth/AuthProvider'
 import {
   CORE_PROPERTY_IDS,
@@ -25,15 +24,16 @@ import { useStore } from '../../../../mock/store'
 import { LevelBadge } from '../LevelBadge/LevelBadge'
 import { greenhouseHref } from '../GreenhouseCard/GreenhouseCard'
 import { useGreenhouseLevels } from '../../useGreenhouseLevels'
-import { isPlacementEnabled } from '../../../../theme/release'
+import { isPlacementEnabled, isPlacementReady } from '../../../../theme/release'
 import type { SizeBand, StageBand, TodoSubcategory } from '../../../../mock/types'
-import { TodoKindIcon } from '../../../todo/components/TodoKindIcon/TodoKindIcon'
 import { canSeeActivity } from '../../../feed/activityXp'
 import { aggregateCommunityGrade, formatGradeWhen } from '../../communityGrade'
+import { passportNow } from '../../passportNow'
 import { CatalogMark } from '../CatalogMark/CatalogMark'
 import { AiFieldStamp } from '../AiFieldStamp/AiFieldStamp'
 import { IdentifyBadge } from '../IdentifyBadge/IdentifyBadge'
 import { PassportMarket } from '../PassportMarket/PassportMarket'
+import { PassportNow } from '../PassportNow/PassportNow'
 import { PassportTodo } from '../../../todo/components/PassportTodo/PassportTodo'
 import { PhotoChecks } from '../PhotoChecks/PhotoChecks'
 import { PhotoCheckSticker } from '../PhotoCheckSticker/PhotoCheckSticker'
@@ -61,7 +61,6 @@ import {
   Board,
   Frame,
   Code,
-  AsideStatButton,
   GradeRow,
   IdentityHead,
   Main,
@@ -72,21 +71,15 @@ import {
   OwnerMeta,
   OwnerName,
   Panel,
-  PhotoIcon,
-  PhotoIconButton,
-  PhotoMore,
-  CareMarkSlot,
-  PriceTip,
   Rating,
-  SectionTitle,
   ShowMore,
   CategoryName,
+  StatNote,
   SubName,
   Tab,
   TaxonomyItem,
   TaxonomyRow,
   TabBar,
-  TipLine,
   Timeline,
   TimelineRow,
   Title,
@@ -98,7 +91,11 @@ import {
 /** Longer names end in an ellipsis on the passport head (the tooltip has the full name). */
 const TITLE_MAX = 48
 
-type TabId = 'grading' | 'todo' | 'activity' | 'market' | 'settings'
+/** Extra catalog traits shown before More details folds the rest. */
+const TRAITS_SHOWN = 2
+
+/** Story: the plant's whole timeline (activity and community grades). Care: its tasks. */
+export type PassportTab = 'story' | 'care' | 'market' | 'settings'
 
 function stageName(stage: StageBand | undefined, labels: { mature: string; established: string; rooted: string; cutting: string }) {
   if (stage === 'MATURE') return labels.mature
@@ -136,7 +133,7 @@ export function PlantPassport({
   plantId,
   embedded = false,
   dialog = false,
-  initialTab = 'grading',
+  initialTab,
   activityKey,
   careMark,
 }: {
@@ -144,8 +141,9 @@ export function PlantPassport({
   embedded?: boolean
   /** Fixed popup: photo stays put, the white page scrolls. */
   dialog?: boolean
-  initialTab?: TabId
-  /** History row to mark when the activity tab is open. */
+  /** Default: Care right after care was done, otherwise Story. */
+  initialTab?: PassportTab
+  /** History row to mark when the story tab is open. */
   activityKey?: string
   /** Care assignment stamp after watering / photo. */
   careMark?: TodoSubcategory
@@ -154,12 +152,9 @@ export function PlantPassport({
   const { openAuth } = useAuth()
   const { t, tr, formatMoney, locale } = useI18n()
   const plant = db.plants.find((item) => item.id === plantId)
-  const [tab, setTab] = useState<TabId>(initialTab)
-  // Extra fields show in full on the wide layout; they fold behind Show more only when they would crowd the owner rows.
+  const startTab: PassportTab = initialTab ?? (careMark ? 'care' : 'story')
+  const [tab, setTab] = useState<PassportTab>(startTab)
   const [customsOpen, setCustomsOpen] = useState(false)
-  const [probe, setProbe] = useState(true)
-  const [crowded, setCrowded] = useState(false)
-  const asideRef = useRef<HTMLElement>(null)
   const listing = db.listings.find((item) => item.plantId === plantId && item.status === 'active')
   const [toast, setToast] = useState('')
   const [photoIndex, setPhotoIndex] = useState(0)
@@ -173,46 +168,15 @@ export function PlantPassport({
   // As a popup, the owner and greenhouse rows only make sense from Home and the market; elsewhere the grower is already known.
   const showOwner = !dialog || pathname === '/home' || pathname.startsWith('/market')
 
-  const hasLevel = Boolean(levels[db.plants.find((item) => item.id === plantId)?.ownerId ?? ''])
-  // Measure again whenever the plant or the board size changes: show every field, then fold if they overflow.
-  useEffect(() => {
-    setCrowded(false)
-    setProbe(true)
-  }, [plantId, showOwner, hasLevel])
-
-  useEffect(() => {
-    const board = asideRef.current?.parentElement
-    if (!board) return
-    let size = `${board.clientWidth}x${board.clientHeight}`
-    const observer = new ResizeObserver(() => {
-      const next = `${board.clientWidth}x${board.clientHeight}`
-      if (next === size) return
-      size = next
-      setCrowded(false)
-      setProbe(true)
-    })
-    observer.observe(board)
-    return () => observer.disconnect()
-  }, [])
-
-  useLayoutEffect(() => {
-    if (!probe) return
-    const aside = asideRef.current
-    if (!aside) return
-    const stacked = (aside.parentElement?.clientWidth ?? 0) <= 760
-    setCrowded(stacked || aside.scrollHeight > aside.clientHeight + 1)
-    setProbe(false)
-  }, [probe])
-
   useEffect(() => {
     setPhotoIndex(0)
     setPhotoViewerOpen(false)
     setCustomsOpen(false)
-    setTab(initialTab)
-  }, [plantId, initialTab])
+    setTab(startTab)
+  }, [plantId, startTab])
 
   useEffect(() => {
-    if (tab !== 'activity' || !activityKey) return
+    if (tab !== 'story' || !activityKey) return
     document.getElementById(`passport-activity-${activityKey}`)?.scrollIntoView({ block: 'nearest' })
   }, [tab, activityKey, plantId])
 
@@ -241,18 +205,13 @@ export function PlantPassport({
     return ok
   }
   const showBuy = Boolean(listing) && !isOwner
-  const stage = stageName(plant.stage, {
-    mature: t.market.mature,
-    established: t.market.established,
-    rooted: t.market.rooted,
-    cutting: t.market.unitCutting,
-  })
   const stageLabels = {
     mature: t.market.mature,
     established: t.market.established,
     rooted: t.market.rooted,
     cutting: t.market.unitCutting,
   }
+  const stage = stageName(plant.stage, stageLabels)
   const traits: { label: string; value: ReactNode; fieldId?: 'size' | 'stage' }[] = [
     { label: t.market.size, value: plant.sizeBand ?? plant.sizeGrade, fieldId: 'size' },
     ...(stage ? [{ label: t.market.stage, value: stage, fieldId: 'stage' as const }] : []),
@@ -290,7 +249,6 @@ export function PlantPassport({
   const communityGrade = aggregateCommunityGrade(plant.grades)
   const gradeLabel = communityGrade ? t.grade.community : t.grade.catalog
   const gradeLetter = communityGrade ?? plant.quality
-  const grades = [...(plant.grades ?? [])].sort((a, b) => b.at.localeCompare(a.at))
 
   const customFields = catalogCategory
     ? db.catalog.properties.flatMap((property) => {
@@ -316,26 +274,35 @@ export function PlantPassport({
         ]
       })
     : []
+  // The first few traits always show; the rest fold behind More details, at every width.
+  const shownFields = customsOpen ? customFields : customFields.slice(0, TRAITS_SHOWN)
+  const foldedCount = customFields.length - TRAITS_SHOWN
 
   const marketOn = isPlacementEnabled(db.system, 'passport.market')
-  const rankOn = isPlacementEnabled(db.system, 'passport.rank')
   const todoOn = isPlacementEnabled(db.system, 'passport.todo')
-  const tabs: { id: TabId; label: string }[] = [
-    ...(rankOn ? [{ id: 'grading' as const, label: t.passport.gradingTab }] : []),
-    ...(todoOn ? [{ id: 'todo' as const, label: t.passport.todoTab }] : []),
-    { id: 'activity', label: t.passport.activityTab },
+  // Community grades join the story only while Rank is live.
+  const gradesOn = isPlacementReady(db.system, 'passport.rank')
+  const tabs: { id: PassportTab; label: string }[] = [
+    { id: 'story', label: t.passport.storyTab },
+    ...(todoOn ? [{ id: 'care' as const, label: t.passport.todoTab }] : []),
     ...(marketOn ? [{ id: 'market' as const, label: t.passport.marketTab }] : []),
     // The owner's actions on the plant (who sees it, delete it), last.
     ...(canEdit && isOwner ? [{ id: 'settings' as const, label: t.passport.settingsTab }] : []),
   ]
-  const fallbackTab: TabId = rankOn ? 'grading' : todoOn ? 'todo' : 'activity'
-  const activeTab: TabId =
-    (tab === 'market' && !marketOn) ||
-    (tab === 'grading' && !rankOn) ||
-    (tab === 'todo' && !todoOn) ||
-    (tab === 'settings' && !(canEdit && isOwner))
-      ? fallbackTab
+  const activeTab: PassportTab =
+    (tab === 'market' && !marketOn) || (tab === 'care' && !todoOn) || (tab === 'settings' && !(canEdit && isOwner))
+      ? 'story'
       : tab
+
+  const now = passportNow({
+    plant,
+    todos: db.todos ?? [],
+    updates: db.updates ?? [],
+    isOwner,
+    careOn: todoOn,
+    careMark,
+    activityKey,
+  })
 
   const onBuy = () => {
     if (!listing) return
@@ -356,12 +323,7 @@ export function PlantPassport({
   const bestOffer = openOffers.length > 0 ? Math.max(...openOffers) : undefined
   const lastSale = plant.comps?.[plant.comps.length - 1]?.price ?? marketClass?.lastPrice
   const floor = marketClass?.rangeMin
-  const quotes = [
-    { label: t.passport.bestOffer, value: bestOffer },
-    { label: t.passport.lastSale, value: lastSale },
-    { label: t.passport.floor, value: floor },
-  ]
-  const known = quotes.flatMap((quote) => (quote.value == null ? [] : [quote.value]))
+  const known = [bestOffer, lastSale, floor].flatMap((value) => (value == null ? [] : [value]))
   const average = known.length > 0 ? Math.round(known.reduce((sum, value) => sum + value, 0) / known.length) : null
 
   const photos = plant.photos.filter(Boolean)
@@ -374,6 +336,56 @@ export function PlantPassport({
   const titleCut = shownTitle.lastIndexOf(' ')
   const titleHead = titleCut > 0 ? shownTitle.slice(0, titleCut + 1) : ''
   const titleLast = titleCut > 0 ? shownTitle.slice(titleCut + 1) : shownTitle
+
+  // Story: activity (or the stored history) and community grades in one timeline, newest first.
+  const fromActivity = (db.updates ?? []).filter(
+    (item) => item.plantId === plant.id && canSeeActivity(item, signedIn ? currentUser : null),
+  )
+  const checks = plant.identification?.photos
+  const storyRows: { key: string; at: string; body: ReactNode }[] = [
+    ...(fromActivity.length > 0
+      ? fromActivity.map((item) => {
+          const scanCheck =
+            item.kind === 'scan' ? checks?.find((check) => check.requestId === item.identifyRequestId) : undefined
+          return {
+            key: item.id,
+            at: item.createdAt,
+            body: (
+              <ActivityBody>
+                <span>{tr(item.body, item.bodyHe)}</span>
+                {scanCheck ? <PhotoCheckSticker check={scanCheck} /> : null}
+                {item.kind === 'added' ? (
+                  <>
+                    <IdentifyBadge
+                      identification={plant.identification}
+                      notInCatalog={plant.speciesId === OTHER_CATEGORY_ID}
+                      compact
+                    />
+                    {checks?.length ? <PhotoChecks photos={photos} checks={checks} size="sm" /> : null}
+                  </>
+                ) : null}
+              </ActivityBody>
+            ),
+          }
+        })
+      : plant.history.map((entry, index) => ({
+          key: `${plant.id}:${index}`,
+          at: entry.at,
+          body: <span>{tr(entry.label, entry.labelHe)}</span>,
+        }))),
+    ...(gradesOn
+      ? (plant.grades ?? []).map((grade, index) => ({
+          key: `grade-${grade.at}-${index}`,
+          at: grade.at,
+          body: (
+            <GradeRow>
+              <HealthChip health={grade.letter} />
+              <span>{t.grade.anonymousEntry}</span>
+            </GradeRow>
+          ),
+        }))
+      : []),
+  ].sort((a, b) => b.at.localeCompare(a.at))
 
   return (
     <Frame>
@@ -390,32 +402,9 @@ export function PlantPassport({
         onViewerOpenChange={setPhotoViewerOpen}
       />
 
-      <Aside ref={asideRef} $embedded={embedded} $dialog={dialog}>
+      <Aside $embedded={embedded} $dialog={dialog}>
         <IdentityHead>
-          <PhotoIconButton
-            type="button"
-            aria-label={t.passport.photos}
-            onClick={() => {
-              setPhotoIndex(0)
-              setPhotoViewerOpen(true)
-            }}
-          >
-            <PhotoIcon>
-              <PlantImage src={photos[0]} alt="" />
-              {careMark ? (
-                <CareMarkSlot>
-                  <TodoKindIcon kind={careMark} size={16} mark />
-                </CareMarkSlot>
-              ) : null}
-            </PhotoIcon>
-            {photos.length > 1 ? (
-              <PhotoMore title={t.addPlant.photosCount.replace('{n}', String(photos.length))}>
-                +{photos.length - 1}
-              </PhotoMore>
-            ) : null}
-          </PhotoIconButton>
           <NameBlock>
-            <Code>{plant.code}</Code>
             <TitleRow>
               {/* The pencil is glued to the last word, so it sits right after the name and never on a line alone.
                   The heading's name stays the plant's name (aria-label), not "… Edit Name". */}
@@ -485,10 +474,14 @@ export function PlantPassport({
                 ) : null}
               </TaxonomyRow>
             )}
+            {/* The class code is reference, not the name: it sits quietly under the category. */}
+            <Code>{plant.code}</Code>
           </NameBlock>
         </IdentityHead>
 
-          {/* Admin on someone else's plant: hide or delete it (#69). The owner's controls sit at the foot. */}
+        {now ? <PassportNow now={now} /> : null}
+
+          {/* Admin on someone else's plant: hide or delete it (#69). The owner's controls sit in Settings. */}
           {canEdit && isAdmin && !isOwner ? (
             <ManageRow>
               {plant.visibility ? (
@@ -496,38 +489,34 @@ export function PlantPassport({
                   {plant.visibility === 'deleted' ? t.moderation.state.deleted : t.moderation.state.hidden}
                 </Badge>
               ) : null}
-              {isAdmin && !isOwner ? (
-                <>
-                  <Button
-                    size="sm"
-                    variant={plant.visibility === 'hidden' ? 'growth' : 'ghost'}
-                    type="button"
-                    onClick={() =>
-                      setModerating({
-                        type: 'plant',
-                        id: plant.id,
-                        label: title,
-                        action: plant.visibility === 'hidden' ? 'show' : plant.visibility === 'deleted' ? 'restore' : 'hide',
-                      })
-                    }
-                  >
-                    {plant.visibility === 'hidden'
-                      ? t.moderation.action.show
-                      : plant.visibility === 'deleted'
-                        ? t.moderation.action.restore
-                        : t.moderation.action.hide}
-                  </Button>
-                  {plant.visibility !== 'deleted' ? (
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      type="button"
-                      onClick={() => setModerating({ type: 'plant', id: plant.id, label: title, action: 'delete' })}
-                    >
-                      {t.moderation.action.delete}
-                    </Button>
-                  ) : null}
-                </>
+              <Button
+                size="sm"
+                variant={plant.visibility === 'hidden' ? 'growth' : 'ghost'}
+                type="button"
+                onClick={() =>
+                  setModerating({
+                    type: 'plant',
+                    id: plant.id,
+                    label: title,
+                    action: plant.visibility === 'hidden' ? 'show' : plant.visibility === 'deleted' ? 'restore' : 'hide',
+                  })
+                }
+              >
+                {plant.visibility === 'hidden'
+                  ? t.moderation.action.show
+                  : plant.visibility === 'deleted'
+                    ? t.moderation.action.restore
+                    : t.moderation.action.hide}
+              </Button>
+              {plant.visibility !== 'deleted' ? (
+                <Button
+                  size="sm"
+                  variant="danger"
+                  type="button"
+                  onClick={() => setModerating({ type: 'plant', id: plant.id, label: title, action: 'delete' })}
+                >
+                  {t.moderation.action.delete}
+                </Button>
               ) : null}
             </ManageRow>
           ) : null}
@@ -554,25 +543,20 @@ export function PlantPassport({
               <dd>{gradeLetter}</dd>
             </AsideStat>
           ) : null}
-          {!marketOn ? null : average == null ? (
-            <AsideStat>
+          {marketOn ? (
+            <AsideStat data-passport-average>
               <dt>{t.passport.averagePrice}</dt>
-              <dd>—</dd>
+              <dd>{average == null ? '—' : formatMoney(average)}</dd>
+              {/* What the average leans on, written out: no hover needed on a phone. */}
+              {average != null && (lastSale != null || floor != null) ? (
+                <StatNote>
+                  {t.passport.priceFrom
+                    .replace('{last}', lastSale == null ? '—' : formatMoney(lastSale))
+                    .replace('{floor}', floor == null ? '—' : formatMoney(floor))}
+                </StatNote>
+              ) : null}
             </AsideStat>
-          ) : (
-            <AsideStatButton type="button" aria-describedby="passport-price-tip" data-passport-average>
-              <dt>{t.passport.averagePrice}</dt>
-              <dd>{formatMoney(average)}</dd>
-              <PriceTip id="passport-price-tip" role="tooltip">
-                {quotes.map((quote) => (
-                  <TipLine key={quote.label}>
-                    <span>{quote.label}</span>
-                    <strong>{quote.value == null ? '—' : formatMoney(quote.value)}</strong>
-                  </TipLine>
-                ))}
-              </PriceTip>
-            </AsideStatButton>
-          )}
+          ) : null}
           {traits.map((trait) => {
             const mark = trait.fieldId ? plant.identification?.fields?.[trait.fieldId] : undefined
             const aiLabel =
@@ -603,29 +587,28 @@ export function PlantPassport({
               </AsideStat>
             )
           })}
-          {(customsOpen || !crowded) &&
-            customFields.map((field) => (
-              <AsideStat key={field.id}>
-                <dt>{field.label}</dt>
-                <dd>
-                  {field.value}
-                  {canEdit && field.options.length > 0 ? (
-                    <EditPencil label={field.label} onClick={() => setEditField(`trait:${field.id}`)} />
-                  ) : null}
-                </dd>
-                {field.mark ? <AiFieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
-                {editField === `trait:${field.id}` ? (
-                  <InlineEdit
-                    label={field.label}
-                    kind="choice"
-                    value={field.raw}
-                    options={field.options}
-                    onSave={(next) => saveField({ traits: { ...(plant.traits ?? {}), [field.id]: next } })}
-                    onCancel={() => setEditField(null)}
-                  />
+          {shownFields.map((field) => (
+            <AsideStat key={field.id}>
+              <dt>{field.label}</dt>
+              <dd>
+                {field.value}
+                {canEdit && field.options.length > 0 ? (
+                  <EditPencil label={field.label} onClick={() => setEditField(`trait:${field.id}`)} />
                 ) : null}
-              </AsideStat>
-            ))}
+              </dd>
+              {field.mark ? <AiFieldStamp mark={field.mark} aiLabel={field.aiLabel} corner /> : null}
+              {editField === `trait:${field.id}` ? (
+                <InlineEdit
+                  label={field.label}
+                  kind="choice"
+                  value={field.raw}
+                  options={field.options}
+                  onSave={(next) => saveField({ traits: { ...(plant.traits ?? {}), [field.id]: next } })}
+                  onCancel={() => setEditField(null)}
+                />
+              ) : null}
+            </AsideStat>
+          ))}
           {/* The plant's note: the owner can add one here; others see it when there is one. */}
           {plant.description || canEdit ? (
             <AsideStat $wide>
@@ -649,9 +632,9 @@ export function PlantPassport({
             </AsideStat>
           ) : null}
         </AsideStats>
-        {customFields.length > 0 && crowded && (
-          <ShowMore type="button" onClick={() => setCustomsOpen((open) => !open)}>
-            {customsOpen ? t.passport.showLess : t.passport.showMore}
+        {foldedCount > 0 && (
+          <ShowMore type="button" aria-expanded={customsOpen} onClick={() => setCustomsOpen((open) => !open)}>
+            {customsOpen ? t.passport.showLess : t.passport.moreDetails.replace('{n}', String(foldedCount))}
           </ShowMore>
         )}
 
@@ -718,28 +701,21 @@ export function PlantPassport({
         </TabBar>
 
         <Panel role="tabpanel" $embedded={embedded} $dialog={dialog}>
-          {activeTab === 'grading' && rankOn && (
-            <FeatureGate placement="passport.rank" title={t.passport.gradingTab}>
-              <SectionTitle>{t.passport.gradingTab}</SectionTitle>
-              {grades.length === 0 ? (
-                <Muted>{t.grade.noActivity}</Muted>
-              ) : (
-                <Timeline data-grade-activity>
-                  {grades.map((grade, index) => (
-                    <TimelineRow key={`${grade.at}-${index}`}>
-                      <time dateTime={grade.at}>{formatGradeWhen(grade.at, locale)}</time>
-                      <GradeRow>
-                        <HealthChip health={grade.letter} />
-                        <span>{t.grade.anonymousEntry}</span>
-                      </GradeRow>
-                    </TimelineRow>
-                  ))}
-                </Timeline>
-              )}
-            </FeatureGate>
-          )}
+          {activeTab === 'story' &&
+            (storyRows.length === 0 ? (
+              <Muted>{t.passport.noHistory}</Muted>
+            ) : (
+              <Timeline data-passport-story>
+                {storyRows.map((row) => (
+                  <TimelineRow key={row.key} id={`passport-activity-${row.key}`} $mark={row.key === activityKey}>
+                    <time dateTime={row.at}>{formatGradeWhen(row.at, locale)}</time>
+                    {row.body}
+                  </TimelineRow>
+                ))}
+              </Timeline>
+            ))}
 
-          {activeTab === 'todo' && todoOn && (
+          {activeTab === 'care' && todoOn && (
             <FeatureGate placement="passport.todo" title={t.passport.todoTab}>
               <PassportTodo
                 plant={plant}
@@ -747,61 +723,6 @@ export function PlantPassport({
                 careMark={careMark}
               />
             </FeatureGate>
-          )}
-
-          {activeTab === 'activity' && (
-            <>
-              <SectionTitle>{t.passport.history}</SectionTitle>
-              {(() => {
-                const fromActivity = (db.updates ?? [])
-                  .filter((item) => item.plantId === plant.id && canSeeActivity(item, signedIn ? currentUser : null))
-                  .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-                if (fromActivity.length) {
-                  return (
-                    <Timeline>
-                      {fromActivity.map((item) => {
-                        const key = item.id
-                        const marked = key === activityKey
-                        const at = item.createdAt.slice(0, 10)
-                        const checks = plant.identification?.photos
-                        const scanCheck =
-                          item.kind === 'scan' ? checks?.find((check) => check.requestId === item.identifyRequestId) : undefined
-                        return (
-                          <TimelineRow key={key} id={`passport-activity-${key}`} $mark={marked}>
-                            <time>{at}</time>
-                            <ActivityBody>
-                              <span>{tr(item.body, item.bodyHe)}</span>
-                              {scanCheck ? <PhotoCheckSticker check={scanCheck} /> : null}
-                              {item.kind === 'added' ? (
-                                <>
-                                  <IdentifyBadge identification={plant.identification} notInCatalog={plant.speciesId === OTHER_CATEGORY_ID} compact />
-                                  {checks?.length ? <PhotoChecks photos={photos} checks={checks} size="sm" /> : null}
-                                </>
-                              ) : null}
-                            </ActivityBody>
-                          </TimelineRow>
-                        )
-                      })}
-                    </Timeline>
-                  )
-                }
-                if (plant.history.length === 0) return <Muted>{t.passport.noHistory}</Muted>
-                return (
-                  <Timeline>
-                    {plant.history.map((entry, index) => {
-                      const key = `${plant.id}:${index}`
-                      const marked = key === activityKey
-                      return (
-                        <TimelineRow key={key} id={`passport-activity-${key}`} $mark={marked}>
-                          <time>{entry.at}</time>
-                          <span>{tr(entry.label, entry.labelHe)}</span>
-                        </TimelineRow>
-                      )
-                    })}
-                  </Timeline>
-                )
-              })()}
-            </>
           )}
 
           {activeTab === 'settings' && canEdit && isOwner && (

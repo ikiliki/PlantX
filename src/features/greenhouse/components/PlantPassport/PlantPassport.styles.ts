@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components'
 import { Link } from 'react-router-dom'
-import { popIn, riseIn } from '../../../../theme/motion'
+import { riseIn } from '../../../../theme/motion'
 import { theme } from '../../../../theme/tokens'
 import type { PlantRarity } from '../../../../mock/types'
 
@@ -126,68 +126,6 @@ export const IdentityHead = styled.div`
   ${stacked} {
     padding-inline-end: 48px;
     gap: 0;
-  }
-`
-
-export const PhotoIconButton = styled.button`
-  position: relative;
-  flex: 0 0 auto;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: zoom-in;
-  border-radius: ${theme.radii.pill};
-  transition: transform ${theme.motion.base} ${theme.motion.spring};
-  &:hover {
-    transform: scale(1.04);
-  }
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.growth};
-    outline-offset: 3px;
-  }
-  ${stacked} {
-    display: none;
-  }
-`
-
-export const PhotoIcon = styled.div`
-  position: relative;
-  width: 84px;
-  height: 84px;
-  padding: 4px;
-  border-radius: ${theme.radii.pill};
-  background: color-mix(in srgb, var(--c-creamCard) 72%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-forest) 12%, transparent);
-  animation: ${popIn} ${theme.motion.slow} ${theme.motion.spring} backwards;
-  overflow: visible;
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: ${theme.radii.pill};
-    object-fit: cover;
-    transition: transform ${theme.motion.slow} ${theme.motion.ease};
-  }
-  ${PhotoIconButton}:hover & img {
-    transform: scale(1.06);
-  }
-  ${stacked} {
-    width: 68px;
-    height: 68px;
-    animation: none;
-  }
-`
-
-export const CareMarkSlot = styled.span`
-  position: absolute;
-  inset-inline-end: -4px;
-  bottom: -4px;
-  z-index: 2;
-  line-height: 0;
-  animation: ${popIn} ${theme.motion.slow} ${theme.motion.spring} both;
-  ${stacked} {
-    animation: none;
   }
 `
 
@@ -350,21 +288,12 @@ export const AsideStat = styled.div<{ $wide?: boolean }>`
   }
 `
 
-export const AsideStatButton = styled.button`
-  ${asideStatTile}
-  margin: 0;
-  font: inherit;
-  color: inherit;
-  cursor: help;
-  position: relative;
-  animation: ${riseIn} ${theme.motion.slow} ${theme.motion.ease} backwards;
-  ${stacked} {
-    animation: none;
-  }
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.growth};
-    outline-offset: 2px;
-  }
+/** A quiet line under a stat's value (what an average is made of). */
+export const StatNote = styled.small`
+  font-size: 12px;
+  font-weight: 500;
+  color: ${theme.colors.muted};
+  overflow-wrap: anywhere;
 `
 
 export const AsideLabel = styled.span`
@@ -555,51 +484,6 @@ export const PriceWrap = styled.button`
   }
 `
 
-export const PriceTip = styled.span`
-  position: absolute;
-  z-index: 4;
-  inset-block-start: calc(100% + 8px);
-  inset-inline-start: 0;
-  display: grid;
-  gap: 6px;
-  width: max-content;
-  max-width: min(260px, 70vw);
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: ${theme.colors.ink};
-  color: ${theme.colors.cream};
-  box-shadow: ${theme.shadow.card};
-  font-family: ${theme.fonts.body};
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.3;
-  text-align: start;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(4px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-
-  ${PriceWrap}:hover &,
-  ${PriceWrap}:focus &,
-  ${PriceWrap}:focus-visible &,
-  ${AsideStatButton}:hover &,
-  ${AsideStatButton}:focus &,
-  ${AsideStatButton}:focus-visible & {
-    opacity: 1;
-    transform: none;
-  }
-`
-
-export const TipLine = styled.span`
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  white-space: nowrap;
-  strong {
-    font-weight: 700;
-  }
-`
-
 export const PriceBlock = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -771,11 +655,6 @@ export const Panel = styled.div<{ $embedded?: boolean; $dialog?: boolean }>`
   }
 `
 
-export const SectionTitle = styled.h3`
-  font-size: 18px;
-  color: ${theme.colors.ink};
-`
-
 export const Muted = styled.p`
   font-size: 14px;
   line-height: 1.45;
@@ -820,25 +699,6 @@ export const ParentLink = styled(Link)`
   font-size: 15px;
   font-weight: 700;
   color: ${theme.colors.forest};
-`
-
-/** "+2" on the small photo: the plant has more photos in the gallery. */
-export const PhotoMore = styled.span`
-  position: absolute;
-  inset-block-end: -2px;
-  inset-inline-end: -4px;
-  display: grid;
-  place-items: center;
-  min-width: 26px;
-  height: 26px;
-  padding: 0 6px;
-  border: 2px solid ${theme.colors.creamCard};
-  border-radius: ${theme.radii.pill};
-  background: ${theme.colors.forest};
-  color: ${theme.colors.growth};
-  font-size: 11px;
-  font-weight: 800;
-  box-shadow: ${theme.shadow.soft};
 `
 
 export const ActivityBody = styled.div`
