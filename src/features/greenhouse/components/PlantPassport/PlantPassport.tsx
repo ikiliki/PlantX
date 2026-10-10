@@ -77,7 +77,6 @@ import {
   PhotoMore,
   CareMarkSlot,
   PriceTip,
-  Qty,
   Rating,
   SectionTitle,
   ShowMore,
@@ -100,11 +99,6 @@ import {
 const TITLE_MAX = 48
 
 type TabId = 'grading' | 'todo' | 'activity' | 'market' | 'settings'
-
-/** Drop trailing ×N (or xN) quantity suffixes baked into listing titles. */
-function titleWithoutQuantity(text: string) {
-  return text.replace(/\s*[×x]\s*[\d,.]+$/iu, '').trim()
-}
 
 function stageName(stage: StageBand | undefined, labels: { mature: string; established: string; rooted: string; cutting: string }) {
   if (stage === 'MATURE') return labels.mature
@@ -374,7 +368,7 @@ export function PlantPassport({
   const safeIndex = photos.length === 0 ? 0 : Math.min(photoIndex, photos.length - 1)
   const ownerName = owner ? publicGrowerName(owner, locale === 'he') : ''
 
-  const title = titleWithoutQuantity(tr(plant.title, plant.titleHe))
+  const title = tr(plant.title, plant.titleHe)
   // A very long name ends in an ellipsis (the full name is the tooltip); the edit pencil follows it.
   const shownTitle = title.length > TITLE_MAX ? `${title.slice(0, TITLE_MAX - 1).trimEnd()}…` : title
   const titleCut = shownTitle.lastIndexOf(' ')
@@ -609,10 +603,6 @@ export function PlantPassport({
               </AsideStat>
             )
           })}
-          <AsideStat>
-            <dt>{t.market.quantity}</dt>
-            <dd>×{plant.quantity}</dd>
-          </AsideStat>
           {(customsOpen || !crowded) &&
             customFields.map((field) => (
               <AsideStat key={field.id}>

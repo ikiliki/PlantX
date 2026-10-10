@@ -65,7 +65,6 @@ export function guestPlantAsPlant(item: GuestPlant): Plant {
     description: item.description,
     descriptionHe: item.descriptionHe,
     photos: item.photos,
-    quantity: 1,
     sizeGrade: item.sizeBand,
     sizeBand: item.sizeBand,
     quality: item.quality,

@@ -14,7 +14,6 @@
       "/class-photos/pot-gold-a-l-mat.jpg",
       "/class-photos/pot-gold-a-s-r.png"
     ],
-    "quantity": 1,
     "sizeGrade": "mature",
     "sizeBand": "L",
     "quality": "A",
@@ -58,12 +57,11 @@
     "marketClassId": "mc-pot-gold-b-m-r",
     "variety": "Golden",
     "varietyHe": "זהוב",
-    "title": "Rooted pothos cuttings ×40",
-    "titleHe": "ייחורי פוטוס מושרשים ×40",
+    "title": "Rooted pothos cuttings",
+    "titleHe": "ייחורי פוטוס מושרשים",
     "photos": [
       "/class-photos/pot-gold-a-s-r.png"
     ],
-    "quantity": 40,
     "sizeGrade": "cutting",
     "sizeBand": "M",
     "quality": "B",
@@ -103,12 +101,11 @@
     "marketClassId": "mc-pot-njoy-b-m-est",
     "variety": "N'Joy",
     "varietyHe": "אן ג'וי",
-    "title": "N'Joy pothos ×6",
-    "titleHe": "פוטוס אן ג'וי ×6",
+    "title": "N'Joy pothos",
+    "titleHe": "פוטוס אן ג'וי",
     "photos": [
       "/class-photos/pot-njoy-b-m-est.jpg"
     ],
-    "quantity": 6,
     "sizeGrade": "medium",
     "sizeBand": "M",
     "quality": "B",
@@ -151,7 +148,6 @@
       "/class-photos/mon-std-a-l-mat.jpg",
       "/class-photos/mon-std-a-l-mat.jpg"
     ],
-    "quantity": 1,
     "sizeGrade": "specimen",
     "sizeBand": "XL",
     "quality": "A",
@@ -214,14 +210,13 @@
     "marketClassId": "mc-mon-std-a-l-est",
     "variety": "Standard",
     "varietyHe": "סטנדרט",
-    "title": "Monstera Deliciosa 60cm ×50",
-    "titleHe": "מונסטרה דליסיוסה 60 ס״מ ×50",
+    "title": "Monstera Deliciosa 60cm",
+    "titleHe": "מונסטרה דליסיוסה 60 ס״מ",
     "photos": [
       "/class-photos/mon-std-a-l-mat.jpg",
       "/class-photos/mon-std-a-xl-mat.jpg",
       "/class-photos/mon-std-a-l-mat.jpg"
     ],
-    "quantity": 50,
     "sizeGrade": "60cm",
     "sizeBand": "L",
     "quality": "A",
@@ -252,15 +247,14 @@
     "marketClassId": "mc-pot-gold-a-m-r",
     "variety": "Golden",
     "varietyHe": "זהוב",
-    "title": "Rooted pothos cuttings ×300",
-    "titleHe": "ייחורי פוטוס מושרשים ×300",
+    "title": "Rooted pothos cuttings",
+    "titleHe": "ייחורי פוטוס מושרשים",
     "photos": [
       "/class-photos/pot-gold-a-s-r.png",
       "/class-photos/pot-gold-a-xl-mat.jpg",
       "/class-photos/pot-gold-a-l-mat.jpg",
       "/class-photos/pot-gold-a-s-r.png"
     ],
-    "quantity": 300,
     "sizeGrade": "cutting",
     "sizeBand": "M",
     "quality": "A",
@@ -301,7 +295,6 @@
       "/class-photos/pot-gold-a-s-r.png",
       "/class-photos/pot-njoy-b-m-est.jpg"
     ],
-    "quantity": 1,
     "sizeGrade": "medium",
     "sizeBand": "M",
     "quality": "B",
@@ -335,7 +328,6 @@
       "/class-photos/pot-gold-a-xl-mat.jpg",
       "/class-photos/pot-gold-a-l-mat.jpg"
     ],
-    "quantity": 1,
     "sizeGrade": "mature",
     "sizeBand": "L",
     "quality": "A",
@@ -373,7 +365,6 @@
     "photos": [
       "/class-photos/pot-njoy-b-m-est.jpg"
     ],
-    "quantity": 2,
     "sizeGrade": "medium",
     "sizeBand": "M",
     "quality": "B",
@@ -410,7 +401,6 @@
       "/class-photos/mon-std-a-l-mat.jpg",
       "/class-photos/mon-std-a-xl-mat.jpg"
     ],
-    "quantity": 1,
     "sizeGrade": "60cm",
     "sizeBand": "L",
     "quality": "A",
@@ -446,7 +436,6 @@
     "photos": [
       "/class-photos/pot-gold-a-xl-mat.jpg"
     ],
-    "quantity": 1,
     "sizeGrade": "XL",
     "sizeBand": "XL",
     "quality": "A",
@@ -481,7 +470,6 @@
     "photos": [
       "/class-photos/pot-gold-a-l-mat.jpg"
     ],
-    "quantity": 1,
     "sizeGrade": "L",
     "sizeBand": "L",
     "quality": "A",
@@ -516,7 +504,6 @@
     "photos": [
       "/class-photos/pot-gold-a-s-r.png"
     ],
-    "quantity": 12,
     "sizeGrade": "S",
     "sizeBand": "S",
     "quality": "A",
@@ -549,7 +536,6 @@
     "photos": [
       "/class-photos/pot-njoy-b-m-est.jpg"
     ],
-    "quantity": 4,
     "sizeGrade": "M",
     "sizeBand": "M",
     "quality": "B",
@@ -582,7 +568,6 @@
     "photos": [
       "/class-photos/mon-std-a-l-mat.jpg"
     ],
-    "quantity": 3,
     "sizeGrade": "L",
     "sizeBand": "L",
     "quality": "A",
@@ -617,7 +602,6 @@
     "photos": [
       "/class-photos/mon-std-a-xl-mat.jpg"
     ],
-    "quantity": 1,
     "sizeGrade": "XL",
     "sizeBand": "XL",
     "quality": "A",

@@ -305,10 +305,6 @@ function PlantPreview({
             <dt>{t.admin.serverColSize}</dt>
             <dd>{row.sizeBand ?? row.sizeGrade}</dd>
           </div>
-          <div>
-            <dt>{t.admin.serverColQty}</dt>
-            <dd>{row.quantity}</dd>
-          </div>
         </PreviewStats>
       </PreviewCard>
       <PreviewDetails>

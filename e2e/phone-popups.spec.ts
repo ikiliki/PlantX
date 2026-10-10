@@ -22,7 +22,6 @@ test.describe('activity sheet popups', () => {
       title: 'E2E bell pothos',
       titleHe: 'E2E bell pothos',
       photos: ['/class-photos/pot-gold-a-l-mat.jpg'],
-      quantity: 1,
       sizeGrade: 'M',
       sizeBand: 'M',
       quality: '',

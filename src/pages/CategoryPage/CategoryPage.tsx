@@ -82,7 +82,7 @@ function CategoryReady({ speciesId: speciesIdProp }: { speciesId?: string }) {
         </SummaryStat>
         <SummaryStat>
           <dt>{t.guide.inGreenhouses}</dt>
-          <dd>{grown.reduce((sum, plant) => sum + plant.quantity, 0).toLocaleString()}</dd>
+          <dd>{grown.length.toLocaleString()}</dd>
         </SummaryStat>
         <SummaryStat>
           <dt>{t.guide.onMarket}</dt>

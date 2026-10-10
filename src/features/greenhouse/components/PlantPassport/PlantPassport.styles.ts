@@ -615,11 +615,6 @@ export const Price = styled.p`
   color: ${theme.colors.cream};
 `
 
-export const Qty = styled.span`
-  font-size: 14px;
-  color: ${onForest(0.6)};
-`
-
 export const ActionRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;

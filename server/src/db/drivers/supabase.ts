@@ -537,7 +537,7 @@ export function createSupabaseStore(): PlantxStore {
       await client.query(
         `insert into plants (
           id, position, code, owner_id, species_id, market_class_id, variety, variety_he,
-          subcategory_id, title, title_he, description, description_he, quantity, size_grade,
+          subcategory_id, title, title_he, description, description_he, size_grade,
           size_band, quality, rooting, stage, pot_format, pot_format_he, pot_size_cm,
           stem_length_cm, leaf_count, location_zone, location_zone_he, lat, lng, parent_id,
           batch_id, propagated_at, verified_at, verified_by, status,
@@ -545,8 +545,8 @@ export function createSupabaseStore(): PlantxStore {
           growth_water, growth_water_he, growth_note, growth_note_he, created_at, is_private
         ) values (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-          $21,$22,$23,$24,$25,$26,$27,$28,null,$29,$30,$31,$32,$33,$34,$35,$36,$37,
-          $38,$39,$40,$41,$42,$43,$44,$45
+          $21,$22,$23,$24,$25,$26,$27,null,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,
+          $38,$39,$40,$41,$42,$43,$44
         )
         on conflict (id) do update set
           position = excluded.position,
@@ -561,7 +561,6 @@ export function createSupabaseStore(): PlantxStore {
           title_he = excluded.title_he,
           description = excluded.description,
           description_he = excluded.description_he,
-          quantity = excluded.quantity,
           size_grade = excluded.size_grade,
           size_band = excluded.size_band,
           quality = excluded.quality,
@@ -1003,7 +1002,6 @@ function plantParams(plant: Plant, position: number, subIds: Set<string>) {
     plant.titleHe,
     plant.description ?? null,
     plant.descriptionHe ?? null,
-    plant.quantity,
     plant.sizeGrade,
     plant.sizeBand ?? null,
     plant.quality || null,
@@ -1086,7 +1084,6 @@ function plantFrom(
     title: text(row, 'title'),
     titleHe: text(row, 'title_he'),
     photos: photos.filter((item) => text(item, 'plant_id') === id).map((item) => text(item, 'url')),
-    quantity: num(row, 'quantity'),
     sizeGrade: text(row, 'size_grade'),
     quality: text(row, 'quality') as Plant['quality'],
     rooting: text(row, 'rooting') as Plant['rooting'],

@@ -299,7 +299,6 @@ interface StoreApi {
     speciesId: string
     title: string
     titleHe: string
-    quantity: number
     quality: QualityGrade
     rooting: 'rooted' | 'unrooted' | 'established'
     parentId?: string
@@ -1322,7 +1321,6 @@ export function StoreProvider({
         description: input.description.trim(),
         descriptionHe: input.descriptionHe.trim(),
         photos: plantPhotos(input.photos),
-        quantity: 1,
         sizeGrade: input.sizeBand,
         sizeBand: input.sizeBand,
         quality: input.quality,
@@ -1469,7 +1467,6 @@ export function StoreProvider({
           photos: [
             input.photo ?? defaultPlantPhoto,
           ],
-          quantity: input.quantity,
           sizeGrade: 'cutting',
           quality: input.quality,
           rooting: input.rooting,
@@ -1549,7 +1546,6 @@ export function StoreProvider({
           title: draft.title,
           titleHe: draft.titleHe,
           photos: [draft.photo],
-          quantity: draft.quantity,
           sizeGrade: 'claimed',
           quality: 'B',
           rooting: 'established',

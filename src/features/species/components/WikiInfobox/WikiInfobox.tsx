@@ -55,7 +55,7 @@ export function WikiInfobox({ species }: { species: Species }) {
         </Row>
         <Row>
           <dt>{t.guide.inGreenhouses}</dt>
-          <dd>{grown.reduce((sum, plant) => sum + plant.quantity, 0).toLocaleString()}</dd>
+          <dd>{grown.length.toLocaleString()}</dd>
         </Row>
         {marketOn && (
           <Row>

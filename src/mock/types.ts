@@ -201,7 +201,6 @@ export interface Plant extends VisibilityMeta {
   description?: string
   descriptionHe?: string
   photos: string[]
-  quantity: number
   sizeGrade: string
   sizeBand?: SizeBand
   /** Empty until health is chosen. */

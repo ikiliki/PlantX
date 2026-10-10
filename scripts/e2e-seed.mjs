@@ -33,10 +33,10 @@ await db.query(
    on conflict (id) do nothing`,
 )
 await db.query(
-  `insert into plants (id, position, code, owner_id, species_id, title, title_he, quantity, size_grade, rooting,
+  `insert into plants (id, position, code, owner_id, species_id, title, title_he, size_grade, rooting,
      location_zone, location_zone_he, lat, lng, status, created_at, is_private)
    values ('e2e-private-plant', 1000, 'POT-GOLD-M-EST', 'u-admin', 'sp-pothos', 'E2E private pothos',
-     'E2E private pothos', 1, 'M', 'established', 'Unknown', 'לא ידוע', 31.4, 35.1, 'owned', '2026-10-06', true)
+     'E2E private pothos', 'M', 'established', 'Unknown', 'לא ידוע', 31.4, 35.1, 'owned', '2026-10-06', true)
    on conflict (id) do nothing`,
 )
 await db.query(
